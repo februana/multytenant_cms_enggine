@@ -169,46 +169,56 @@ function ensure_upload_dirs(): void {
 function load_config(): array {
     ensure_upload_dirs();
     $defaults = config_defaults();
-    // Migration support: prefer repo-level config/site.json when present and valid.
+    // Merge order (each file optional, invalid JSON ignored):
+    // 1) config_defaults()
+    // 2) config/site.json
+    // 3) config/theme.json
+    // 4) config/sections.json
+    // 5) config/seo.json
+    $config = $defaults;
     $siteConfigPath = ROOT_DIR . '/../config/site.json';
+    $legacyConfigPath = CONFIG_FILE;
+    $anyFileLoaded = false;
+
+    // Load base: prefer site.json, else legacy config.json
     if (is_readable($siteConfigPath)) {
         $raw = @file_get_contents($siteConfigPath);
         if ($raw !== false) {
-            $config = json_decode($raw, true);
-            if (is_array($config)) {
-                $config = array_replace_recursive($defaults, $config);
-                if (!is_array($config['gallery']['items'])) {
-                    $config['gallery']['items'] = [];
-                }
-                if (!is_array($config['media']['background_sections'])) {
-                    $config['media']['background_sections'] = [];
-                }
-                if (empty($config['schedule']['countdown_target'])) {
-                    $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
-                }
-                if (!is_file(ROOT_DIR . '/event.ics')) {
-                    write_event_ics($config);
-                }
-                return $config;
+            $base = json_decode($raw, true);
+            if (is_array($base)) {
+                $config = array_replace_recursive($config, $base);
+                $anyFileLoaded = true;
             }
-            // if JSON invalid, fall through to legacy CONFIG_FILE fallback
+        }
+    } elseif (is_readable($legacyConfigPath)) {
+        $raw = @file_get_contents($legacyConfigPath);
+        if ($raw !== false) {
+            $base = json_decode($raw, true);
+            if (is_array($base)) {
+                $config = array_replace_recursive($config, $base);
+                $anyFileLoaded = true;
+            }
         }
     }
 
-    // Fallback: behave exactly as before using CONFIG_FILE (config.json)
-    if (!is_readable(CONFIG_FILE)) {
+    // Merge modular files in order; ignore missing/invalid files
+    $modFiles = ['theme.json', 'sections.json', 'seo.json'];
+    foreach ($modFiles as $mf) {
+        $path = ROOT_DIR . '/../config/' . $mf;
+        if (!is_readable($path)) continue;
+        $raw = @file_get_contents($path);
+        if ($raw === false) continue;
+        $mod = json_decode($raw, true);
+        if (!is_array($mod)) continue;
+        $config = array_replace_recursive($config, $mod);
+        $anyFileLoaded = true;
+    }
+
+    // If no config files were found at all, behave like legacy: persist defaults and return
+    if (!$anyFileLoaded) {
         save_config($defaults);
         return $defaults;
     }
-    $raw = @file_get_contents(CONFIG_FILE);
-    if ($raw === false) {
-        return $defaults;
-    }
-    $config = json_decode($raw, true);
-    if (!is_array($config)) {
-        return $defaults;
-    }
-    $config = array_replace_recursive($defaults, $config);
     if (!is_array($config['gallery']['items'])) {
         $config['gallery']['items'] = [];
     }
