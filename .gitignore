@@ -11,6 +11,11 @@
 # SQLite DB if accidentally present
 database.sqlite
 
+# Runtime-generated files
+event.ics
+guest-links.json
+cookiejar
+
 # Backup archives
 *.tar.gz
 *.tgz

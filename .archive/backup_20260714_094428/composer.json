@@ -1,8 +1,0 @@
-{
-    "name": "shiro/undangan",
-    "description": "Wedding Invitation CMS",
-    "type": "project",
-    "require": {
-        "chillerlan/php-qrcode": "^5.0"
-    }
-}
