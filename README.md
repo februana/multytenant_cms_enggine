@@ -113,6 +113,49 @@ sudo /opt/februandik-web/deploy/health-check.sh
 - `.env.example` : contoh konfigurasi environment
 - `README.md` : dokumentasi ini
 
+## Database configuration (UNDANGAN_DB_PATH)
+
+This application uses a single SQLite database file. To support migration and deployments, the application resolves the database path in the following priority (highest → lowest):
+
+1. `UNDANGAN_DB_PATH` environment variable (absolute or relative path)
+2. Legacy path: `app/storage/data/database.sqlite` — used only if the file exists and is readable
+3. Fallback: `app/database.sqlite`
+
+Recommendations
+
+- Place the SQLite database outside the webroot (for example `/var/www/private/database.sqlite`) and set `UNDANGAN_DB_PATH` to that path.
+- Ensure the webserver/PHP-FPM user has read/write access to the directory and file.
+
+Example export (temporary for current shell):
+
+```bash
+export UNDANGAN_DB_PATH=/var/www/private/database.sqlite
+```
+
+Add this variable to your deployment environment (systemd unit, container env, or shared-hosting panel) rather than committing it into the repo.
+
+Backward compatibility
+
+- Existing installations that used `app/storage/data/database.sqlite` will continue to work: the application will prefer that file if present.
+- If that legacy file is absent and `UNDANGAN_DB_PATH` is not set, the application will create and use `app/database.sqlite`.
+
+Migration note
+
+- To migrate an existing legacy DB into a new canonical location, copy the file and set `UNDANGAN_DB_PATH` to point to it; DO NOT modify schema or run migrations — the app uses the same tables and schema.
+
+Troubleshooting
+
+- Permission denied: ensure ownership and permissions are correct:
+
+```bash
+sudo chown www-data:www-data /var/www/private/database.sqlite
+sudo chmod 640 /var/www/private/database.sqlite
+```
+
+- Database not found: verify `UNDANGAN_DB_PATH` and look for legacy path `app/storage/data/database.sqlite` or fallback `app/database.sqlite`.
+
+For full deploy examples (Nginx, Apache, Docker, shared hosting) and migration steps see `deploy/DB_DEPLOY.md`.
+
 ## Catatan
 
 Untuk SSL, gunakan Certbot atau penyedia lain secara manual setelah Nginx terpasang dan DNS `februandik.duckdns.org` menunjuk ke server.
