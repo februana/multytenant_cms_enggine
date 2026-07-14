@@ -54,12 +54,19 @@ define('ALLOWED_IMAGE_TYPES', array_map('strtolower', (array) (getenv('ALLOWED_I
 // 1) UNDANGAN_DB_PATH env var
 // 2) /var/www/private/database.sqlite (recommended, outside webroot)
 // 3) repo storage/data/database.sqlite (not committed to git)
+// Database path resolution
+// Priority:
+// 1) UNDANGAN_DB_PATH env var
+// 2) legacy path: app/storage/data/database.sqlite (if exists)
+// 3) fallback: app/database.sqlite
+$legacyDb = __DIR__ . '/storage/data/database.sqlite';
+$fallbackDb = __DIR__ . '/database.sqlite';
 if (getenv('UNDANGAN_DB_PATH')) {
     $dbPath = getenv('UNDANGAN_DB_PATH');
-} elseif (is_readable('/var/www/private/database.sqlite')) {
-    $dbPath = '/var/www/private/database.sqlite';
+} elseif (is_readable($legacyDb)) {
+    $dbPath = $legacyDb;
 } else {
-    $dbPath = __DIR__ . '/storage/data/database.sqlite';
+    $dbPath = $fallbackDb;
 }
 if (!defined('DB_PATH')) define('DB_PATH', $dbPath);
 

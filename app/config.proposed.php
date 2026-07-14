@@ -42,12 +42,18 @@ if (!defined('ALLOWED_AUDIO_TYPES')) define('ALLOWED_AUDIO_TYPES', ['mp3','ogg',
 if (!defined('ALLOWED_VIDEO_TYPES')) define('ALLOWED_VIDEO_TYPES', ['mp4']);
 
 // Database path resolution
+// Priority:
+// 1) UNDANGAN_DB_PATH env var
+// 2) legacy path: app/storage/data/database.sqlite (if exists)
+// 3) fallback: app/database.sqlite
+$legacyDb = __DIR__ . '/storage/data/database.sqlite';
+$fallbackDb = __DIR__ . '/database.sqlite';
 if (getenv('UNDANGAN_DB_PATH')) {
     $dbPath = getenv('UNDANGAN_DB_PATH');
-} elseif (is_readable('/var/www/private/database.sqlite')) {
-    $dbPath = '/var/www/private/database.sqlite';
+} elseif (is_readable($legacyDb)) {
+    $dbPath = $legacyDb;
 } else {
-    $dbPath = ROOT_DIR . '/database.sqlite';
+    $dbPath = $fallbackDb;
 }
 if (!defined('DB_PATH')) define('DB_PATH', $dbPath);
 if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', ROOT_DIR . '/guest-links.json');
