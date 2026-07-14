@@ -39,17 +39,18 @@ $musicSrc = $config['media']['music'] ?: 'music/lagu.mp3';
 $coverPath = $config['media']['cover'] ?: 'uploads/cover/cover.jpg';
 $ogImage = $ogImage ?: $coverPath;
 $heroBackground = $config['media']['background_hero'] ?: $coverPath;
-$bgHero = $heroBackground ? 'style="background-image:url(' . escape_html($heroBackground) . ');background-size:cover;background-position:center;"' : '';
+$heroStyle = $heroBackground ? 'style="--hero-bg:url(&quot;' . escape_html($heroBackground) . '&quot;);"' : '';
 $sectionBackgrounds = [
     $config['media']['background_sections'][0] ?? '',
     $config['media']['background_sections'][1] ?? '',
     $config['media']['background_sections'][2] ?? ''
 ];
 $sectionStyles = [
-    $sectionBackgrounds[0] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[0]) . ');background-size:cover;background-position:center;"' : '',
-    $sectionBackgrounds[1] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[1]) . ');background-size:cover;background-position:center;"' : '',
-    $sectionBackgrounds[2] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[2]) . ');background-size:cover;background-position:center;"' : ''
+    $sectionBackgrounds[0] ? 'style="--section-bg:url(&quot;' . escape_html($sectionBackgrounds[0]) . '&quot;);"' : '',
+    $sectionBackgrounds[1] ? 'style="--section-bg:url(&quot;' . escape_html($sectionBackgrounds[1]) . '&quot;);"' : '',
+    $sectionBackgrounds[2] ? 'style="--section-bg:url(&quot;' . escape_html($sectionBackgrounds[2]) . '&quot;);"' : ''
 ];
+$qrisImage = $config['gift']['qris_image'] ?? '';
 $qrData = rawurlencode($mapsUrl ?: 'https://www.google.com/maps');
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
 $countdownTarget = $config['schedule']['countdown_target'] ?: ($akadDate . 'T' . $akadTime . '+07:00');
@@ -73,7 +74,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/app/style.css" />
   <script type="application/ld+json">
   <?php echo $schema; ?>
   </script>
@@ -93,7 +94,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   </header>
 
   <main>
-    <section id="hero" class="hero" <?php echo $bgHero; ?>>
+    <section id="hero" class="hero" <?php echo $heroStyle; ?>>
       <div class="hero-card">
         <p class="eyebrow">Kami Akan Menikah</p>
         <h1><?php echo escape_html($config['wedding']['bride_name']); ?> &amp; <?php echo escape_html($config['wedding']['groom_name']); ?></h1>
@@ -119,7 +120,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       </div>
     </section>
 
-    <section class="section intro-section" style="background:#f9f6f0;padding:40px 20px">
+    <section class="section intro-section">
       <div class="section-head">
         <p class="label">Kepada Yth.</p>
         <h2 id="guestNameDisplay"><?php echo escape_html($guestFallback); ?></h2>
@@ -167,7 +168,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         <h2>Prewedding Kami</h2>
         <p>Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p>
       </div>
-      <button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button>
+      <button type="button" id="loadGalleryBtn" class="load-gallery-btn">Muat Galeri</button>
       <div id="galleryGrid" class="gallery-grid">
         <p class="loading">Memuat galeri...</p>
       </div>
@@ -236,7 +237,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
             <span class="amplop-number" data-account="<?php echo escape_html($giftAccount); ?>"><?php echo escape_html($giftAccount); ?></span>
           </div>
           <button type="button" class="amplop-copy-btn" data-account="<?php echo escape_html($giftAccount); ?>">Salin Nomor</button>
-          <p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p>
+          <p class="amplop-feedback">✓ Nomor berhasil disalin</p>
         </div>
         <div class="amplop-card">
           <div class="amplop-header">Untuk <?php echo escape_html($config['wedding']['groom_name']); ?></div>
@@ -249,8 +250,14 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
             <span class="amplop-number" data-account="<?php echo escape_html($giftEwalletNumber); ?>"><?php echo escape_html($giftEwalletNumber); ?></span>
           </div>
           <button type="button" class="amplop-copy-btn" data-account="<?php echo escape_html($giftEwalletNumber); ?>">Salin Nomor</button>
-          <p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p>
+          <p class="amplop-feedback">✓ Nomor berhasil disalin</p>
         </div>
+        <?php if ($qrisImage): ?>
+          <div class="amplop-card amplop-qris-card">
+            <div class="amplop-header">QRIS</div>
+            <div class="qris-image-wrap"><img src="<?php echo escape_html($qrisImage); ?>" alt="QRIS pembayaran" loading="lazy" decoding="async"></div>
+          </div>
+        <?php endif; ?>
       </div>
     </section>
 
@@ -277,7 +284,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
     </section>
   </main>
 
-  <div id="lightbox" class="lightbox" style="display:none;">
+  <div id="lightbox" class="lightbox">
     <div class="lightbox-container">
       <button type="button" class="lightbox-close" title="Tutup (Esc)">&times;</button>
       <img id="lightboxImage" src="" alt="Foto galeri" class="lightbox-image" loading="lazy" decoding="async" />
@@ -285,6 +292,6 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   </div>
 
   <audio id="backgroundMusic" src="<?php echo escape_html($musicSrc); ?>" preload="auto" loop></audio>
-  <script src="script.js" defer></script>
+  <script src="/app/script.js" defer></script>
 </body>
 </html>

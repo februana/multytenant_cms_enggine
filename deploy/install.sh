@@ -95,7 +95,7 @@ server {
     client_max_body_size 20M;
 
     location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
+        try_files \$uri \$uri/ /app/index.php?\$query_string;
     }
 
     location ~ \.php$ {

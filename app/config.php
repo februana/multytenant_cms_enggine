@@ -28,12 +28,12 @@ load_dotenv_file('/var/www/private/.env');
 load_dotenv_file(__DIR__ . '/.env');
 
 if (!defined('ROOT_DIR')) define('ROOT_DIR', __DIR__);
-if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', ROOT_DIR . '/uploads');
+if (!defined('UPLOADS_DIR')) define('UPLOADS_DIR', ROOT_DIR . '/../uploads');
 if (!defined('UPLOADS_COVER_DIR')) define('UPLOADS_COVER_DIR', UPLOADS_DIR . '/cover');
 if (!defined('UPLOADS_MUSIC_DIR')) define('UPLOADS_MUSIC_DIR', UPLOADS_DIR . '/music');
 if (!defined('UPLOADS_GALLERY_DIR')) define('UPLOADS_GALLERY_DIR', UPLOADS_DIR . '/gallery');
 if (!defined('UPLOADS_BACKGROUND_DIR')) define('UPLOADS_BACKGROUND_DIR', UPLOADS_DIR . '/background');
-if (!defined('CONFIG_FILE')) define('CONFIG_FILE', ROOT_DIR . '/config.json');
+if (!defined('CONFIG_FILE')) define('CONFIG_FILE', ROOT_DIR . '/../config.json');
 
 if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
 if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 15 * 1024 * 1024));
@@ -53,7 +53,7 @@ if (getenv('UNDANGAN_DB_PATH')) {
     $dbPath = $fallbackDb;
 }
 if (!defined('DB_PATH')) define('DB_PATH', $dbPath);
-if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', ROOT_DIR . '/guest-links.json');
+if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', ROOT_DIR . '/../guest-links.json');
 
 function send_security_header(string $name, string $value): void {
     foreach (headers_list() as $h) {
@@ -552,7 +552,7 @@ function write_event_ics(array $config): void {
         'END:VEVENT',
         'END:VCALENDAR'
     ]);
-    @file_put_contents(ROOT_DIR . '/event.ics', $ics, LOCK_EX);
+    @file_put_contents(ROOT_DIR . '/../event.ics', $ics, LOCK_EX);
 }
 
 function escape_ics_value(string $value): string {

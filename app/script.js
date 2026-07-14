@@ -1,5 +1,5 @@
-const targetDate = new Date('2026-12-29T09:00:00+07:00');
 const countdown = document.getElementById('countdown');
+const targetDate = countdown ? new Date(countdown.dataset.countdown || '') : null;
 const music = document.getElementById('backgroundMusic');
 const musicBtn = document.getElementById('musicBtn');
 const openInvitationBtn = document.getElementById('openInvitationBtn');
@@ -32,20 +32,8 @@ function updateGuestName(){
   }
 }
 
-function loadLocalQr(){
-  const qrImg = document.getElementById('qrLokasiImg');
-  if(!qrImg) return;
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.href = 'assets/qr-lokasi.webp';
-  document.head.appendChild(link);
-  fetch('assets/qr-lokasi.webp', {method:'HEAD'}).then(() => {
-    qrImg.src = 'assets/qr-lokasi.webp';
-  }).catch(() => {});
-}
-
 function updateCountdown(){
-  if(!countdown) return;
+  if(!countdown || !targetDate || Number.isNaN(targetDate.getTime())) return;
   const diff = targetDate - new Date();
   if(diff <= 0){
     countdown.innerHTML = '<div><strong>00</strong><span>Hari</span></div><div><strong>00</strong><span>Jam</span></div><div><strong>00</strong><span>Menit</span></div><div><strong>00</strong><span>Detik</span></div>';
@@ -277,7 +265,6 @@ updateDataSaverState();
 getCsrf();
 loadMessages();
 updateGuestName();
-loadLocalQr();
 findAmplopButtons();
 if (!isDataSaver) {
   loadGallery();

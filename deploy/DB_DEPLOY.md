@@ -54,7 +54,7 @@ server {
     root /var/www/februandik-web;
 
     location / {
-        try_files $uri $uri/ /index.php?$query_string;
+        try_files $uri $uri/ /app/index.php?$query_string;
     }
 
     location ~ \.php$ {

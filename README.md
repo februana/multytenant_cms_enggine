@@ -60,6 +60,7 @@ Skrip akan:
 - membuat direktori aplikasi dan runtime
 - menulis konfigurasi Nginx dengan socket PHP-FPM yang terdeteksi
 - membuat symlink webroot ke `/var/www/februandik-web`
+- mengarahkan fallback frontend ke `app/index.php` sebagai entrypoint kanonik
 
 4. Setelah install selesai, edit `../.env` jika diperlukan dan jalankan health check:
 
@@ -107,7 +108,7 @@ sudo /opt/februandik-web/deploy/health-check.sh
 
 ## Struktur repositori
 
-- `app/` : aset frontend dan endpoint PHP yang dijalankan dari webroot
+- `app/` : aset frontend dan endpoint PHP yang dijalankan from within the application directory when configured as the webroot
 - `deploy/` : skrip instalasi dan pemeliharaan server
 - `storage/` : runtime data yang diabaikan oleh Git
 - `.env.example` : contoh konfigurasi environment
