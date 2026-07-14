@@ -1,0 +1,15 @@
+# Deny direct access to sensitive files and disable directory listing
+Options -Indexes
+<FilesMatch "^(?:\.env(?:\.example)?|database\.sqlite|config\.json|guest-links\.json)$">
+  Require all denied
+</FilesMatch>
+
+# Prevent serving of common sensitive filenames in gallery/thumbs
+<FilesMatch "^(?:thumbs)$">
+  Require all denied
+</FilesMatch>
+
+# Rewrite the homepage and index.html to the PHP-powered front page
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/(|index\.html)$
+RewriteRule ^(index\.html)?$ /index.php [L]

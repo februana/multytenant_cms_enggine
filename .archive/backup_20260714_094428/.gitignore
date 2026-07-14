@@ -1,0 +1,20 @@
+# Environment
+.env
+.env.local
+
+# Runtime storage (do not commit uploads or runtime DB)
+/storage/
+/uploads/
+/gallery/
+/music/
+
+# SQLite DB if accidentally present
+database.sqlite
+
+# Backup archives
+*.tar.gz
+*.tgz
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,20 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Andi & Februana//Wedding Invitation//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Pernikahan Andi & Februana
+X-WR-TIMEZONE:Asia/Jakarta
+BEGIN:VEVENT
+UID:undangan-andi-februana-2026-12-29@febrero.local
+DTSTAMP:20261229T090000+0700
+DTSTART:20261229T090000+0700
+DTEND:20261229T110000+0700
+SUMMARY:Pernikahan Andi & Februana
+DESCRIPTION:Undangan pernikahan Andi & Februana\n\nAkad Nikah: Pukul 09.00 WIB\nResepsi: Pukul 11.00 WIB - Selesai\n\nAlamat: PFR2+G9H Asinan, Kabupaten Semarang, Jawa Tengah\n\nMohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.
+LOCATION:PFR2+G9H Asinan\, Kabupaten Semarang\, Jawa Tengah
+SEQUENCE:0
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR
