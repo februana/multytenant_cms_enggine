@@ -1,0 +1,2 @@
+{"success":true,"message":"Terima kasih, RSVP berhasil dikirim."}
+HTTP_STATUS:200

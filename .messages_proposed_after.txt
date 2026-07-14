@@ -1,0 +1,2 @@
+[{"nama":"PropUser","status":"Hadir","ucapan":"Hai","created_at":"2026-07-14 15:56:50"}]
+HTTP_STATUS:200
