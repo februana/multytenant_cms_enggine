@@ -121,6 +121,23 @@ This application uses a single SQLite database file. To support migration and de
 2. Legacy path: `app/storage/data/database.sqlite` — used only if the file exists and is readable
 3. Fallback: `app/database.sqlite`
 
+## Configuration (modular)
+
+The application now supports a modular configuration layout stored under a top-level `config/` directory. This change is backward-compatible and is rolled out incrementally.
+
+- Current runtime source: `config/site.json` is used if present and valid. If not present, the application falls back to the legacy `config.json` file.
+- Other files under `config/` (for example `theme.json`, `sections.json`, `seo.json`) are present as preparation-only and do not affect runtime until the loader is extended in a later phase.
+
+Migration guidance (non-destructive):
+
+1. Keep `config.json` in place as long as you need backward compatibility.
+2. Create `config/` and add `site.json` (a copy of your current `config.json`) — this is sufficient for the app to pick up the modular config.
+3. Optionally populate `theme.json`, `sections.json`, and `seo.json` with subsets for future use; these will be consumed in a later roadmap phase.
+4. Validate the JSON files (e.g. `python3 -m json.tool config/site.json`) and confirm the app behavior before removing `config.json`.
+
+Rollback: if `config/site.json` contains errors or you observe differences, restore the previous `config.json` file and remove or fix `config/site.json` to revert to legacy behavior.
+
+See `deploy/CONFIG_MIGRATION.md` for step-by-step migration and testing instructions.
 Recommendations
 
 - Place the SQLite database outside the webroot (for example `/var/www/private/database.sqlite`) and set `UNDANGAN_DB_PATH` to that path.

@@ -4,14 +4,12 @@ This document provides deployment examples and guidance for the SQLite database 
 
 Overview
 
-- The app resolves the database path by priority:
   1. `UNDANGAN_DB_PATH` environment variable (recommended)
   2. Legacy path: `app/storage/data/database.sqlite` (if present)
   3. Fallback: `app/database.sqlite`
 
 Configure via environment
 
-- Set `UNDANGAN_DB_PATH` in your runtime environment (systemd unit, Docker, container orchestrator, or hosting control panel).
 
 Example: systemd unit excerpt
 
@@ -94,8 +92,6 @@ services:
 
 Shared hosting notes
 
-- If you have PHP on shared hosting without system-level env config, add `UNDANGAN_DB_PATH` to your control panel environment settings if available. Otherwise, upload the canonical DB inside your home directory (outside `public_html`) and set `UNDANGAN_DB_PATH` to that path.
-- If environment variables are unavailable, put the DB in `app/database.sqlite` but ensure the file and parent directory are not web-accessible.
 
 Migration from old installs
 
@@ -120,13 +116,9 @@ sudo chmod 640 /var/www/private/database.sqlite
 
 Backward compatibility
 
-- If `UNDANGAN_DB_PATH` is NOT set, the application will continue to prefer `app/storage/data/database.sqlite` if present for backward compatibility, otherwise it will fall back to `app/database.sqlite`.
 
 Troubleshooting
 
-- "Unable to open database" or permission errors: check owner and permissions for file and parent dir.
-- If you see an empty list on `messages.php`: verify the DB path and that the DB file contains rows (use `sqlite3 /path/to/db "SELECT count(*) FROM tamu;"`).
-- To inspect DB contents locally:
 
 ```
 sqlite3 /path/to/database.sqlite
@@ -137,3 +129,12 @@ sqlite> SELECT * FROM tamu LIMIT 10;
 Questions
 
 If you need an example tailored to your hosting environment (specific control panel, container orchestrator, or OS), tell me the environment and I will provide an adapted snippet.
+
+Configuration modularization
+
+This project includes an optional modular configuration directory `config/` (root-level). Current behavior:
+
+- `config/site.json` is preferred when present and valid.
+- If `config/site.json` is not present or invalid, the application falls back to `config.json` (legacy).
+
+Recommended migration steps are documented in `deploy/CONFIG_MIGRATION.md`.
