@@ -169,6 +169,33 @@ function ensure_upload_dirs(): void {
 function load_config(): array {
     ensure_upload_dirs();
     $defaults = config_defaults();
+    // Migration support: prefer repo-level config/site.json when present and valid.
+    $siteConfigPath = ROOT_DIR . '/../config/site.json';
+    if (is_readable($siteConfigPath)) {
+        $raw = @file_get_contents($siteConfigPath);
+        if ($raw !== false) {
+            $config = json_decode($raw, true);
+            if (is_array($config)) {
+                $config = array_replace_recursive($defaults, $config);
+                if (!is_array($config['gallery']['items'])) {
+                    $config['gallery']['items'] = [];
+                }
+                if (!is_array($config['media']['background_sections'])) {
+                    $config['media']['background_sections'] = [];
+                }
+                if (empty($config['schedule']['countdown_target'])) {
+                    $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
+                }
+                if (!is_file(ROOT_DIR . '/event.ics')) {
+                    write_event_ics($config);
+                }
+                return $config;
+            }
+            // if JSON invalid, fall through to legacy CONFIG_FILE fallback
+        }
+    }
+
+    // Fallback: behave exactly as before using CONFIG_FILE (config.json)
     if (!is_readable(CONFIG_FILE)) {
         save_config($defaults);
         return $defaults;
