@@ -1,4 +1,16 @@
 {
+  "media": {
+    "cover": "uploads/cover/cover.jpg",
+    "music": "music/lagu.mp3",
+    "background_hero": "",
+    "background_sections": []
+  },
+  "gallery": {
+    "cover": "",
+    "items": []
+  }
+}
+{
 	"media": {
 		"cover": "uploads/cover/cover.jpg",
 		"music": "music/lagu.mp3",
