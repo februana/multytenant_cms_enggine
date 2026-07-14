@@ -1,2 +1,0 @@
-{"success":true,"message":"","csrf_token":"35d8f19a76aab175558eaa74f3a78abe309abaf88d2c2abe4a0c0d7432359f7d"}
-HTTP_STATUS:200
