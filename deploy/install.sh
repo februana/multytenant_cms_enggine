@@ -3,7 +3,7 @@ set -euo pipefail
 
 # deploy/install.sh
 # Canonical installer for Ubuntu 24.04 + Nginx + PHP-FPM
-# Single-Root Architecture v2.0 - Deploys to /var/www/wedding
+# Single-Root Architecture v2.0 - Always deploys to /var/www/wedding
 
 CANONICAL_TARGET="/var/www/wedding"
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,33 +14,31 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "=== Wedding Invitation Deployment (v2.0) ==="
-echo "Source: $SOURCE_DIR"
-echo "Target: $CANONICAL_TARGET"
+echo "Source (Repository): $SOURCE_DIR"
+echo "Target (Runtime):    $CANONICAL_TARGET"
+echo ""
 
-# Detect if running from temp directory (fresh clone scenario)
-if [[ "$SOURCE_DIR" == "/tmp"* ]]; then
-  echo "Detected temporary clone. Migrating to canonical target..."
-  
-  if [ -d "$CANONICAL_TARGET" ]; then
-    echo "ERROR: $CANONICAL_TARGET already exists. Remove it first or run update script." >&2
-    exit 1
-  fi
+# Deploy from any source location to canonical target
+if [ -d "$CANONICAL_TARGET" ] && [ "$SOURCE_DIR" = "$CANONICAL_TARGET" ]; then
+  # Running from target directory - update in place
+  echo "Running from canonical target. Updating in place..."
+  WORKING_DIR="$CANONICAL_TARGET"
+  CLEANUP_SOURCE=false
+elif [ -d "$CANONICAL_TARGET" ]; then
+  # Target exists but running from different source
+  echo "ERROR: $CANONICAL_TARGET already exists." >&2
+  echo "To update an existing installation, run this script from within $CANONICAL_TARGET" >&2
+  echo "Or remove $CANONICAL_TARGET first for a fresh install." >&2
+  exit 1
+else
+  # Fresh install - migrate from any source location to canonical target
+  echo "Deploying from $SOURCE_DIR to $CANONICAL_TARGET..."
   
   mkdir -p "$CANONICAL_TARGET"
-  cp -r "$SOURCE_DIR"/* "$CANONICAL_TARGET/"
-  cp -r "$SOURCE_DIR"/.[!.]* "$CANONICAL_TARGET/" 2>/dev/null || true
+  rsync -av --delete "$SOURCE_DIR/" "$CANONICAL_TARGET/"
   
   WORKING_DIR="$CANONICAL_TARGET"
   CLEANUP_SOURCE=true
-else
-  # Running in-place (already at target)
-  WORKING_DIR="$SOURCE_DIR"
-  CLEANUP_SOURCE=false
-  
-  if [ "$WORKING_DIR" != "$CANONICAL_TARGET" ]; then
-    echo "WARNING: Running from $WORKING_DIR instead of $CANONICAL_TARGET"
-    echo "For production, clone to /tmp and run this script, or move files manually."
-  fi
 fi
 
 echo ""
@@ -94,7 +92,6 @@ chown www-www-data "$WORKING_DIR/event.ics"
 
 echo ""
 echo "Deploying Nginx configuration..."
-SERVER_NAME="${SERVER_NAME:-$(hostname -f 2>/dev/null || echo 'localhost')}"
 NGINX_CONF="/etc/nginx/sites-available/wedding"
 
 # Generate Nginx config with detected socket
@@ -113,26 +110,26 @@ server {
     autoindex off;
 
     # Block sensitive paths
-    location ~ ^/(app|deploy|backups|\.git) {
+    location ~ ^/(app|deploy|backups|\\.git) {
         deny all;
         return 403;
     }
 
     # Block sensitive file types
-    location ~ \.(json|sqlite)$ {
+    location ~ \\.(json|sqlite)$ {
         deny all;
         return 403;
     }
 
     # Block hidden files
-    location ~ /\. {
+    location ~ /\\. {
         deny all;
         return 403;
     }
 
     # Disable PHP in uploads
     location /uploads {
-        location ~ \.php$ {
+        location ~ \\.php$ {
             deny all;
             return 403;
         }
@@ -144,7 +141,7 @@ server {
     }
 
     # PHP-FPM handler
-    location ~ \.php$ {
+    location ~ \\.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:$PHP_FPM_SOCK;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
@@ -152,7 +149,7 @@ server {
     }
 
     # Cache static assets
-    location ~* \.(jpg|jpeg|png|gif|webp|css|js|svg|ico|woff|woff2|ttf|eot)$ {
+    location ~* \\.(jpg|jpeg|png|gif|webp|css|js|svg|ico|woff|woff2|ttf|eot)$ {
         expires 7d;
         access_log off;
     }
