@@ -169,56 +169,21 @@ function ensure_upload_dirs(): void {
 function load_config(): array {
     ensure_upload_dirs();
     $defaults = config_defaults();
-    // Merge order (each file optional, invalid JSON ignored):
-    // 1) config_defaults()
-    // 2) config/site.json
-    // 3) config/theme.json
-    // 4) config/sections.json
-    // 5) config/seo.json
+    // Load canonical config.json only (consolidated single source of truth)
     $config = $defaults;
-    $siteConfigPath = ROOT_DIR . '/../config/site.json';
     $legacyConfigPath = CONFIG_FILE;
-    $anyFileLoaded = false;
 
-    // Load base: prefer site.json, else legacy config.json
-    if (is_readable($siteConfigPath)) {
-        $raw = @file_get_contents($siteConfigPath);
-        if ($raw !== false) {
-            $base = json_decode($raw, true);
-            if (is_array($base)) {
-                $config = array_replace_recursive($config, $base);
-                $anyFileLoaded = true;
-            }
-        }
-    } elseif (is_readable($legacyConfigPath)) {
+    if (is_readable($legacyConfigPath)) {
         $raw = @file_get_contents($legacyConfigPath);
         if ($raw !== false) {
             $base = json_decode($raw, true);
             if (is_array($base)) {
                 $config = array_replace_recursive($config, $base);
-                $anyFileLoaded = true;
             }
         }
     }
 
-    // Merge modular files in order; ignore missing/invalid files
-    $modFiles = ['theme.json', 'sections.json', 'seo.json'];
-    foreach ($modFiles as $mf) {
-        $path = ROOT_DIR . '/../config/' . $mf;
-        if (!is_readable($path)) continue;
-        $raw = @file_get_contents($path);
-        if ($raw === false) continue;
-        $mod = json_decode($raw, true);
-        if (!is_array($mod)) continue;
-        $config = array_replace_recursive($config, $mod);
-        $anyFileLoaded = true;
-    }
-
-    // If no config files were found at all, behave like legacy: persist defaults and return
-    if (!$anyFileLoaded) {
-        save_config($defaults);
-        return $defaults;
-    }
+    // Ensure required keys exist
     if (!is_array($config['gallery']['items'])) {
         $config['gallery']['items'] = [];
     }
@@ -228,7 +193,7 @@ function load_config(): array {
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
     }
-    if (!is_file(ROOT_DIR . '/event.ics')) {
+    if (!is_file(ROOT_DIR . '/../event.ics')) {
         write_event_ics($config);
     }
     return $config;

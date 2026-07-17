@@ -1,25 +1,43 @@
-# Environment
+```
+# Backup and deployment artifacts
+backups/
+deploy/*.sh
+
+# Configuration and data files that might contain sensitive info
+*.json
+config.json
 .env
 .env.local
+*.env.*
 
-# Runtime storage (do not commit uploads or runtime DB)
-/storage/
-/uploads/
-/gallery/
-/music/
+# Log files
+*.log
 
-# SQLite DB if accidentally present
-database.sqlite
+# Temporary files
+*.tmp
+*.swp
 
-# Runtime-generated files
-event.ics
-guest-links.json
-cookiejar
-
-# Backup archives
-*.tar.gz
-*.tgz
-
-# OS files
+# OS generated files
 .DS_Store
 Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build outputs
+build/
+dist/
+target/
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+```

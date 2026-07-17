@@ -1,10 +1,6 @@
 <?php
-// Load proposed consolidated config if present, otherwise fallback to existing config
-if (is_readable(__DIR__ . '/config.proposed.php')) {
-    require_once __DIR__ . '/config.proposed.php';
-} else {
-    require_once __DIR__ . '/config.php';
-}
+// Load consolidated app config
+require_once __DIR__ . '/config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }

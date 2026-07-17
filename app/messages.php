@@ -1,10 +1,6 @@
 <?php
-// Load proposed consolidated config if present, otherwise fallback to existing config
-if (is_readable(__DIR__ . '/config.proposed.php')) {
-    require_once __DIR__ . '/config.proposed.php';
-} else {
-    require_once __DIR__ . '/config.php';
-}
+// Load consolidated app config
+require_once __DIR__ . '/config.php';
 header('Content-Type: application/json; charset=utf-8');
 if (!is_readable(DB_PATH)) { echo json_encode([], JSON_UNESCAPED_UNICODE); exit; }
 try {
