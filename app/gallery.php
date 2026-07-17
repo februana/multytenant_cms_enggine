@@ -1,26 +1,20 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 
-$storageDir = __DIR__ . '/uploads';
-$legacyGallery = __DIR__ . '/gallery';
-$webDir = 'uploads';
-if (!is_dir($storageDir) && !is_dir($legacyGallery)) {
+require_once __DIR__ . '/config.php';
+
+$storageDir = UPLOADS_GALLERY_DIR;
+$webDir = 'uploads/gallery';
+if (!is_dir($storageDir)) {
     mkdir($storageDir, 0755, true);
-}
-if (is_dir($storageDir)) {
-    $dir = $storageDir;
-    $webDir = 'uploads';
-} else {
-    $dir = $legacyGallery;
-    $webDir = 'gallery';
 }
 
 $allowed = ['jpg','jpeg','png','gif','webp'];
 $coverNames = ['cover.webp','cover.jpg','cover.jpeg'];
 $items = [];
-foreach (scandir($dir) ?: [] as $f) {
+foreach (scandir($storageDir) ?: [] as $f) {
     if ($f === '.' || $f === '..' || $f === 'thumbs') continue;
-    $path = $dir . '/' . $f;
+    $path = $storageDir . '/' . $f;
     if (!is_file($path)) continue;
     $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
     if (!in_array($ext, $allowed, true)) continue;
@@ -28,7 +22,7 @@ foreach (scandir($dir) ?: [] as $f) {
     $items[] = ['name' => $f, 'mtime' => filemtime($path) ?: 0];
 }
 usort($items, function($a, $b){ return $b['mtime'] <=> $a['mtime']; });
-$thumbDir = $dir . '/thumbs';
+$thumbDir = $storageDir . '/thumbs';
 if (!is_dir($thumbDir)) @mkdir($thumbDir, 0755, true);
 
 function create_thumb($srcPath, $thumbPath, $maxWidth = 600) {
@@ -71,7 +65,7 @@ foreach ($items as $it) {
     $thumbName = $base . '.webp';
     $thumbPath = $thumbDir . '/' . $thumbName;
     $thumbUrl = $webDir . '/thumbs/' . rawurlencode($thumbName);
-    $fullSrcPath = $dir . '/' . $name;
+    $fullSrcPath = $storageDir . '/' . $name;
     if (!file_exists($thumbPath)) {
         @create_thumb($fullSrcPath, $thumbPath);
     }

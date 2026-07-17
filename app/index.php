@@ -1,10 +1,6 @@
 <?php
-// Load the proposed consolidated config when present, otherwise fallback to the existing config.php
-if (is_readable(__DIR__ . '/config.proposed.php')) {
-  require_once __DIR__ . '/config.proposed.php';
-} else {
-  require_once __DIR__ . '/config.php';
-}
+// Load consolidated app config
+require_once __DIR__ . '/config.php';
 $config = load_config();
 
 function escape_html(string $value): string {
