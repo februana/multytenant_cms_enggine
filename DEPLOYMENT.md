@@ -1,266 +1,204 @@
 # Deployment Guide
 
+This guide provides step-by-step instructions for deploying the Wedding Invitation application on Ubuntu 24.04.
+
 ## Prerequisites
 
-- **Web Server**: Nginx (recommended) or Apache
-- **PHP**: Version 7.4 or higher
-- **PHP Extensions**: `pdo`, `sqlite3`, `json`, `gd`, `fileinfo`
-- **Database**: SQLite (built-in, no separate installation needed)
-- **User**: Web server user (typically `www-data` on Ubuntu/Debian)
+- Ubuntu 24.04 server (fresh installation recommended)
+- Root or sudo access
+- Domain name pointing to your server (optional, for production)
+- At least 512MB RAM and 5GB disk space
 
-## Quick Start
+## Quick Installation
 
-### 1. Clone Repository
-
-```bash
-git clone <repository-url> /var/www/wedding
-cd /var/www/wedding
-```
-
-### 2. Run Installation Script
+### Step 1: Clone and Install
 
 ```bash
-chmod +x deploy/install.sh
-sudo ./deploy/install.sh
+cd /tmp
+git clone https://github.com/yourusername/wedding-invitation.git temp-wedding
+cd temp-wedding
+sudo bash deploy/install.sh
 ```
 
-This script will:
-- Create required directories (`uploads/*`)
-- Set correct file permissions
-- Generate placeholder files
-- Configure ownership for web server
+The installer will automatically:
+- Install Nginx, PHP-FPM 8.x, and required extensions
+- Create the deployment directory at `/var/www/wedding`
+- Copy all application files
+- Configure Nginx with security rules
+- Set secure file permissions
+- Initialize the database and configuration files
+- Enable the site and reload Nginx
 
-### 3. Configure Web Server
-
-#### Nginx Configuration
-
-Copy the provided configuration template:
+### Step 2: Verify Installation
 
 ```bash
-sudo cp deploy/nginx-site.conf /etc/nginx/sites-available/wedding
-sudo ln -s /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/
+sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-Edit `/etc/nginx/sites-available/wedding`:
-- Change `server_name` to your domain
-- Verify `root` points to `/var/www/wedding`
+Expected output:
+```
+=== Deployment Health Check ===
+✓ Deployment directory exists
+✓ File exists: index.php
+✓ File exists: admin.php
+...
+✓ config.json blocked from public access
+✓ database.sqlite blocked from public access
 
-Test and reload:
+DEPLOYMENT HEALTHY
+```
+
+### Step 3: Access the Application
+
+Open your browser and navigate to:
+- `http://your-server-ip/` for the invitation
+- `http://your-server-ip/admin.php` for the admin panel
+
+## Manual Installation (Alternative)
+
+If you prefer manual control:
+
+### Step 1: Install Dependencies
+
+```bash
+sudo apt update
+sudo apt install -y nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq git
+```
+
+### Step 2: Clone Repository
+
+```bash
+sudo mkdir -p /var/www/wedding
+sudo git clone https://github.com/yourusername/wedding-invitation.git /var/www/wedding
+```
+
+### Step 3: Set Permissions
+
+```bash
+sudo chown -R www-www-data /var/www/wedding
+sudo find /var/www/wedding -type d -exec chmod 755 {} \;
+sudo find /var/www/wedding -type f -name "*.php" -exec chmod 644 {} \;
+sudo chmod 600 /var/www/wedding/config.json
+```
+
+### Step 4: Configure Nginx
+
+Copy the provided Nginx configuration:
+
+```bash
+sudo cp /var/www/wedding/deploy/nginx-site.conf /etc/nginx/sites-available/wedding
+sudo ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding
+sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+Edit `/etc/nginx/sites-available/wedding` if you need to customize the server name.
+
+### Step 5: Test and Reload
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-#### Apache Configuration
-
-Enable `.htaccess` support in your virtual host:
-
-```apache
-<VirtualHost *:80>
-    ServerName your-domain.com
-    DocumentRoot /var/www/wedding
-    
-    <Directory /var/www/wedding>
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-Enable required modules:
-
-```bash
-sudo a2enmod rewrite
-sudo a2enmod headers
-sudo systemctl restart apache2
-```
-
-### 4. Verify Installation
-
-Run the health check:
-
-```bash
-./deploy/health-check.sh
-```
-
-Expected output: All checks should pass with HTTP 200 status codes.
-
-### 5. Access Application
-
-- **Frontend**: `https://your-domain.com/`
-- **Admin Panel**: `https://your-domain.com/admin.php`
-
-## File Permissions
-
-The installation script sets these permissions automatically:
-
-| Path | Permission | Owner | Group |
-|------|------------|-------|-------|
-| `config.json` | `600` | www-data | www-data |
-| `database.sqlite` | `600` | www-data | www-data |
-| `guest-links.json` | `600` | www-data | www-data |
-| `uploads/` | `755` | www-data | www-data |
-| `app/` | `755` | root | root |
-| `assets/` | `755` | root | root |
-
-### Manual Permission Fix
-
-If needed, manually fix permissions:
-
-```bash
-sudo chown -R www-www-data /var/www/wedding
-sudo chmod 600 /var/www/wedding/config.json
-sudo chmod 755 /var/www/wedding/uploads
-```
-
 ## Configuration
 
-### Initial Setup
+### Database
 
-1. Access `https://your-domain.com/admin.php`
-2. Login with default credentials (if set) or create admin account
-3. Configure wedding details, theme, and media uploads
-4. Save settings (writes to `config.json`)
+The application uses SQLite. The database file is created automatically at `/var/www/wedding/database.sqlite`.
 
-### Environment Variables (Optional)
+### Configuration File
 
-Create `.env` file in root for custom settings:
+Edit `/var/www/wedding/config.json` to customize:
+- Site title and description
+- Wedding details (couple names, date, location)
+- Media paths (cover image, music, background)
+- Gallery images
+- Gift/bank account information
 
-```bash
-APP_ENV=production
-APP_DEBUG=false
-```
+### Uploads
 
-## Backup & Restore
+User-uploaded media is stored in:
+- `/var/www/wedding/uploads/cover/` - Cover images
+- `/var/www/wedding/uploads/music/` - Background music
+- `/var/www/wedding/uploads/gallery/` - Gallery photos
+- `/var/www/wedding/uploads/background/` - Background images
 
-### Automated Backups
+## SSL/HTTPS Setup (Recommended)
 
-Add to crontab for daily backups:
-
-```bash
-0 2 * * * /var/www/wedding/deploy/backup.sh
-```
-
-Backups are stored in `/var/www/wedding/backups/`.
-
-### Manual Backup
+For production deployments, enable HTTPS using Certbot:
 
 ```bash
-./deploy/backup.sh
-```
-
-### Restore from Backup
-
-```bash
-./deploy/restore.sh /path/to/backup.tar.gz
-```
-
-**Warning**: This overwrites current data. Ensure you have a recent backup before restoring.
-
-## Security Hardening
-
-### 1. Verify Protected Resources
-
-Test that sensitive files are blocked:
-
-```bash
-curl -I https://your-domain.com/config.json
-# Should return 403 Forbidden
-
-curl -I https://your-domain.com/app/config.php
-# Should return 403 Forbidden
-```
-
-### 2. Disable Directory Listing
-
-Already configured in `.htaccess` and Nginx config. Verify:
-
-```bash
-curl -I https://your-domain.com/uploads/
-# Should return 403 or 404, not directory listing
-```
-
-### 3. SSL/TLS Configuration
-
-Use Let's Encrypt for free SSL:
-
-```bash
-sudo apt install certbot python3-certbot-nginx
+sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d your-domain.com
 ```
 
-### 4. Regular Updates
+Certbot will automatically:
+- Obtain a free SSL certificate
+- Configure HTTPS redirect
+- Set up automatic renewal
 
-Keep PHP and system packages updated:
+## Firewall Configuration
+
+If UFW is enabled:
 
 ```bash
-sudo apt update && sudo apt upgrade
+sudo ufw allow 'Nginx Full'
+sudo ufw allow 'Nginx HTTPS'  # If using SSL
+sudo ufw enable
 ```
 
 ## Troubleshooting
 
-### 500 Internal Server Error
+### Application Not Loading
 
-1. Check PHP error log: `/var/log/php-fpm/error.log`
-2. Check web server error log: `/var/log/nginx/error.log`
-3. Verify file permissions
-4. Ensure PHP extensions are installed
+1. Check Nginx status: `sudo systemctl status nginx`
+2. Check PHP-FPM status: `sudo systemctl status php*-fpm`
+3. Check logs: `sudo tail -f /var/log/nginx/wedding.error.log`
 
-### 403 Forbidden on Valid Pages
+### Permission Denied Errors
 
-1. Verify `index.php` exists in root
-2. Check `.htaccess` syntax (Apache)
-3. Verify Nginx configuration `try_files` directive
-
-### Uploads Not Working
-
-1. Check `uploads/` directory permissions: `ls -la uploads/`
-2. Verify ownership: `chown -R www-www-data uploads/`
-3. Check PHP `upload_max_filesize` and `post_max_size` in `php.ini`
+```bash
+sudo chown -R www-www-data /var/www/wedding
+sudo find /var/www/wedding -type f -name "*.json" -exec chmod 600 {} \;
+```
 
 ### Database Errors
 
-1. Verify `database.sqlite` exists and is writable
-2. Check permissions: `chmod 600 database.sqlite`
-3. Ensure PHP has SQLite extension enabled
+Ensure the database file exists and is writable:
 
-## Upgrade from v1.x
+```bash
+ls -la /var/www/wedding/database.sqlite
+sudo chown www-www-data /var/www/wedding/database.sqlite
+sudo chmod 600 /var/www/wedding/database.sqlite
+```
 
-If upgrading from the legacy dual-root architecture:
+### 403 Forbidden on Config/Database
 
-1. **Backup Current Data**:
-   ```bash
-   ./deploy/backup.sh
-   ```
+This is expected and correct! These files should be blocked from public access.
 
-2. **Pull Latest Code**:
-   ```bash
-   git pull origin main
-   ```
+### 502 Bad Gateway
 
-3. **Run Installation Script**:
-   ```bash
-   ./deploy/install.sh
-   ```
+Check that PHP-FPM is running and the socket path in Nginx config matches:
 
-4. **Update Web Server Config**:
-   - Replace old Nginx/Apache config with new templates
-   - Change document root to repository root (not `/app`)
+```bash
+sudo systemctl status php*-fpm
+find /run/php -name "*.sock"
+```
 
-5. **Verify Functionality**:
-   ```bash
-   ./deploy/health-check.sh
-   ```
+Update the `fastcgi_pass` directive in `/etc/nginx/sites-available/wedding` if needed.
 
-6. **Clean Old Files** (optional):
-   - Remove old `/app/` references from configs
-   - Delete legacy scripts if no longer needed
+## Updating
 
-## Support
+To update from Git:
 
-For issues or questions:
-1. Check logs in `/var/log/`
-2. Run health check script
-3. Review `ARCHITECTURE.md` for system design
-4. Consult `SECURITY.md` for security policies
+```bash
+cd /var/www/wedding
+sudo git pull
+sudo systemctl reload nginx
+```
+
+## Next Steps
+
+- [Architecture Overview](ARCHITECTURE.md)
+- [Security Best Practices](SECURITY.md)
+- [Backup & Restore Procedures](BACKUP_RESTORE.md)

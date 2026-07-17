@@ -2,112 +2,135 @@
 set -euo pipefail
 
 # deploy/install.sh
-# Idempotent installer for Ubuntu + Nginx + PHP-FPM deployment
-# Updated for Single-Root Architecture (v2.0)
+# Canonical installer for Ubuntu 24.04 + Nginx + PHP-FPM
+# Single-Root Architecture v2.0 - Deploys to /var/www/wedding
+
+CANONICAL_TARGET="/var/www/wedding"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [ "$EUID" -ne 0 ]; then
   echo "This script must be run as root or via sudo." >&2
   exit 2
 fi
 
-REPO_DIR="/opt/februandik-web"
-WWW_DIR="/var/www/februandik-web"
-SERVER_NAME_ARG="${1:-}"
-SERVER_NAME="${SERVER_NAME:-$SERVER_NAME_ARG}"
-CERTBOT_EMAIL="${CERTBOT_EMAIL:-}"
-NGINX_SITE="/etc/nginx/sites-available/${SERVER_NAME:-februandik.duckdns.org}.conf"
+echo "=== Wedding Invitation Deployment (v2.0) ==="
+echo "Source: $SOURCE_DIR"
+echo "Target: $CANONICAL_TARGET"
 
-echo "Installing system packages (nginx, php-fpm, required extensions)..."
-apt update
-apt install -y nginx php-fpm php-sqlite3 php-gd php-mbstring php-zip jq ca-certificates curl unzip
-
-PHP_FPM_SOCK=$(find /run/php -name 'php*-fpm.sock' | head -n 1 || true)
-if [ -z "$PHP_FPM_SOCK" ]; then
-  echo "Could not find a PHP-FPM socket under /run/php. Please verify php-fpm is installed." >&2
-  exit 1
+# Detect if running from temp directory (fresh clone scenario)
+if [[ "$SOURCE_DIR" == "/tmp"* ]]; then
+  echo "Detected temporary clone. Migrating to canonical target..."
+  
+  if [ -d "$CANONICAL_TARGET" ]; then
+    echo "ERROR: $CANONICAL_TARGET already exists. Remove it first or run update script." >&2
+    exit 1
+  fi
+  
+  mkdir -p "$CANONICAL_TARGET"
+  cp -r "$SOURCE_DIR"/* "$CANONICAL_TARGET/"
+  cp -r "$SOURCE_DIR"/.[!.]* "$CANONICAL_TARGET/" 2>/dev/null || true
+  
+  WORKING_DIR="$CANONICAL_TARGET"
+  CLEANUP_SOURCE=true
+else
+  # Running in-place (already at target)
+  WORKING_DIR="$SOURCE_DIR"
+  CLEANUP_SOURCE=false
+  
+  if [ "$WORKING_DIR" != "$CANONICAL_TARGET" ]; then
+    echo "WARNING: Running from $WORKING_DIR instead of $CANONICAL_TARGET"
+    echo "For production, clone to /tmp and run this script, or move files manually."
+  fi
 fi
 
+echo ""
+echo "Installing system packages..."
+apt update -qq
+apt install -y -qq nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
+
+# Find PHP-FPM socket
+PHP_FPM_SOCK=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1 || echo "/run/php/php-fpm.sock")
 echo "Using PHP-FPM socket: $PHP_FPM_SOCK"
 
-echo "Creating repository and web directories..."
-mkdir -p "$REPO_DIR"
-mkdir -p "$WWW_DIR"
-chown -R root:root "$REPO_DIR"
+echo ""
+echo "Creating runtime directories..."
+mkdir -p "$WORKING_DIR/uploads/cover"
+mkdir -p "$WORKING_DIR/uploads/music"
+mkdir -p "$WORKING_DIR/uploads/gallery"
+mkdir -p "$WORKING_DIR/uploads/background"
+mkdir -p "$WORKING_DIR/backups"
 
-echo "Copying repository files to $REPO_DIR..."
-if [ -d "$(pwd)" ]; then
-  rsync -a --delete \
-    --exclude '.git' \
-    --exclude 'backups' \
-    --exclude 'vendor' \
-    ./ "$REPO_DIR/"
-else
-  echo "Working directory not found. Run this script from repository root." >&2
-  exit 1
+echo "Setting permissions..."
+chown -R www-www-data "$WORKING_DIR"
+find "$WORKING_DIR" -type d -exec chmod 755 {} \;
+find "$WORKING_DIR" -type f -name "*.php" -exec chmod 644 {} \;
+find "$WORKING_DIR" -type f -name "*.json" -exec chmod 600 {} \;
+find "$WORKING_DIR" -type f -name "*.sqlite" -exec chmod 600 {} \;
+
+# Initialize database if missing
+if [ ! -f "$WORKING_DIR/database.sqlite" ]; then
+  touch "$WORKING_DIR/database.sqlite"
+  chown www-www-data "$WORKING_DIR/database.sqlite"
+  chmod 600 "$WORKING_DIR/database.sqlite"
 fi
 
-echo "Preparing runtime directories (uploads)..."
-mkdir -p "$REPO_DIR/uploads/cover"
-mkdir -p "$REPO_DIR/uploads/music"
-mkdir -p "$REPO_DIR/uploads/gallery"
-mkdir -p "$REPO_DIR/uploads/background"
-chown -R www-data:www-data "$REPO_DIR/uploads"
-chmod -R 755 "$REPO_DIR/uploads"
-
-echo "Securing sensitive files..."
-chmod 600 "$REPO_DIR/config.json" 2>/dev/null || true
-chmod 600 "$REPO_DIR/guest-links.json" 2>/dev/null || true
-chown www-data:www-data "$REPO_DIR/config.json" 2>/dev/null || true
-chown www-data:www-data "$REPO_DIR/guest-links.json" 2>/dev/null || true
-
-echo "Initializing backup directory..."
-mkdir -p "$REPO_DIR/backups"
-chown www-data:www-data "$REPO_DIR/backups"
-chmod 750 "$REPO_DIR/backups"
-
-echo "Creating placeholder event.ics..."
-touch "$REPO_DIR/event.ics"
-chown www-data:www-data "$REPO_DIR/event.ics"
-
-echo "Setting up Nginx site configuration..."
-if [ -z "$SERVER_NAME" ]; then
-  echo "WARNING: SERVER_NAME not provided; defaulting to februandik.duckdns.org." >&2
-  SERVER_NAME=februandik.duckdns.org
+# Initialize config if missing
+if [ ! -f "$WORKING_DIR/config.json" ]; then
+  echo '{"site":{"title":"Wedding"},"media":{},"gallery":[]}' > "$WORKING_DIR/config.json"
+  chown www-www-data "$WORKING_DIR/config.json"
+  chmod 600 "$WORKING_DIR/config.json"
 fi
 
-cat > "$NGINX_SITE" <<NGINX_EOF
+# Initialize guest-links if missing
+if [ ! -f "$WORKING_DIR/guest-links.json" ]; then
+  echo '[]' > "$WORKING_DIR/guest-links.json"
+  chown www-www-data "$WORKING_DIR/guest-links.json"
+  chmod 600 "$WORKING_DIR/guest-links.json"
+fi
+
+# Initialize event.ics
+touch "$WORKING_DIR/event.ics"
+chown www-www-data "$WORKING_DIR/event.ics"
+
+echo ""
+echo "Deploying Nginx configuration..."
+SERVER_NAME="${SERVER_NAME:-$(hostname -f 2>/dev/null || echo 'localhost')}"
+NGINX_CONF="/etc/nginx/sites-available/wedding"
+
+# Generate Nginx config with detected socket
+cat > "$NGINX_CONF" <<NGINX_EOF
 server {
     listen 80;
-    server_name ${SERVER_NAME};
+    server_name _;
 
-    root ${WWW_DIR};
+    root $WORKING_DIR;
     index index.php admin.php save.php messages.php gallery.php;
 
-    access_log /var/log/nginx/${SERVER_NAME}.access.log;
-    error_log /var/log/nginx/${SERVER_NAME}.error.log;
+    access_log /var/log/nginx/wedding.access.log;
+    error_log /var/log/nginx/wedding.error.log;
 
     client_max_body_size 20M;
-
-    # Disable directory listing
     autoindex off;
 
-    # Block access to sensitive directories and files
-    location ~ ^/(app|storage|deploy|backups) {
+    # Block sensitive paths
+    location ~ ^/(app|deploy|backups|\.git) {
         deny all;
         return 403;
     }
 
-    location ~ \.(json|sqlite|md|sh)$ {
+    # Block sensitive file types
+    location ~ \.(json|sqlite)$ {
         deny all;
         return 403;
     }
 
+    # Block hidden files
     location ~ /\. {
         deny all;
         return 403;
     }
 
-    # Disable PHP execution in uploads
+    # Disable PHP in uploads
     location /uploads {
         location ~ \.php$ {
             deny all;
@@ -115,7 +138,7 @@ server {
         }
     }
 
-    # Main routing: serve static files, fallback to index.php
+    # Route static files, fallback to index.php
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
@@ -136,14 +159,30 @@ server {
 }
 NGINX_EOF
 
-ln -sf "$NGINX_SITE" /etc/nginx/sites-enabled/${SERVER_NAME}.conf
+# Enable site
+ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/wedding
+rm -f /etc/nginx/sites-enabled/default
 
 echo "Testing Nginx configuration..."
-nginx -t
+if ! nginx -t; then
+  echo "ERROR: Nginx configuration test failed" >&2
+  exit 1
+fi
 
-echo "Reloading services..."
-systemctl restart php*-fpm 2>/dev/null || systemctl restart php-fpm 2>/dev/null || true
+echo "Reloading Nginx..."
 systemctl reload nginx
 
-echo "Install complete. Run deploy/health-check.sh to verify."
+# Cleanup temporary source if needed
+if [ "$CLEANUP_SOURCE" = true ]; then
+  echo ""
+  echo "Cleaning up temporary source directory..."
+  rm -rf "$SOURCE_DIR"
+fi
+
+echo ""
+echo "=== Installation Complete ==="
+echo "Document Root: $WORKING_DIR"
+echo "Site URL: http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost')"
+echo ""
+echo "Run 'sudo $WORKING_DIR/deploy/health-check.sh' to verify deployment."
 exit 0
