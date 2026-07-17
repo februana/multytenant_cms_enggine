@@ -12,18 +12,18 @@ A modern, single-page wedding invitation web application built with PHP and SQLi
 ### One-Command Installation
 
 ```bash
-cd /tmp
-git clone https://github.com/yourusername/wedding-invitation.git temp-wedding
-cd temp-wedding
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
 sudo bash deploy/install.sh
 ```
 
 The installer will:
-1. Install Nginx, PHP-FPM, and required extensions
-2. Deploy the application to `/var/www/wedding`
-3. Configure Nginx with security rules
-4. Set proper file permissions
-5. Initialize the database and configuration
+1. Detect the repository location automatically
+2. Install Nginx, PHP-FPM, and required extensions
+3. Deploy the application to `/var/www/wedding`
+4. Configure Nginx with security rules
+5. Set proper file permissions
+6. Initialize the database and configuration
 
 After installation, visit `http://your-server-ip/` to see your invitation.
 

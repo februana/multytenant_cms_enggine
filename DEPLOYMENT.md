@@ -14,9 +14,12 @@ This guide provides step-by-step instructions for deploying the Wedding Invitati
 ### Step 1: Clone and Install
 
 ```bash
-cd /tmp
-git clone https://github.com/yourusername/wedding-invitation.git temp-wedding
-cd temp-wedding
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
 sudo bash deploy/install.sh
 ```
 
