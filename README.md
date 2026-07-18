@@ -9,7 +9,39 @@ A modern, single-page wedding invitation web application built with PHP and SQLi
 - Root or sudo access
 - Domain name pointing to your server (optional)
 
-### One-Command Installation
+### Installation & Update Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    DEPLOYMENT LIFECYCLE                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  FRESH INSTALLATION                 UPDATES                     │
+│  ─────────────────                  ───────                     │
+│                                                                 │
+│  1. Clone repository                1. Run update script        │
+│     git clone <repo>                   sudo ./deploy/update.sh  │
+│     cd webserver_undangan                                       │
+│                                     2. Creates backup           │
+│  2. Run installer (ONCE)            3. Downloads latest code    │
+│     sudo ./deploy/install.sh        4. Runs composer install    │
+│                                     5. Preserves user data:     │
+│  3. Application deployed               - config.json            │
+│     to /var/www/wedding              - guest-links.json         │
+│                                     - database.sqlite          │
+│  4. Save credentials                - uploads/                 │
+│     shown at end of install          - backups/               │
+│                                     - .env                     │
+│  ✅ Installation complete           6. Restarts services        │
+│                                     7. Runs health check        │
+│                                                                 │
+│  ⚠️  install.sh is ONE-TIME ONLY    ✅ Safe to run repeatedly   │
+│     Do NOT use for updates                                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### One-Command Installation (Fresh Install Only)
 
 ```bash
 git clone https://github.com/februana/webserver_undangan.git
@@ -29,6 +61,51 @@ The installer will:
 After installation, visit `http://your-server-ip/` to see your invitation.
 
 > **Important**: If this is a fresh installation, the installer will display the generated administrator credentials at the end. **Save these credentials immediately** as they will not be displayed again.
+
+### Updating an Existing Installation
+
+**DO NOT use `install.sh` for updates.** It is designed for one-time installation only and will refuse to run if the application is already installed.
+
+To update your installation safely:
+
+```bash
+cd /var/www/wedding
+sudo ./deploy/update.sh
+```
+
+Or from any location:
+
+```bash
+sudo /var/www/wedding/deploy/update.sh
+```
+
+The update script will:
+1. ✅ Verify the application is installed at `/var/www/wedding`
+2. ✅ Create a backup using `backup.sh` before proceeding
+3. ✅ Download the latest source code from GitHub
+4. ✅ Run `composer install --no-dev --optimize-autoloader`
+5. ✅ Copy only application files (preserving user data)
+6. ✅ Preserve critical user data:
+   - `config.json` - Your configuration
+   - `guest-links.json` - Guest link data
+   - `database.sqlite` - All RSVP and message data
+   - `.env` - Environment settings
+   - `event.ics` - Event calendar
+   - `uploads/` - All uploaded media (images, music, etc.)
+   - `backups/` - Previous backups
+   - `storage/` - Storage directory if exists
+7. ✅ Set correct ownership (`www-data`) and permissions
+8. ✅ Restart PHP-FPM (auto-detects PHP version)
+9. ✅ Reload Nginx configuration
+10. ✅ Run health check to verify deployment
+11. ✅ Clean up temporary files
+
+If the health check fails, the script will:
+- Display clear error messages
+- Preserve the backup (do NOT delete it)
+- Exit without removing the backup
+
+The update script is **idempotent** - safe to run multiple times.
 
 ## Features
 
@@ -213,6 +290,34 @@ See [BACKUP_RESTORE.md](BACKUP_RESTORE.md) for more details.
 
 Verify your deployment:
 ```bash
+sudo /var/www/wedding/deploy/health-check.sh
+```
+
+## Deployment Scripts Summary
+
+| Script | Purpose | When to Use |
+|--------|---------|-------------|
+| `deploy/install.sh` | Fresh installation | **ONE-TIME ONLY** - Initial setup on new server |
+| `deploy/update.sh` | Update existing installation | Every time you want to update to latest version |
+| `deploy/backup.sh` | Create backup | Before updates, or regularly for safety |
+| `deploy/restore.sh` | Restore from backup | When you need to recover from a backup |
+| `deploy/health-check.sh` | Verify deployment health | After install/update, or anytime to check status |
+
+### Quick Reference
+
+```bash
+# Fresh installation (run ONCE)
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
+sudo ./deploy/install.sh
+
+# Update existing installation (safe to run repeatedly)
+sudo /var/www/wedding/deploy/update.sh
+
+# Create backup before making changes
+sudo /var/www/wedding/deploy/backup.sh
+
+# Verify deployment health
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
