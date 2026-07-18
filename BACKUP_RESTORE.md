@@ -146,9 +146,9 @@ tar -xzf backup.tar.gz uploads/
 Then fix permissions:
 
 ```bash
-chown www-www-data database.sqlite config.json
+chown www-data:www-data database.sqlite config.json
 chmod 600 database.sqlite config.json
-chown -R www-www-data uploads/
+chown -R www-data:www-data uploads/
 chmod -R 755 uploads/
 ```
 

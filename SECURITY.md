@@ -60,7 +60,7 @@ chmod 600 database.sqlite
 
 # Uploads directory (writable by web server)
 chmod 755 uploads/
-chown -R www-www-data uploads/
+chown -R www-data:www-data uploads/
 
 # Source code (read-only)
 chmod 755 app/
