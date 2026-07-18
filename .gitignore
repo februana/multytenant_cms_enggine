@@ -1,17 +1,18 @@
 ```gitignore
 # Logs and temp files
 *.log
-*.tmp
 
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
 .idea/
 
+# Original rules preserved
+*.log
 # Dependencies
 node_modules/
 venv/
@@ -19,27 +20,30 @@ venv/
 __pycache__/
 .mypy_cache/
 .pytest_cache/
+
+# Build artifacts
 dist/
 build/
 target/
-.gradle/
 
-# OS generated files
+# Python
+*.pyc
+*.pyo
+*.pyd
+
+# Compiled files
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.exe
+
+# System files
 .DS_Store
 Thumbs.db
 
-# Compiled files
-*.pyc
-*.class
-*.o
-*.exe
-*.dll
-*.so
-*.a
-*.obj
-*.out
-
-# Coverage reports
+# Coverage
 coverage/
 htmlcov/
 .coverage
@@ -67,4 +71,3 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-```
