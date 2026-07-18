@@ -35,7 +35,15 @@ else
   echo "Deploying from $SOURCE_DIR to $CANONICAL_TARGET..."
   
   mkdir -p "$CANONICAL_TARGET"
-  rsync -av --delete "$SOURCE_DIR/" "$CANONICAL_TARGET/"
+  rsync -av --delete \
+    --exclude='.git' \
+    --exclude='.gitignore' \
+    --exclude='.github' \
+    --exclude='.vscode' \
+    --exclude='*.md' \
+    --exclude='composer.json' \
+    --exclude='composer.lock' \
+    "$SOURCE_DIR/" "$CANONICAL_TARGET/"
   
   WORKING_DIR="$CANONICAL_TARGET"
   CLEANUP_SOURCE=true
@@ -46,8 +54,22 @@ echo "Installing system packages..."
 apt update -qq
 apt install -y -qq nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
 
-# Find PHP-FPM socket
-PHP_FPM_SOCK=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1 || echo "/run/php/php-fpm.sock")
+# Find PHP-FPM socket automatically (supports Ubuntu PHP versions)
+PHP_FPM_SOCK=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1)
+if [ -z "$PHP_FPM_SOCK" ]; then
+  # Fallback: try to detect common socket paths
+  if [ -S "/run/php/php-fpm.sock" ]; then
+    PHP_FPM_SOCK="/run/php/php-fpm.sock"
+  elif [ -S "/run/php/php8.3-fpm.sock" ]; then
+    PHP_FPM_SOCK="/run/php/php8.3-fpm.sock"
+  elif [ -S "/run/php/php8.2-fpm.sock" ]; then
+    PHP_FPM_SOCK="/run/php/php8.2-fpm.sock"
+  elif [ -S "/run/php/php8.1-fpm.sock" ]; then
+    PHP_FPM_SOCK="/run/php/php8.1-fpm.sock"
+  else
+    PHP_FPM_SOCK="/run/php/php-fpm.sock"
+  fi
+fi
 echo "Using PHP-FPM socket: $PHP_FPM_SOCK"
 
 echo ""
@@ -116,6 +138,8 @@ if [ ! -f "$ENV_FILE" ]; then
   # Store credentials for display at the end
   ADMIN_PASSWORD="$GENERATED_PASS"
   CREDENTIALS_GENERATED=true
+
+  echo "Generated secure administrator password."
 fi
 
 echo ""
@@ -194,8 +218,17 @@ if ! nginx -t; then
   exit 1
 fi
 
-echo "Reloading Nginx..."
-systemctl reload nginx
+# Enable and start Nginx (do not fail if already running)
+echo "Enabling Nginx service..."
+systemctl enable nginx >/dev/null 2>&1 || true
+
+echo "Starting Nginx..."
+if ! systemctl is-active --quiet nginx; then
+  systemctl start nginx
+else
+  echo "Nginx is already running. Reloading configuration..."
+  systemctl reload nginx
+fi
 
 # Cleanup temporary source if needed
 if [ "$CLEANUP_SOURCE" = true ]; then

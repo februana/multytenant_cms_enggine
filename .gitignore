@@ -1,5 +1,5 @@
-```
-# Environment variables
+```bash
+# Environment files
 .env
 .env.local
 .env.*
@@ -11,39 +11,37 @@
 *.tmp
 *.swp
 
-# Dependencies
-node_modules/
-venv/
-.venv/
-__pycache__/
-*.egg-info/
-
-# Build artifacts
-dist/
-build/
-target/
-
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Editor specific
-.vscode/
-.idea/
-*.swp
-*.swo
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.julia/
+zig*/
+target/
+.gradle/
 
-# Coverage reports
+# Build artifacts
+dist/
+build/
 coverage/
 htmlcov/
-.coverage
-
-# Python specific
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.out
+*.exe
+*.dll
 *.so
+*.a
+*.class
+
+# Editors
+.vscode/
+.idea/
 
 # Compressed files
 *.zip
@@ -55,4 +53,13 @@ htmlcov/
 *.7z
 *.rar
 *.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
 ```
