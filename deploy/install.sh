@@ -59,7 +59,7 @@ mkdir -p "$WORKING_DIR/uploads/background"
 mkdir -p "$WORKING_DIR/backups"
 
 echo "Setting permissions..."
-chown -R www-www-data "$WORKING_DIR"
+chown -R www-data:www-data "$WORKING_DIR"
 find "$WORKING_DIR" -type d -exec chmod 755 {} \;
 find "$WORKING_DIR" -type f -name "*.php" -exec chmod 644 {} \;
 find "$WORKING_DIR" -type f -name "*.json" -exec chmod 600 {} \;
@@ -68,27 +68,27 @@ find "$WORKING_DIR" -type f -name "*.sqlite" -exec chmod 600 {} \;
 # Initialize database if missing
 if [ ! -f "$WORKING_DIR/database.sqlite" ]; then
   touch "$WORKING_DIR/database.sqlite"
-  chown www-www-data "$WORKING_DIR/database.sqlite"
+  chown www-data:www-data "$WORKING_DIR/database.sqlite"
   chmod 600 "$WORKING_DIR/database.sqlite"
 fi
 
 # Initialize config if missing
 if [ ! -f "$WORKING_DIR/config.json" ]; then
   echo '{"site":{"title":"Wedding"},"media":{},"gallery":[]}' > "$WORKING_DIR/config.json"
-  chown www-www-data "$WORKING_DIR/config.json"
+  chown www-data:www-data "$WORKING_DIR/config.json"
   chmod 600 "$WORKING_DIR/config.json"
 fi
 
 # Initialize guest-links if missing
 if [ ! -f "$WORKING_DIR/guest-links.json" ]; then
   echo '[]' > "$WORKING_DIR/guest-links.json"
-  chown www-www-data "$WORKING_DIR/guest-links.json"
+  chown www-data:www-data "$WORKING_DIR/guest-links.json"
   chmod 600 "$WORKING_DIR/guest-links.json"
 fi
 
 # Initialize event.ics
 touch "$WORKING_DIR/event.ics"
-chown www-www-data "$WORKING_DIR/event.ics"
+chown www-data:www-data "$WORKING_DIR/event.ics"
 
 echo ""
 echo "Deploying Nginx configuration..."

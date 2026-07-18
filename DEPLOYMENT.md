@@ -78,7 +78,7 @@ sudo git clone https://github.com/yourusername/wedding-invitation.git /var/www/w
 ### Step 3: Set Permissions
 
 ```bash
-sudo chown -R www-www-data /var/www/wedding
+sudo chown -R www-data:www-data /var/www/wedding
 sudo find /var/www/wedding -type d -exec chmod 755 {} \;
 sudo find /var/www/wedding -type f -name "*.php" -exec chmod 644 {} \;
 sudo chmod 600 /var/www/wedding/config.json
@@ -161,7 +161,7 @@ sudo ufw enable
 ### Permission Denied Errors
 
 ```bash
-sudo chown -R www-www-data /var/www/wedding
+sudo chown -R www-data:www-data /var/www/wedding
 sudo find /var/www/wedding -type f -name "*.json" -exec chmod 600 {} \;
 ```
 
@@ -171,7 +171,7 @@ Ensure the database file exists and is writable:
 
 ```bash
 ls -la /var/www/wedding/database.sqlite
-sudo chown www-www-data /var/www/wedding/database.sqlite
+sudo chown www-data:www-data /var/www/wedding/database.sqlite
 sudo chmod 600 /var/www/wedding/database.sqlite
 ```
 
