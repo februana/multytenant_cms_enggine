@@ -1,6 +1,6 @@
 :root{
   --bg:#fff8f2;
-  --paper:rgba(255,255,255,.9);
+  --paper:#ffffff;
   --paper-solid:#ffffff;
   --text:#2f2424;
   --muted:#806f66;
@@ -30,8 +30,7 @@ a{color:var(--primary);text-decoration:none;font-weight:700}
   align-items:center;
   gap:18px;
   padding:18px 7vw;
-  background:rgba(255,255,255,.86);
-  backdrop-filter:blur(16px);
+  background:#ffffff;
   border-bottom:1px solid rgba(200,150,120,.18);
 }
 .brand{
@@ -59,7 +58,7 @@ a{color:var(--primary);text-decoration:none;font-weight:700}
   content:'';
   position:absolute;
   inset:0;
-  background:radial-gradient(circle at center,rgba(255,255,255,.08),transparent 62%);
+  background:transparent;
   pointer-events:none;
   z-index:0;
 }
@@ -71,10 +70,9 @@ a{color:var(--primary);text-decoration:none;font-weight:700}
   color:#fff;
   padding:46px 38px;
   border-radius:36px;
-  background:rgba(255,255,255,.12);
+  background:transparent;
   border:1px solid rgba(255,255,255,.18);
   box-shadow:var(--shadow);
-  backdrop-filter:blur(12px);
 }
 .eyebrow,.label{
   letter-spacing:.28em;
@@ -124,12 +122,12 @@ button:hover,.calendar-btn:hover,.whatsapp-btn:hover{transform:translateY(-2px)}
 .countdown div{
   padding:16px 10px;
   border-radius:18px;
-  background:rgba(255,255,255,.14);
+  background:transparent;
   border:1px solid rgba(255,255,255,.18);
 }
 .countdown strong{display:block;font-size:2rem;line-height:1}
 .countdown span{font-size:.92rem;color:rgba(255,255,255,.74)}
-.music-btn{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.music-btn{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
 .music-note{font-size:.86rem;color:rgba(255,255,255,.7);margin:8px 0 0}
 .section{padding:72px 7vw;max-width:1180px;margin:0 auto}
 .section.intro-section{padding:40px 20px}
@@ -246,7 +244,7 @@ input,select,textarea{
   position:absolute;
   top:-40px;
   right:0;
-  background:rgba(255,255,255,.2);
+  background:transparent;
   color:#fff;
   border:none;
   border-radius:50%;
