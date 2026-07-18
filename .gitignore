@@ -4,12 +4,14 @@
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
 .idea/
 
+# Original rules preserved
+*.log
 # Dependencies
 node_modules/
 venv/
