@@ -48,8 +48,6 @@ else
     --exclude='.github' \
     --exclude='.vscode' \
     --exclude='*.md' \
-    --exclude='composer.json' \
-    --exclude='composer.lock' \
     "$SOURCE_DIR/" "$CANONICAL_TARGET/"
   
   WORKING_DIR="$CANONICAL_TARGET"
@@ -61,6 +59,28 @@ else
   cp "$WORKING_DIR/app/script.js" "$WORKING_DIR/script.js"
   chown www-data:www-data "$WORKING_DIR/style.css" "$WORKING_DIR/script.js"
   chmod 644 "$WORKING_DIR/style.css" "$WORKING_DIR/script.js"
+fi
+
+# Install Composer dependencies
+echo ""
+echo "Installing Composer dependencies..."
+if command -v composer &>/dev/null; then
+  cd "$WORKING_DIR"
+  if [ -f "composer.json" ]; then
+    echo "Running composer install --no-dev --optimize-autoloader..."
+    if ! composer install --no-dev --optimize-autoloader; then
+      echo "ERROR: Composer install failed. Deployment aborted." >&2
+      exit 1
+    fi
+    echo "Composer dependencies installed successfully."
+  else
+    echo "WARNING: composer.json not found in $WORKING_DIR. Skipping Composer install."
+  fi
+else
+  echo "ERROR: Composer is not installed or not in PATH." >&2
+  echo "Please install Composer first: https://getcomposer.org/download/" >&2
+  echo "Deployment aborted to prevent broken application." >&2
+  exit 1
 fi
 
 echo ""
