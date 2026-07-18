@@ -13,6 +13,7 @@ CANONICAL_TARGET="/var/www/wedding"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMP_DIR="/tmp/webserver_undangan_update"
+REAL_USER="${SUDO_USER:-$USER}"
 BACKUP_SCRIPT="$CANONICAL_TARGET/deploy/backup.sh"
 HEALTH_CHECK_SCRIPT="$CANONICAL_TARGET/deploy/health-check.sh"
 
@@ -81,18 +82,17 @@ fi
 
 # Step 4: Download latest source to temporary directory
 log_info "Downloading latest source code..."
-mkdir -p "$TEMP_DIR"
 
 # Get repository URL from existing installation (if available)
-REPO_URL="https://github.com/februana/webserver_undangan.git"
+REPO_URL="git@github.com:februana/webserver_undangan.git"
 
 # Clone to temp directory (shallow clone for speed)
-if ! git clone --depth 1 "$REPO_URL" "$TEMP_DIR" 2>/dev/null; then
+# Clone to temp directory (shallow clone for speed)
+if ! sudo -u "$REAL_USER" git clone --depth 1 "$REPO_URL" "$TEMP_DIR"; then
     log_error "Failed to clone repository. Please check your internet connection."
     rm -rf "$TEMP_DIR"
     exit 1
 fi
-
 log_info "Source code downloaded successfully."
 echo ""
 
