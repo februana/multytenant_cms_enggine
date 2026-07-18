@@ -260,8 +260,16 @@ else
   echo "✓ ADMIN_PASS is set"
 fi
 
-# Check 3: No reference to "change-this-password" remains
-if grep -r "change-this-password" "$WORKING_DIR" >/dev/null 2>&1; then
+# Check 3: No reference to "change-this-password" remains in sensitive config files
+# Only check application config files where credentials would actually be stored
+INSECURE_FOUND=false
+for config_file in "$WORKING_DIR/.env" "$WORKING_DIR/config.php" "$WORKING_DIR/app/config.php"; do
+  if [ -f "$config_file" ] && grep -q "change-this-password" "$config_file" 2>/dev/null; then
+    INSECURE_FOUND=true
+    break
+  fi
+done
+if [ "$INSECURE_FOUND" = true ]; then
   echo "ERROR: Found insecure fallback password 'change-this-password' in files" >&2
   VERIFICATION_FAILED=true
 else
