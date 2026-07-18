@@ -90,6 +90,34 @@ fi
 touch "$WORKING_DIR/event.ics"
 chown www-data:www-data "$WORKING_DIR/event.ics"
 
+# Handle .env file setup
+ENV_FILE="$WORKING_DIR/.env"
+ENV_EXAMPLE="$WORKING_DIR/.env.example"
+
+CREDENTIALS_GENERATED=false
+ADMIN_USERNAME="admin"
+ADMIN_PASSWORD=""
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo ""
+  echo "Setting up .env file..."
+  
+  # Copy .env.example to .env
+  cp "$ENV_EXAMPLE" "$ENV_FILE"
+  chown www-data:www-data "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+  
+  # Generate cryptographically secure random password
+  GENERATED_PASS=$(openssl rand -base64 24 | tr -dc 'a-zA-Z0-9' | head -c 24)
+  
+  # Write generated password into ADMIN_PASS
+  sed -i "s/^ADMIN_PASS=.*/ADMIN_PASS=${GENERATED_PASS}/" "$ENV_FILE"
+  
+  # Store credentials for display at the end
+  ADMIN_PASSWORD="$GENERATED_PASS"
+  CREDENTIALS_GENERATED=true
+fi
+
 echo ""
 echo "Deploying Nginx configuration..."
 NGINX_CONF="/etc/nginx/sites-available/wedding"
@@ -176,10 +204,62 @@ if [ "$CLEANUP_SOURCE" = true ]; then
   rm -rf "$SOURCE_DIR"
 fi
 
+# Verification step
+echo ""
+echo "=== Verifying Installation ==="
+
+VERIFICATION_FAILED=false
+
+# Check 1: .env exists
+if [ ! -f "$ENV_FILE" ]; then
+  echo "ERROR: .env file does not exist" >&2
+  VERIFICATION_FAILED=true
+else
+  echo "✓ .env file exists"
+fi
+
+# Check 2: ADMIN_PASS is not empty
+ADMIN_PASS_VALUE=$(grep "^ADMIN_PASS=" "$ENV_FILE" | cut -d'=' -f2)
+if [ -z "$ADMIN_PASS_VALUE" ]; then
+  echo "ERROR: ADMIN_PASS is empty in .env file" >&2
+  VERIFICATION_FAILED=true
+else
+  echo "✓ ADMIN_PASS is set"
+fi
+
+# Check 3: No reference to "change-this-password" remains
+if grep -r "change-this-password" "$WORKING_DIR" >/dev/null 2>&1; then
+  echo "ERROR: Found insecure fallback password 'change-this-password' in files" >&2
+  VERIFICATION_FAILED=true
+else
+  echo "✓ No insecure fallback password found"
+fi
+
+if [ "$VERIFICATION_FAILED" = true ]; then
+  echo ""
+  echo "INSTALLATION FAILED: Verification checks did not pass" >&2
+  exit 1
+fi
+
 echo ""
 echo "=== Installation Complete ==="
 echo "Document Root: $WORKING_DIR"
 echo "Site URL: http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost')"
+echo ""
+
+# Display generated credentials if this was a fresh install
+if [ "$CREDENTIALS_GENERATED" = true ]; then
+  echo "====================================="
+  echo "Administrator account created"
+  echo ""
+  echo "Username: $ADMIN_USERNAME"
+  echo "Password: $ADMIN_PASSWORD"
+  echo ""
+  echo "Save these credentials now."
+  echo "They will not be displayed again."
+  echo "====================================="
+fi
+
 echo ""
 echo "Run 'sudo $WORKING_DIR/deploy/health-check.sh' to verify deployment."
 exit 0

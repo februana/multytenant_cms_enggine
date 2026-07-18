@@ -22,7 +22,7 @@ This application implements multiple layers of security:
 
 1. **Web Server Level**: Access controls block sensitive files
 2. **File System Level**: Restrictive permissions limit access
-3. **Application Level**: Input validation and CSRF protection
+3. **Application Level**: Input validation, CSRF protection, and password hashing
 4. **Network Level**: HTTPS/TLS encryption recommended
 
 ### Protected Resources
@@ -34,6 +34,7 @@ The following are **blocked** from direct web access:
 | `/app/` | Source code | Web server deny rule |
 | `*.json` | Configuration data | Web server deny rule |
 | `*.sqlite` | Database | Web server deny rule |
+| `.env` | Environment variables | Web server deny rule |
 | `/backups/` | Backup archives | Web server deny rule |
 | `.*` | Hidden files | Web server deny rule |
 
@@ -46,6 +47,49 @@ To prevent Remote Code Execution (RCE) attacks:
 - Original filenames sanitized to prevent directory traversal
 - File types validated before acceptance
 
+## Authentication System
+
+### Password Storage
+
+- Passwords are hashed using PHP's `password_hash()` with bcrypt algorithm
+- Verification uses `password_verify()` for timing-safe comparison
+- No plaintext passwords are stored
+
+### Authentication Priority
+
+The authentication system follows this priority order:
+
+1. **Priority 1**: `config.json` → `admin.password_hash`
+   - Takes precedence when set
+   - Used after administrator changes password via admin panel
+
+2. **Priority 2**: `.env` → `ADMIN_USER` + `ADMIN_PASS`
+   - Used for initial installation login
+   - Ignored once password_hash is set in config.json
+
+3. **No Fallback**: Login rejected if neither credential source exists
+   - No hardcoded fallback passwords
+   - No silent defaults like "change-this-password"
+
+### Password Migration
+
+When an administrator changes their password through the admin panel:
+
+1. The new password is hashed with `password_hash()`
+2. The hash is stored in `config.json` under `admin.password_hash`
+3. Subsequent logins use the hash, ignoring `.env` credentials
+4. This provides secure migration from environment-based auth
+
+### First Installation
+
+During fresh installation:
+
+1. If `.env` doesn't exist, `.env.example` is copied to `.env`
+2. A cryptographically secure random password is generated using `openssl rand`
+3. The password is written to `ADMIN_PASS` in `.env`
+4. Credentials are displayed once at the end of installation
+5. **Important**: Save these credentials immediately - they won't be shown again
+
 ## Configuration Guidelines
 
 ### File Permissions
@@ -57,6 +101,7 @@ Production servers should enforce these permissions:
 chmod 600 config.json
 chmod 600 guest-links.json
 chmod 600 database.sqlite
+chmod 600 .env
 
 # Uploads directory (writable by web server)
 chmod 755 uploads/
@@ -80,7 +125,7 @@ Use the provided `deploy/nginx-site.conf` which includes:
 #### Apache
 
 Ensure `.htaccess` is enabled with `AllowOverride All`. The included `.htaccess` file provides:
-- Access denial for JSON/SQLite files
+- Access denial for JSON/SQLite/.env files
 - Upload directory protections
 - Hidden file blocking
 
@@ -114,7 +159,8 @@ git pull origin main
 
 ### 3. Strong Admin Credentials
 
-- Use complex passwords (12+ characters, mixed case, numbers, symbols)
+- On fresh installation, a cryptographically secure password is auto-generated
+- For manual setup, use complex passwords (12+ characters, mixed case, numbers, symbols)
 - Change default credentials immediately after installation
 - Consider implementing two-factor authentication if available
 
@@ -233,13 +279,15 @@ Before going live, verify:
 - [ ] HTTPS enabled with valid certificate
 - [ ] File permissions set correctly
 - [ ] Web server config applied and tested
-- [ ] Admin password changed from default
+- [ ] Admin password changed from initial/generated value
 - [ ] PHP error display disabled
 - [ ] Upload size limits configured
 - [ ] Backup system operational
 - [ ] Logs accessible for monitoring
-- [ ] Blocked paths verified (config.json, app/, etc.)
+- [ ] Blocked paths verified (config.json, app/, .env, etc.)
 - [ ] Database file not directly downloadable
+- [ ] No hardcoded fallback passwords in codebase
+- [ ] `password_hash()` and `password_verify()` used correctly
 
 ## Version-Specific Notes
 
@@ -247,7 +295,9 @@ Before going live, verify:
 
 - Single-root architecture improves security isolation
 - Enhanced web server rules block more attack vectors
-- Removed legacy upload endpoints reduce attack surface
+- Removed insecure fallback passwords
+- Cryptographically secure password generation during installation
+- Password hashing with proper priority-based authentication
 
 ### Upgrading from 1.x
 
@@ -255,12 +305,16 @@ After upgrading:
 1. Verify new `.htaccess` rules are active
 2. Test that `/app/` directory is blocked
 3. Confirm `config.json` returns 403 when accessed directly
+4. Update admin password to use new hashing system
+5. Remove any hardcoded passwords from configuration
 
 ## Additional Resources
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [PHP Security Best Practices](https://www.php.net/manual/en/security.php)
 - [Nginx Security Guide](https://www.nginx.com/resources/admin-guide/security-controls/)
+- [PHP password_hash() Documentation](https://www.php.net/manual/en/function.password-hash.php)
+- [PHP password_verify() Documentation](https://www.php.net/manual/en/function.password-verify.php)
 
 ## Contact
 

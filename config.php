@@ -322,13 +322,24 @@ function verify_admin_password(string $password, array $config): bool {
     if ($password === '') {
         return false;
     }
+    
+    // Priority 1: Check config.json password_hash
     $hash = $config['admin']['password_hash'] ?? '';
     if ($hash !== '') {
         return password_verify($password, $hash);
     }
-    $envUser = getenv('ADMIN_USER') ?: 'admin';
-    $envPass = getenv('ADMIN_PASS') ?: 'change-this-password';
-    return hash_equals($envUser, $config['admin']['username'] ?? $envUser) && hash_equals($envPass, $password);
+    
+    // Priority 2: Check .env credentials (ADMIN_USER + ADMIN_PASS)
+    $envUser = getenv('ADMIN_USER');
+    $envPass = getenv('ADMIN_PASS');
+    
+    // Reject login if no credentials configured
+    if ($envPass === '' || $envPass === false) {
+        return false;
+    }
+    
+    $expectedUser = $envUser ?: 'admin';
+    return hash_equals($expectedUser, $config['admin']['username'] ?? $expectedUser) && hash_equals($envPass, $password);
 }
 
 function set_admin_password(string $password, array &$config): void {

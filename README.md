@@ -24,8 +24,11 @@ The installer will:
 4. Configure Nginx with security rules
 5. Set proper file permissions
 6. Initialize the database and configuration
+7. **Generate a cryptographically secure administrator password** (if .env doesn't exist)
 
 After installation, visit `http://your-server-ip/` to see your invitation.
+
+> **Important**: If this is a fresh installation, the installer will display the generated administrator credentials at the end. **Save these credentials immediately** as they will not be displayed again.
 
 ## Features
 
@@ -34,7 +37,7 @@ After installation, visit `http://your-server-ip/` to see your invitation.
 - 📸 Photo gallery
 - 🎵 Background music support
 - 📅 Event calendar (.ics download)
-- 🔒 Secure admin panel
+- 🔒 Secure admin panel with password hashing
 - 📱 Mobile-responsive design
 
 ## Documentation
@@ -55,6 +58,8 @@ After installation, visit `http://your-server-ip/` to see your invitation.
 ├── gallery.php            # Gallery endpoint
 ├── config.json            # Configuration (protected)
 ├── database.sqlite        # Database (protected)
+├── .env                   # Environment variables (protected)
+├── .env.example           # Example environment file
 ├── uploads/               # User media (public)
 │   ├── cover/
 │   ├── music/
@@ -68,18 +73,95 @@ After installation, visit `http://your-server-ip/` to see your invitation.
 
 ## Administration
 
-Access the admin panel at `http://your-domain/admin.php`.
+Access the admin panel at `http://your-domain/admin`.
 
-Default credentials are set during installation. Change them immediately after first login.
+### Administrator Credentials
+
+#### Fresh Installation
+
+During first installation, if no `.env` file exists:
+1. The installer copies `.env.example` to `.env`
+2. A cryptographically secure random password is generated
+3. The credentials are displayed once at the end of installation
+
+**Save these credentials immediately** - they will not be shown again.
+
+#### Existing Installation
+
+For existing installations with `.env` already present:
+- Username: `admin` (or as configured in `.env`)
+- Password: As set in `.env` or changed via admin panel
+
+### Authentication Priority
+
+The authentication system uses the following priority:
+
+1. **Priority 1**: `config.json` → `admin.password_hash`
+   - If a password has been changed via the admin panel, this takes precedence
+   - Uses secure bcrypt hashing
+
+2. **Priority 2**: `.env` file → `ADMIN_USER` + `ADMIN_PASS`
+   - Used for initial login before password change
+   - Falls back to default username `admin` if `ADMIN_USER` not set
+
+3. **No Fallback**: If neither is configured, login is rejected
+   - No hardcoded passwords
+   - No silent fallback to insecure defaults
+
+### Changing Administrator Password
+
+1. Log into the admin panel
+2. Navigate to Settings
+3. Enter a new password in the "Admin Password" field
+4. Save changes
+
+After changing the password:
+- The new password hash is stored in `config.json`
+- The `.env` `ADMIN_PASS` is ignored for authentication
+- This provides migration path from environment-based to hashed storage
 
 ## Security
 
-- Sensitive files (`config.json`, `database.sqlite`) are blocked from public access
+- Sensitive files (`config.json`, `database.sqlite`, `.env`) are blocked from public access
 - PHP execution is disabled in the `uploads/` directory
 - File permissions are automatically set to secure defaults
+- Passwords are hashed using `password_hash()` with bcrypt
 - Regular backups are recommended
 
 See [SECURITY.md](SECURITY.md) for detailed security information.
+
+## .env File Configuration
+
+The `.env` file supports optional environment configuration:
+
+```bash
+# Administrator credentials (used until password is changed via admin panel)
+ADMIN_USER=admin
+ADMIN_PASS=your-secure-password-here
+
+# WhatsApp configuration
+WHATSAPP_NUMBER=6285162909164
+WHATSAPP_MESSAGE=Assalamu'alaikum...
+
+# Optional: Database path
+UNDANGAN_DB_PATH=/var/www/private/database.sqlite
+
+# Upload settings
+MAX_UPLOAD_SIZE=5242880
+SESSION_TIMEOUT=3600
+ALLOWED_IMAGE_TYPES=jpg,jpeg,png,gif,webp
+```
+
+### Creating .env Manually
+
+If you need to create `.env` manually:
+
+```bash
+cp .env.example .env
+# Edit .env and set ADMIN_PASS to a secure password
+chmod 600 .env
+chown www-data:www-data .env
+```
 
 ## Backup & Restore
 
@@ -108,6 +190,7 @@ sudo /var/www/wedding/deploy/health-check.sh
 - Nginx web server
 - SQLite3
 - `jq` for health checks
+- `openssl` for password generation during installation
 
 ## License
 
