@@ -80,11 +80,40 @@ Access the admin panel at `http://your-domain/admin`.
 #### Fresh Installation
 
 During first installation, if no `.env` file exists:
-1. The installer copies `.env.example` to `.env`
-2. A cryptographically secure random password is generated
-3. The credentials are displayed once at the end of installation
 
-**Save these credentials immediately** - they will not be shown again.
+1. The installer copies `.env.example` to `.env`
+2. A cryptographically secure random password is generated using `openssl rand -base64 24`
+3. The credentials are written to `.env`:
+   ```bash
+   ADMIN_USER=admin
+   ADMIN_PASS=<generated random password>
+   ```
+4. The credentials are displayed once at the end of installation:
+   ```
+   ======================================
+   Administrator account created
+   
+   Username:
+   admin
+   
+   Password:
+   xxxxxxxxxxxxxxxxxxxxxxxx
+   
+   Credentials have been saved to:
+   
+   /var/www/wedding/.env
+   
+   Save these credentials now.
+   ======================================
+   ```
+
+**Save these credentials immediately** - they will not be displayed again.
+
+The `.env` file serves as a recovery mechanism for:
+- Initial login before password change
+- Recovery if password is forgotten
+- Maintenance operations
+- Reinstallation scenarios
 
 #### Existing Installation
 
@@ -99,10 +128,12 @@ The authentication system uses the following priority:
 1. **Priority 1**: `config.json` → `admin.password_hash`
    - If a password has been changed via the admin panel, this takes precedence
    - Uses secure bcrypt hashing
+   - Once set, `ADMIN_PASS` in `.env` is ignored for login
 
 2. **Priority 2**: `.env` file → `ADMIN_USER` + `ADMIN_PASS`
    - Used for initial login before password change
    - Falls back to default username `admin` if `ADMIN_USER` not set
+   - Remains available for recovery purposes
 
 3. **No Fallback**: If neither is configured, login is rejected
    - No hardcoded passwords
@@ -116,9 +147,10 @@ The authentication system uses the following priority:
 4. Save changes
 
 After changing the password:
-- The new password hash is stored in `config.json`
-- The `.env` `ADMIN_PASS` is ignored for authentication
-- This provides migration path from environment-based to hashed storage
+- The new password hash is stored in `config.json` under `admin.password_hash`
+- The `.env` `ADMIN_PASS` is **ignored** for authentication
+- Changing `ADMIN_PASS` in `.env` after setting a password hash will **NOT** change the login password
+- The `.env` file remains for recovery, maintenance, and reinstallation purposes only
 
 ## Security
 
