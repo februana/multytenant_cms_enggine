@@ -8,8 +8,8 @@ DEPLOY_DIR="/var/www/wedding"
 PASS_COUNT=0
 FAIL_COUNT=0
 
-pass() { echo "✓ $1"; ((PASS_COUNT++)); }
-fail() { echo "✗ $1"; ((FAIL_COUNT++)); }
+pass() { echo "✓ $1"; ((PASS_COUNT++)) || true; }
+fail() { echo "✗ $1"; ((FAIL_COUNT++)) || true; }
 
 echo "=== Deployment Health Check ==="
 echo "Target: $DEPLOY_DIR"
