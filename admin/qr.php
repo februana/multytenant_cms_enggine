@@ -18,6 +18,9 @@ $options = new QROptions([
     // output PNG
     'outputType' => QRCode::OUTPUT_IMAGE_PNG,
 
+    // return raw binary instead of base64 data URI
+    'outputBase64' => false,
+
     // Error correction level H
     'eccLevel' => QRCode::ECC_H,
 
@@ -36,6 +39,9 @@ $options = new QROptions([
 ]);
 
 $png = (new QRCode($options))->render($data);
+
+// Clear any output buffers to ensure no extra output before PNG bytes
+ob_end_clean();
 
 header('Content-Type: image/png');
 header('Content-Length: '.strlen($png));
