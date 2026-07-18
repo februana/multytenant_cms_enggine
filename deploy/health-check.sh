@@ -61,24 +61,28 @@ if command -v curl &> /dev/null && pgrep nginx > /dev/null 2>&1; then
   echo ""
   echo "HTTP Checks:"
   
+  SITE_HOST="februandik.duckdns.org"
+  HTTP_BASE="http://127.0.0.1"
+  HTTPS_BASE="https://${SITE_HOST}"
+  
   # Frontend
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/ 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "200" ]; then
+  HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/" 2>/dev/null || echo "000")
+  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
     pass "Frontend responds (HTTP $HTTP_CODE)"
   else
     fail "Frontend not responding (HTTP $HTTP_CODE)"
   fi
   
   # Admin panel
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/admin.php 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+  HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/admin.php" 2>/dev/null || echo "000")
+  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
     pass "Admin panel accessible (HTTP $HTTP_CODE)"
   else
     fail "Admin panel issue (HTTP $HTTP_CODE)"
   fi
   
   # Security: config.json should be blocked
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/config.json 2>/dev/null || echo "000")
+  HTTP_CODE=$(curl -L -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/config.json" 2>/dev/null || echo "000")
   if [ "$HTTP_CODE" = "403" ]; then
     pass "config.json blocked from public access (HTTP $HTTP_CODE)"
   else
@@ -86,7 +90,7 @@ if command -v curl &> /dev/null && pgrep nginx > /dev/null 2>&1; then
   fi
   
   # Security: .sqlite should be blocked
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/database.sqlite 2>/dev/null || echo "000")
+  HTTP_CODE=$(curl -L -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/database.sqlite" 2>/dev/null || echo "000")
   if [ "$HTTP_CODE" = "403" ]; then
     pass "database.sqlite blocked from public access (HTTP $HTTP_CODE)"
   else
