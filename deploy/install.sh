@@ -282,15 +282,22 @@ echo ""
 
 # Display generated credentials if this was a fresh install
 if [ "$CREDENTIALS_GENERATED" = true ]; then
-  echo "====================================="
+  echo ""
+  echo "======================================"
   echo "Administrator account created"
   echo ""
-  echo "Username: $ADMIN_USERNAME"
-  echo "Password: $ADMIN_PASSWORD"
+  echo "Username:"
+  echo "$ADMIN_USERNAME"
+  echo ""
+  echo "Password:"
+  echo "$ADMIN_PASSWORD"
+  echo ""
+  echo "Credentials have been saved to:"
+  echo ""
+  echo "$ENV_FILE"
   echo ""
   echo "Save these credentials now."
-  echo "They will not be displayed again."
-  echo "====================================="
+  echo "======================================"
 fi
 
 echo ""
