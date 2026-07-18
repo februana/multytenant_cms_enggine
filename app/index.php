@@ -69,7 +69,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   <title><?php echo escape_html($siteTitle); ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Allura&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/app/style.css" />
   <script type="application/ld+json">
   <?php echo $schema; ?>
@@ -127,7 +127,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       <div class="section-head">
         <p class="label">Undangan Pernikahan</p>
         <h2><?php echo escape_html($config['wedding']['quote']); ?></h2>
-        <p><?php echo escape_html($config['wedding']['opening_text']); ?></p>
+        <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
       </div>
       <div class="cards-grid">
         <article class="card">
@@ -154,8 +154,8 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
     <section id="cerita" class="section panel" <?php echo $sectionStyles[1]; ?>>
       <p class="label">Cerita Kami</p>
       <h2>Perjalanan indah bersama</h2>
-      <p><?php echo escape_html($config['wedding']['opening_text']); ?></p>
-      <p><?php echo escape_html($config['wedding']['closing_text']); ?></p>
+      <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
+      <p><?php echo nl2br(escape_html($config['wedding']['closing_text'])); ?></p>
     </section>
 
     <section id="galeri" class="section panel" <?php echo $sectionStyles[2]; ?>>
