@@ -8,6 +8,21 @@ This guide provides step-by-step instructions for deploying the Wedding Invitati
 - Root or sudo access
 - Domain name pointing to your server (optional, for production)
 - At least 512MB RAM and 5GB disk space
+- Composer installed (required for QR code functionality)
+
+### Installing Composer
+
+Before running the deployment script, ensure Composer is installed:
+
+```bash
+# Download and install Composer
+curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Verify installation
+composer --version
+```
+
+The deployment script will fail with a clear error if Composer is not available, preventing a broken deployment.
 
 ## Quick Installation
 
@@ -24,9 +39,11 @@ sudo bash deploy/install.sh
 ```
 
 The installer will automatically:
+- Verify Composer is installed (required for QR code functionality)
 - Install Nginx, PHP-FPM 8.x, and required extensions
 - Create the deployment directory at `/var/www/wedding`
-- Copy all application files
+- Copy all application files including `composer.json`
+- Run `composer install --no-dev --optimize-autoloader` to install dependencies
 - Configure Nginx with security rules
 - Set secure file permissions
 - Initialize the database and configuration files
@@ -84,7 +101,21 @@ sudo find /var/www/wedding -type f -name "*.php" -exec chmod 644 {} \;
 sudo chmod 600 /var/www/wedding/config.json
 ```
 
-### Step 4: Configure Nginx
+### Step 4: Install Composer Dependencies
+
+**This step is critical for QR code functionality.**
+
+```bash
+cd /var/www/wedding
+composer install --no-dev --optimize-autoloader
+```
+
+If Composer is not installed, install it first:
+```bash
+curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+```
+
+### Step 5: Configure Nginx
 
 Copy the provided Nginx configuration:
 
@@ -96,7 +127,7 @@ sudo rm -f /etc/nginx/sites-enabled/default
 
 Edit `/etc/nginx/sites-available/wedding` if you need to customize the server name.
 
-### Step 5: Test and Reload
+### Step 6: Test and Reload
 
 ```bash
 sudo nginx -t
