@@ -128,15 +128,22 @@ if [ "$WEB_SERVER" = "nginx" ]; then
     apt install -y -qq nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
 elif [ "$WEB_SERVER" = "apache" ]; then
     echo "Installing Apache and PHP-FPM..."
-    apt install -y -qq apache2 php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip libapache2-mod-proxy-fcgid
+    apt install -y -qq apache2 php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
     
     # Enable required Apache modules
     echo "Enabling Apache modules..."
     a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias
+    # Note: proxy_fcgi is a built-in module in modern Apache, no extra package needed
     
     # Enable SSL by default
     a2enmod socache_shmcb
 fi
+
+# Start PHP-FPM service to ensure socket is available
+echo "Starting PHP-FPM service..."
+systemctl enable php-fpm >/dev/null 2>&1 || systemctl enable php8.3-fpm >/dev/null 2>&1 || systemctl enable php8.2-fpm >/dev/null 2>&1 || true
+systemctl start php-fpm >/dev/null 2>&1 || systemctl start php8.3-fpm >/dev/null 2>&1 || systemctl start php8.2-fpm >/dev/null 2>&1 || true
+sleep 2
 
 # Find PHP-FPM socket automatically (supports Ubuntu PHP versions)
 PHP_FPM_SOCK=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1)

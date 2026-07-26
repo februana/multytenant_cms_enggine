@@ -152,8 +152,13 @@ migration_mode() {
     local sock=$(get_php_fpm_socket)
     
     if [ "$tgt" = "apache" ]; then
-        apt update -qq && apt install -y -qq apache2 libapache2-mod-proxy-fcgid || { rollback_migration "$cur" "$tgt"; return 1; }
+        apt update -qq && apt install -y -qq apache2 || { rollback_migration "$cur" "$tgt"; return 1; }
         a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias socache_shmcb >/dev/null 2>&1
+        # Start PHP-FPM to ensure socket is available before config generation
+        systemctl enable php-fpm >/dev/null 2>&1 || systemctl enable php8.3-fpm >/dev/null 2>&1 || systemctl enable php8.2-fpm >/dev/null 2>&1 || true
+        systemctl start php-fpm >/dev/null 2>&1 || systemctl start php8.3-fpm >/dev/null 2>&1 || systemctl start php8.2-fpm >/dev/null 2>&1 || true
+        sleep 2
+        sock=$(get_php_fpm_socket)
         generate_apache_config "$sock"
         apache2ctl configtest || { rollback_migration "$cur" "$tgt"; return 1; }
         a2ensite wedding.conf; a2dissite 000-default.conf 2>/dev/null
@@ -161,6 +166,11 @@ migration_mode() {
         systemctl stop nginx 2>/dev/null; systemctl disable nginx 2>/dev/null
     else
         apt update -qq && apt install -y -qq nginx || { rollback_migration "$cur" "$tgt"; return 1; }
+        # Start PHP-FPM to ensure socket is available before config generation
+        systemctl enable php-fpm >/dev/null 2>&1 || systemctl enable php8.3-fpm >/dev/null 2>&1 || systemctl enable php8.2-fpm >/dev/null 2>&1 || true
+        systemctl start php-fpm >/dev/null 2>&1 || systemctl start php8.3-fpm >/dev/null 2>&1 || systemctl start php8.2-fpm >/dev/null 2>&1 || true
+        sleep 2
+        sock=$(get_php_fpm_socket)
         generate_nginx_config "$sock"
         nginx -t || { rollback_migration "$cur" "$tgt"; return 1; }
         ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding; rm -f /etc/nginx/sites-enabled/default
