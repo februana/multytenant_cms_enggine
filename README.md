@@ -2,12 +2,98 @@
 
 A modern, single-page wedding invitation web application built with PHP and SQLite.
 
-## Quick Start
+# Supported Web Servers
 
-### Prerequisites
-- Ubuntu 24.04 server
-- Root or sudo access
-- Domain name pointing to your server (optional)
+This application officially supports two production-ready web servers:
+
+## Nginx (Recommended)
+
+**Pros:**
+- High performance with low memory footprint
+- Excellent static file serving
+- Built-in caching capabilities
+- Simple configuration syntax
+- Better handling of concurrent connections
+
+**Cons:**
+- No `.htaccess` support (requires full config reload for changes)
+- Dynamic module loading requires recompilation in some cases
+
+**Features:**
+- PHP-FPM integration
+- HTTPS with Let's Encrypt
+- HTTP to HTTPS redirect
+- Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+- Upload size limits (20MB default)
+- Static file caching (7 days)
+- URL rewriting
+- Hidden file protection
+- Database and backup file protection
+
+## Apache
+
+**Pros:**
+- `.htaccess` support for per-directory configuration
+- Extensive module ecosystem
+- Easy dynamic module loading
+- Full WebDAV support with PROPFIND, PUT, DELETE, COPY, MOVE, MKCOL, LOCK, UNLOCK
+
+**Cons:**
+- Higher memory usage compared to Nginx
+- Slightly lower performance under high concurrency
+
+**Features:**
+- PHP-FPM via mod_proxy_fcgi
+- HTTPS with Let's Encrypt
+- HTTP to HTTPS redirect
+- Security headers
+- Upload size limits (20MB default)
+- Static file caching
+- URL rewriting via mod_rewrite
+- Hidden file protection
+- Database and backup file protection
+- **Full WebDAV support** for remote file management
+
+**Required Apache Modules:**
+- `rewrite` - URL rewriting
+- `headers` - Security headers
+- `ssl` - HTTPS support
+- `proxy_fcgi` - PHP-FPM integration
+- `setenvif` - Environment variables
+- `dav` - WebDAV core
+- `dav_fs` - WebDAV filesystem
+- `auth_basic` - Basic authentication for WebDAV
+- `alias` - URL aliasing
+- `socache_shmcb` - SSL session caching
+
+## WebDAV Support
+
+### Apache WebDAV
+
+Apache provides full WebDAV support with all standard methods:
+- PROPFIND - List files and properties
+- PUT - Upload files
+- DELETE - Remove files
+- COPY - Copy files/folders
+- MOVE - Move files/folders
+- MKCOL - Create collections (folders)
+- LOCK - Lock resources
+- UNLOCK - Unlock resources
+
+To enable WebDAV:
+1. Ensure Apache is selected as your web server
+2. WebDAV modules are automatically enabled during installation
+3. Create a WebDAV password file: `htpasswd -c /etc/apache2/.davpasswd username`
+4. Access WebDAV at `http://your-domain/webdav`
+
+### Nginx WebDAV
+
+Nginx has limited WebDAV support through the `ngx_http_dav_module`:
+- Supports: PUT, DELETE, MKCOL, COPY, MOVE
+- Does NOT support: PROPFIND (full), LOCK, UNLOCK
+
+For full WebDAV functionality, Apache is recommended.
+
 
 ### Installation & Update Flow
 
@@ -336,3 +422,76 @@ MIT License - See LICENSE file for details.
 ## Support
 
 For issues and feature requests, please open an issue on GitHub.
+
+## Fresh Installation
+
+Run the installer and select your preferred web server:
+
+```bash
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
+sudo bash deploy/install.sh
+```
+
+The installer will prompt you to choose between Nginx (recommended) or Apache.
+
+## Deployment Manager
+
+For existing installations, use the Deployment Manager:
+
+```bash
+sudo /var/www/wedding/deploy/update.sh
+```
+
+The menu provides four options:
+
+1. **Update Application** - Updates source code without changing the web server
+2. **Change Web Server** - Migrate between Nginx and Apache
+3. **Reconfigure Web Server** - Rebuild configuration from templates
+4. **Exit**
+
+## Migrating Nginx -> Apache
+
+1. Run `sudo /var/www/wedding/deploy/update.sh`
+2. Select option 2 (Change Web Server)
+3. Choose Apache as the target
+4. The script will:
+   - Create a backup
+   - Install Apache and required modules
+   - Deploy Apache configuration
+   - Preserve SSL certificates from Let's Encrypt
+   - Maintain PHP-FPM settings
+   - Test configuration before switching
+   - Stop Nginx and start Apache
+   - Run health check
+5. If any step fails, automatic rollback occurs
+
+## Migrating Apache -> Nginx
+
+1. Run `sudo /var/www/wedding/deploy/update.sh`
+2. Select option 2 (Change Web Server)
+3. Choose Nginx as the target
+4. The script will:
+   - Create a backup
+   - Install Nginx
+   - Deploy Nginx configuration
+   - Preserve SSL certificates
+   - Maintain PHP-FPM settings
+   - Test configuration before switching
+   - Stop Apache and start Nginx
+   - Run health check
+5. If any step fails, automatic rollback occurs
+
+## Reconfigure Web Server
+
+Use this option if you've made manual configuration changes and want to restore the default configuration:
+
+1. Run `sudo /var/www/wedding/deploy/update.sh`
+2. Select option 3 (Reconfigure Web Server)
+3. Confirm the action
+4. The script will:
+   - Generate fresh configuration from templates
+   - Test the configuration
+   - Reload the web server
+
+⚠️ **Warning:** Any manual configuration changes will be lost.
