@@ -2,301 +2,225 @@
 set -euo pipefail
 
 # deploy/update.sh
-# Official update mechanism for Wedding Invitation Web Application
+# Deployment Manager for Wedding Invitation Web Application
 # 
-# This script safely updates an existing installation at /var/www/wedding
-# without affecting user data (uploads, database, config, etc.)
-#
 # Usage: sudo ./deploy/update.sh
 
 CANONICAL_TARGET="/var/www/wedding"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+TEMPLATE_DIR="$SCRIPT_DIR/templates"
 TEMP_DIR="/tmp/webserver_undangan_update"
 REAL_USER="${SUDO_USER:-$USER}"
 BACKUP_SCRIPT="$CANONICAL_TARGET/deploy/backup.sh"
 HEALTH_CHECK_SCRIPT="$CANONICAL_TARGET/deploy/health-check.sh"
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_section() { echo -e "${BLUE}======================================${NC}\n${BLUE}$1${NC}\n${BLUE}======================================${NC}"; }
+
+if [ "$EUID" -ne 0 ]; then log_error "Must run as root"; exit 2; fi
+
+detect_web_server() {
+    if systemctl is-active --quiet nginx 2>/dev/null; then echo "nginx"
+    elif systemctl is-active --quiet apache2 2>/dev/null; then echo "apache"
+    else echo "unknown"; fi
 }
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-    log_error "This script must be run as root or via sudo."
-    exit 2
-fi
-
-echo "=== Wedding Invitation Update Script ==="
-echo ""
-
-# Step 1: Verify application is installed
-log_info "Checking if application is installed at $CANONICAL_TARGET..."
-if [ ! -d "$CANONICAL_TARGET" ]; then
-    log_error "Application not found at $CANONICAL_TARGET"
-    log_error "Please run install.sh first for initial installation."
-    exit 1
-fi
-
-if [ ! -f "$CANONICAL_TARGET/index.php" ]; then
-    log_error "Application files not found. This does not appear to be a valid installation."
-    exit 1
-fi
-
-log_info "Application found at $CANONICAL_TARGET"
-echo ""
-
-# Step 2: Create backup before update
-log_info "Creating backup before update..."
-if [ -f "$BACKUP_SCRIPT" ]; then
-    if ! "$BACKUP_SCRIPT"; then
-        log_error "Backup failed. Aborting update to prevent data loss."
-        exit 1
+get_php_fpm_socket() {
+    local sock=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1)
+    if [ -z "$sock" ]; then
+        for v in php-fpm php8.3-fpm php8.2-fpm php8.1-fpm; do
+            [ -S "/run/php/$v.sock" ] && sock="/run/php/$v.sock" && break
+        done
     fi
-    log_info "Backup completed successfully."
-else
-    log_warn "Backup script not found at $BACKUP_SCRIPT"
-    log_warn "Proceeding without backup (not recommended for production)."
-fi
-echo ""
+    echo "${sock:-/run/php/php-fpm.sock}"
+}
 
-# Step 3: Clean up any previous failed update attempts
-if [ -d "$TEMP_DIR" ]; then
-    log_warn "Removing temporary directory from previous attempt..."
-    rm -rf "$TEMP_DIR"
-fi
+create_backup() {
+    log_info "Creating backup..."
+    [ -f "$BACKUP_SCRIPT" ] && "$BACKUP_SCRIPT" || log_warn "Backup script not found"
+}
 
-# Step 4: Download latest source to temporary directory
-log_info "Downloading latest source code..."
+generate_nginx_config() {
+    local sock="$1"
+    local conf="/etc/nginx/sites-available/wedding"
+    cp "$TEMPLATE_DIR/nginx/wedding.conf" "$conf"
+    sed -i "s|{{DOMAIN}}|_|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|/var/log/nginx|g; s|{{UPLOAD_LIMIT}}|20M|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/_|g" "$conf"
+    log_info "Nginx config generated from template"
+}
 
-# Get repository URL from existing installation (if available)
-REPO_URL="git@github.com:februana/webserver_undangan.git"
+generate_apache_config() {
+    local sock="$1"
+    local conf="/etc/apache2/sites-available/wedding.conf"
+    cp "$TEMPLATE_DIR/apache/wedding.conf" "$conf"
+    sed -i "s|{{DOMAIN}}|_|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/_|g" "$conf"
+    log_info "Apache config generated from template"
+}
 
-# Clone to temp directory (shallow clone for speed)
-# Clone to temp directory (shallow clone for speed)
-if ! sudo -u "$REAL_USER" git clone --depth 1 "$REPO_URL" "$TEMP_DIR"; then
-    log_error "Failed to clone repository. Please check your internet connection."
-    rm -rf "$TEMP_DIR"
-    exit 1
-fi
-log_info "Source code downloaded successfully."
-echo ""
-
-# Step 5: Install Composer dependencies
-log_info "Installing Composer dependencies..."
-cd "$TEMP_DIR"
-if [ -f "composer.json" ]; then
-    if command -v composer &>/dev/null; then
-        if ! composer install --no-dev --optimize-autoloader --quiet; then
-            log_error "Composer install failed."
-            rm -rf "$TEMP_DIR"
-            exit 1
-        fi
-        log_info "Composer dependencies installed."
+rollback_migration() {
+    local src="$1" tgt="$2"
+    log_error "Rolling back to $src..."
+    if [ "$tgt" = "apache" ]; then
+        a2dissite wedding.conf 2>/dev/null; systemctl stop apache2 2>/dev/null; systemctl disable apache2 2>/dev/null
+        ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding 2>/dev/null
+        systemctl start nginx 2>/dev/null; systemctl enable nginx 2>/dev/null
     else
-        log_error "Composer is not installed. Cannot proceed with update."
-        rm -rf "$TEMP_DIR"
-        exit 1
+        rm -f /etc/nginx/sites-enabled/wedding 2>/dev/null; systemctl stop nginx 2>/dev/null; systemctl disable nginx 2>/dev/null
+        a2ensite wedding.conf 2>/dev/null; systemctl start apache2 2>/dev/null; systemctl enable apache2 2>/dev/null
     fi
-else
-    log_warn "composer.json not found in source."
-fi
-echo ""
+    log_error "Rollback complete"
+}
 
-# Step 6: Identify files/directories to preserve (user data)
-log_info "Preparing to update application files..."
-
-# Files and directories that must be preserved
-PRESERVE_FILES=(
-    "config.json"
-    "guest-links.json"
-    "database.sqlite"
-    ".env"
-    "event.ics"
-)
-
-PRESERVE_DIRS=(
-    "uploads"
-    "backups"
-    "storage"
-)
-
-# Step 7: Backup user data from current installation temporarily
-log_info "Preserving user data..."
-TEMP_PRESERVE="$TEMP_DIR/_preserve_user_data"
-mkdir -p "$TEMP_PRESERVE"
-
-# Copy files to preserve
-for file in "${PRESERVE_FILES[@]}"; do
-    if [ -f "$CANONICAL_TARGET/$file" ]; then
-        cp -a "$CANONICAL_TARGET/$file" "$TEMP_PRESERVE/"
+update_application() {
+    log_section "Update Application"
+    [ ! -d "$CANONICAL_TARGET" ] && { log_error "App not found"; return 1; }
+    [ ! -f "$CANONICAL_TARGET/index.php" ] && { log_error "Invalid install"; return 1; }
+    
+    create_backup
+    [ -d "$TEMP_DIR" ] && rm -rf "$TEMP_DIR"
+    
+    log_info "Downloading source..."
+    git clone --depth 1 git@github.com:februana/webserver_undangan.git "$TEMP_DIR" 2>/dev/null || { log_error "Clone failed"; rm -rf "$TEMP_DIR"; return 1; }
+    
+    cd "$TEMP_DIR"
+    [ -f composer.json ] && command -v composer &>/dev/null && composer install --no-dev --optimize-autoloader --quiet
+    
+    PRESERVE_FILES=("config.json" "guest-links.json" "database.sqlite" ".env" "event.ics")
+    PRESERVE_DIRS=("uploads" "backups" "storage")
+    mkdir -p "$TEMP_DIR/_preserve"
+    
+    for f in "${PRESERVE_FILES[@]}"; do [ -f "$CANONICAL_TARGET/$f" ] && cp -a "$CANONICAL_TARGET/$f" "$TEMP_DIR/_preserve/"; done
+    for d in "${PRESERVE_DIRS[@]}"; do [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$CANONICAL_TARGET/$d" "$TEMP_DIR/_preserve/"; done
+    
+    rsync -av --exclude='.git' --exclude='*.md' --exclude='uploads/' --exclude='backups/' --exclude='storage/' --exclude='config.json' --exclude='guest-links.json' --exclude='database.sqlite' --exclude='.env' --exclude='event.ics' "$TEMP_DIR/" "$CANONICAL_TARGET/"
+    
+    for f in "${PRESERVE_FILES[@]}"; do [ -f "$TEMP_DIR/_preserve/$f" ] && cp -a "$TEMP_DIR/_preserve/$f" "$CANONICAL_TARGET/"; done
+    for d in "${PRESERVE_DIRS[@]}"; do [ -d "$TEMP_DIR/_preserve/$d" ] && { [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$TEMP_DIR/_preserve/$d/"* "$CANONICAL_TARGET/$d/" 2>/dev/null || cp -a "$TEMP_DIR/_preserve/$d" "$CANONICAL_TARGET/"; }; done
+    
+    [ -f "$CANONICAL_TARGET/app/style.css" ] && cp "$CANONICAL_TARGET/app/style.css" "$CANONICAL_TARGET/style.css"
+    [ -f "$CANONICAL_TARGET/app/script.js" ] && cp "$CANONICAL_TARGET/app/script.js" "$CANONICAL_TARGET/script.js"
+    
+    chown -R www-data:www-data "$CANONICAL_TARGET"
+    find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;
+    find "$CANONICAL_TARGET" -type f \( -name "*.php" -o -name "*.json" -o -name "*.sqlite" -o -name ".env" \) -exec chmod 644 {} \;
+    
+    PHP_VER=$(get_php_fpm_socket | grep -oP 'php\d\.\d' | head -1)
+    [ -n "$PHP_VER" ] && systemctl restart "${PHP_VER}-fpm" 2>/dev/null || systemctl restart php-fpm 2>/dev/null || true
+    
+    local ws=$(detect_web_server)
+    if [ "$ws" = "nginx" ]; then
+        nginx -t 2>/dev/null && systemctl reload nginx || log_warn "Nginx reload skipped"
+    elif [ "$ws" = "apache" ]; then
+        apache2ctl configtest 2>/dev/null && systemctl reload apache2 || log_warn "Apache reload skipped"
     fi
-done
+    
+    [ -f "$HEALTH_CHECK_SCRIPT" ] && "$HEALTH_CHECK_SCRIPT" || log_warn "Health check skipped"
+    rm -rf "$TEMP_DIR"
+    log_info "UPDATE COMPLETE"
+}
 
-# Copy directories to preserve
-for dir in "${PRESERVE_DIRS[@]}"; do
-    if [ -d "$CANONICAL_TARGET/$dir" ]; then
-        cp -a "$CANONICAL_TARGET/$dir" "$TEMP_PRESERVE/"
+migration_mode() {
+    log_section "Migration Mode"
+    local cur=$(detect_web_server)
+    [ "$cur" = "unknown" ] && { log_error "No web server"; return 1; }
+    
+    log_info "Current: $(echo $cur | tr '[:lower:]' '[:upper:]')"
+    
+    if [ "$cur" = "nginx" ]; then
+        echo "1. Apache  2. Nginx (current)"
+        read -p "Choice [1-2]: " c; [ "$c" != "1" ] && { log_info "No migration needed"; return 0; }
+        local tgt="apache"
+    else
+        echo "1. Nginx  2. Apache (current)"
+        read -p "Choice [1-2]: " c; [ "$c" != "1" ] && { log_info "No migration needed"; return 0; }
+        local tgt="nginx"
     fi
-done
-
-log_info "User data preserved."
-echo ""
-
-# Step 8: Copy application files to target (excluding preserved items)
-log_info "Copying application files to $CANONICAL_TARGET..."
-
-# Use rsync to sync files, excluding preserved items
-rsync -av \
-    --exclude='.git' \
-    --exclude='.gitignore' \
-    --exclude='.github' \
-    --exclude='.vscode' \
-    --exclude='*.md' \
-    --exclude='uploads/' \
-    --exclude='backups/' \
-    --exclude='storage/' \
-    --exclude='config.json' \
-    --exclude='guest-links.json' \
-    --exclude='database.sqlite' \
-    --exclude='.env' \
-    --exclude='event.ics' \
-    "$TEMP_DIR/" "$CANONICAL_TARGET/"
-
-log_info "Application files copied."
-echo ""
-
-# Step 9: Restore preserved user data
-log_info "Restoring user data..."
-for file in "${PRESERVE_FILES[@]}"; do
-    if [ -f "$TEMP_PRESERVE/$file" ]; then
-        cp -a "$TEMP_PRESERVE/$file" "$CANONICAL_TARGET/"
+    
+    echo "1. Safe Migration  2. Clean Migration  3. Cancel"
+    read -p "Choice [1-3]: " mtype
+    [ "$mtype" = "3" ] && { log_info "Cancelled"; return 0; }
+    [ "$mtype" != "1" ] && [ "$mtype" != "2" ] && { log_error "Invalid"; return 1; }
+    
+    create_backup
+    local sock=$(get_php_fpm_socket)
+    
+    if [ "$tgt" = "apache" ]; then
+        apt update -qq && apt install -y -qq apache2 libapache2-mod-proxy-fcgid || { rollback_migration "$cur" "$tgt"; return 1; }
+        a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias socache_shmcb >/dev/null 2>&1
+        generate_apache_config "$sock"
+        apache2ctl configtest || { rollback_migration "$cur" "$tgt"; return 1; }
+        a2ensite wedding.conf; a2dissite 000-default.conf 2>/dev/null
+        systemctl enable apache2; systemctl restart apache2 || { rollback_migration "$cur" "$tgt"; return 1; }
+        systemctl stop nginx 2>/dev/null; systemctl disable nginx 2>/dev/null
+    else
+        apt update -qq && apt install -y -qq nginx || { rollback_migration "$cur" "$tgt"; return 1; }
+        generate_nginx_config "$sock"
+        nginx -t || { rollback_migration "$cur" "$tgt"; return 1; }
+        ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding; rm -f /etc/nginx/sites-enabled/default
+        systemctl enable nginx; systemctl restart nginx || { rollback_migration "$cur" "$tgt"; return 1; }
+        systemctl stop apache2 2>/dev/null; systemctl disable apache2 2>/dev/null
     fi
-done
-
-for dir in "${PRESERVE_DIRS[@]}"; do
-    if [ -d "$TEMP_PRESERVE/$dir" ]; then
-        # Merge directories instead of replacing
-        if [ -d "$CANONICAL_TARGET/$dir" ]; then
-            cp -a "$TEMP_PRESERVE/$dir/"* "$CANONICAL_TARGET/$dir/" 2>/dev/null || true
+    
+    [ "$(detect_web_server)" != "$tgt" ] && { rollback_migration "$cur" "$tgt"; return 1; }
+    [ -f "$HEALTH_CHECK_SCRIPT" ] && "$HEALTH_CHECK_SCRIPT" || log_warn "Health check skipped"
+    
+    if [ "$mtype" = "2" ]; then
+        echo ""; log_section "Clean Migration"
+        read -p "Remove $cur completely? [y/N]: " rm
+        if [[ "$rm" =~ ^[Yy]$ ]]; then
+            if [ "$cur" = "nginx" ]; then
+                systemctl stop nginx 2>/dev/null; systemctl disable nginx 2>/dev/null
+                apt purge -y -qq nginx nginx-common nginx-core 2>/dev/null; apt autoremove -y -qq 2>/dev/null
+                rm -f /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding 2>/dev/null
+            else
+                systemctl stop apache2 2>/dev/null; systemctl disable apache2 2>/dev/null
+                apt purge -y -qq apache2 apache2-bin apache2-data apache2-utils 2>/dev/null; apt autoremove -y -qq 2>/dev/null
+                a2dissite wedding.conf 000-default.conf 2>/dev/null
+                rm -f /etc/apache2/sites-available/wedding.conf /etc/apache2/sites-enabled/wedding.conf 2>/dev/null
+            fi
+            log_info "Let's Encrypt certs preserved"
         else
-            cp -a "$TEMP_PRESERVE/$dir" "$CANONICAL_TARGET/"
+            log_info "$cur kept but disabled"
         fi
     fi
-done
+    
+    log_info "MIGRATION COMPLETE: $cur -> $tgt"
+}
 
-log_info "User data restored."
-echo ""
-
-# Step 10: Copy public assets (style.css, script.js) from app/ to root
-log_info "Updating public assets..."
-if [ -f "$CANONICAL_TARGET/app/style.css" ]; then
-    cp "$CANONICAL_TARGET/app/style.css" "$CANONICAL_TARGET/style.css"
-fi
-if [ -f "$CANONICAL_TARGET/app/script.js" ]; then
-    cp "$CANONICAL_TARGET/app/script.js" "$CANONICAL_TARGET/script.js"
-fi
-log_info "Public assets updated."
-echo ""
-
-# Step 11: Set proper ownership and permissions
-log_info "Setting ownership and permissions..."
-chown -R www-data:www-data "$CANONICAL_TARGET"
-find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;
-find "$CANONICAL_TARGET" -type f -name "*.php" -exec chmod 644 {} \;
-find "$CANONICAL_TARGET" -type f -name "*.json" -exec chmod 600 {} \;
-find "$CANONICAL_TARGET" -type f -name "*.sqlite" -exec chmod 600 {} \;
-find "$CANONICAL_TARGET" -type f -name ".env" -exec chmod 600 {} \;
-log_info "Ownership and permissions set."
-echo ""
-
-# Step 12: Detect PHP-FPM version and restart services
-log_info "Restarting PHP-FPM..."
-PHP_FPM_SOCK=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1 || echo "")
-if [ -n "$PHP_FPM_SOCK" ]; then
-    # Extract PHP version from socket path
-    PHP_VERSION=$(echo "$PHP_FPM_SOCK" | grep -oP 'php\d\.\d' | head -1 || echo "")
-    if [ -n "$PHP_VERSION" ]; then
-        log_info "Detected PHP version: $PHP_VERSION"
-        systemctl restart "$PHP_VERSION-fpm" 2>/dev/null || systemctl restart php-fpm 2>/dev/null || true
+reconfigure_web_server() {
+    log_section "Reconfigure Web Server"
+    local cur=$(detect_web_server)
+    [ "$cur" = "unknown" ] && { log_error "No web server"; return 1; }
+    
+    log_warn "This will rebuild config from templates"
+    read -p "Continue? [y/N]: " c; [[ ! "$c" =~ ^[Yy]$ ]] && { log_info "Cancelled"; return 0; }
+    
+    local sock=$(get_php_fpm_socket)
+    if [ "$cur" = "nginx" ]; then
+        generate_nginx_config "$sock"; nginx -t || return 1; systemctl reload nginx
     else
-        systemctl restart php-fpm 2>/dev/null || true
+        generate_apache_config "$sock"; apache2ctl configtest || return 1; systemctl reload apache2
     fi
-else
-    systemctl restart php-fpm 2>/dev/null || true
-fi
-log_info "PHP-FPM restarted."
+    log_info "RECONFIGURATION COMPLETE"
+}
 
-log_info "Reloading Nginx..."
-if nginx -t 2>/dev/null; then
-    systemctl reload nginx
-    log_info "Nginx reloaded."
-else
-    log_warn "Nginx configuration test failed, skipping reload."
-fi
-echo ""
-
-# Step 13: Run health check
-log_info "Running health check..."
-if [ -f "$HEALTH_CHECK_SCRIPT" ]; then
-    if ! "$HEALTH_CHECK_SCRIPT"; then
-        log_error "Health check FAILED!"
-        log_error "Update may have issues. Backup is preserved at:"
-        ls -lt "$CANONICAL_TARGET/backups/"*.tar.gz 2>/dev/null | head -1 || log_warn "Could not locate backup file."
-        log_error "Do NOT delete the backup. Review the health check errors above."
-        # Clean up temp directory but keep backup
-        rm -rf "$TEMP_DIR"
-        exit 1
-    fi
-    log_info "Health check passed."
-else
-    log_warn "Health check script not found. Skipping health check."
-fi
-echo ""
-
-# Step 14: Clean up temporary directory
-log_info "Cleaning up temporary files..."
-rm -rf "$TEMP_DIR"
-log_info "Cleanup completed."
-echo ""
-
-# Success message
-echo "========================================"
-echo -e "${GREEN}UPDATE COMPLETED SUCCESSFULLY${NC}"
-echo "========================================"
-echo ""
-echo "Runtime location: $CANONICAL_TARGET"
-echo ""
-echo "The following user data was preserved:"
-for file in "${PRESERVE_FILES[@]}"; do
-    if [ -f "$CANONICAL_TARGET/$file" ]; then
-        echo "  ✓ $file"
-    fi
+while true; do
+    clear
+    log_section "Deployment Manager"
+    echo "1. Update Application\n2. Migration Mode\n3. Reconfigure Web Server\n4. Exit"
+    read -p "Choice [1-4]: " ch
+    case $ch in
+        1) update_application; read -p "Press Enter...";;
+        2) migration_mode; read -p "Press Enter...";;
+        3) reconfigure_web_server; read -p "Press Enter...";;
+        4) log_info "Exiting"; exit 0;;
+        *) log_error "Invalid"; sleep 2;;
+    esac
 done
-for dir in "${PRESERVE_DIRS[@]}"; do
-    if [ -d "$CANONICAL_TARGET/$dir" ]; then
-        echo "  ✓ $dir/"
-    fi
-done
-echo ""
-echo "A backup was created before this update."
-echo "Backups are stored in: $CANONICAL_TARGET/backups/"
-echo ""
-echo "Run 'sudo $HEALTH_CHECK_SCRIPT' anytime to verify deployment health."
-echo ""
-
-exit 0

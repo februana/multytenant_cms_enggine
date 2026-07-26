@@ -56,49 +56,77 @@ else
   fail "Directory not owned by www-data (owned by $OWNER)"
 fi
 
-# Check 6: HTTP checks (if Nginx is running)
-if command -v curl &> /dev/null && pgrep nginx > /dev/null 2>&1; then
-  echo ""
-  echo "HTTP Checks:"
-  
-  SITE_HOST="februandik.duckdns.org"
-  HTTP_BASE="http://127.0.0.1"
-  HTTPS_BASE="https://${SITE_HOST}"
-  
-  # Frontend
-  HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/" 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
-    pass "Frontend responds (HTTP $HTTP_CODE)"
-  else
-    fail "Frontend not responding (HTTP $HTTP_CODE)"
-  fi
-  
-  # Admin panel
-  HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/admin.php" 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
-    pass "Admin panel accessible (HTTP $HTTP_CODE)"
-  else
-    fail "Admin panel issue (HTTP $HTTP_CODE)"
-  fi
-  
-  # Security: config.json should be blocked
-  HTTP_CODE=$(curl -L -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/config.json" 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "403" ]; then
-    pass "config.json blocked from public access (HTTP $HTTP_CODE)"
-  else
-    fail "SECURITY: config.json publicly accessible (HTTP $HTTP_CODE)"
-  fi
-  
-  # Security: .sqlite should be blocked
-  HTTP_CODE=$(curl -L -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/database.sqlite" 2>/dev/null || echo "000")
-  if [ "$HTTP_CODE" = "403" ]; then
-    pass "database.sqlite blocked from public access (HTTP $HTTP_CODE)"
-  else
-    fail "SECURITY: database.sqlite publicly accessible (HTTP $HTTP_CODE)"
-  fi
+# Check 6: HTTP checks (if Nginx or Apache is running)
+WEB_SERVER_DETECTED=""
+if command -v curl &> /dev/null; then
+    if pgrep nginx > /dev/null 2>&1; then
+        WEB_SERVER_DETECTED="nginx"
+    elif pgrep apache2 > /dev/null 2>&1; then
+        WEB_SERVER_DETECTED="apache"
+    fi
+    
+    if [ -n "$WEB_SERVER_DETECTED" ]; then
+        echo ""
+        echo "HTTP Checks ($WEB_SERVER_DETECTED):"
+        
+        # Try to detect domain from web server configuration or use localhost
+        SITE_HOST=""
+        
+        # Try to get domain from Nginx config
+        if [ "$WEB_SERVER_DETECTED" = "nginx" ] && [ -f "/etc/nginx/sites-enabled/wedding" ]; then
+            SITE_HOST=$(grep -oP 'server_name\s+\K[^\s;]+' /etc/nginx/sites-enabled/wedding 2>/dev/null | head -1 || echo "")
+        fi
+        
+        # Try to get domain from Apache config
+        if [ -z "$SITE_HOST" ] && [ "$WEB_SERVER_DETECTED" = "apache" ] && [ -f "/etc/apache2/sites-enabled/wedding.conf" ]; then
+            SITE_HOST=$(grep -oP 'ServerName\s+\K[^\s]+' /etc/apache2/sites-enabled/wedding.conf 2>/dev/null | head -1 || echo "")
+        fi
+        
+        # Fallback to localhost if no domain found
+        if [ -z "$SITE_HOST" ] || [ "$SITE_HOST" = "_" ]; then
+            SITE_HOST="localhost"
+        fi
+        
+        HTTP_BASE="http://127.0.0.1"
+        
+        # Frontend
+        HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/" 2>/dev/null || echo "000")
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+            pass "Frontend responds (HTTP $HTTP_CODE)"
+        else
+            fail "Frontend not responding (HTTP $HTTP_CODE)"
+        fi
+        
+        # Admin panel
+        HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/admin.php" 2>/dev/null || echo "000")
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+            pass "Admin panel accessible (HTTP $HTTP_CODE)"
+        else
+            fail "Admin panel issue (HTTP $HTTP_CODE)"
+        fi
+        
+        # Security: config.json should be blocked
+        HTTP_CODE=$(curl -L -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/config.json" 2>/dev/null || echo "000")
+        if [ "$HTTP_CODE" = "403" ]; then
+            pass "config.json blocked from public access (HTTP $HTTP_CODE)"
+        else
+            fail "SECURITY: config.json publicly accessible (HTTP $HTTP_CODE)"
+        fi
+        
+        # Security: .sqlite should be blocked
+        HTTP_CODE=$(curl -L -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/database.sqlite" 2>/dev/null || echo "000")
+        if [ "$HTTP_CODE" = "403" ]; then
+            pass "database.sqlite blocked from public access (HTTP $HTTP_CODE)"
+        else
+            fail "SECURITY: database.sqlite publicly accessible (HTTP $HTTP_CODE)"
+        fi
+    else
+        echo ""
+        echo "Skipping HTTP checks (no web server running or curl unavailable)"
+    fi
 else
-  echo ""
-  echo "Skipping HTTP checks (Nginx not running or curl unavailable)"
+    echo ""
+    echo "Skipping HTTP checks (curl not available)"
 fi
 
 echo ""

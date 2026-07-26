@@ -2,11 +2,14 @@
 set -euo pipefail
 
 # deploy/install.sh
-# Canonical installer for Ubuntu 24.04 + Nginx + PHP-FPM
+# Canonical installer for Ubuntu 24.04 + Nginx/Apache + PHP-FPM
 # Single-Root Architecture v2.0 - Always deploys to /var/www/wedding
+# Supports both Nginx and Apache web servers
 
 CANONICAL_TARGET="/var/www/wedding"
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATE_DIR="$SCRIPT_DIR/templates"
 
 if [ "$EUID" -ne 0 ]; then
   echo "This script must be run as root or via sudo." >&2
@@ -16,6 +19,38 @@ fi
 echo "=== Wedding Invitation Deployment (v2.0) ==="
 echo "Source (Repository): $SOURCE_DIR"
 echo "Target (Runtime):    $CANONICAL_TARGET"
+echo ""
+
+# Web Server Selection Wizard
+echo "================================="
+echo "Select Web Server"
+echo "================================="
+echo ""
+echo "1. Nginx (Recommended)"
+echo "2. Apache"
+echo ""
+
+while true; do
+    read -p "Enter your choice [1-2]: " WEB_SERVER_CHOICE
+    case $WEB_SERVER_CHOICE in
+        1)
+            WEB_SERVER="nginx"
+            echo "Selected: Nginx"
+            break
+            ;;
+        2)
+            WEB_SERVER="apache"
+            echo "Selected: Apache"
+            break
+            ;;
+        *)
+            echo "Invalid choice. Please enter 1 or 2."
+            ;;
+    esac
+done
+
+echo ""
+echo "Web Server: $WEB_SERVER"
 echo ""
 
 # Deploy from any source location to canonical target
@@ -86,7 +121,22 @@ fi
 echo ""
 echo "Installing system packages..."
 apt update -qq
-apt install -y -qq nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
+
+# Install packages based on selected web server
+if [ "$WEB_SERVER" = "nginx" ]; then
+    echo "Installing Nginx and PHP-FPM..."
+    apt install -y -qq nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
+elif [ "$WEB_SERVER" = "apache" ]; then
+    echo "Installing Apache and PHP-FPM..."
+    apt install -y -qq apache2 php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip libapache2-mod-proxy-fcgid
+    
+    # Enable required Apache modules
+    echo "Enabling Apache modules..."
+    a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias
+    
+    # Enable SSL by default
+    a2enmod socache_shmcb
+fi
 
 # Find PHP-FPM socket automatically (supports Ubuntu PHP versions)
 PHP_FPM_SOCK=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1)
@@ -177,93 +227,84 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 echo ""
-echo "Deploying Nginx configuration..."
-NGINX_CONF="/etc/nginx/sites-available/wedding"
+if [ "$WEB_SERVER" = "nginx" ]; then
+    echo "Deploying Nginx configuration from template..."
+    NGINX_CONF="/etc/nginx/sites-available/wedding"
 
-# Generate Nginx config with detected socket
-cat > "$NGINX_CONF" <<NGINX_EOF
-server {
-    listen 80;
-    server_name _;
+    # Copy template and replace placeholders
+    cp "$TEMPLATE_DIR/nginx/wedding.conf" "$NGINX_CONF"
+    
+    # Replace placeholders with actual values
+    sed -i "s|{{DOMAIN}}|_|g" "$NGINX_CONF"
+    sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$NGINX_CONF"
+    sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$NGINX_CONF"
+    sed -i "s|{{LOG_PATH}}|/var/log/nginx|g" "$NGINX_CONF"
+    sed -i "s|{{UPLOAD_LIMIT}}|20M|g" "$NGINX_CONF"
+    sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/_|g" "$NGINX_CONF"
 
-    root $WORKING_DIR;
-    index index.php admin.php save.php messages.php gallery.php;
+    # Enable site
+    ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/wedding
+    rm -f /etc/nginx/sites-enabled/default
 
-    access_log /var/log/nginx/wedding.access.log;
-    error_log /var/log/nginx/wedding.error.log;
+    echo "Testing Nginx configuration..."
+    if ! nginx -t; then
+      echo "ERROR: Nginx configuration test failed" >&2
+      exit 1
+    fi
 
-    client_max_body_size 20M;
-    autoindex off;
+    # Enable and start Nginx (do not fail if already running)
+    echo "Enabling Nginx service..."
+    systemctl enable nginx >/dev/null 2>&1 || true
 
-    # Block sensitive paths
-    location ~ ^/(app|deploy|backups|\\.git) {
-        deny all;
-        return 403;
-    }
+    echo "Starting Nginx..."
+    if ! systemctl is-active --quiet nginx; then
+      systemctl start nginx
+    else
+      echo "Nginx is already running. Reloading configuration..."
+      systemctl reload nginx
+    fi
 
-    # Block sensitive file types
-    location ~ \\.(json|sqlite)$ {
-        deny all;
-        return 403;
-    }
+elif [ "$WEB_SERVER" = "apache" ]; then
+    echo "Deploying Apache configuration from template..."
+    APACHE_CONF="/etc/apache2/sites-available/wedding.conf"
 
-    # Block hidden files
-    location ~ /\\. {
-        deny all;
-        return 403;
-    }
+    # Get domain name or use default
+    DOMAIN="_"
+    
+    # Copy template and replace placeholders
+    cp "$TEMPLATE_DIR/apache/wedding.conf" "$APACHE_CONF"
+    
+    # Replace placeholders with actual values
+    sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$APACHE_CONF"
+    sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$APACHE_CONF"
+    sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$APACHE_CONF"
+    sed -i "s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$APACHE_CONF"
+    sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_CONF"
 
-    # Disable PHP in uploads
-    location /uploads {
-        location ~ \\.php$ {
-            deny all;
-            return 403;
-        }
-    }
+    echo "Testing Apache configuration..."
+    if ! apache2ctl configtest; then
+      echo "ERROR: Apache configuration test failed" >&2
+      exit 1
+    fi
 
-    # Route static files, fallback to index.php
-    location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
-    }
+    # Enable site
+    a2ensite wedding.conf
+    
+    # Disable default site if enabled
+    a2dissite 000-default.conf 2>/dev/null || true
 
-    # PHP-FPM handler
-    location ~ \\.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:$PHP_FPM_SOCK;
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-        include fastcgi_params;
-    }
+    # Enable and start Apache
+    echo "Enabling Apache service..."
+    systemctl enable apache2 >/dev/null 2>&1 || true
 
-    # Cache static assets
-    location ~* \\.(jpg|jpeg|png|gif|webp|css|js|svg|ico|woff|woff2|ttf|eot)$ {
-        expires 7d;
-        access_log off;
-    }
-}
-NGINX_EOF
-
-# Enable site
-ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/wedding
-rm -f /etc/nginx/sites-enabled/default
-
-echo "Testing Nginx configuration..."
-if ! nginx -t; then
-  echo "ERROR: Nginx configuration test failed" >&2
-  exit 1
+    echo "Starting Apache..."
+    if ! systemctl is-active --quiet apache2; then
+      systemctl start apache2
+    else
+      echo "Apache is already running. Reloading configuration..."
+      systemctl reload apache2
+    fi
 fi
-
-# Enable and start Nginx (do not fail if already running)
-echo "Enabling Nginx service..."
-systemctl enable nginx >/dev/null 2>&1 || true
-
-echo "Starting Nginx..."
-if ! systemctl is-active --quiet nginx; then
-  systemctl start nginx
-else
-  echo "Nginx is already running. Reloading configuration..."
-  systemctl reload nginx
-fi
-
 # Cleanup temporary source if needed
 if [ "$CLEANUP_SOURCE" = true ]; then
   echo ""
