@@ -12,9 +12,6 @@
     ServerAlias www.{{DOMAIN}}
     DocumentRoot {{DOCUMENT_ROOT}}
 
-    # WebDAV location - configured within main VirtualHost to avoid conflicts
-    Alias /webdav {{DOCUMENT_ROOT}}/uploads
-
     <Directory {{DOCUMENT_ROOT}}>
         Options -Indexes +FollowSymLinks
         AllowOverride All
@@ -27,21 +24,38 @@
         RewriteRule ^(.*)$ index.php?$query_string [QSA,L]
     </Directory>
 
-    # WebDAV configuration using Directory block for the target path
-    <Directory {{DOCUMENT_ROOT}}/uploads>
-        Require all granted
-        Options Indexes FollowSymLinks
-        
+    # WebDAV configuration using Location block for proper URL-based access control
+    # The /webdav URL endpoint maps to the uploads directory with DAV enabled
+    Alias /webdav {{DOCUMENT_ROOT}}/uploads
+    
+    <Location /webdav>
         DAV On
         AuthType Basic
         AuthName "Wedding WebDAV"
         AuthUserFile /etc/apache2/.davpasswd
         Require valid-user
-
-        # Allow all WebDAV methods
-        <LimitExcept GET HEAD OPTIONS PROPFIND PROPPATCH PUT DELETE COPY MOVE MKCOL LOCK UNLOCK>
+        
+        # Allow WebDAV-specific methods only
+        <LimitExcept GET HEAD OPTIONS PROPFIND PROPPATCH PUT DELETE COPY MOVE MKCOL LOCK UNLOCK REPORT>
             Require all denied
         </LimitExcept>
+        
+        # Ensure PHP files are never executed via WebDAV (security)
+        <FilesMatch "\.php$">
+            Require all denied
+        </FilesMatch>
+    </Location>
+
+    # Directory permissions for uploads - allow read but block PHP execution
+    <Directory {{DOCUMENT_ROOT}}/uploads>
+        Require all granted
+        Options Indexes FollowSymLinks
+        DirectoryIndex none
+        
+        # Block PHP execution when accessed directly as files
+        <FilesMatch "\.php$">
+            Require all denied
+        </FilesMatch>
     </Directory>
 
     # PHP-FPM handler via ProxyFCG
