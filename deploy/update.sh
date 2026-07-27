@@ -33,6 +33,25 @@ detect_web_server() {
     else echo "unknown"; fi
 }
 
+# Detect domain from existing configuration
+detect_domain_from_config() {
+    local ws=$(detect_web_server)
+    local domain=""
+    
+    if [ "$ws" = "nginx" ] && [ -f "/etc/nginx/sites-enabled/wedding" ]; then
+        domain=$(grep -oP 'server_name\s+\K[^\s;]+' /etc/nginx/sites-enabled/wedding 2>/dev/null | head -1 || echo "")
+    elif [ "$ws" = "apache" ] && [ -f "/etc/apache2/sites-enabled/wedding.conf" ]; then
+        domain=$(grep -oP 'ServerName\s+\K[^\s]+' /etc/apache2/sites-enabled/wedding.conf 2>/dev/null | head -1 || echo "")
+    fi
+    
+    # Fallback to hostname if no domain found
+    if [ -z "$domain" ] || [ "$domain" = "_" ]; then
+        domain=$(hostname -f 2>/dev/null || echo "_")
+    fi
+    
+    echo "$domain"
+}
+
 get_php_fpm_socket() {
     local sock=$(find /run/php -name '*.sock' 2>/dev/null | head -n 1)
     if [ -z "$sock" ]; then
@@ -43,6 +62,18 @@ get_php_fpm_socket() {
     echo "${sock:-/run/php/php-fpm.sock}"
 }
 
+# Check if SSL certificate exists for the given domain
+check_ssl_exists() {
+    local domain="$1"
+    local cert_path="/etc/letsencrypt/live/$domain/fullchain.pem"
+    local key_path="/etc/letsencrypt/live/$domain/privkey.pem"
+    
+    if [ -f "$cert_path" ] && [ -f "$key_path" ]; then
+        return 0
+    fi
+    return 1
+}
+
 create_backup() {
     log_info "Creating backup..."
     [ -f "$BACKUP_SCRIPT" ] && "$BACKUP_SCRIPT" || log_warn "Backup script not found"
@@ -50,17 +81,47 @@ create_backup() {
 
 generate_nginx_config() {
     local sock="$1"
+    local domain="${2:-_}"
     local conf="/etc/nginx/sites-available/wedding"
+    
+    # Validate domain
+    if [ -z "$domain" ] || [ "$domain" = "{{DOMAIN}}" ]; then
+        log_error "Invalid domain for Nginx config generation"
+        return 1
+    fi
+    
     cp "$TEMPLATE_DIR/nginx/wedding.conf" "$conf"
-    sed -i "s|{{DOMAIN}}|_|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|/var/log/nginx|g; s|{{UPLOAD_LIMIT}}|20M|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/_|g" "$conf"
+    sed -i "s|{{DOMAIN}}|$domain|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|/var/log/nginx|g; s|{{UPLOAD_LIMIT}}|20M|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$domain|g" "$conf"
+    
+    # Validate no unresolved placeholders
+    if grep -q '{{' "$conf"; then
+        log_error "Unresolved placeholders in generated Nginx config"
+        return 1
+    fi
+    
     log_info "Nginx config generated from template"
 }
 
 generate_apache_config() {
     local sock="$1"
+    local domain="${2:-_}"
     local conf="/etc/apache2/sites-available/wedding.conf"
+    
+    # Validate domain
+    if [ -z "$domain" ] || [ "$domain" = "{{DOMAIN}}" ]; then
+        log_error "Invalid domain for Apache config generation"
+        return 1
+    fi
+    
     cp "$TEMPLATE_DIR/apache/wedding.conf" "$conf"
-    sed -i "s|{{DOMAIN}}|_|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/_|g" "$conf"
+    sed -i "s|{{DOMAIN}}|$domain|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$domain|g" "$conf"
+    
+    # Validate no unresolved placeholders
+    if grep -q '{{' "$conf"; then
+        log_error "Unresolved placeholders in generated Apache config"
+        return 1
+    fi
+    
     log_info "Apache config generated from template"
 }
 
@@ -151,6 +212,10 @@ migration_mode() {
     create_backup
     local sock=$(get_php_fpm_socket)
     
+    # Get domain from existing configuration
+    local domain=$(detect_domain_from_config)
+    log_info "Domain: $domain"
+    
     if [ "$tgt" = "apache" ]; then
         apt update -qq && apt install -y -qq apache2 || { rollback_migration "$cur" "$tgt"; return 1; }
         a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias socache_shmcb >/dev/null 2>&1
@@ -159,7 +224,7 @@ migration_mode() {
         systemctl start php-fpm >/dev/null 2>&1 || systemctl start php8.3-fpm >/dev/null 2>&1 || systemctl start php8.2-fpm >/dev/null 2>&1 || true
         sleep 2
         sock=$(get_php_fpm_socket)
-        generate_apache_config "$sock"
+        generate_apache_config "$sock" "$domain" || { rollback_migration "$cur" "$tgt"; return 1; }
         apache2ctl configtest || { rollback_migration "$cur" "$tgt"; return 1; }
         a2ensite wedding.conf; a2dissite 000-default.conf 2>/dev/null
         systemctl enable apache2; systemctl restart apache2 || { rollback_migration "$cur" "$tgt"; return 1; }
@@ -171,7 +236,7 @@ migration_mode() {
         systemctl start php-fpm >/dev/null 2>&1 || systemctl start php8.3-fpm >/dev/null 2>&1 || systemctl start php8.2-fpm >/dev/null 2>&1 || true
         sleep 2
         sock=$(get_php_fpm_socket)
-        generate_nginx_config "$sock"
+        generate_nginx_config "$sock" "$domain" || { rollback_migration "$cur" "$tgt"; return 1; }
         nginx -t || { rollback_migration "$cur" "$tgt"; return 1; }
         ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding; rm -f /etc/nginx/sites-enabled/default
         systemctl enable nginx; systemctl restart nginx || { rollback_migration "$cur" "$tgt"; return 1; }
@@ -209,14 +274,22 @@ reconfigure_web_server() {
     local cur=$(detect_web_server)
     [ "$cur" = "unknown" ] && { log_error "No web server"; return 1; }
     
+    # Get domain from existing configuration
+    local domain=$(detect_domain_from_config)
+    log_info "Domain: $domain"
+    
     log_warn "This will rebuild config from templates"
     read -p "Continue? [y/N]: " c; [[ ! "$c" =~ ^[Yy]$ ]] && { log_info "Cancelled"; return 0; }
     
     local sock=$(get_php_fpm_socket)
     if [ "$cur" = "nginx" ]; then
-        generate_nginx_config "$sock"; nginx -t || return 1; systemctl reload nginx
+        generate_nginx_config "$sock" "$domain" || return 1
+        nginx -t || return 1
+        systemctl reload nginx
     else
-        generate_apache_config "$sock"; apache2ctl configtest || return 1; systemctl reload apache2
+        generate_apache_config "$sock" "$domain" || return 1
+        apache2ctl configtest || return 1
+        systemctl reload apache2
     fi
     log_info "RECONFIGURATION COMPLETE"
 }
