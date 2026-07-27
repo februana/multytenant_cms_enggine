@@ -51,7 +51,14 @@ for dir in cover music gallery background; do
   fi
 done
 
-# Check 4: Permissions check (config should be 600)
+# Check 4: WebDAV directory exists and is writable
+if [ -d "$DEPLOY_DIR/webdav" ] && [ -w "$DEPLOY_DIR/webdav" ]; then
+  pass "WebDAV directory exists and is writable"
+else
+  fail "WebDAV directory missing or not writable: webdav/"
+fi
+
+# Check 5: Permissions check (config should be 600)
 CONFIG_PERMS=$(stat -c %a "$DEPLOY_DIR/config.json" 2>/dev/null || echo "000")
 if [[ "$CONFIG_PERMS" == "600" ]] || [[ "$CONFIG_PERMS" == "640" ]]; then
   pass "Config file permissions secure ($CONFIG_PERMS)"

@@ -60,7 +60,6 @@
     </FilesMatch>
 
     # Disable PHP execution in uploads directory (security)
-    # But allow WebDAV access via /webdav alias
     <Directory {{DOCUMENT_ROOT}}/uploads>
         Require all granted
         Options Indexes FollowSymLinks
@@ -72,8 +71,8 @@
         </FilesMatch>
     </Directory>
 
-    # WebDAV configuration for /webdav URL endpoint
-    Alias /webdav {{DOCUMENT_ROOT}}/uploads
+    # WebDAV configuration for /webdav URL endpoint (separate from CMS uploads)
+    Alias /webdav {{DOCUMENT_ROOT}}/webdav
     
     <Location /webdav>
         DAV On
@@ -86,12 +85,19 @@
         <LimitExcept GET HEAD OPTIONS PROPFIND PROPPATCH PUT DELETE COPY MOVE MKCOL LOCK UNLOCK REPORT>
             Require all denied
         </LimitExcept>
+    </Location>
+
+    # Directory permissions for webdav - allow read but block PHP execution
+    <Directory {{DOCUMENT_ROOT}}/webdav>
+        Require all granted
+        Options Indexes FollowSymLinks
+        DirectoryIndex none
         
-        # Ensure PHP files are not executed via WebDAV
+        # Block PHP execution when accessed directly as files
         <FilesMatch "\.php$">
             Require all denied
         </FilesMatch>
-    </Location>
+    </Directory>
 
     # PHP-FPM handler via ProxyFCG
     <FilesMatch \.php$>

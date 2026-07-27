@@ -377,6 +377,7 @@ mkdir -p "$WORKING_DIR/uploads/cover"
 mkdir -p "$WORKING_DIR/uploads/music"
 mkdir -p "$WORKING_DIR/uploads/gallery"
 mkdir -p "$WORKING_DIR/uploads/background"
+mkdir -p "$WORKING_DIR/webdav"
 mkdir -p "$WORKING_DIR/backups"
 
 echo "Setting permissions..."
