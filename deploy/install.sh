@@ -21,7 +21,49 @@ echo "Source (Repository): $SOURCE_DIR"
 echo "Target (Runtime):    $CANONICAL_TARGET"
 echo ""
 
-# Web Server Selection Wizard
+# Detect or prompt for domain name
+detect_or_prompt_domain() {
+    local detected=""
+    
+    # Try to detect from hostname if it's a real domain
+    if [ -n "$(hostname -f 2>/dev/null)" ] && [ "$(hostname -f)" != "localhost" ] && [ "$(hostname -f)" != "(none)" ]; then
+        detected="$(hostname -f)"
+    fi
+    
+    if [ -n "$detected" ]; then
+        echo "$detected"
+        return 0
+    fi
+    
+    # Prompt user for domain
+    echo ""
+    echo "=========================================="
+    echo "Domain Configuration"
+    echo "=========================================="
+    echo "Please enter your domain name (e.g., example.com)"
+    echo "Leave empty to use localhost for testing"
+    read -p "Domain: " input_domain
+    
+    if [ -z "$input_domain" ]; then
+        echo "_"
+    else
+        echo "$input_domain"
+    fi
+}
+
+# Check if SSL certificate exists for the given domain
+check_ssl_exists() {
+    local domain="$1"
+    local cert_path="/etc/letsencrypt/live/$domain/fullchain.pem"
+    local key_path="/etc/letsencrypt/live/$domain/privkey.pem"
+    
+    if [ -f "$cert_path" ] && [ -f "$key_path" ]; then
+        return 0
+    fi
+    return 1
+}
+
+echo ""
 echo "================================="
 echo "Select Web Server"
 echo "================================="
@@ -52,6 +94,24 @@ done
 echo ""
 echo "Web Server: $WEB_SERVER"
 echo ""
+
+# Get domain name
+DOMAIN=$(detect_or_prompt_domain)
+if [ -z "$DOMAIN" ]; then
+    log_error "Domain cannot be empty. Aborting."
+    exit 1
+fi
+echo "Domain: $DOMAIN"
+
+# Check for existing SSL certificate
+HAS_SSL=false
+if check_ssl_exists "$DOMAIN"; then
+    HAS_SSL=true
+    echo "SSL certificate found for $DOMAIN"
+else
+    echo "No SSL certificate found for $DOMAIN. Will generate HTTP-only config."
+    echo "Run certbot separately to enable HTTPS later."
+fi
 
 # Deploy from any source location to canonical target
 if [ -d "$CANONICAL_TARGET" ] && [ "$SOURCE_DIR" = "$CANONICAL_TARGET" ]; then
@@ -238,16 +298,36 @@ if [ "$WEB_SERVER" = "nginx" ]; then
     echo "Deploying Nginx configuration from template..."
     NGINX_CONF="/etc/nginx/sites-available/wedding"
 
+    # Validate DOMAIN before proceeding
+    if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "{{DOMAIN}}" ]; then
+        log_error "Invalid domain for Nginx configuration. Aborting."
+        exit 1
+    fi
+
     # Copy template and replace placeholders
     cp "$TEMPLATE_DIR/nginx/wedding.conf" "$NGINX_CONF"
     
     # Replace placeholders with actual values
-    sed -i "s|{{DOMAIN}}|_|g" "$NGINX_CONF"
+    sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$NGINX_CONF"
     sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$NGINX_CONF"
     sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$NGINX_CONF"
     sed -i "s|{{LOG_PATH}}|/var/log/nginx|g" "$NGINX_CONF"
     sed -i "s|{{UPLOAD_LIMIT}}|20M|g" "$NGINX_CONF"
-    sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/_|g" "$NGINX_CONF"
+    
+    # Handle SSL path based on certificate existence
+    if [ "$HAS_SSL" = true ]; then
+        sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$NGINX_CONF"
+    else
+        # For HTTP-only config, use placeholder that won't break config
+        # The HTTPS block is commented out by default in template
+        sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$NGINX_CONF"
+    fi
+
+    # Validate no unresolved placeholders remain
+    if grep -q '{{' "$NGINX_CONF"; then
+        log_error "Unresolved placeholders found in generated Nginx config"
+        exit 1
+    fi
 
     # Enable site
     ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/wedding
@@ -255,8 +335,8 @@ if [ "$WEB_SERVER" = "nginx" ]; then
 
     echo "Testing Nginx configuration..."
     if ! nginx -t; then
-      echo "ERROR: Nginx configuration test failed" >&2
-      exit 1
+        echo "ERROR: Nginx configuration test failed" >&2
+        exit 1
     fi
 
     # Enable and start Nginx (do not fail if already running)
@@ -275,9 +355,12 @@ elif [ "$WEB_SERVER" = "apache" ]; then
     echo "Deploying Apache configuration from template..."
     APACHE_CONF="/etc/apache2/sites-available/wedding.conf"
 
-    # Get domain name or use default
-    DOMAIN="_"
-    
+    # Validate DOMAIN before proceeding
+    if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "{{DOMAIN}}" ]; then
+        log_error "Invalid domain for Apache configuration. Aborting."
+        exit 1
+    fi
+
     # Copy template and replace placeholders
     cp "$TEMPLATE_DIR/apache/wedding.conf" "$APACHE_CONF"
     
@@ -286,12 +369,26 @@ elif [ "$WEB_SERVER" = "apache" ]; then
     sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$APACHE_CONF"
     sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$APACHE_CONF"
     sed -i "s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$APACHE_CONF"
-    sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_CONF"
+    
+    # Handle SSL path based on certificate existence
+    if [ "$HAS_SSL" = true ]; then
+        sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_CONF"
+    else
+        # For HTTP-only config, we still need valid paths but they won't be used
+        # since the HTTPS VirtualHost won't be enabled without certs
+        sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_CONF"
+    fi
+
+    # Validate no unresolved placeholders remain
+    if grep -q '{{' "$APACHE_CONF"; then
+        log_error "Unresolved placeholders found in generated Apache config"
+        exit 1
+    fi
 
     echo "Testing Apache configuration..."
     if ! apache2ctl configtest; then
-      echo "ERROR: Apache configuration test failed" >&2
-      exit 1
+        echo "ERROR: Apache configuration test failed" >&2
+        exit 1
     fi
 
     # Enable site
