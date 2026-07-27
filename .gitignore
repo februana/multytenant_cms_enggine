@@ -1,1 +1,1 @@
-Nothing needs to be added to the .gitignore file based on the provided changes. The modified files (`deploy/install.sh` and `deploy/update.sh`) are shell script files that should typically be tracked in version control.
+Nothing should be ignored based on the provided file changes. The only modified file is 'deploy/templates/apache/wedding.conf', which appears to be a configuration file and does not fall under any of the categories that should be ignored according to the rules.
