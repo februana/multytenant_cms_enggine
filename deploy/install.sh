@@ -11,6 +11,14 @@ SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
 
+# Track configuration for rollback
+declare -A BACKUP_STATE=(
+    [apache_enabled_sites]=""
+    [nginx_enabled_sites]=""
+    [apache_status]="stopped"
+    [nginx_status]="stopped"
+)
+
 if [ "$EUID" -ne 0 ]; then
   echo "This script must be run as root or via sudo." >&2
   exit 2
@@ -21,6 +29,66 @@ echo "Source (Repository): $SOURCE_DIR"
 echo "Target (Runtime):    $CANONICAL_TARGET"
 echo ""
 
+# Rollback function
+rollback() {
+    local reason="${1:-Unknown error}"
+    echo ""
+    echo "=========================================="
+    echo "ROLLBACK INITIATED"
+    echo "Reason: $reason"
+    echo "=========================================="
+    # Remove newly created sites if they exist
+    echo "Removing newly created site configurations..."
+    a2dissite wedding.conf 2>/dev/null || true
+    a2dissite wedding-ssl.conf 2>/dev/null || true
+    rm -f /etc/nginx/sites-enabled/wedding 2>/dev/null || true
+    
+    # Restore Apache sites
+    if [ -n "${BACKUP_STATE[apache_enabled_sites]}" ]; then
+        echo "Restoring Apache enabled sites..."
+        for site in ${BACKUP_STATE[apache_enabled_sites]}; do
+            a2ensite "$site" 2>/dev/null || true
+        done
+    fi
+
+    # Restore Nginx sites
+    if [ -n "${BACKUP_STATE[nginx_enabled_sites]}" ]; then
+        echo "Restoring Nginx enabled sites..."
+        for site in ${BACKUP_STATE[nginx_enabled_sites]}; do
+            ln -sf "/etc/nginx/sites-available/$site" "/etc/nginx/sites-enabled/$site" 2>/dev/null || true
+        done
+    fi
+
+    # Restore services
+    if [ "${BACKUP_STATE[apache_status]}" = "active" ]; then
+        echo "Restarting Apache..."
+        systemctl start apache2 2>/dev/null || true
+    fi
+
+    if [ "${BACKUP_STATE[nginx_status]}" = "active" ]; then
+        echo "Restarting Nginx..."
+        systemctl start nginx 2>/dev/null || true
+    fi
+    
+    # Remove SSL config if it was created during failed installation
+    if [ -f /etc/apache2/sites-available/wedding-ssl.conf ]; then
+        echo "Removing partially created SSL configuration..."
+        rm -f /etc/apache2/sites-available/wedding-ssl.conf
+        rm -f /etc/apache2/sites-enabled/wedding-ssl.conf
+    fi
+
+    echo ""
+    echo "Rollback complete. Please review the error above and try again."
+
+# Validate domain format
+validate_domain() {
+    local domain="$1"
+    if [[ "$domain" =~ ^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$ ]]; then
+        return 0
+    fi
+    return 1
+}
+
 # Detect or prompt for domain name
 detect_or_prompt_domain() {
     local detected=""
@@ -28,11 +96,11 @@ detect_or_prompt_domain() {
     # Try to detect from hostname if it's a real domain
     if [ -n "$(hostname -f 2>/dev/null)" ] && [ "$(hostname -f)" != "localhost" ] && [ "$(hostname -f)" != "(none)" ]; then
         detected="$(hostname -f)"
-    fi
-    
-    if [ -n "$detected" ]; then
-        echo "$detected"
-        return 0
+        # Validate detected domain
+        if validate_domain "$detected"; then
+            echo "$detected"
+            return 0
+        fi
     fi
     
     # Prompt user for domain
@@ -40,15 +108,31 @@ detect_or_prompt_domain() {
     echo "=========================================="
     echo "Domain Configuration"
     echo "=========================================="
-    echo "Please enter your domain name (e.g., example.com)"
-    echo "Leave empty to use localhost for testing"
-    read -p "Domain: " input_domain
+    echo "Please enter your primary domain name (e.g., example.com or februandik.duckdns.org)"
+    echo "This will be used for:"
+    echo "  - Web server configuration (ServerName/server_name)"
+    echo "  - SSL certificate (Let's Encrypt)"
+    echo "  - Application URLs"
+    echo ""
     
-    if [ -z "$input_domain" ]; then
-        echo "_"
-    else
-        echo "$input_domain"
-    fi
+    while true; do
+        read -p "Primary domain: " input_domain
+        
+        if [ -z "$input_domain" ]; then
+            echo "Domain cannot be empty. Please enter a valid domain name."
+            continue
+        fi
+        
+        # Remove http:// or https:// prefix if present
+        input_domain=$(echo "$input_domain" | sed -E 's|^https?://||' | sed -E 's|/$||')
+        
+        if validate_domain "$input_domain"; then
+            echo "$input_domain"
+            return 0
+        else
+            echo "Invalid domain format. Please enter a valid domain (e.g., example.com)"
+        fi
+    done
 }
 
 # Check if SSL certificate exists for the given domain
@@ -61,6 +145,54 @@ check_ssl_exists() {
         return 0
     fi
     return 1
+}
+
+# Stop and disable conflicting web server
+stop_conflicting_server() {
+    local target_server="$1"
+    
+    if [ "$target_server" = "apache" ]; then
+        # Stop and disable Nginx
+        if systemctl is-active --quiet nginx 2>/dev/null; then
+            echo "Stopping Nginx (conflicting with Apache)..."
+            systemctl stop nginx 2>/dev/null || true
+            BACKUP_STATE[nginx_status]="active"
+        fi
+        if systemctl is-enabled --quiet nginx 2>/dev/null; then
+            systemctl disable nginx 2>/dev/null || true
+        fi
+        # Save enabled Nginx sites
+        if [ -d /etc/nginx/sites-enabled ]; then
+            BACKUP_STATE[nginx_enabled_sites]=$(ls /etc/nginx/sites-enabled 2>/dev/null | tr '\n' ' ')
+        fi
+    elif [ "$target_server" = "nginx" ]; then
+        # Stop and disable Apache
+        if systemctl is-active --quiet apache2 2>/dev/null; then
+            echo "Stopping Apache (conflicting with Nginx)..."
+            systemctl stop apache2 2>/dev/null || true
+            BACKUP_STATE[apache_status]="active"
+        fi
+        if systemctl is-enabled --quiet apache2 2>/dev/null; then
+            systemctl disable apache2 2>/dev/null || true
+        fi
+        # Save enabled Apache sites
+        if [ -d /etc/apache2/sites-enabled ]; then
+            BACKUP_STATE[apache_enabled_sites]=$(ls /etc/apache2/sites-enabled 2>/dev/null | tr '\n' ' ')
+        fi
+    fi
+    
+    # Verify ports are free
+    sleep 1
+    if command -v ss &>/dev/null; then
+        local port_80=$(ss -tulpn 2>/dev/null | grep ':80 ' || true)
+        local port_443=$(ss -tulpn 2>/dev/null | grep ':443 ' || true)
+        if [ -n "$port_80" ] || [ -n "$port_443" ]; then
+            echo "WARNING: Ports may still be in use:"
+            echo "$port_80$port_443"
+            echo "Attempting to force release..."
+            sleep 2
+        fi
+    fi
 }
 
 echo ""
@@ -95,10 +227,14 @@ echo ""
 echo "Web Server: $WEB_SERVER"
 echo ""
 
+# Stop conflicting web server BEFORE installing packages
+echo "Checking for conflicting web servers..."
+stop_conflicting_server "$WEB_SERVER"
+
 # Get domain name
 DOMAIN=$(detect_or_prompt_domain)
 if [ -z "$DOMAIN" ]; then
-    log_error "Domain cannot be empty. Aborting."
+    rollback "Domain cannot be empty"
     exit 1
 fi
 echo "Domain: $DOMAIN"
@@ -353,60 +489,198 @@ if [ "$WEB_SERVER" = "nginx" ]; then
 
 elif [ "$WEB_SERVER" = "apache" ]; then
     echo "Deploying Apache configuration from template..."
-    APACHE_CONF="/etc/apache2/sites-available/wedding.conf"
+    APACHE_HTTP_CONF="/etc/apache2/sites-available/wedding.conf"
+    APACHE_SSL_CONF="/etc/apache2/sites-available/wedding-ssl.conf"
 
     # Validate DOMAIN before proceeding
     if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "{{DOMAIN}}" ]; then
-        log_error "Invalid domain for Apache configuration. Aborting."
+        rollback "Invalid domain for Apache configuration"
         exit 1
     fi
 
-    # Copy template and replace placeholders
-    cp "$TEMPLATE_DIR/apache/wedding.conf" "$APACHE_CONF"
+    # ===== STEP 1: Generate and enable HTTP VirtualHost first =====
+    echo "Generating HTTP VirtualHost configuration..."
+    cp "$TEMPLATE_DIR/apache/apache-http.conf.template" "$APACHE_HTTP_CONF"
     
     # Replace placeholders with actual values
-    sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$APACHE_CONF"
-    sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$APACHE_CONF"
-    sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$APACHE_CONF"
-    sed -i "s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$APACHE_CONF"
-    
-    # Handle SSL path based on certificate existence
-    if [ "$HAS_SSL" = true ]; then
-        sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_CONF"
-    else
-        # For HTTP-only config, we still need valid paths but they won't be used
-        # since the HTTPS VirtualHost won't be enabled without certs
-        sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_CONF"
-    fi
+    sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$APACHE_HTTP_CONF"
+    sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$APACHE_HTTP_CONF"
+    sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$APACHE_HTTP_CONF"
+    sed -i "s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$APACHE_HTTP_CONF"
 
     # Validate no unresolved placeholders remain
-    if grep -q '{{' "$APACHE_CONF"; then
-        log_error "Unresolved placeholders found in generated Apache config"
+    if grep -q '{{' "$APACHE_HTTP_CONF"; then
+        rollback "Unresolved placeholders found in generated Apache HTTP config"
         exit 1
     fi
 
-    echo "Testing Apache configuration..."
+    echo "Testing Apache HTTP configuration..."
     if ! apache2ctl configtest; then
-        echo "ERROR: Apache configuration test failed" >&2
+        rollback "Apache HTTP configuration test failed"
         exit 1
     fi
 
-    # Enable site
+    # Enable HTTP site
     a2ensite wedding.conf
-    
-    # Disable default site if enabled
     a2dissite 000-default.conf 2>/dev/null || true
 
-    # Enable and start Apache
-    echo "Enabling Apache service..."
+    # Start Apache with HTTP only
+    echo "Starting Apache (HTTP only)..."
     systemctl enable apache2 >/dev/null 2>&1 || true
-
-    echo "Starting Apache..."
     if ! systemctl is-active --quiet apache2; then
       systemctl start apache2
     else
-      echo "Apache is already running. Reloading configuration..."
       systemctl reload apache2
+    fi
+
+    # ===== STEP 2: Ask for Let's Encrypt email and run Certbot to obtain SSL certificate =====
+    echo ""
+    echo "=========================================="
+    echo "SSL Certificate Setup"
+    echo "=========================================="
+    echo "Domain: $DOMAIN"
+    echo ""
+    
+    # Ask for Let's Encrypt email
+    echo "Enter your email address for Let's Encrypt certificate notifications:"
+    echo "(This is required for certificate renewal reminders)"
+    while true; do
+        read -p "Email: " LETSENCRYPT_EMAIL
+        if [ -z "$LETSENCRYPT_EMAIL" ]; then
+            echo "Email cannot be empty. Please enter a valid email address."
+            continue
+        fi
+        # Basic email validation
+        if [[ ! "$LETSENCRYPT_EMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
+            echo "Invalid email format. Please enter a valid email address."
+            continue
+        fi
+        break
+    done
+    
+    echo ""
+    echo "Do you want to obtain an SSL certificate from Let's Encrypt?"
+    echo "1. Yes, obtain SSL certificate now (recommended)"
+    echo "2. No, configure SSL later manually"
+    echo ""
+    
+    while true; do
+        read -p "Enter your choice [1-2]: " SSL_CHOICE
+        case $SSL_CHOICE in
+            1)
+                echo "Obtaining SSL certificate..."
+                
+                # Verify DNS resolution before running certbot
+                echo "Verifying DNS resolution for $DOMAIN..."
+                if ! command -v dig &>/dev/null && ! command -v nslookup &>/dev/null; then
+                    apt install -y -qq dnsutils >/dev/null 2>&1 || true
+                fi
+                
+                # Try to verify domain resolves to this server
+                if command -v dig &>/dev/null; then
+                    RESOLVED_IP=$(dig +short "$DOMAIN" 2>/dev/null | head -1 || echo "")
+                elif command -v nslookup &>/dev/null; then
+                    RESOLVED_IP=$(nslookup "$DOMAIN" 2>/dev/null | grep -A1 "Name:" | tail -1 | awk '{print $2}' || echo "")
+                else
+                    RESOLVED_IP=""
+                fi
+                
+                if [ -n "$RESOLVED_IP" ]; then
+                    echo "DNS resolved: $DOMAIN -> $RESOLVED_IP"
+                    # Get local IP
+                    LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "")
+                    if [ -n "$LOCAL_IP" ] && [ "$RESOLVED_IP" != "$LOCAL_IP" ]; then
+                        echo "WARNING: Resolved IP ($RESOLVED_IP) does not match local IP ($LOCAL_IP)"
+                        echo "Certbot may fail if DNS is not correctly configured."
+                        read -p "Continue anyway? [y/N]: " CONTINUE
+                        if [[ ! "$CONTINUE" =~ ^[Yy]$ ]]; then
+                            echo "Skipping SSL certificate setup."
+                            SSL_CHOICE="2"
+                            break
+                        fi
+                    fi
+                fi
+                
+                # Install certbot if not present
+                if ! command -v certbot &>/dev/null; then
+                    echo "Installing certbot..."
+                    apt install -y -qq certbot
+                fi
+                
+                # Run certbot to obtain certificate only (not modifying Apache config)
+                # Using --standalone to avoid certbot creating any Apache configs
+                # Deployment manager owns all Apache configuration
+                echo "Running certbot..."
+                
+                # Stop Apache temporarily for standalone mode
+                systemctl stop apache2 2>/dev/null || true
+                
+                if certbot certonly --standalone -d "$DOMAIN" --non-interactive --agree-tos --email "$LETSENCRYPT_EMAIL"; then
+                    echo "SSL certificate obtained successfully!"
+                    HAS_SSL=true
+                    
+                    # Restart Apache after certificate obtained
+                    systemctl start apache2
+                    
+                    # ===== STEP 3: Generate SSL VirtualHost after Certbot =====
+                    echo "Generating SSL VirtualHost configuration..."
+                    cp "$TEMPLATE_DIR/apache/apache-ssl.conf.template" "$APACHE_SSL_CONF"
+                    
+                    # Replace placeholders
+                    sed -i "s|{{DOMAIN}}|$DOMAIN|g" "$APACHE_SSL_CONF"
+                    sed -i "s|{{DOCUMENT_ROOT}}|$WORKING_DIR|g" "$APACHE_SSL_CONF"
+                    sed -i "s|{{PHP_SOCKET}}|$PHP_FPM_SOCK|g" "$APACHE_SSL_CONF"
+                    sed -i "s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$DOMAIN|g" "$APACHE_SSL_CONF"
+                    sed -i "s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$APACHE_SSL_CONF"
+                    
+                    # Validate no unresolved placeholders remain
+                    if grep -q '{{' "$APACHE_SSL_CONF"; then
+                        rollback "Unresolved placeholders found in generated Apache SSL config"
+                        exit 1
+                    fi
+                    
+                    # Enable SSL site
+                    a2ensite wedding-ssl.conf
+                    
+                    # Test and reload
+                    echo "Testing Apache SSL configuration..."
+                    if ! apache2ctl configtest; then
+                        rollback "Apache SSL configuration test failed"
+                        exit 1
+                    fi
+                    
+                    echo "Reloading Apache with SSL enabled..."
+                    systemctl reload apache2
+                    
+                    echo ""
+                    echo "✓ HTTPS is now enabled for $DOMAIN"
+                else
+                    echo "WARNING: Certbot failed or was cancelled."
+                    echo "Continuing with HTTP-only configuration."
+                    HAS_SSL=false
+                    
+                    # Ensure Apache is running after certbot failure
+                    systemctl start apache2 2>/dev/null || true
+                fi
+                break
+                ;;
+            2)
+                echo "Skipping SSL certificate setup. You can run certbot later."
+                HAS_SSL=false
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please enter 1 or 2."
+                ;;
+        esac
+    done
+
+    # Final configuration test
+    echo ""
+    echo "Final Apache configuration test..."
+    if ! apache2ctl configtest; then
+        rollback "Final Apache configuration test failed"
+        exit 1
     fi
 fi
 # Cleanup temporary source if needed
@@ -416,7 +690,7 @@ if [ "$CLEANUP_SOURCE" = true ]; then
   rm -rf "$SOURCE_DIR"
 fi
 
-# Verification step
+# ===== FINAL VERIFICATION AND HEALTH CHECKS =====
 echo ""
 echo "=== Verifying Installation ==="
 
@@ -440,7 +714,6 @@ else
 fi
 
 # Check 3: No reference to "change-this-password" remains in sensitive config files
-# Only check application config files where credentials would actually be stored
 INSECURE_FOUND=false
 for config_file in "$WORKING_DIR/.env" "$WORKING_DIR/config.php" "$WORKING_DIR/app/config.php"; do
   if [ -f "$config_file" ] && grep -q "change-this-password" "$config_file" 2>/dev/null; then
@@ -455,9 +728,109 @@ else
   echo "✓ No insecure fallback password found"
 fi
 
+# Check 4: Web server configuration test
+echo ""
+echo "=== Configuration Validation ==="
+if [ "$WEB_SERVER" = "apache" ]; then
+    echo "Running apache2ctl configtest..."
+    if ! apache2ctl configtest; then
+        echo "ERROR: Apache configuration test failed" >&2
+        VERIFICATION_FAILED=true
+    else
+        echo "✓ Apache configuration test passed"
+    fi
+    
+    echo "Restarting Apache..."
+    if ! systemctl restart apache2; then
+        echo "ERROR: Failed to restart Apache" >&2
+        VERIFICATION_FAILED=true
+    else
+        echo "✓ Apache restarted successfully"
+    fi
+    
+    echo "Checking Apache status..."
+    if systemctl is-active --quiet apache2; then
+        echo "✓ Apache is running"
+    else
+        echo "ERROR: Apache is not running" >&2
+        VERIFICATION_FAILED=true
+    fi
+elif [ "$WEB_SERVER" = "nginx" ]; then
+    echo "Running nginx -t..."
+    if ! nginx -t; then
+        echo "ERROR: Nginx configuration test failed" >&2
+        VERIFICATION_FAILED=true
+    else
+        echo "✓ Nginx configuration test passed"
+    fi
+    
+    echo "Restarting Nginx..."
+    if ! systemctl restart nginx; then
+        echo "ERROR: Failed to restart Nginx" >&2
+        VERIFICATION_FAILED=true
+    else
+        echo "✓ Nginx restarted successfully"
+    fi
+    
+    echo "Checking Nginx status..."
+    if systemctl is-active --quiet nginx; then
+        echo "✓ Nginx is running"
+    else
+        echo "ERROR: Nginx is not running" >&2
+        VERIFICATION_FAILED=true
+    fi
+fi
+
+# Check 5: Port ownership verification
+echo ""
+echo "=== Port Verification ==="
+if command -v ss &>/dev/null; then
+    echo "Checking port 80..."
+    PORT_80_OWNER=$(ss -tulpn 2>/dev/null | grep ':80 ' | awk '{print $7}' | head -1 || echo "")
+    if [ -n "$PORT_80_OWNER" ]; then
+        echo "✓ Port 80 is bound: $PORT_80_OWNER"
+    else
+        echo "WARNING: Port 80 does not appear to be bound"
+    fi
+    
+    echo "Checking port 443..."
+    PORT_443_OWNER=$(ss -tulpn 2>/dev/null | grep ':443 ' | awk '{print $7}' | head -1 || echo "")
+    if [ -n "$PORT_443_OWNER" ]; then
+        echo "✓ Port 443 is bound: $PORT_443_OWNER"
+    else
+        echo "INFO: Port 443 is not bound (SSL may not be configured yet)"
+    fi
+fi
+
+# Check 6: HTTP/HTTPS connectivity
+echo ""
+echo "=== Connectivity Tests ==="
+if command -v curl &>/dev/null; then
+    # Test HTTP
+    echo "Testing HTTP connectivity..."
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Host: $DOMAIN" "http://127.0.0.1/" 2>/dev/null || echo "000")
+    if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+        echo "✓ HTTP responds (HTTP $HTTP_CODE)"
+    else
+        echo "WARNING: HTTP not responding as expected (HTTP $HTTP_CODE)"
+    fi
+    
+    # Test HTTPS if SSL is configured
+    if [ "$HAS_SSL" = true ]; then
+        echo "Testing HTTPS connectivity..."
+        HTTPS_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" -H "Host: $DOMAIN" "https://127.0.0.1/" 2>/dev/null || echo "000")
+        if [ "$HTTPS_CODE" = "200" ] || [ "$HTTPS_CODE" = "301" ] || [ "$HTTPS_CODE" = "302" ]; then
+            echo "✓ HTTPS responds (HTTP $HTTPS_CODE)"
+        else
+            echo "WARNING: HTTPS not responding as expected (HTTP $HTTPS_CODE)"
+        fi
+    fi
+fi
+
 if [ "$VERIFICATION_FAILED" = true ]; then
   echo ""
   echo "INSTALLATION FAILED: Verification checks did not pass" >&2
+  rollback "Verification checks failed"
   exit 1
 fi
 

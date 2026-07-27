@@ -1,0 +1,95 @@
+# Apache HTTP configuration for Wedding Invitation Web Application
+# Production-ready template with PHP-FPM, security headers, and WebDAV support
+#
+# Placeholders (to be replaced by installer):
+# {{DOMAIN}} - Your domain name
+# {{DOCUMENT_ROOT}} - Document root path
+# {{PHP_SOCKET}} - PHP-FPM socket path
+# {{LOG_PATH}} - Log directory path
+
+<VirtualHost *:80>
+    ServerName {{DOMAIN}}
+    ServerAlias www.{{DOMAIN}}
+    DocumentRoot {{DOCUMENT_ROOT}}
+
+    # WebDAV location - configured within main VirtualHost to avoid conflicts
+    Alias /webdav {{DOCUMENT_ROOT}}/uploads
+
+    <Directory {{DOCUMENT_ROOT}}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+
+        # Enable mod_rewrite for clean URLs
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^(.*)$ index.php?$query_string [QSA,L]
+    </Directory>
+
+    # WebDAV configuration
+    <Location /webdav>
+        DAV On
+        AuthType Basic
+        AuthName "Wedding WebDAV"
+        AuthUserFile /etc/apache2/.davpasswd
+        Require valid-user
+
+        # WebDAV-specific options
+        Options Indexes FollowSymLinks
+
+        # Allow WebDAV methods
+        <LimitExcept GET POST OPTIONS PROPFIND PUT DELETE COPY MOVE MKCOL LOCK UNLOCK>
+            Require all denied
+        </LimitExcept>
+    </Location>
+
+    # Ensure proper permissions for WebDAV directory
+    <Directory {{DOCUMENT_ROOT}}/uploads>
+        Require all granted
+        Options Indexes FollowSymLinks
+    </Directory>
+
+    # PHP-FPM handler via ProxyFCG
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:{{PHP_SOCKET}}|fcgi://localhost/"
+    </FilesMatch>
+
+    # Upload size limit (20MB)
+    LimitRequestBody 20971520
+
+    # Security Headers (also applied to HTTP)
+    <IfModule mod_headers.c>
+        Header always set X-Frame-Options "SAMEORIGIN"
+        Header always set X-Content-Type-Options "nosniff"
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    </IfModule>
+
+    # Cache static assets
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        ExpiresByType image/jpg "access plus 7 days"
+        ExpiresByType image/jpeg "access plus 7 days"
+        ExpiresByType image/png "access plus 7 days"
+        ExpiresByType image/gif "access plus 7 days"
+        ExpiresByType image/webp "access plus 7 days"
+        ExpiresByType text/css "access plus 7 days"
+        ExpiresByType application/javascript "access plus 7 days"
+        ExpiresByType image/svg+xml "access plus 7 days"
+        ExpiresByType image/x-icon "access plus 7 days"
+        ExpiresByType font/woff "access plus 7 days"
+        ExpiresByType font/woff2 "access plus 7 days"
+        ExpiresByType font/ttf "access plus 7 days"
+        ExpiresByType font/eot "access plus 7 days"
+    </IfModule>
+
+    <IfModule mod_headers.c>
+        <FilesMatch "\.(jpg|jpeg|png|gif|webp|css|js|svg|ico|woff|woff2|ttf|eot)$">
+            Header set Cache-Control "public, max-age=604800, immutable"
+        </FilesMatch>
+    </IfModule>
+
+    ErrorLog {{LOG_PATH}}/wedding-error.log
+    CustomLog {{LOG_PATH}}/wedding-access.log combined
+</VirtualHost>

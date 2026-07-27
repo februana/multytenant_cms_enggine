@@ -105,7 +105,8 @@ generate_nginx_config() {
 generate_apache_config() {
     local sock="$1"
     local domain="${2:-_}"
-    local conf="/etc/apache2/sites-available/wedding.conf"
+    local http_conf="/etc/apache2/sites-available/wedding.conf"
+    local ssl_conf="/etc/apache2/sites-available/wedding-ssl.conf"
     
     # Validate domain
     if [ -z "$domain" ] || [ "$domain" = "{{DOMAIN}}" ]; then
@@ -113,28 +114,47 @@ generate_apache_config() {
         return 1
     fi
     
-    cp "$TEMPLATE_DIR/apache/wedding.conf" "$conf"
-    sed -i "s|{{DOMAIN}}|$domain|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$domain|g" "$conf"
+    # Generate HTTP configuration
+    cp "$TEMPLATE_DIR/apache/apache-http.conf.template" "$http_conf"
+    sed -i "s|{{DOMAIN}}|$domain|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$http_conf"
     
-    # Validate no unresolved placeholders
-    if grep -q '{{' "$conf"; then
-        log_error "Unresolved placeholders in generated Apache config"
+    # Validate no unresolved placeholders in HTTP config
+    if grep -q '{{' "$http_conf"; then
+        log_error "Unresolved placeholders in generated Apache HTTP config"
         return 1
     fi
     
-    log_info "Apache config generated from template"
+    # Check if SSL certificate exists and generate SSL config if so
+    if check_ssl_exists "$domain"; then
+        cp "$TEMPLATE_DIR/apache/apache-ssl.conf.template" "$ssl_conf"
+        sed -i "s|{{DOMAIN}}|$domain|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LETSENCRYPT_PATH}}|/etc/letsencrypt/live/$domain|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$ssl_conf"
+        
+        # Validate no unresolved placeholders in SSL config
+        if grep -q '{{' "$ssl_conf"; then
+            log_error "Unresolved placeholders in generated Apache SSL config"
+            return 1
+        fi
+        
+        log_info "Apache HTTP+SSL configs generated from templates"
+    else
+        log_info "Apache HTTP config generated from template (SSL not configured)"
+    fi
+    
+    return 0
 }
 
 rollback_migration() {
     local src="$1" tgt="$2"
     log_error "Rolling back to $src..."
     if [ "$tgt" = "apache" ]; then
-        a2dissite wedding.conf 2>/dev/null; systemctl stop apache2 2>/dev/null; systemctl disable apache2 2>/dev/null
+        a2dissite wedding.conf 2>/dev/null; a2dissite wedding-ssl.conf 2>/dev/null
+        systemctl stop apache2 2>/dev/null; systemctl disable apache2 2>/dev/null
         ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding 2>/dev/null
         systemctl start nginx 2>/dev/null; systemctl enable nginx 2>/dev/null
     else
         rm -f /etc/nginx/sites-enabled/wedding 2>/dev/null; systemctl stop nginx 2>/dev/null; systemctl disable nginx 2>/dev/null
-        a2ensite wedding.conf 2>/dev/null; systemctl start apache2 2>/dev/null; systemctl enable apache2 2>/dev/null
+        a2ensite wedding.conf 2>/dev/null; a2ensite wedding-ssl.conf 2>/dev/null || true
+        systemctl start apache2 2>/dev/null; systemctl enable apache2 2>/dev/null
     fi
     log_error "Rollback complete"
 }
@@ -227,6 +247,10 @@ migration_mode() {
         generate_apache_config "$sock" "$domain" || { rollback_migration "$cur" "$tgt"; return 1; }
         apache2ctl configtest || { rollback_migration "$cur" "$tgt"; return 1; }
         a2ensite wedding.conf; a2dissite 000-default.conf 2>/dev/null
+        # Enable SSL site if certificate exists
+        if check_ssl_exists "$domain"; then
+            a2ensite wedding-ssl.conf 2>/dev/null || true
+        fi
         systemctl enable apache2; systemctl restart apache2 || { rollback_migration "$cur" "$tgt"; return 1; }
         systemctl stop nginx 2>/dev/null; systemctl disable nginx 2>/dev/null
     else
@@ -257,8 +281,9 @@ migration_mode() {
             else
                 systemctl stop apache2 2>/dev/null; systemctl disable apache2 2>/dev/null
                 apt purge -y -qq apache2 apache2-bin apache2-data apache2-utils 2>/dev/null; apt autoremove -y -qq 2>/dev/null
-                a2dissite wedding.conf 000-default.conf 2>/dev/null
+                a2dissite wedding.conf wedding-ssl.conf 000-default.conf 2>/dev/null || true
                 rm -f /etc/apache2/sites-available/wedding.conf /etc/apache2/sites-enabled/wedding.conf 2>/dev/null
+                rm -f /etc/apache2/sites-available/wedding-ssl.conf /etc/apache2/sites-enabled/wedding-ssl.conf 2>/dev/null
             fi
             log_info "Let's Encrypt certs preserved"
         else
@@ -289,6 +314,12 @@ reconfigure_web_server() {
     else
         generate_apache_config "$sock" "$domain" || return 1
         apache2ctl configtest || return 1
+        # Enable/disable SSL site based on certificate existence
+        if check_ssl_exists "$domain"; then
+            a2ensite wedding-ssl.conf 2>/dev/null || true
+        else
+            a2dissite wedding-ssl.conf 2>/dev/null || true
+        fi
         systemctl reload apache2
     fi
     log_info "RECONFIGURATION COMPLETE"
