@@ -92,18 +92,6 @@ validate_domain() {
 
 # Detect or prompt for domain name
 detect_or_prompt_domain() {
-    local detected=""
-    
-    # Try to detect from hostname if it's a real domain
-    if [ -n "$(hostname -f 2>/dev/null)" ] && [ "$(hostname -f)" != "localhost" ] && [ "$(hostname -f)" != "(none)" ]; then
-        detected="$(hostname -f)"
-        # Validate detected domain
-        if validate_domain "$detected"; then
-            echo "$detected"
-            return 0
-        fi
-    fi
-    
     # Prompt user for domain
     echo "" >&2
     echo "==========================================" >&2
