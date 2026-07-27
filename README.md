@@ -228,6 +228,7 @@ The update script is **idempotent** - safe to run multiple times.
 │   ├── music/
 │   ├── gallery/
 │   └── background/
+├── webdav/                # WebDAV storage (separate from CMS uploads)
 ├── app/                   # Application logic (protected)
 ├── assets/                # Static CSS/JS/images
 ├── backups/               # Automated backups

@@ -25,8 +25,8 @@
     </Directory>
 
     # WebDAV configuration using Location block for proper URL-based access control
-    # The /webdav URL endpoint maps to the uploads directory with DAV enabled
-    Alias /webdav {{DOCUMENT_ROOT}}/uploads
+    # The /webdav URL endpoint maps to the dedicated webdav directory (separate from CMS uploads)
+    Alias /webdav {{DOCUMENT_ROOT}}/webdav
     
     <Location /webdav>
         DAV On
@@ -39,14 +39,21 @@
         <LimitExcept GET HEAD OPTIONS PROPFIND PROPPATCH PUT DELETE COPY MOVE MKCOL LOCK UNLOCK REPORT>
             Require all denied
         </LimitExcept>
+    </Location>
+
+    # Directory permissions for webdav - allow read but block PHP execution
+    <Directory {{DOCUMENT_ROOT}}/webdav>
+        Require all granted
+        Options Indexes FollowSymLinks
+        DirectoryIndex none
         
-        # Ensure PHP files are never executed via WebDAV (security)
+        # Block PHP execution when accessed directly as files
         <FilesMatch "\.php$">
             Require all denied
         </FilesMatch>
-    </Location>
+    </Directory>
 
-    # Directory permissions for uploads - allow read but block PHP execution
+    # Directory permissions for uploads (CMS storage) - allow read but block PHP execution
     <Directory {{DOCUMENT_ROOT}}/uploads>
         Require all granted
         Options Indexes FollowSymLinks

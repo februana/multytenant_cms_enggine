@@ -3,7 +3,7 @@ set -euo pipefail
 
 # deploy/backup.sh
 # Creates timestamped backup of all user data
-# Backs up: config.json, guest-links.json, database.sqlite, uploads/, event.ics, .davpasswd
+# Backs up: config.json, guest-links.json, database.sqlite, uploads/, webdav/, event.ics, .davpasswd
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -28,6 +28,7 @@ BACKUP_FILES=(
     "guest-links.json"
     "database.sqlite"
     "uploads/"
+    "webdav/"
     "event.ics"
 )
 

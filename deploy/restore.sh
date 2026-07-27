@@ -58,6 +58,8 @@ chmod 600 guest-links.json 2>/dev/null || true
 chown www-data:www-data config.json guest-links.json database.sqlite 2>/dev/null || true
 chown -R www-data:www-data uploads/ 2>/dev/null || true
 chmod -R 755 uploads/ 2>/dev/null || true
+chown -R www-data:www-data webdav/ 2>/dev/null || true
+chmod -R 755 webdav/ 2>/dev/null || true
 
 # Verify critical files
 if [ -f config.json ]; then

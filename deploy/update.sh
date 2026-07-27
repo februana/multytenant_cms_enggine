@@ -193,13 +193,13 @@ update_application() {
     [ -f composer.json ] && command -v composer &>/dev/null && composer install --no-dev --optimize-autoloader --quiet
     
     PRESERVE_FILES=("config.json" "guest-links.json" "database.sqlite" ".env" "event.ics")
-    PRESERVE_DIRS=("uploads" "backups" "storage")
+    PRESERVE_DIRS=("uploads" "webdav" "backups" "storage")
     mkdir -p "$TEMP_DIR/_preserve"
     
     for f in "${PRESERVE_FILES[@]}"; do [ -f "$CANONICAL_TARGET/$f" ] && cp -a "$CANONICAL_TARGET/$f" "$TEMP_DIR/_preserve/"; done
     for d in "${PRESERVE_DIRS[@]}"; do [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$CANONICAL_TARGET/$d" "$TEMP_DIR/_preserve/"; done
     
-    rsync -av --exclude='.git' --exclude='*.md' --exclude='uploads/' --exclude='backups/' --exclude='storage/' --exclude='config.json' --exclude='guest-links.json' --exclude='database.sqlite' --exclude='.env' --exclude='event.ics' "$TEMP_DIR/" "$CANONICAL_TARGET/"
+    rsync -av --exclude='.git' --exclude='*.md' --exclude='uploads/' --exclude='webdav/' --exclude='backups/' --exclude='storage/' --exclude='config.json' --exclude='guest-links.json' --exclude='database.sqlite' --exclude='.env' --exclude='event.ics' "$TEMP_DIR/" "$CANONICAL_TARGET/"
     
     for f in "${PRESERVE_FILES[@]}"; do [ -f "$TEMP_DIR/_preserve/$f" ] && cp -a "$TEMP_DIR/_preserve/$f" "$CANONICAL_TARGET/"; done
     for d in "${PRESERVE_DIRS[@]}"; do [ -d "$TEMP_DIR/_preserve/$d" ] && { [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$TEMP_DIR/_preserve/$d/"* "$CANONICAL_TARGET/$d/" 2>/dev/null || cp -a "$TEMP_DIR/_preserve/$d" "$CANONICAL_TARGET/"; }; done
