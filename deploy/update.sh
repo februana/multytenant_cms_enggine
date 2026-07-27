@@ -44,9 +44,9 @@ detect_domain_from_config() {
         domain=$(grep -oP 'ServerName\s+\K[^\s]+' /etc/apache2/sites-enabled/wedding.conf 2>/dev/null | head -1 || echo "")
     fi
     
-    # Fallback to hostname if no domain found
-    if [ -z "$domain" ] || [ "$domain" = "_" ]; then
-        domain=$(hostname -f 2>/dev/null || echo "_")
+    # If no domain found, return underscore as placeholder
+    if [ -z "$domain" ]; then
+        domain="_"
     fi
     
     echo "$domain"
