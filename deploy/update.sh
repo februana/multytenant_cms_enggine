@@ -114,6 +114,25 @@ generate_apache_config() {
         return 1
     fi
     
+    # Fix ports.conf to use standard ports (80 and 443)
+    log_info "Configuring Apache ports.conf..."
+    if [ -f /etc/apache2/ports.conf ]; then
+        cp /etc/apache2/ports.conf /etc/apache2/ports.conf.backup.$(date +%Y%m%d%H%M%S)
+        cat > /etc/apache2/ports.conf << 'EOF'
+# Apache ports configuration - managed by deployment manager
+Listen 80
+
+<IfModule ssl_module>
+    Listen 443
+</IfModule>
+
+<IfModule gnutls_module>
+    Listen 443
+</IfModule>
+EOF
+        log_info "ports.conf updated with standard configuration"
+    fi
+    
     # Generate HTTP configuration
     cp "$TEMPLATE_DIR/apache/apache-http.conf.template" "$http_conf"
     sed -i "s|{{DOMAIN}}|$domain|g; s|{{DOCUMENT_ROOT}}|$CANONICAL_TARGET|g; s|{{PHP_SOCKET}}|$sock|g; s|{{LOG_PATH}}|\${APACHE_LOG_DIR}|g" "$http_conf"

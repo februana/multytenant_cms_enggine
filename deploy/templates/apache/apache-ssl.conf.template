@@ -66,24 +66,24 @@
         </FilesMatch>
     </Directory>
 
-    # WebDAV location for HTTPS
+    # WebDAV location for HTTPS using Directory block
     Alias /webdav {{DOCUMENT_ROOT}}/uploads
 
-    <Location /webdav>
+    <Directory {{DOCUMENT_ROOT}}/uploads>
+        Require all granted
+        Options Indexes FollowSymLinks
+        
         DAV On
         AuthType Basic
         AuthName "Wedding WebDAV"
         AuthUserFile /etc/apache2/.davpasswd
         Require valid-user
 
-        # WebDAV-specific options
-        Options Indexes FollowSymLinks
-
-        # Allow WebDAV methods
-        <LimitExcept GET POST OPTIONS PROPFIND PUT DELETE COPY MOVE MKCOL LOCK UNLOCK>
+        # Allow all WebDAV methods
+        <LimitExcept GET HEAD OPTIONS PROPFIND PROPPATCH PUT DELETE COPY MOVE MKCOL LOCK UNLOCK>
             Require all denied
         </LimitExcept>
-    </Location>
+    </Directory>
 
     # PHP-FPM handler via ProxyFCG
     <FilesMatch \.php$>

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # deploy/backup.sh
 # Creates timestamped backup of all user data
-# Backs up: config.json, guest-links.json, database.sqlite, uploads/, event.ics
+# Backs up: config.json, guest-links.json, database.sqlite, uploads/, event.ics, .davpasswd
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -21,19 +21,35 @@ cd "$ROOT_DIR"
 
 # Create backup archive
 echo "Creating $BACKUP_FILE..."
-tar -czf "$BACKUP_FILE" \
-    config.json \
-    guest-links.json \
-    database.sqlite \
-    uploads/ \
-    event.ics \
-    2>/dev/null || {
-        # Some files might not exist yet, that's OK
-        echo "Warning: Some files were not found (this is normal for new installations)."
-        tar -czf "$BACKUP_FILE" \
-            $(ls config.json guest-links.json database.sqlite event.ics uploads/ 2>/dev/null) \
-            || true
-    }
+
+# Build list of files to backup
+BACKUP_FILES=(
+    "config.json"
+    "guest-links.json"
+    "database.sqlite"
+    "uploads/"
+    "event.ics"
+)
+
+# Include WebDAV password file if it exists
+if [ -f "/etc/apache2/.davpasswd" ]; then
+    echo "Including WebDAV password file in backup..."
+    # Copy to temporary location for inclusion in archive
+    mkdir -p "$BACKUP_DIR/_temp_backup"
+    cp /etc/apache2/.davpasswd "$BACKUP_DIR/_temp_backup/davpasswd"
+    BACKUP_FILES+=("_temp_backup/davpasswd")
+fi
+
+tar -czf "$BACKUP_FILE" "${BACKUP_FILES[@]}" 2>/dev/null || {
+    # Some files might not exist yet, that's OK
+    echo "Warning: Some files were not found (this is normal for new installations)."
+    tar -czf "$BACKUP_FILE" $(ls "${BACKUP_FILES[@]}" 2>/dev/null) || true
+}
+
+# Cleanup temporary files
+if [ -d "$BACKUP_DIR/_temp_backup" ]; then
+    rm -rf "$BACKUP_DIR/_temp_backup"
+fi
 
 # Set secure permissions on backup
 chmod 600 "$BACKUP_FILE"

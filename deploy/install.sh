@@ -104,22 +104,22 @@ detect_or_prompt_domain() {
     fi
     
     # Prompt user for domain
-    echo ""
-    echo "=========================================="
-    echo "Domain Configuration"
-    echo "=========================================="
-    echo "Please enter your primary domain name (e.g., example.com or februandik.duckdns.org)"
-    echo "This will be used for:"
-    echo "  - Web server configuration (ServerName/server_name)"
-    echo "  - SSL certificate (Let's Encrypt)"
-    echo "  - Application URLs"
-    echo ""
+    echo "" >&2
+    echo "==========================================" >&2
+    echo "Domain Configuration" >&2
+    echo "==========================================" >&2
+    echo "Please enter your primary domain name (e.g., example.com or februandik.duckdns.org)" >&2
+    echo "This will be used for:" >&2
+    echo "  - Web server configuration (ServerName/server_name)" >&2
+    echo "  - SSL certificate (Let's Encrypt)" >&2
+    echo "  - Application URLs" >&2
+    echo "" >&2
     
     while true; do
         read -p "Primary domain: " input_domain
         
         if [ -z "$input_domain" ]; then
-            echo "Domain cannot be empty. Please enter a valid domain name."
+            echo "Domain cannot be empty. Please enter a valid domain name." >&2
             continue
         fi
         
@@ -130,7 +130,7 @@ detect_or_prompt_domain() {
             echo "$input_domain"
             return 0
         else
-            echo "Invalid domain format. Please enter a valid domain (e.g., example.com)"
+            echo "Invalid domain format. Please enter a valid domain (e.g., example.com)" >&2
         fi
     done
 }
@@ -195,6 +195,10 @@ stop_conflicting_server() {
     fi
 }
 
+# Redirect all stdout to stderr for banners/prompts
+exec 3>&1
+exec 1>&2
+
 echo ""
 echo "================================="
 echo "Select Web Server"
@@ -237,16 +241,16 @@ if [ -z "$DOMAIN" ]; then
     rollback "Domain cannot be empty"
     exit 1
 fi
-echo "Domain: $DOMAIN"
+echo "Domain: $DOMAIN" >&3
 
 # Check for existing SSL certificate
 HAS_SSL=false
 if check_ssl_exists "$DOMAIN"; then
     HAS_SSL=true
-    echo "SSL certificate found for $DOMAIN"
+    echo "SSL certificate found for $DOMAIN" >&3
 else
-    echo "No SSL certificate found for $DOMAIN. Will generate HTTP-only config."
-    echo "Run certbot separately to enable HTTPS later."
+    echo "No SSL certificate found for $DOMAIN. Will generate HTTP-only config." >&3
+    echo "Run certbot separately to enable HTTPS later." >&3
 fi
 
 # Deploy from any source location to canonical target
@@ -327,12 +331,31 @@ elif [ "$WEB_SERVER" = "apache" ]; then
     apt install -y -qq apache2 php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
     
     # Enable required Apache modules
-    echo "Enabling Apache modules..."
-    a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias
+    echo "Enabling Apache modules..." >&2
+    a2enmod rewrite headers ssl proxy_fcgi setenvif dav dav_fs auth_basic alias >&2 2>&1 || true
     # Note: proxy_fcgi is a built-in module in modern Apache, no extra package needed
     
     # Enable SSL by default
-    a2enmod socache_shmcb
+    a2enmod socache_shmcb >&2 2>&1 || true
+    
+    # Fix ports.conf to use standard ports (80 and 443)
+    echo "Configuring Apache ports.conf..." >&2
+    if [ -f /etc/apache2/ports.conf ]; then
+        cp /etc/apache2/ports.conf /etc/apache2/ports.conf.backup.$(date +%Y%m%d%H%M%S)
+        cat > /etc/apache2/ports.conf << 'EOF'
+# Apache ports configuration - managed by deployment manager
+Listen 80
+
+<IfModule ssl_module>
+    Listen 443
+</IfModule>
+
+<IfModule gnutls_module>
+    Listen 443
+</IfModule>
+EOF
+        echo "ports.conf updated with standard configuration" >&2
+    fi
 fi
 
 # Start PHP-FPM service to ensure socket is available
@@ -682,6 +705,64 @@ elif [ "$WEB_SERVER" = "apache" ]; then
         rollback "Final Apache configuration test failed"
         exit 1
     fi
+    
+    # ===== WebDAV Configuration =====
+    echo ""
+    echo "=========================================="
+    echo "WebDAV Configuration"
+    echo "=========================================="
+    
+    WEBDAV_ENABLED=false
+    read -p "Enable WebDAV? [Y/n]: " WEBDAV_CHOICE
+    if [[ "$WEBDAV_CHOICE" =~ ^[Yy]$ ]] || [ -z "$WEBDAV_CHOICE" ]; then
+        WEBDAV_ENABLED=true
+        echo "Configuring WebDAV..."
+        
+        # Install apache2-utils if not present
+        if ! command -v htpasswd &>/dev/null; then
+            echo "Installing apache2-utils for htpasswd..."
+            apt install -y -qq apache2-utils
+        fi
+        
+        # Prompt for WebDAV username
+        read -p "WebDAV username [admin]: " WEBDAV_USERNAME
+        if [ -z "$WEBDAV_USERNAME" ]; then
+            WEBDAV_USERNAME="admin"
+        fi
+        
+        # Prompt for WebDAV password with confirmation
+        while true; do
+            read -s -p "WebDAV password: " WEBDAV_PASS1
+            echo ""
+            read -s -p "Confirm password: " WEBDAV_PASS2
+            echo ""
+            
+            if [ -z "$WEBDAV_PASS1" ]; then
+                echo "Password cannot be empty. Please enter a valid password."
+                continue
+            fi
+            
+            if [ "$WEBDAV_PASS1" != "$WEBDAV_PASS2" ]; then
+                echo "Passwords do not match. Please try again."
+                continue
+            fi
+            
+            break
+        done
+        
+        # Create .davpasswd file
+        echo "Creating WebDAV password file..."
+        htpasswd -cb /etc/apache2/.davpasswd "$WEBDAV_USERNAME" "$WEBDAV_PASS1"
+        chown root:www-data /etc/apache2/.davpasswd
+        chmod 640 /etc/apache2/.davpasswd
+        echo "WebDAV password file created at /etc/apache2/.davpasswd"
+        
+        # Store WebDAV credentials for display
+        WEBDAV_USER_DISPLAY="$WEBDAV_USERNAME"
+    else
+        echo "WebDAV disabled."
+        WEBDAV_USER_DISPLAY=""
+    fi
 fi
 # Cleanup temporary source if needed
 if [ "$CLEANUP_SOURCE" = true ]; then
@@ -835,31 +916,58 @@ if [ "$VERIFICATION_FAILED" = true ]; then
 fi
 
 echo ""
-echo "=== Installation Complete ==="
-echo "Document Root: $WORKING_DIR"
-echo "Site URL: http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 'localhost')"
-echo ""
+echo "=== Installation Complete ===" >&3
+echo "" >&3
+echo "Domain: $DOMAIN" >&3
+echo "Document Root: $WORKING_DIR" >&3
+echo "Web Server: $WEB_SERVER" >&3
+if [ "$HAS_SSL" = true ]; then
+    echo "HTTPS Status: Enabled" >&3
+else
+    echo "HTTPS Status: Not configured (HTTP only)" >&3
+fi
+echo "" >&3
+
+# Display WebDAV information if enabled
+if [ "$WEBDAV_ENABLED" = true ] && [ -n "$WEBDAV_USER_DISPLAY" ]; then
+    echo "======================================" >&3
+    echo "WebDAV Configuration" >&3
+    echo "======================================" >&3
+    echo "WebDAV URL:" >&3
+    if [ "$HAS_SSL" = true ]; then
+        echo "https://$DOMAIN/webdav" >&3
+    else
+        echo "http://$DOMAIN/webdav" >&3
+    fi
+    echo "" >&3
+    echo "Username:" >&3
+    echo "$WEBDAV_USER_DISPLAY" >&3
+    echo "" >&3
+    echo "(Password not displayed for security)" >&3
+    echo "======================================" >&3
+    echo "" >&3
+fi
 
 # Display generated credentials if this was a fresh install
 if [ "$CREDENTIALS_GENERATED" = true ]; then
-  echo ""
-  echo "======================================"
-  echo "Administrator account created"
-  echo ""
-  echo "Username:"
-  echo "$ADMIN_USERNAME"
-  echo ""
-  echo "Password:"
-  echo "$ADMIN_PASSWORD"
-  echo ""
-  echo "Credentials have been saved to:"
-  echo ""
-  echo "$ENV_FILE"
-  echo ""
-  echo "Save these credentials now."
-  echo "======================================"
+  echo "" >&3
+  echo "======================================" >&3
+  echo "Administrator account created" >&3
+  echo "" >&3
+  echo "Username:" >&3
+  echo "$ADMIN_USERNAME" >&3
+  echo "" >&3
+  echo "Password:" >&3
+  echo "$ADMIN_PASSWORD" >&3
+  echo "" >&3
+  echo "Credentials have been saved to:" >&3
+  echo "" >&3
+  echo "$ENV_FILE" >&3
+  echo "" >&3
+  echo "Save these credentials now." >&3
+  echo "======================================" >&3
 fi
 
-echo ""
-echo "Run 'sudo $WORKING_DIR/deploy/health-check.sh' to verify deployment."
+echo "" >&3
+echo "Run 'sudo $WORKING_DIR/deploy/health-check.sh' to verify deployment." >&3
 exit 0
