@@ -79,6 +79,7 @@ rollback() {
 
     echo ""
     echo "Rollback complete. Please review the error above and try again."
+}
 
 # Validate domain format
 validate_domain() {
