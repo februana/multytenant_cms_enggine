@@ -1,1 +1,27 @@
-Nothing should be ignored based on the provided file changes. The only modified file is 'deploy/templates/apache/wedding.conf', which appears to be a configuration file and does not fall under any of the categories that should be ignored according to the rules.
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+.env.*
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+
+# Build/dist directories
+dist/
+build/
+target/
+```
