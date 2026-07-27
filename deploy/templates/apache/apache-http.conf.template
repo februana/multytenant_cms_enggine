@@ -27,27 +27,21 @@
         RewriteRule ^(.*)$ index.php?$query_string [QSA,L]
     </Directory>
 
-    # WebDAV configuration
-    <Location /webdav>
+    # WebDAV configuration using Directory block for the target path
+    <Directory {{DOCUMENT_ROOT}}/uploads>
+        Require all granted
+        Options Indexes FollowSymLinks
+        
         DAV On
         AuthType Basic
         AuthName "Wedding WebDAV"
         AuthUserFile /etc/apache2/.davpasswd
         Require valid-user
 
-        # WebDAV-specific options
-        Options Indexes FollowSymLinks
-
-        # Allow WebDAV methods
-        <LimitExcept GET POST OPTIONS PROPFIND PUT DELETE COPY MOVE MKCOL LOCK UNLOCK>
+        # Allow all WebDAV methods
+        <LimitExcept GET HEAD OPTIONS PROPFIND PROPPATCH PUT DELETE COPY MOVE MKCOL LOCK UNLOCK>
             Require all denied
         </LimitExcept>
-    </Location>
-
-    # Ensure proper permissions for WebDAV directory
-    <Directory {{DOCUMENT_ROOT}}/uploads>
-        Require all granted
-        Options Indexes FollowSymLinks
     </Directory>
 
     # PHP-FPM handler via ProxyFCG

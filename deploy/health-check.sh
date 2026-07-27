@@ -15,6 +15,17 @@ echo "=== Deployment Health Check ==="
 echo "Target: $DEPLOY_DIR"
 echo ""
 
+# Detect web server type
+WEB_SERVER=""
+if systemctl is-active --quiet apache2 2>/dev/null; then
+    WEB_SERVER="apache"
+elif systemctl is-active --quiet nginx 2>/dev/null; then
+    WEB_SERVER="nginx"
+fi
+
+echo "Web Server: ${WEB_SERVER:-unknown}"
+echo ""
+
 # Check 1: Directory exists
 if [ -d "$DEPLOY_DIR" ]; then
   pass "Deployment directory exists"
@@ -56,10 +67,70 @@ else
   fail "Directory not owned by www-data (owned by $OWNER)"
 fi
 
-# Check 6: HTTP checks (if Nginx or Apache is running)
+# Check 6: Apache-specific checks (ports.conf, modules)
+if [ "$WEB_SERVER" = "apache" ]; then
+    echo ""
+    echo "Apache-Specific Checks:"
+    
+    # Check ports.conf configuration
+    if [ -f /etc/apache2/ports.conf ]; then
+        if grep -q "^Listen 80" /etc/apache2/ports.conf && grep -q "Listen 443" /etc/apache2/ports.conf; then
+            pass "ports.conf has standard configuration (Listen 80, Listen 443)"
+        else
+            fail "ports.conf may have non-standard port configuration"
+        fi
+    else
+        fail "ports.conf not found"
+    fi
+    
+    # Check required Apache modules
+    REQUIRED_MODULES=("rewrite" "headers" "ssl" "proxy_fcgi" "setenvif")
+    for mod in "${REQUIRED_MODULES[@]}"; do
+        if [ -f "/etc/apache2/mods-enabled/${mod}.load" ]; then
+            pass "Apache module enabled: $mod"
+        else
+            fail "Apache module missing: $mod"
+        fi
+    done
+    
+    # Check WebDAV modules and password file if WebDAV is configured
+    if grep -q "DAV On" /etc/apache2/sites-enabled/wedding.conf 2>/dev/null || \
+       grep -q "DAV On" /etc/apache2/sites-enabled/wedding-ssl.conf 2>/dev/null; then
+        echo ""
+        echo "WebDAV Configuration Checks:"
+        
+        # Check WebDAV modules
+        for mod in dav dav_fs auth_basic; do
+            if [ -f "/etc/apache2/mods-enabled/${mod}.load" ]; then
+                pass "WebDAV module enabled: $mod"
+            else
+                fail "WebDAV module missing: $mod"
+            fi
+        done
+        
+        # Check WebDAV password file
+        if [ -f /etc/apache2/.davpasswd ]; then
+            pass "WebDAV password file exists (/etc/apache2/.davpasswd)"
+            # Check permissions
+            DAV_PERMS=$(stat -c %a /etc/apache2/.davpasswd 2>/dev/null || echo "000")
+            if [[ "$DAV_PERMS" == "640" ]] || [[ "$DAV_PERMS" == "600" ]]; then
+                pass "WebDAV password file permissions secure ($DAV_PERMS)"
+            else
+                fail "WebDAV password file permissions insecure ($DAV_PERMS)"
+            fi
+        else
+            fail "WebDAV password file missing (/etc/apache2/.davpasswd)"
+        fi
+    fi
+fi
+
+# Check 7: HTTP checks (if Nginx or Apache is running)
 WEB_SERVER_DETECTED=""
 if command -v curl &> /dev/null; then
-    if pgrep nginx > /dev/null 2>&1; then
+    # Use already detected WEB_SERVER if available, otherwise detect via pgrep
+    if [ -n "$WEB_SERVER" ]; then
+        WEB_SERVER_DETECTED="$WEB_SERVER"
+    elif pgrep nginx > /dev/null 2>&1; then
         WEB_SERVER_DETECTED="nginx"
     elif pgrep apache2 > /dev/null 2>&1; then
         WEB_SERVER_DETECTED="apache"

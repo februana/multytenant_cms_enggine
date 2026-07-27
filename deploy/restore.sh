@@ -37,6 +37,20 @@ cd "$ROOT_DIR"
 echo "Extracting files..."
 tar -xzf "$BACKUP_FILE"
 
+# Restore WebDAV password file if present in backup
+if tar -tzf "$BACKUP_FILE" | grep -q "_temp_backup/davpasswd"; then
+    echo "Restoring WebDAV password file..."
+    # Extract only the davpasswd file to a temp location
+    tar -xzf "$BACKUP_FILE" _temp_backup/davpasswd 2>/dev/null || true
+    if [ -f "_temp_backup/davpasswd" ]; then
+        cp "_temp_backup/davpasswd" /etc/apache2/.davpasswd
+        chown root:www-data /etc/apache2/.davpasswd
+        chmod 640 /etc/apache2/.davpasswd
+        rm -rf "_temp_backup"
+        echo "WebDAV password file restored to /etc/apache2/.davpasswd"
+    fi
+fi
+
 # Set secure permissions
 echo "Setting permissions..."
 chmod 600 config.json 2>/dev/null || true
