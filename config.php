@@ -152,7 +152,110 @@ function config_defaults(): array {
         'admin' => [
             'username' => 'admin',
             'password_hash' => ''
-        ]
+        ],
+        'theme' => [
+            'primary_color' => '#c84c47',
+            'secondary_color' => '#f0c2a1',
+            'accent_color' => '#f0c2a1',
+            'background_color' => '#fff8f2',
+            'text_color' => '#2f2424',
+            'link_color' => '#c84c47',
+            'button_style' => 'rounded',
+            'border_radius' => '28px',
+            'shadow' => '0 22px 60px rgba(73,45,34,.14)',
+            'container_width' => '1200px',
+            'section_spacing' => '80px',
+            'heading_font' => 'Playfair Display, serif',
+            'body_font' => 'Lato, sans-serif',
+            'font_size_base' => '16px',
+            'animation_enabled' => true,
+            'navbar_style' => 'transparent',
+            'card_style' => 'elevated',
+            'footer_style' => 'centered'
+        ],
+        'sections' => [
+            [
+                'id' => 'hero',
+                'title' => 'Hero',
+                'subtitle' => '',
+                'enabled' => true,
+                'order' => 1
+            ],
+            [
+                'id' => 'bride_groom',
+                'title' => 'Bride & Groom',
+                'subtitle' => 'Mempelai',
+                'enabled' => true,
+                'order' => 2
+            ],
+            [
+                'id' => 'countdown',
+                'title' => 'Countdown',
+                'subtitle' => 'Menuju Hari Bahagia',
+                'enabled' => true,
+                'order' => 3
+            ],
+            [
+                'id' => 'love_story',
+                'title' => 'Love Story',
+                'subtitle' => 'Cerita Kami',
+                'enabled' => true,
+                'order' => 4
+            ],
+            [
+                'id' => 'gallery',
+                'title' => 'Gallery',
+                'subtitle' => 'Galeri Foto',
+                'enabled' => true,
+                'order' => 5
+            ],
+            [
+                'id' => 'events',
+                'title' => 'Events',
+                'subtitle' => 'Acara',
+                'enabled' => true,
+                'order' => 6
+            ],
+            [
+                'id' => 'location',
+                'title' => 'Location',
+                'subtitle' => 'Lokasi Acara',
+                'enabled' => true,
+                'order' => 7
+            ],
+            [
+                'id' => 'rsvp',
+                'title' => 'RSVP',
+                'subtitle' => 'Konfirmasi Kehadiran',
+                'enabled' => true,
+                'order' => 8
+            ],
+            [
+                'id' => 'gift',
+                'title' => 'Gift',
+                'subtitle' => 'Ucapan & Hadiah',
+                'enabled' => true,
+                'order' => 9
+            ],
+            [
+                'id' => 'guest_wishes',
+                'title' => 'Guest Wishes',
+                'subtitle' => 'Ucapan Tamu',
+                'enabled' => true,
+                'order' => 10
+            ],
+            [
+                'id' => 'footer',
+                'title' => 'Footer',
+                'subtitle' => '',
+                'enabled' => true,
+                'order' => 11
+            ]
+        ],
+        'love_story' => [
+            'items' => []
+        ],
+        'custom_css' => ''
     ];
 }
 
@@ -185,6 +288,12 @@ function load_config(): array {
     }
     if (!is_array($config['media']['background_sections'])) {
         $config['media']['background_sections'] = [];
+    }
+    if (!is_array($config['love_story']['items'])) {
+        $config['love_story']['items'] = [];
+    }
+    if (!is_array($config['sections'])) {
+        $config['sections'] = $defaults['sections'];
     }
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);

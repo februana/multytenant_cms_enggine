@@ -87,7 +87,47 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
     <button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik auto & gallery lazy load">📊 Mode Hemat</button>
   </header>
 
+  <?php
+  // Section visibility helper function
+  function is_section_enabled($config, $sectionId) {
+      if (!isset($config['sections']) || !is_array($config['sections'])) {
+          return true; // Default: all sections enabled for backward compatibility
+      }
+      foreach ($config['sections'] as $section) {
+          if (($section['id'] ?? '') === $sectionId) {
+              return !empty($section['enabled']);
+          }
+      }
+      return true; // Unknown sections default to enabled
+  }
+  
+  function get_section_title($config, $sectionId, $defaultTitle) {
+      if (!isset($config['sections']) || !is_array($config['sections'])) {
+          return $defaultTitle;
+      }
+      foreach ($config['sections'] as $section) {
+          if (($section['id'] ?? '') === $sectionId) {
+              return !empty($section['custom_title']) ? $section['custom_title'] : $defaultTitle;
+          }
+      }
+      return $defaultTitle;
+  }
+  
+  function get_section_subtitle($config, $sectionId, $defaultSubtitle) {
+      if (!isset($config['sections']) || !is_array($config['sections'])) {
+          return $defaultSubtitle;
+      }
+      foreach ($config['sections'] as $section) {
+          if (($section['id'] ?? '') === $sectionId) {
+              return !empty($section['custom_subtitle']) ? $section['custom_subtitle'] : $defaultSubtitle;
+          }
+      }
+      return $defaultSubtitle;
+  }
+  ?>
+
   <main>
+    <?php if (is_section_enabled($config, 'hero')): ?>
     <section id="hero" class="hero" <?php echo $bgHero; ?>>
       <div class="hero-card">
         <p class="eyebrow">Kami Akan Menikah</p>
@@ -121,10 +161,11 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       </div>
     </section>
 
+    <?php if (is_section_enabled($config, 'undangan')): ?>
     <section id="undangan" class="section intro-section" <?php echo $sectionStyles[0]; ?>>
       <div class="section-head">
-        <p class="label">Undangan Pernikahan</p>
-        <h2><?php echo nl2br(escape_html($config['wedding']['quote'])); ?></h2>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'undangan', 'Undangan Pernikahan')); ?></p>
+        <h2><?php echo nl2br(escape_html(get_section_subtitle($config, 'undangan', $config['wedding']['quote']))); ?></h2>
         <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
       </div>
       <div class="cards-grid">
@@ -148,19 +189,23 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         </article>
       </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'cerita')): ?>
     <section id="cerita" class="section panel" <?php echo $sectionStyles[1]; ?>>
-      <p class="label">Cerita Kami</p>
-      <h2>Perjalanan indah bersama</h2>
+      <p class="label"><?php echo escape_html(get_section_title($config, 'cerita', 'Cerita Kami')); ?></p>
+      <h2><?php echo escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')); ?></h2>
       <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
       <p><?php echo nl2br(escape_html($config['wedding']['closing_text'])); ?></p>
 
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'galeri')): ?>
     <section id="galeri" class="section panel" <?php echo $sectionStyles[2]; ?>>
       <div class="section-head left">
-        <p class="label">Galeri</p>
-        <h2>Prewedding Kami</h2>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'galeri', 'Galeri')); ?></p>
+        <h2><?php echo escape_html(get_section_subtitle($config, 'galeri', 'Prewedding Kami')); ?></h2>
         <p>Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p>
       </div>
       <button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button>
@@ -168,11 +213,13 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         <p class="loading">Memuat galeri...</p>
       </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'acara')): ?>
     <section id="acara" class="section">
       <div class="section-head">
-        <p class="label">Jadwal Acara</p>
-        <h2>Rangkaian Acara</h2>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'acara', 'Jadwal Acara')); ?></p>
+        <h2><?php echo escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')); ?></h2>
       </div>
       <div class="timeline">
         <div class="timeline-item">
@@ -187,11 +234,13 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         </div>
       </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'lokasi')): ?>
     <section id="lokasi" class="section panel">
       <div class="section-head left">
-        <p class="label">Lokasi</p>
-        <h2>Tempat Acara</h2>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'lokasi', 'Lokasi')); ?></p>
+        <h2><?php echo escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')); ?></h2>
       </div>
       <div class="location-grid">
         <div class="card">
@@ -213,11 +262,13 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         </div>
       </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'amplop')): ?>
     <section id="amplop" class="section panel">
       <div class="section-head left">
-        <p class="label">Amplop Digital</p>
-        <h2>Tanda Terima Kasih</h2>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'amplop', 'Amplop Digital')); ?></p>
+        <h2><?php echo escape_html(get_section_subtitle($config, 'amplop', 'Tanda Terima Kasih')); ?></h2>
         <p>Jika ingin memberikan amplop digital, berikut data rekening:</p>
       </div>
       <div class="amplop-container">
@@ -249,11 +300,13 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         </div>
       </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'rsvp')): ?>
     <section id="rsvp" class="section panel">
       <div class="section-head left">
-        <p class="label">RSVP</p>
-        <h2>Konfirmasi Kehadiran</h2>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'rsvp', 'RSVP')); ?></p>
+        <h2><?php echo escape_html(get_section_subtitle($config, 'rsvp', 'Konfirmasi Kehadiran')); ?></h2>
       </div>
       <form id="rsvpForm" class="rsvp-form">
         <input type="hidden" name="csrf_token" id="csrfToken" />
@@ -271,6 +324,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       </form>
       <div id="messages" class="messages"></div>
     </section>
+    <?php endif; ?>
   </main>
 
   <div id="lightbox" class="lightbox" style="display:none;">
