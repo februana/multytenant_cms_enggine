@@ -120,6 +120,38 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['whatsapp']['phone'] = trim((string)($_POST['whatsapp_phone'] ?? '')) ?: $config['whatsapp']['phone'];
                 $config['whatsapp']['message'] = trim((string)($_POST['whatsapp_message'] ?? '')) ?: $config['whatsapp']['message'];
                 break;
+            case 'save_sections':
+                $newSections = $_POST['sections'] ?? [];
+                if (is_array($newSections) && !empty($newSections)) {
+                    $updatedSections = [];
+                    foreach ($newSections as $index => $sectionData) {
+                        $sectionId = trim((string)($sectionData['id'] ?? ''));
+                        if ($sectionId === '') continue;
+                        
+                        $originalSection = null;
+                        foreach ($config['sections'] as $origSec) {
+                            if ($origSec['id'] === $sectionId) {
+                                $originalSection = $origSec;
+                                break;
+                            }
+                        }
+                        
+                        $updatedSections[] = [
+                            'id' => $sectionId,
+                            'title' => $originalSection['title'] ?? '',
+                            'subtitle' => $originalSection['subtitle'] ?? '',
+                            'enabled' => !empty($sectionData['enabled']),
+                            'custom_title' => trim((string)($sectionData['custom_title'] ?? '')),
+                            'custom_subtitle' => trim((string)($sectionData['custom_subtitle'] ?? '')),
+                            'order' => (int)($sectionData['order'] ?? 0)
+                        ];
+                    }
+                    usort($updatedSections, function($a, $b) {
+                        return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+                    });
+                    $config['sections'] = $updatedSections;
+                }
+                break;
             case 'save_guest_link':
                 $saveConfig = false;
                 $guestName = trim((string)($_POST['guest_name'] ?? ''));
@@ -373,6 +405,7 @@ $qrisPreview = $config['gift']['qris_image'];
                         <a href="#parents">Parents</a>
                         <a href="#schedule">Schedule</a>
                         <a href="#countdown">Countdown</a>
+                        <a href="#sections">Sections</a>
                         <a href="#gallery">Gallery</a>
                         <a href="#cover">Cover</a>
                         <a href="#background">Background</a>
@@ -460,6 +493,41 @@ $qrisPreview = $config['gift']['qris_image'];
                             </div>
                             <p style="font-size:0.95rem;color:#5c4c32;">Countdown akan otomatis diperbarui saat tanggal akad, jam, atau zona waktu diubah.</p>
                             <button type="submit">Simpan Countdown</button>
+                        </form>
+                    </section>
+
+                    <section id="sections" class="card panel-section">
+                        <h2>Sections</h2>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_sections">
+                            <p style="margin-bottom:1rem;color:#5c4c32;">Kelola tampilan bagian website. Aktifkan/nonaktifkan, ubah urutan, atau sesuaikan judul setiap bagian.</p>
+                            <div id="sections-list">
+                                <?php 
+                                $sections = $config['sections'] ?? [];
+                                usort($sections, function($a, $b) {
+                                    return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+                                });
+                                foreach ($sections as $index => $section): 
+                                ?>
+                                <div class="section-item" style="background:#f7f3ed;padding:1rem;margin-bottom:1rem;border-radius:8px;">
+                                    <input type="hidden" name="sections[<?php echo $index; ?>][id]" value="<?php echo escape_html($section['id']); ?>">
+                                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+                                        <span style="font-weight:bold;color:#c84c47;"><?php echo escape_html($section['title']); ?></span>
+                                        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;">
+                                            <input type="checkbox" name="sections[<?php echo $index; ?>][enabled]" value="1" <?php echo !empty($section['enabled']) ? 'checked' : ''; ?>>
+                                            Enabled
+                                        </label>
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;">
+                                        <div class="form-row"><label>Custom Title</label><input type="text" name="sections[<?php echo $index; ?>][custom_title]" value="<?php echo escape_html($section['custom_title'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['title']); ?>"></div>
+                                        <div class="form-row"><label>Custom Subtitle</label><input type="text" name="sections[<?php echo $index; ?>][custom_subtitle]" value="<?php echo escape_html($section['custom_subtitle'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['subtitle'] ?? ''); ?>"></div>
+                                        <div class="form-row"><label>Order</label><input type="number" name="sections[<?php echo $index; ?>][order]" value="<?php echo escape_html((string)($section['order'] ?? $index)); ?>" style="width:80px;"></div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="submit">Simpan Sections</button>
                         </form>
                     </section>
 
