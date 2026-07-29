@@ -25,6 +25,7 @@ echo "Creating $BACKUP_FILE..."
 # Build list of files to backup
 BACKUP_FILES=(
     "config.json"
+    "custom.css"
     "guest-links.json"
     "database.sqlite"
     "uploads/"

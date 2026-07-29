@@ -32,6 +32,7 @@ if (!defined('UPLOADS_GALLERY_DIR')) define('UPLOADS_GALLERY_DIR', UPLOADS_DIR .
 if (!defined('UPLOADS_BACKGROUND_DIR')) define('UPLOADS_BACKGROUND_DIR', UPLOADS_DIR . '/background');
 if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS_DIR . '/love-story');
 if (!defined('CONFIG_FILE')) define('CONFIG_FILE', ROOT_DIR . '/config.json');
+if (!defined('CUSTOM_CSS_FILE')) define('CUSTOM_CSS_FILE', ROOT_DIR . '/custom.css');
 
 // Security defaults
 if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
@@ -399,6 +400,75 @@ function load_guest_links(): array {
         ];
     }
     return $result;
+}
+
+function load_custom_css(): string {
+    if (!is_readable(CUSTOM_CSS_FILE)) {
+        $config = load_config();
+        return (string)($config['custom_css'] ?? '');
+    }
+    $css = @file_get_contents(CUSTOM_CSS_FILE);
+    return $css === false ? '' : $css;
+}
+
+function validate_custom_css(string $css): array {
+    $css = str_replace("\0", '', $css);
+    if (strlen($css) > 100000) {
+        return ['valid' => false, 'message' => 'Custom CSS terlalu besar (maks 100 KB).'];
+    }
+    $forbiddenPatterns = [
+        '/<\s*\/?\s*script\b/i' => 'Tag script tidak diizinkan.',
+        '/<\?php|\?>/i' => 'Kode PHP tidak diizinkan.',
+        '/<\s*\/?\s*[a-z][^>]*>/i' => 'Tag HTML tidak diizinkan.',
+        '/javascript\s*:/i' => 'URL javascript: tidak diizinkan.',
+        '/\bon[a-z]+\s*=/i' => 'Inline event handler tidak diizinkan.',
+        '/expression\s*\(/i' => 'CSS expression tidak diizinkan.',
+        '/@import\b/i' => '@import tidak diizinkan pada Custom CSS.'
+    ];
+    foreach ($forbiddenPatterns as $pattern => $message) {
+        if (preg_match($pattern, $css)) {
+            return ['valid' => false, 'message' => $message];
+        }
+    }
+
+    $withoutComments = preg_replace('#/\*.*?\*/#s', '', $css) ?? $css;
+    $withoutStrings = preg_replace('/(["\']).*?\1/s', '', $withoutComments) ?? $withoutComments;
+    $balance = 0;
+    $parenBalance = 0;
+    $bracketBalance = 0;
+    $length = strlen($withoutStrings);
+    for ($i = 0; $i < $length; $i++) {
+        $char = $withoutStrings[$i];
+        if ($char === '{') $balance++;
+        if ($char === '}') $balance--;
+        if ($char === '(') $parenBalance++;
+        if ($char === ')') $parenBalance--;
+        if ($char === '[') $bracketBalance++;
+        if ($char === ']') $bracketBalance--;
+        if ($balance < 0 || $parenBalance < 0 || $bracketBalance < 0) {
+            return ['valid' => false, 'message' => 'Struktur CSS tidak valid.'];
+        }
+    }
+    if ($balance !== 0 || $parenBalance !== 0 || $bracketBalance !== 0) {
+        return ['valid' => false, 'message' => 'Kurung CSS tidak seimbang.'];
+    }
+    if (trim($css) !== '' && !preg_match('/[{}:;]/', $css)) {
+        return ['valid' => false, 'message' => 'Custom CSS harus berisi aturan CSS yang valid.'];
+    }
+    return ['valid' => true, 'message' => ''];
+}
+
+function save_custom_css(string $css): bool {
+    $tmp = CUSTOM_CSS_FILE . '.tmp';
+    if (@file_put_contents($tmp, $css, LOCK_EX) === false) {
+        return false;
+    }
+    if (!@rename($tmp, CUSTOM_CSS_FILE)) {
+        @unlink($tmp);
+        return false;
+    }
+    @chmod(CUSTOM_CSS_FILE, 0644);
+    return true;
 }
 
 function save_guest_links(array $links): bool {

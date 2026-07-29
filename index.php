@@ -12,6 +12,7 @@ $ogTitle = $config['site']['open_graph_title'];
 $ogDescription = $config['site']['open_graph_description'];
 $ogImage = $config['site']['open_graph_image'];
 $schema = $config['site']['schema'];
+$customCss = load_custom_css();
 $weddingTitle = $config['wedding']['title'];
 $heroText = $config['wedding']['opening_text'];
 $guestFallback = 'Bapak/Ibu/Saudara/i';
@@ -116,15 +117,9 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       color: var(--link);
     }
   </style>
-  <?php
-  // Load custom CSS if present
-  if (!empty($config['custom_css'])):
-  ?>
-  <style id="custom-css">
-    <?php echo $config['custom_css']; ?>
-  </style>
+  <?php if (trim($customCss) !== ''): ?>
+  <link rel="stylesheet" href="custom.css" />
   <?php endif; ?>
-  <link rel="stylesheet" href="style.css" />
   <script type="application/ld+json">
   <?php echo $schema; ?>
   </script>
@@ -209,6 +204,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
         <button class="music-btn" type="button" id="musicBtn">Putar Musik</button>
       </div>
     </section>
+    <?php endif; ?>
 
     <section class="section intro-section" style="background:#f9f6f0;padding:40px 20px">
       <div class="section-head">
