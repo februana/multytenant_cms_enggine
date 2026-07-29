@@ -35,3 +35,5 @@ th { background:#faf4eb; font-weight:700; }
 .gallery-card img { width:100%; border-radius:14px; object-fit:cover; aspect-ratio:4/3; }
 .gallery-card button { width:100%; }
 @media (max-width: 960px) { .layout { grid-template-columns:1fr; } .sidebar { position:relative; max-height:none; } .form-grid { grid-template-columns:1fr; } }
+.code-editor { font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace; min-height:360px; line-height:1.55; tab-size:2; white-space:pre; }
+.form-row small { color:#6b5b45; line-height:1.5; }

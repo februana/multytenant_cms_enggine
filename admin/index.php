@@ -152,6 +152,18 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $config['sections'] = $updatedSections;
                 }
                 break;
+            case 'save_custom_css':
+                $customCss = (string)($_POST['custom_css'] ?? '');
+                $validation = validate_custom_css($customCss);
+                $saveConfig = false;
+                if (empty($validation['valid'])) {
+                    $error = $validation['message'] ?: 'Custom CSS tidak valid.';
+                } elseif (!save_custom_css($customCss)) {
+                    $error = 'Gagal menyimpan Custom CSS.';
+                } else {
+                    $success = 'Custom CSS berhasil disimpan.';
+                }
+                break;
             case 'save_theme':
                 $config['theme']['primary_color'] = trim((string)($_POST['primary_color'] ?? '')) ?: $config['theme']['primary_color'];
                 $config['theme']['secondary_color'] = trim((string)($_POST['secondary_color'] ?? '')) ?: $config['theme']['secondary_color'];
@@ -467,6 +479,7 @@ $backgroundSectionPreviews = [
     $config['media']['background_sections'][2] ?? ''
 ];
 $qrisPreview = $config['gift']['qris_image'];
+$customCss = load_custom_css();
 
 ?><!DOCTYPE html>
 <html lang="id">
@@ -509,6 +522,7 @@ $qrisPreview = $config['gift']['qris_image'];
                         <a href="#countdown">Countdown</a>
                         <a href="#sections">Sections</a>
                         <a href="#theme">Theme</a>
+                        <a href="#custom-css">Custom CSS</a>
                         <a href="#love-story">Love Story</a>
                         <a href="#gallery">Gallery</a>
                         <a href="#cover">Cover</a>
@@ -710,6 +724,22 @@ $qrisPreview = $config['gift']['qris_image'];
                             </div>
 
                             <button type="submit" style="margin-top:1.5rem;">Simpan Theme</button>
+                        </form>
+                    </section>
+
+
+                    <section id="custom-css" class="card panel-section">
+                        <h2>Custom CSS</h2>
+                        <p class="section-description">Tambahkan CSS khusus yang disimpan terpisah dari <code>style.css</code> dan dimuat setelah stylesheet default.</p>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_custom_css">
+                            <div class="form-row">
+                                <label>CSS Editor</label>
+                                <textarea name="custom_css" class="code-editor" rows="18" spellcheck="false" placeholder=".hero { background: linear-gradient(...); }"><?php echo escape_html($customCss); ?></textarea>
+                                <small>Hanya CSS valid yang diterima. HTML, JavaScript, PHP, tag HTML, URL javascript:, dan inline event handler akan ditolak.</small>
+                            </div>
+                            <button type="submit">Simpan Custom CSS</button>
                         </form>
                     </section>
 

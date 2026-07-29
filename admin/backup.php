@@ -12,7 +12,7 @@ if ($zip->open($tmpFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
     exit;
 }
 
-$files = [CONFIG_FILE, ROOT_DIR . '/event.ics', ROOT_DIR . '/guest-links.json'];
+$files = [CONFIG_FILE, CUSTOM_CSS_FILE, ROOT_DIR . '/event.ics', ROOT_DIR . '/guest-links.json'];
 if (is_readable(DB_PATH)) {
     $files[] = DB_PATH;
 }

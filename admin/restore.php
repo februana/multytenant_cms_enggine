@@ -39,7 +39,7 @@ if ($zip->open($tmpFile) !== true) {
     exit;
 }
 
-$allowedTopFiles = ['config.json', 'event.ics', 'guest-links.json', basename(DB_PATH)];
+$allowedTopFiles = ['config.json', 'custom.css', 'event.ics', 'guest-links.json', basename(DB_PATH)];
 $allowedFolders = ['uploads/'];
 $tmpDir = sys_get_temp_dir() . '/restore_' . bin2hex(random_bytes(6));
 @mkdir($tmpDir, 0755, true);
