@@ -30,6 +30,7 @@ if (!defined('UPLOADS_COVER_DIR')) define('UPLOADS_COVER_DIR', UPLOADS_DIR . '/c
 if (!defined('UPLOADS_MUSIC_DIR')) define('UPLOADS_MUSIC_DIR', UPLOADS_DIR . '/music');
 if (!defined('UPLOADS_GALLERY_DIR')) define('UPLOADS_GALLERY_DIR', UPLOADS_DIR . '/gallery');
 if (!defined('UPLOADS_BACKGROUND_DIR')) define('UPLOADS_BACKGROUND_DIR', UPLOADS_DIR . '/background');
+if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS_DIR . '/love-story');
 if (!defined('CONFIG_FILE')) define('CONFIG_FILE', ROOT_DIR . '/config.json');
 
 // Security defaults
@@ -179,77 +180,99 @@ function config_defaults(): array {
                 'title' => 'Hero',
                 'subtitle' => '',
                 'enabled' => true,
-                'order' => 1
+                'order' => 1,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'bride_groom',
                 'title' => 'Bride & Groom',
                 'subtitle' => 'Mempelai',
                 'enabled' => true,
-                'order' => 2
+                'order' => 2,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'countdown',
                 'title' => 'Countdown',
                 'subtitle' => 'Menuju Hari Bahagia',
                 'enabled' => true,
-                'order' => 3
+                'order' => 3,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'love_story',
                 'title' => 'Love Story',
                 'subtitle' => 'Cerita Kami',
                 'enabled' => true,
-                'order' => 4
+                'order' => 4,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'gallery',
                 'title' => 'Gallery',
                 'subtitle' => 'Galeri Foto',
                 'enabled' => true,
-                'order' => 5
+                'order' => 5,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'events',
                 'title' => 'Events',
                 'subtitle' => 'Acara',
                 'enabled' => true,
-                'order' => 6
+                'order' => 6,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'location',
                 'title' => 'Location',
                 'subtitle' => 'Lokasi Acara',
                 'enabled' => true,
-                'order' => 7
+                'order' => 7,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'rsvp',
                 'title' => 'RSVP',
                 'subtitle' => 'Konfirmasi Kehadiran',
                 'enabled' => true,
-                'order' => 8
+                'order' => 8,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'gift',
                 'title' => 'Gift',
                 'subtitle' => 'Ucapan & Hadiah',
                 'enabled' => true,
-                'order' => 9
+                'order' => 9,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'guest_wishes',
                 'title' => 'Guest Wishes',
                 'subtitle' => 'Ucapan Tamu',
                 'enabled' => true,
-                'order' => 10
+                'order' => 10,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ],
             [
                 'id' => 'footer',
                 'title' => 'Footer',
                 'subtitle' => '',
                 'enabled' => true,
-                'order' => 11
+                'order' => 11,
+                'custom_title' => '',
+                'custom_subtitle' => ''
             ]
         ],
         'love_story' => [
@@ -260,7 +283,7 @@ function config_defaults(): array {
 }
 
 function ensure_upload_dirs(): void {
-    foreach ([UPLOADS_DIR, UPLOADS_COVER_DIR, UPLOADS_MUSIC_DIR, UPLOADS_GALLERY_DIR, UPLOADS_BACKGROUND_DIR] as $dir) {
+    foreach ([UPLOADS_DIR, UPLOADS_COVER_DIR, UPLOADS_MUSIC_DIR, UPLOADS_GALLERY_DIR, UPLOADS_BACKGROUND_DIR, UPLOADS_LOVE_STORY_DIR] as $dir) {
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
@@ -294,6 +317,17 @@ function load_config(): array {
     }
     if (!is_array($config['sections'])) {
         $config['sections'] = $defaults['sections'];
+    } else {
+        // Ensure each section has custom_title and custom_subtitle keys for backward compatibility
+        foreach ($config['sections'] as &$section) {
+            if (!isset($section['custom_title'])) {
+                $section['custom_title'] = '';
+            }
+            if (!isset($section['custom_subtitle'])) {
+                $section['custom_subtitle'] = '';
+            }
+        }
+        unset($section);
     }
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);

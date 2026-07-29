@@ -67,7 +67,63 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   <title><?php echo escape_html($siteTitle); ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Allura&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <?php
+  // Generate Google Fonts URL from theme settings
+  $fontFamilies = [];
+  if (!empty($config['theme']['heading_font'])) {
+      $fontFamilies[] = urlencode(str_replace(' ', '+', explode(',', $config['theme']['heading_font'])[0]));
+  }
+  if (!empty($config['theme']['body_font'])) {
+      $fontFamilies[] = urlencode(str_replace(' ', '+', explode(',', $config['theme']['body_font'])[0]));
+  }
+  if (empty($fontFamilies)) {
+      $fontFamilies = ['Allura', 'Inter'];
+  }
+  $fontsUrl = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', array_unique($fontFamilies)) . '&display=swap';
+  ?>
+  <link href="<?php echo escape_html($fontsUrl); ?>" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <?php
+  // Generate CSS variables from theme settings
+  $theme = $config['theme'] ?? [];
+  ?>
+  <style id="theme-variables">
+    :root {
+      --primary: <?php echo escape_html($theme['primary_color'] ?? '#c84c47'); ?>;
+      --secondary: <?php echo escape_html($theme['secondary_color'] ?? '#f0c2a1'); ?>;
+      --accent: <?php echo escape_html($theme['accent_color'] ?? '#f0c2a1'); ?>;
+      --bg: <?php echo escape_html($theme['background_color'] ?? '#fff8f2'); ?>;
+      --text: <?php echo escape_html($theme['text_color'] ?? '#2f2424'); ?>;
+      --link: <?php echo escape_html($theme['link_color'] ?? '#c84c47'); ?>;
+      --shadow: <?php echo escape_html($theme['shadow'] ?? '0 22px 60px rgba(73,45,34,.14)'); ?>;
+      --radius: <?php echo escape_html($theme['border_radius'] ?? '28px'); ?>;
+      --container-width: <?php echo escape_html($theme['container_width'] ?? '1200px'); ?>;
+      --section-spacing: <?php echo escape_html($theme['section_spacing'] ?? '80px'); ?>;
+      --font-heading: <?php echo escape_html($theme['heading_font'] ?? 'Playfair Display, serif'); ?>;
+      --font-body: <?php echo escape_html($theme['body_font'] ?? 'Lato, sans-serif'); ?>;
+      --font-size-base: <?php echo escape_html($theme['font_size_base'] ?? '16px'); ?>;
+    }
+    body {
+      font-family: var(--font-body);
+      font-size: var(--font-size-base);
+      color: var(--text);
+      background-color: var(--bg);
+    }
+    h1, h2, h3, h4, h5, h6, .label, .eyebrow {
+      font-family: var(--font-heading);
+    }
+    a {
+      color: var(--link);
+    }
+  </style>
+  <?php
+  // Load custom CSS if present
+  if (!empty($config['custom_css'])):
+  ?>
+  <style id="custom-css">
+    <?php echo $config['custom_css']; ?>
+  </style>
+  <?php endif; ?>
   <link rel="stylesheet" href="style.css" />
   <script type="application/ld+json">
   <?php echo $schema; ?>
@@ -195,9 +251,9 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
     <section id="cerita" class="section panel" <?php echo $sectionStyles[1]; ?>>
       <p class="label"><?php echo escape_html(get_section_title($config, 'cerita', 'Cerita Kami')); ?></p>
       <h2><?php echo escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')); ?></h2>
-      <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
-      <p><?php echo nl2br(escape_html($config['wedding']['closing_text'])); ?></p>
-
+      <div id="loveStoryContainer">
+        <p class="loading">Memuat cerita...</p>
+      </div>
     </section>
     <?php endif; ?>
 
@@ -336,5 +392,71 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
 
   <audio id="backgroundMusic" src="<?php echo escape_html($musicSrc); ?>" preload="auto" loop></audio>
   <script src="script.js" defer></script>
+  <script>
+  // Load Love Story dynamically
+  (function() {
+    const container = document.getElementById('loveStoryContainer');
+    if (!container) return;
+
+    fetch('app/love-story.php')
+      .then(function(response) {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(function(stories) {
+        if (!stories || stories.length === 0) {
+          container.innerHTML = '<p>Belum ada cerita cinta yang ditambahkan.</p>';
+          return;
+        }
+
+        let html = '<div class="love-story-timeline">';
+        stories.forEach(function(story, index) {
+          html += '<div class="love-story-item">';
+          if (story.icon) {
+            html += '<div class="love-story-icon">' + escapeHtml(story.icon) + '</div>';
+          }
+          if (story.image) {
+            html += '<div class="love-story-image"><img src="' + escapeHtml(story.image) + '" alt="' + escapeHtml(story.image_alt || '') + '"></div>';
+            if (story.image_caption) {
+              html += '<p class="love-story-caption">' + escapeHtml(story.image_caption) + '</p>';
+            }
+          }
+          html += '<div class="love-story-content">';
+          if (story.event_date) {
+            html += '<p class="love-story-date">' + escapeHtml(formatDate(story.event_date)) + '</p>';
+          }
+          if (story.title) {
+            html += '<h3>' + escapeHtml(story.title) + '</h3>';
+          }
+          if (story.subtitle) {
+            html += '<p class="love-story-subtitle">' + escapeHtml(story.subtitle) + '</p>';
+          }
+          if (story.description) {
+            html += '<p class="love-story-description">' + escapeHtml(story.description) + '</p>';
+          }
+          html += '</div></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+      })
+      .catch(function(error) {
+        console.error('Error loading love story:', error);
+        container.innerHTML = '<p>Gagal memuat cerita. Silakan coba lagi nanti.</p>';
+      });
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('id-ID', options);
+    }
+  })();
+  </script>
 </body>
 </html>

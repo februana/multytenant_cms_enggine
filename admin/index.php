@@ -152,6 +152,108 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $config['sections'] = $updatedSections;
                 }
                 break;
+            case 'save_theme':
+                $config['theme']['primary_color'] = trim((string)($_POST['primary_color'] ?? '')) ?: $config['theme']['primary_color'];
+                $config['theme']['secondary_color'] = trim((string)($_POST['secondary_color'] ?? '')) ?: $config['theme']['secondary_color'];
+                $config['theme']['accent_color'] = trim((string)($_POST['accent_color'] ?? '')) ?: $config['theme']['accent_color'];
+                $config['theme']['background_color'] = trim((string)($_POST['background_color'] ?? '')) ?: $config['theme']['background_color'];
+                $config['theme']['text_color'] = trim((string)($_POST['text_color'] ?? '')) ?: $config['theme']['text_color'];
+                $config['theme']['link_color'] = trim((string)($_POST['link_color'] ?? '')) ?: $config['theme']['link_color'];
+                $config['theme']['heading_font'] = trim((string)($_POST['heading_font'] ?? '')) ?: $config['theme']['heading_font'];
+                $config['theme']['body_font'] = trim((string)($_POST['body_font'] ?? '')) ?: $config['theme']['body_font'];
+                $config['theme']['font_size_base'] = trim((string)($_POST['font_size_base'] ?? '')) ?: $config['theme']['font_size_base'];
+                $config['theme']['container_width'] = trim((string)($_POST['container_width'] ?? '')) ?: $config['theme']['container_width'];
+                $config['theme']['section_spacing'] = trim((string)($_POST['section_spacing'] ?? '')) ?: $config['theme']['section_spacing'];
+                $config['theme']['border_radius'] = trim((string)($_POST['border_radius'] ?? '')) ?: $config['theme']['border_radius'];
+                $config['theme']['shadow'] = trim((string)($_POST['shadow'] ?? '')) ?: $config['theme']['shadow'];
+                $config['theme']['button_style'] = trim((string)($_POST['button_style'] ?? '')) ?: $config['theme']['button_style'];
+                $config['theme']['navbar_style'] = trim((string)($_POST['navbar_style'] ?? '')) ?: $config['theme']['navbar_style'];
+                $config['theme']['card_style'] = trim((string)($_POST['card_style'] ?? '')) ?: $config['theme']['card_style'];
+                $config['theme']['footer_style'] = trim((string)($_POST['footer_style'] ?? '')) ?: $config['theme']['footer_style'];
+                $config['theme']['animation_enabled'] = !empty($_POST['animation_enabled']);
+                break;
+            case 'save_love_story':
+                // Handle love story CRUD operations
+                $action = $_POST['story_action'] ?? '';
+                if ($action === 'add') {
+                    $newItem = [
+                        'id' => uniqid('story_', true),
+                        'title' => trim((string)($_POST['title'] ?? '')),
+                        'subtitle' => trim((string)($_POST['subtitle'] ?? '')),
+                        'description' => trim((string)($_POST['description'] ?? '')),
+                        'event_date' => trim((string)($_POST['event_date'] ?? '')),
+                        'image' => '',
+                        'image_alt' => trim((string)($_POST['image_alt'] ?? '')),
+                        'image_caption' => trim((string)($_POST['image_caption'] ?? '')),
+                        'icon' => trim((string)($_POST['icon'] ?? '')),
+                        'enabled' => !empty($_POST['enabled']),
+                        'order' => count($config['love_story']['items']) + 1
+                    ];
+                    $config['love_story']['items'][] = $newItem;
+                } elseif ($action === 'edit') {
+                    $storyId = $_POST['story_id'] ?? '';
+                    foreach ($config['love_story']['items'] as &$item) {
+                        if (($item['id'] ?? '') === $storyId) {
+                            $item['title'] = trim((string)($_POST['title'] ?? $item['title']));
+                            $item['subtitle'] = trim((string)($_POST['subtitle'] ?? $item['subtitle']));
+                            $item['description'] = trim((string)($_POST['description'] ?? $item['description']));
+                            $item['event_date'] = trim((string)($_POST['event_date'] ?? $item['event_date']));
+                            $item['image_alt'] = trim((string)($_POST['image_alt'] ?? $item['image_alt']));
+                            $item['image_caption'] = trim((string)($_POST['image_caption'] ?? $item['image_caption']));
+                            $item['icon'] = trim((string)($_POST['icon'] ?? $item['icon']));
+                            $item['enabled'] = !empty($_POST['enabled']);
+                            break;
+                        }
+                    }
+                } elseif ($action === 'delete') {
+                    $storyId = $_POST['story_id'] ?? '';
+                    $config['love_story']['items'] = array_values(array_filter(
+                        $config['love_story']['items'],
+                        fn($item) => ($item['id'] ?? '') !== $storyId
+                    ));
+                } elseif ($action === 'reorder') {
+                    $orderArray = json_decode($_POST['order_array'] ?? '[]', true);
+                    if (is_array($orderArray)) {
+                        $orderedItems = [];
+                        foreach ($orderArray as $index => $storyId) {
+                            foreach ($config['love_story']['items'] as $item) {
+                                if (($item['id'] ?? '') === $storyId) {
+                                    $item['order'] = $index + 1;
+                                    $orderedItems[] = $item;
+                                    break;
+                                }
+                            }
+                        }
+                        // Add any items not in the order array (new items)
+                        foreach ($config['love_story']['items'] as $item) {
+                            if (!in_array($item['id'] ?? '', $orderArray, true)) {
+                                $orderedItems[] = $item;
+                            }
+                        }
+                        $config['love_story']['items'] = $orderedItems;
+                    }
+                }
+                // Handle image upload
+                if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                    $uploadResult = upload_file($_FILES['image'], 'image', UPLOADS_LOVE_STORY_DIR);
+                    if ($uploadResult['success']) {
+                        $uploadedPath = $uploadResult['path'];
+                        $storyId = $_POST['story_id'] ?? ($_POST['new_story_temp_id'] ?? '');
+                        if (!empty($storyId) && $action === 'edit') {
+                            foreach ($config['love_story']['items'] as &$item) {
+                                if (($item['id'] ?? '') === $storyId) {
+                                    $item['image'] = basename($uploadedPath);
+                                    break;
+                                }
+                            }
+                        } elseif ($action === 'add' && !empty($config['love_story']['items'])) {
+                            // Set image for the last added item
+                            $lastIndex = count($config['love_story']['items']) - 1;
+                            $config['love_story']['items'][$lastIndex]['image'] = basename($uploadedPath);
+                        }
+                    }
+                }
+                break;
             case 'save_guest_link':
                 $saveConfig = false;
                 $guestName = trim((string)($_POST['guest_name'] ?? ''));
@@ -406,6 +508,8 @@ $qrisPreview = $config['gift']['qris_image'];
                         <a href="#schedule">Schedule</a>
                         <a href="#countdown">Countdown</a>
                         <a href="#sections">Sections</a>
+                        <a href="#theme">Theme</a>
+                        <a href="#love-story">Love Story</a>
                         <a href="#gallery">Gallery</a>
                         <a href="#cover">Cover</a>
                         <a href="#background">Background</a>
@@ -529,6 +633,211 @@ $qrisPreview = $config['gift']['qris_image'];
                             </div>
                             <button type="submit">Simpan Sections</button>
                         </form>
+                    </section>
+
+                    <section id="theme" class="card panel-section">
+                        <h2>Theme Settings</h2>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_theme">
+                            
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Colors</h3>
+                            <div class="form-grid">
+                                <div class="form-row"><label>Primary Color</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Secondary Color</label><input type="color" name="secondary_color" value="<?php echo escape_html($config['theme']['secondary_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Accent Color</label><input type="color" name="accent_color" value="<?php echo escape_html($config['theme']['accent_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Background Color</label><input type="color" name="background_color" value="<?php echo escape_html($config['theme']['background_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Text Color</label><input type="color" name="text_color" value="<?php echo escape_html($config['theme']['text_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Link Color</label><input type="color" name="link_color" value="<?php echo escape_html($config['theme']['link_color']); ?>" style="width:100%;height:40px;"></div>
+                            </div>
+
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Typography</h3>
+                            <div class="form-grid">
+                                <div class="form-row"><label>Heading Font</label><input type="text" name="heading_font" value="<?php echo escape_html($config['theme']['heading_font']); ?>" placeholder="e.g., Playfair Display, serif"></div>
+                                <div class="form-row"><label>Body Font</label><input type="text" name="body_font" value="<?php echo escape_html($config['theme']['body_font']); ?>" placeholder="e.g., Lato, sans-serif"></div>
+                                <div class="form-row"><label>Base Font Size</label><input type="text" name="font_size_base" value="<?php echo escape_html($config['theme']['font_size_base']); ?>" placeholder="e.g., 16px"></div>
+                            </div>
+
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Spacing & Layout</h3>
+                            <div class="form-grid">
+                                <div class="form-row"><label>Container Width</label><input type="text" name="container_width" value="<?php echo escape_html($config['theme']['container_width']); ?>" placeholder="e.g., 1200px"></div>
+                                <div class="form-row"><label>Section Spacing</label><input type="text" name="section_spacing" value="<?php echo escape_html($config['theme']['section_spacing']); ?>" placeholder="e.g., 80px"></div>
+                                <div class="form-row"><label>Border Radius</label><input type="text" name="border_radius" value="<?php echo escape_html($config['theme']['border_radius']); ?>" placeholder="e.g., 28px"></div>
+                                <div class="form-row"><label>Shadow</label><input type="text" name="shadow" value="<?php echo escape_html($config['theme']['shadow']); ?>" placeholder="e.g., 0 22px 60px rgba(73,45,34,.14)"></div>
+                            </div>
+
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Styles</h3>
+                            <div class="form-grid">
+                                <div class="form-row">
+                                    <label>Button Style</label>
+                                    <select name="button_style">
+                                        <option value="rounded" <?php echo $config['theme']['button_style'] === 'rounded' ? 'selected' : ''; ?>>Rounded</option>
+                                        <option value="square" <?php echo $config['theme']['button_style'] === 'square' ? 'selected' : ''; ?>>Square</option>
+                                        <option value="pill" <?php echo $config['theme']['button_style'] === 'pill' ? 'selected' : ''; ?>>Pill</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <label>Navbar Style</label>
+                                    <select name="navbar_style">
+                                        <option value="transparent" <?php echo $config['theme']['navbar_style'] === 'transparent' ? 'selected' : ''; ?>>Transparent</option>
+                                        <option value="sticky" <?php echo $config['theme']['navbar_style'] === 'sticky' ? 'selected' : ''; ?>>Sticky</option>
+                                        <option value="solid" <?php echo $config['theme']['navbar_style'] === 'solid' ? 'selected' : ''; ?>>Solid</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <label>Card Style</label>
+                                    <select name="card_style">
+                                        <option value="elevated" <?php echo $config['theme']['card_style'] === 'elevated' ? 'selected' : ''; ?>>Elevated</option>
+                                        <option value="flat" <?php echo $config['theme']['card_style'] === 'flat' ? 'selected' : ''; ?>>Flat</option>
+                                        <option value="outlined" <?php echo $config['theme']['card_style'] === 'outlined' ? 'selected' : ''; ?>>Outlined</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <label>Footer Style</label>
+                                    <select name="footer_style">
+                                        <option value="centered" <?php echo $config['theme']['footer_style'] === 'centered' ? 'selected' : ''; ?>>Centered</option>
+                                        <option value="left" <?php echo $config['theme']['footer_style'] === 'left' ? 'selected' : ''; ?>>Left</option>
+                                        <option value="right" <?php echo $config['theme']['footer_style'] === 'right' ? 'selected' : ''; ?>>Right</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="margin-top:1rem;">
+                                <label style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="checkbox" name="animation_enabled" value="1" <?php echo !empty($config['theme']['animation_enabled']) ? 'checked' : ''; ?>>
+                                    Enable Animations
+                                </label>
+                            </div>
+
+                            <button type="submit" style="margin-top:1.5rem;">Simpan Theme</button>
+                        </form>
+                    </section>
+
+                    <section id="love-story" class="card panel-section">
+                        <h2>Love Story</h2>
+                        <p class="section-description">Kelola cerita perjalanan cinta Anda dengan timeline yang indah.</p>
+                        
+                        <!-- Add/Edit Form -->
+                        <form method="post" enctype="multipart/form-data" class="love-story-form">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_love_story">
+                            <input type="hidden" name="story_action" id="storyAction" value="add">
+                            <input type="hidden" name="story_id" id="storyId" value="">
+                            
+                            <div class="form-row">
+                                <label>Judul *</label>
+                                <input type="text" name="title" id="storyTitle" required placeholder="Contoh: Pertama Bertemu">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Subtitle (Opsional)</label>
+                                <input type="text" name="subtitle" id="storySubtitle" placeholder="Contoh: Awal dari segalanya">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Tanggal Acara</label>
+                                <input type="date" name="event_date" id="storyEventDate">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Deskripsi</label>
+                                <textarea name="description" id="storyDescription" rows="4" placeholder="Ceritakan momen istimewa ini..."></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Upload Gambar</label>
+                                <input type="file" name="image" id="storyImage" accept="image/*" data-preview-target="#storyImagePreview">
+                                <div id="storyImagePreviewContainer" class="image-preview" style="display:none;">
+                                    <img id="storyImagePreview" src="" alt="Preview gambar">
+                                    <button type="button" class="small-button" onclick="document.getElementById('storyImagePreviewContainer').style.display='none'; document.getElementById('storyImage').value='';">Hapus Gambar</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Alt Text Gambar</label>
+                                <input type="text" name="image_alt" id="storyImageAlt" placeholder="Deskripsi untuk aksesibilitas">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Keterangan Gambar</label>
+                                <input type="text" name="image_caption" id="storyImageCaption" placeholder="Keterangan di bawah gambar">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Icon (Opsional)</label>
+                                <input type="text" name="icon" id="storyIcon" placeholder="Contoh: heart, ring, date">
+                            </div>
+                            
+                            <div class="form-row checkbox-row">
+                                <label>
+                                    <input type="checkbox" name="enabled" id="storyEnabled" checked>
+                                    Aktifkan cerita ini
+                                </label>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" id="saveStoryBtn">Tambah Cerita</button>
+                                <button type="button" id="cancelEditBtn" style="display:none;" onclick="resetStoryForm()">Batal Edit</button>
+                            </div>
+                        </form>
+                        
+                        <!-- Stories List -->
+                        <div class="love-stories-list" style="margin-top:30px;">
+                            <h3>Daftar Cerita</h3>
+                            <?php 
+                            $loveStoryItems = $config['love_story']['items'] ?? [];
+                            usort($loveStoryItems, function($a, $b) {
+                                return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+                            });
+                            ?>
+                            <?php if (empty($loveStoryItems)): ?>
+                                <p>Belum ada cerita. Tambahkan cerita pertama Anda!</p>
+                            <?php else: ?>
+                                <form method="post" class="love-story-order-form">
+                                    <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                    <input type="hidden" name="action" value="save_love_story">
+                                    <input type="hidden" name="story_action" value="reorder">
+                                    <input type="hidden" name="order_array" id="orderArray" value="">
+                                    
+                                    <div class="sortable-list" id="loveStoriesSortable">
+                                        <?php foreach ($loveStoryItems as $item): ?>
+                                            <div class="sortable-item" data-id="<?php echo escape_html($item['id'] ?? ''); ?>">
+                                                <div class="sortable-handle">☰</div>
+                                                <div class="sortable-content">
+                                                    <strong><?php echo escape_html($item['title'] ?? 'Untitled'); ?></strong>
+                                                    <?php if (!empty($item['event_date'])): ?>
+                                                        <span style="color:var(--muted); margin-left:10px;"><?php echo escape_html($item['event_date']); ?></span>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($item['image'])): ?>
+                                                        <img src="uploads/love-story/<?php echo escape_html(basename($item['image'])); ?>" alt="Preview" style="width:60px; height:40px; object-fit:cover; border-radius:4px; margin-left:10px; vertical-align:middle;">
+                                                    <?php endif; ?>
+                                                    <span style="margin-left:10px; color:<?php echo !empty($item['enabled']) ? 'green' : 'red'; ?>;">
+                                                        <?php echo !empty($item['enabled']) ? '✓ Aktif' : '✗ Nonaktif'; ?>
+                                                    </span>
+                                                </div>
+                                                <div class="sortable-actions">
+                                                    <button type="button" class="small-button edit-story-btn" 
+                                                            data-id="<?php echo escape_html($item['id'] ?? ''); ?>"
+                                                            data-title="<?php echo escape_html($item['title'] ?? ''); ?>"
+                                                            data-subtitle="<?php echo escape_html($item['subtitle'] ?? ''); ?>"
+                                                            data-description="<?php echo escape_html($item['description'] ?? ''); ?>"
+                                                            data-event-date="<?php echo escape_html($item['event_date'] ?? ''); ?>"
+                                                            data-image="<?php echo escape_html($item['image'] ?? ''); ?>"
+                                                            data-image-alt="<?php echo escape_html($item['image_alt'] ?? ''); ?>"
+                                                            data-image-caption="<?php echo escape_html($item['image_caption'] ?? ''); ?>"
+                                                            data-icon="<?php echo escape_html($item['icon'] ?? ''); ?>"
+                                                            data-enabled="<?php echo !empty($item['enabled']) ? '1' : '0'; ?>">Edit</button>
+                                                    <button type="button" class="small-button delete-story-btn" 
+                                                            data-id="<?php echo escape_html($item['id'] ?? ''); ?>"
+                                                            data-title="<?php echo escape_html($item['title'] ?? ''); ?>">Hapus</button>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <button type="submit" class="save-order-btn" style="margin-top:15px;">Simpan Urutan</button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
                     </section>
 
                     <section id="gallery" class="card panel-section">
@@ -817,5 +1126,151 @@ $qrisPreview = $config['gift']['qris_image'];
         <?php endif; ?>
     </div>
     <script src="app.js"></script>
+    <script>
+    // Love Story Management Functions
+    function resetStoryForm() {
+        document.getElementById('storyAction').value = 'add';
+        document.getElementById('storyId').value = '';
+        document.getElementById('storyTitle').value = '';
+        document.getElementById('storySubtitle').value = '';
+        document.getElementById('storyEventDate').value = '';
+        document.getElementById('storyDescription').value = '';
+        document.getElementById('storyImage').value = '';
+        document.getElementById('storyImageAlt').value = '';
+        document.getElementById('storyImageCaption').value = '';
+        document.getElementById('storyIcon').value = '';
+        document.getElementById('storyEnabled').checked = true;
+        document.getElementById('saveStoryBtn').textContent = 'Tambah Cerita';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+        document.getElementById('storyImagePreviewContainer').style.display = 'none';
+        document.getElementById('storyImagePreview').src = '';
+    }
+
+    // Edit button handlers
+    document.querySelectorAll('.edit-story-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const title = this.getAttribute('data-title');
+            const subtitle = this.getAttribute('data-subtitle');
+            const description = this.getAttribute('data-description');
+            const eventDate = this.getAttribute('data-event-date');
+            const image = this.getAttribute('data-image');
+            const imageAlt = this.getAttribute('data-image-alt');
+            const imageCaption = this.getAttribute('data-image-caption');
+            const icon = this.getAttribute('data-icon');
+            const enabled = this.getAttribute('data-enabled') === '1';
+
+            document.getElementById('storyAction').value = 'edit';
+            document.getElementById('storyId').value = id;
+            document.getElementById('storyTitle').value = title;
+            document.getElementById('storySubtitle').value = subtitle;
+            document.getElementById('storyDescription').value = description;
+            document.getElementById('storyEventDate').value = eventDate;
+            document.getElementById('storyImageAlt').value = imageAlt;
+            document.getElementById('storyImageCaption').value = imageCaption;
+            document.getElementById('storyIcon').value = icon;
+            document.getElementById('storyEnabled').checked = enabled;
+            document.getElementById('saveStoryBtn').textContent = 'Simpan Perubahan';
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+            if (image) {
+                document.getElementById('storyImagePreview').src = 'uploads/love-story/' + image;
+                document.getElementById('storyImagePreviewContainer').style.display = 'block';
+            }
+
+            // Scroll to form
+            document.querySelector('.love-story-form').scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // Delete button handlers
+    document.querySelectorAll('.delete-story-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const title = this.getAttribute('data-title');
+            if (confirm('Apakah Anda yakin ingin menghapus cerita "' + title + '"?')) {
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.innerHTML = '<input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">' +
+                    '<input type="hidden" name="action" value="save_love_story">' +
+                    '<input type="hidden" name="story_action" value="delete">' +
+                    '<input type="hidden" name="story_id" value="' + id + '">';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+
+    // Image preview handler
+    document.getElementById('storyImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('storyImagePreview').src = e.target.result;
+                document.getElementById('storyImagePreviewContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Sortable functionality for love stories
+    (function() {
+        const sortableList = document.getElementById('loveStoriesSortable');
+        if (!sortableList) return;
+
+        let draggedItem = null;
+
+        sortableList.addEventListener('dragstart', function(e) {
+            if (e.target.classList.contains('sortable-item')) {
+                draggedItem = e.target;
+                setTimeout(function() { e.target.style.opacity = '0.5'; }, 0);
+            }
+        });
+
+        sortableList.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('sortable-item')) {
+                e.target.style.opacity = '1';
+                draggedItem = null;
+            }
+        });
+
+        sortableList.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(sortableList, e.clientY);
+            if (afterElement == null) {
+                sortableList.appendChild(draggedItem);
+            } else {
+                sortableList.insertBefore(draggedItem, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.sortable-item:not(.dragging)')];
+            return draggableElements.reduce(function(closest, child) {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Save order on form submit
+        const orderForm = document.querySelector('.love-story-order-form');
+        if (orderForm) {
+            orderForm.addEventListener('submit', function(e) {
+                const items = sortableList.querySelectorAll('.sortable-item');
+                const orderArray = [];
+                items.forEach(function(item) {
+                    orderArray.push(item.getAttribute('data-id'));
+                });
+                document.getElementById('orderArray').value = JSON.stringify(orderArray);
+            });
+        }
+    })();
+    </script>
 </body>
 </html>
