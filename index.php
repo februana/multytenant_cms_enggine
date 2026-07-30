@@ -35,7 +35,11 @@ $musicSrc = $config['media']['music'] ?: 'music/lagu.mp3';
 $coverPath = $config['media']['cover'] ?: 'uploads/cover/cover.jpg';
 $ogImage = $ogImage ?: $coverPath;
 $heroBackground = $config['media']['background_hero'] ?: $coverPath;
-$bgHero = $heroBackground ? 'style="background-image:url(' . escape_html($heroBackground) . ');background-size:cover;background-position:center;"' : '';
+$heroImageFit = $config['theme']['hero_image_fit'] ?? 'cover';
+$heroImagePosition = $config['theme']['hero_image_position'] ?? 'center';
+$heroBgSize = $heroImageFit === 'contain' ? 'contain' : ($heroImageFit === 'auto' ? 'auto' : 'cover');
+$heroBgRepeat = $heroImageFit !== 'cover' ? 'no-repeat' : 'repeat';
+$bgHero = $heroBackground ? 'style="background-image:url(' . escape_html($heroBackground) . ');background-size:' . $heroBgSize . ';background-position:' . escape_html($heroImagePosition) . ';background-repeat:' . $heroBgRepeat . ';"' : '';
 $sectionBackgrounds = [
     $config['media']['background_sections'][0] ?? '',
     $config['media']['background_sections'][1] ?? '',
@@ -450,6 +454,18 @@ $themeClasses = [
       replaceThemeClass('theme-card-', theme.card_style || 'elevated');
       replaceThemeClass('theme-footer-', theme.footer_style || 'centered');
       replaceThemeClass('theme-animation-', theme.animation_enabled ? 'on' : 'off');
+
+      // Update hero background dynamically for live preview
+      const heroSection = document.getElementById('hero');
+      if (heroSection) {
+        var heroFit = theme.hero_image_fit || 'cover';
+        var heroPosition = theme.hero_image_position || 'center';
+        var bgSize = heroFit === 'contain' ? 'contain' : (heroFit === 'auto' ? 'auto' : 'cover');
+        var bgRepeat = heroFit !== 'cover' ? 'no-repeat' : 'repeat';
+        heroSection.style.backgroundSize = bgSize;
+        heroSection.style.backgroundPosition = heroPosition;
+        heroSection.style.backgroundRepeat = bgRepeat;
+      }
     });
   })();
   </script>

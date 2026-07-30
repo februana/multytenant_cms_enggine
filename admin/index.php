@@ -191,6 +191,8 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['theme']['card_style'] = trim((string)($_POST['card_style'] ?? '')) ?: $config['theme']['card_style'];
                 $config['theme']['footer_style'] = trim((string)($_POST['footer_style'] ?? '')) ?: $config['theme']['footer_style'];
                 $config['theme']['animation_enabled'] = !empty($_POST['animation_enabled']);
+                $config['theme']['hero_image_fit'] = trim((string)($_POST['hero_image_fit'] ?? '')) ?: ($config['theme']['hero_image_fit'] ?? 'cover');
+                $config['theme']['hero_image_position'] = trim((string)($_POST['hero_image_position'] ?? '')) ?: ($config['theme']['hero_image_position'] ?? 'center');
                 break;
             case 'save_love_story':
                 // Handle love story CRUD operations
@@ -493,6 +495,13 @@ foreach (theme_presets() as $presetKey => $preset) {
     $themePresetPreviewData[$presetKey] = $preset['values'];
 }
 $themePreviewConfig = $config['theme'] ?? [];
+// Ensure hero image settings are included in preview config
+if (!isset($themePreviewConfig['hero_image_fit'])) {
+    $themePreviewConfig['hero_image_fit'] = 'cover';
+}
+if (!isset($themePreviewConfig['hero_image_position'])) {
+    $themePreviewConfig['hero_image_position'] = 'center';
+}
 
 
 ?><!DOCTYPE html>
@@ -751,6 +760,30 @@ $themePreviewConfig = $config['theme'] ?? [];
                                     <input type="checkbox" name="animation_enabled" value="1" <?php echo !empty($config['theme']['animation_enabled']) ? 'checked' : ''; ?>>
                                     Enable Animations
                                 </label>
+                            </div>
+
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Hero Image Settings</h3>
+                            <div class="form-grid">
+                                <div class="form-row">
+                                    <label>Hero Image Fit</label>
+                                    <select name="hero_image_fit">
+                                        <option value="cover" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'cover' ? 'selected' : ''; ?>>Cover (Default - memenuhi area)</option>
+                                        <option value="contain" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'contain' ? 'selected' : ''; ?>>Contain (tampilkan seluruh gambar)</option>
+                                        <option value="auto" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'auto' ? 'selected' : ''; ?>>Auto (ukuran asli)</option>
+                                    </select>
+                                    <small>Pilih bagaimana gambar background hero ditampilkan. Cover untuk memenuhi area, Contain untuk menampilkan seluruh gambar tanpa terpotong.</small>
+                                </div>
+                                <div class="form-row">
+                                    <label>Hero Image Position</label>
+                                    <select name="hero_image_position">
+                                        <option value="center" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'center' ? 'selected' : ''; ?>>Center</option>
+                                        <option value="top" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'top' ? 'selected' : ''; ?>>Top</option>
+                                        <option value="bottom" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'bottom' ? 'selected' : ''; ?>>Bottom</option>
+                                        <option value="left" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'left' ? 'selected' : ''; ?>>Left</option>
+                                        <option value="right" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'right' ? 'selected' : ''; ?>>Right</option>
+                                    </select>
+                                    <small>Posisi fokus gambar pada background hero.</small>
+                                </div>
                             </div>
 
                             <div class="theme-actions">
