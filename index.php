@@ -128,7 +128,7 @@ $themeClasses = [
       color: var(--link);
     }
   </style>
-  <?php if (trim($customCss) !== ''): ?>
+  <?php if (trim($customCss) !== '' && file_exists(CUSTOM_CSS_FILE)): ?>
   <link rel="stylesheet" href="custom.css" />
   <?php endif; ?>
   <script type="application/ld+json">
