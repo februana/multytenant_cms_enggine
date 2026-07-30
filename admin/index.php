@@ -198,8 +198,15 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['theme']['card_style'] = trim((string)($_POST['card_style'] ?? '')) ?: $config['theme']['card_style'];
                 $config['theme']['footer_style'] = trim((string)($_POST['footer_style'] ?? '')) ?: $config['theme']['footer_style'];
                 $config['theme']['animation_enabled'] = !empty($_POST['animation_enabled']);
+                // Desktop hero settings
                 $config['theme']['hero_image_fit'] = trim((string)($_POST['hero_image_fit'] ?? '')) ?: ($config['theme']['hero_image_fit'] ?? 'cover');
                 $config['theme']['hero_image_position'] = trim((string)($_POST['hero_image_position'] ?? '')) ?: ($config['theme']['hero_image_position'] ?? 'center');
+                // Mobile hero settings
+                $config['theme']['mobile_hero_image_fit'] = trim((string)($_POST['mobile_hero_image_fit'] ?? '')) ?: ($config['theme']['mobile_hero_image_fit'] ?? 'cover');
+                $config['theme']['mobile_hero_image_position'] = trim((string)($_POST['mobile_hero_image_position'] ?? '')) ?: ($config['theme']['mobile_hero_image_position'] ?? 'center top');
+                $config['theme']['mobile_hero_height'] = trim((string)($_POST['mobile_hero_height'] ?? '')) ?: ($config['theme']['mobile_hero_height'] ?? '85vh');
+                // Mobile button layout
+                $config['buttons']['mobile_layout'] = trim((string)($_POST['buttons_mobile_layout'] ?? '')) ?: ($config['buttons']['mobile_layout'] ?? '2-columns');
                 break;
             case 'save_love_story':
                 // Handle love story CRUD operations
@@ -770,6 +777,8 @@ if (!isset($themePreviewConfig['hero_image_position'])) {
                             </div>
 
                             <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Hero Image Settings</h3>
+                            
+                            <h4 style="margin:1rem 0 0.5rem;font-size:0.95rem;color:#666;">Desktop</h4>
                             <div class="form-grid">
                                 <div class="form-row">
                                     <label>Hero Image Fit</label>
@@ -778,7 +787,7 @@ if (!isset($themePreviewConfig['hero_image_position'])) {
                                         <option value="contain" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'contain' ? 'selected' : ''; ?>>Contain (tampilkan seluruh gambar)</option>
                                         <option value="auto" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'auto' ? 'selected' : ''; ?>>Auto (ukuran asli)</option>
                                     </select>
-                                    <small>Pilih bagaimana gambar background hero ditampilkan. Cover untuk memenuhi area, Contain untuk menampilkan seluruh gambar tanpa terpotong.</small>
+                                    <small>Pilih bagaimana gambar background hero ditampilkan.</small>
                                 </div>
                                 <div class="form-row">
                                     <label>Hero Image Position</label>
@@ -790,6 +799,60 @@ if (!isset($themePreviewConfig['hero_image_position'])) {
                                         <option value="right" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'right' ? 'selected' : ''; ?>>Right</option>
                                     </select>
                                     <small>Posisi fokus gambar pada background hero.</small>
+                                </div>
+                            </div>
+                            
+                            <h4 style="margin:1.5rem 0 0.5rem;font-size:0.95rem;color:#666;">Mobile</h4>
+                            <div class="form-grid">
+                                <div class="form-row">
+                                    <label>Hero Image Fit</label>
+                                    <select name="mobile_hero_image_fit">
+                                        <option value="cover" <?php echo ($config['theme']['mobile_hero_image_fit'] ?? 'cover') === 'cover' ? 'selected' : ''; ?>>Cover</option>
+                                        <option value="contain" <?php echo ($config['theme']['mobile_hero_image_fit'] ?? 'cover') === 'contain' ? 'selected' : ''; ?>>Contain</option>
+                                        <option value="auto" <?php echo ($config['theme']['mobile_hero_image_fit'] ?? 'cover') === 'auto' ? 'selected' : ''; ?>>Auto</option>
+                                    </select>
+                                    <small>Background size untuk mobile.</small>
+                                </div>
+                                <div class="form-row">
+                                    <label>Hero Height</label>
+                                    <select name="mobile_hero_height">
+                                        <option value="70vh" <?php echo ($config['theme']['mobile_hero_height'] ?? '85vh') === '70vh' ? 'selected' : ''; ?>>70vh</option>
+                                        <option value="80vh" <?php echo ($config['theme']['mobile_hero_height'] ?? '85vh') === '80vh' ? 'selected' : ''; ?>>80vh</option>
+                                        <option value="85vh" <?php echo ($config['theme']['mobile_hero_height'] ?? '85vh') === '85vh' ? 'selected' : ''; ?>>85vh (Default)</option>
+                                        <option value="90vh" <?php echo ($config['theme']['mobile_hero_height'] ?? '85vh') === '90vh' ? 'selected' : ''; ?>>90vh</option>
+                                        <option value="100vh" <?php echo ($config['theme']['mobile_hero_height'] ?? '85vh') === '100vh' ? 'selected' : ''; ?>>100vh</option>
+                                    </select>
+                                    <small>Tinggi section hero untuk mobile.</small>
+                                </div>
+                                <div class="form-row" style="grid-column: 1 / -1;">
+                                    <label>Hero Image Position</label>
+                                    <select name="mobile_hero_image_position">
+                                        <optgroup label="Top">
+                                            <option value="left top" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'left top' ? 'selected' : ''; ?>>Top Left</option>
+                                            <option value="center top" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'center top' ? 'selected' : ''; ?>>Top Center</option>
+                                            <option value="right top" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'right top' ? 'selected' : ''; ?>>Top Right</option>
+                                        </optgroup>
+                                        <optgroup label="Center">
+                                            <option value="left center" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'left center' ? 'selected' : ''; ?>>Center Left</option>
+                                            <option value="center center" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'center center' ? 'selected' : ''; ?>>Center</option>
+                                            <option value="right center" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'right center' ? 'selected' : ''; ?>>Center Right</option>
+                                        </optgroup>
+                                        <optgroup label="Bottom">
+                                            <option value="left bottom" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'left bottom' ? 'selected' : ''; ?>>Bottom Left</option>
+                                            <option value="center bottom" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'center bottom' ? 'selected' : ''; ?>>Bottom Center</option>
+                                            <option value="right bottom" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'right bottom' ? 'selected' : ''; ?>>Bottom Right</option>
+                                        </optgroup>
+                                    </select>
+                                    <small>Posisi fokus gambar untuk mobile.</small>
+                                </div>
+                                <div class="form-row" style="grid-column: 1 / -1;">
+                                    <label>Mobile Button Layout</label>
+                                    <select name="buttons_mobile_layout">
+                                        <option value="horizontal" <?php echo ($config['buttons']['mobile_layout'] ?? '2-columns') === 'horizontal' ? 'selected' : ''; ?>>Horizontal (side by side)</option>
+                                        <option value="2-columns" <?php echo ($config['buttons']['mobile_layout'] ?? '2-columns') === '2-columns' ? 'selected' : ''; ?>>2 Columns (Default)</option>
+                                        <option value="1-column" <?php echo ($config['buttons']['mobile_layout'] ?? '2-columns') === '1-column' ? 'selected' : ''; ?>>1 Column (stacked)</option>
+                                    </select>
+                                    <small>Layout tombol CTA untuk mobile.</small>
                                 </div>
                             </div>
 
