@@ -68,10 +68,13 @@
         "password_hash": ""
     },
     "theme": {
+        "theme_preset": "elegant",
         "primary_color": "#c84c47",
         "secondary_color": "#f0c2a1",
         "accent_color": "#f0c2a1",
         "background_color": "#fff8f2",
+        "paper_color": "#ffffff",
+        "muted_color": "#806f66",
         "text_color": "#2f2424",
         "link_color": "#c84c47",
         "button_style": "rounded",

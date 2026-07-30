@@ -288,3 +288,104 @@ document.querySelectorAll('.guest-link-qr').forEach(button => {
     showGuestLinkStatus('QR Code disiapkan untuk link tamu.');
   });
 });
+
+const themeSettingsForm = document.getElementById('themeSettingsForm');
+const themePreviewFrame = document.getElementById('themePreviewFrame');
+const themePreviewReset = document.getElementById('themePreviewReset');
+const themePreviewCancel = document.getElementById('themePreviewCancel');
+
+if (themeSettingsForm && themePreviewFrame) {
+  const previewFieldNames = [
+    'theme_preset', 'primary_color', 'secondary_color', 'accent_color', 'background_color',
+    'paper_color', 'muted_color', 'text_color', 'link_color', 'heading_font', 'body_font',
+    'font_size_base', 'container_width', 'section_spacing', 'border_radius', 'shadow',
+    'button_style', 'navbar_style', 'card_style', 'footer_style', 'animation_enabled'
+  ];
+  const savedTheme = JSON.parse(themeSettingsForm.dataset.savedTheme || '{}');
+  const themePresets = JSON.parse(themeSettingsForm.dataset.themePresets || '{}');
+  const previewInputs = previewFieldNames
+    .map(name => themeSettingsForm.elements[name])
+    .filter(Boolean);
+  let debounceTimer = null;
+
+  function fieldValue(name) {
+    const field = themeSettingsForm.elements[name];
+    if (!field) return '';
+    if (field.type === 'checkbox') return field.checked;
+    return field.value;
+  }
+
+  function setFieldValue(name, value) {
+    const field = themeSettingsForm.elements[name];
+    if (!field) return;
+    if (field.type === 'checkbox') {
+      field.checked = Boolean(value);
+      return;
+    }
+    field.value = value ?? '';
+  }
+
+  function collectTheme() {
+    const selectedPreset = fieldValue('theme_preset');
+    const presetValues = selectedPreset && selectedPreset !== 'custom' ? (themePresets[selectedPreset] || {}) : {};
+    const theme = { ...savedTheme, ...presetValues };
+    previewFieldNames.forEach(name => {
+      if (name === 'theme_preset') {
+        theme[name] = selectedPreset;
+        return;
+      }
+      const field = themeSettingsForm.elements[name];
+      if (!field) return;
+      if (selectedPreset !== 'custom' && presetValues[name] !== undefined) return;
+      theme[name] = fieldValue(name);
+    });
+    return theme;
+  }
+
+  function postThemePreview(theme) {
+    const frameWindow = themePreviewFrame.contentWindow;
+    if (!frameWindow) return;
+    frameWindow.postMessage({ type: 'theme-preview:update', theme }, window.location.origin);
+  }
+
+  function postPreview() {
+    postThemePreview(collectTheme());
+  }
+
+  function schedulePreview(delay = 150) {
+    window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(postPreview, delay);
+  }
+
+  function restoreForm(theme) {
+    previewFieldNames.forEach(name => {
+      if (name in theme) setFieldValue(name, theme[name]);
+    });
+  }
+
+  function applyPresetToForm() {
+    const selectedPreset = fieldValue('theme_preset');
+    if (!selectedPreset || selectedPreset === 'custom' || !themePresets[selectedPreset]) return;
+    Object.entries(themePresets[selectedPreset]).forEach(([name, value]) => setFieldValue(name, value));
+  }
+
+  previewInputs.forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.name === 'theme_preset') applyPresetToForm();
+      schedulePreview();
+    });
+    input.addEventListener('change', () => {
+      if (input.name === 'theme_preset') applyPresetToForm();
+      schedulePreview(input.tagName === 'SELECT' || input.type === 'checkbox' ? 0 : 150);
+    });
+  });
+
+  themePreviewFrame.addEventListener('load', () => postPreview());
+  themePreviewReset?.addEventListener('click', () => {
+    restoreForm(savedTheme);
+    postPreview();
+  });
+  themePreviewCancel?.addEventListener('click', () => {
+    postThemePreview(savedTheme);
+  });
+}

@@ -156,10 +156,13 @@ function config_defaults(): array {
             'password_hash' => ''
         ],
         'theme' => [
+            'theme_preset' => 'elegant',
             'primary_color' => '#c84c47',
             'secondary_color' => '#f0c2a1',
             'accent_color' => '#f0c2a1',
             'background_color' => '#fff8f2',
+            'paper_color' => '#ffffff',
+            'muted_color' => '#806f66',
             'text_color' => '#2f2424',
             'link_color' => '#c84c47',
             'button_style' => 'rounded',
@@ -283,6 +286,108 @@ function config_defaults(): array {
     ];
 }
 
+
+function theme_presets(): array {
+    return [
+        'elegant' => [
+            'label' => 'Elegant',
+            'description' => 'Palet hangat dan klasik untuk undangan yang lembut.',
+            'values' => [
+                'primary_color' => '#c84c47',
+                'secondary_color' => '#f0c2a1',
+                'accent_color' => '#f0c2a1',
+                'background_color' => '#fff8f2',
+                'paper_color' => '#ffffff',
+                'muted_color' => '#806f66',
+                'text_color' => '#2f2424',
+                'link_color' => '#c84c47',
+                'button_style' => 'rounded',
+                'border_radius' => '28px',
+                'shadow' => '0 22px 60px rgba(73,45,34,.14)',
+                'container_width' => '1200px',
+                'section_spacing' => '80px',
+                'heading_font' => 'Playfair Display, serif',
+                'body_font' => 'Lato, sans-serif',
+                'font_size_base' => '16px'
+            ]
+        ],
+        'dark' => [
+            'label' => 'Dark',
+            'description' => 'Kontras gelap modern dengan aksen emas.',
+            'values' => [
+                'primary_color' => '#d6a85f',
+                'secondary_color' => '#2b2430',
+                'accent_color' => '#f4d28f',
+                'background_color' => '#151217',
+                'paper_color' => '#211b26',
+                'muted_color' => '#cbbfb4',
+                'text_color' => '#f6efe7',
+                'link_color' => '#f4d28f',
+                'button_style' => 'pill',
+                'border_radius' => '22px',
+                'shadow' => '0 24px 70px rgba(0,0,0,.38)',
+                'container_width' => '1160px',
+                'section_spacing' => '84px',
+                'heading_font' => 'Cormorant Garamond, serif',
+                'body_font' => 'Inter, sans-serif',
+                'font_size_base' => '16px'
+            ]
+        ],
+        'floral' => [
+            'label' => 'Floral',
+            'description' => 'Nuansa bunga pastel dengan aksen hijau sage.',
+            'values' => [
+                'primary_color' => '#a45c68',
+                'secondary_color' => '#e8b7c2',
+                'accent_color' => '#8ca77b',
+                'background_color' => '#fff7f8',
+                'paper_color' => '#ffffff',
+                'muted_color' => '#846d73',
+                'text_color' => '#3d3034',
+                'link_color' => '#8f4756',
+                'button_style' => 'rounded',
+                'border_radius' => '34px',
+                'shadow' => '0 20px 55px rgba(164,92,104,.18)',
+                'container_width' => '1180px',
+                'section_spacing' => '88px',
+                'heading_font' => 'Great Vibes, cursive',
+                'body_font' => 'Lato, sans-serif',
+                'font_size_base' => '16px'
+            ]
+        ],
+        'minimal' => [
+            'label' => 'Minimal',
+            'description' => 'Tampilan bersih monokrom dengan aksen sederhana.',
+            'values' => [
+                'primary_color' => '#1f2937',
+                'secondary_color' => '#e5e7eb',
+                'accent_color' => '#9ca3af',
+                'background_color' => '#fafafa',
+                'paper_color' => '#ffffff',
+                'muted_color' => '#6b7280',
+                'text_color' => '#111827',
+                'link_color' => '#374151',
+                'button_style' => 'square',
+                'border_radius' => '12px',
+                'shadow' => '0 16px 42px rgba(17,24,39,.10)',
+                'container_width' => '1100px',
+                'section_spacing' => '72px',
+                'heading_font' => 'Inter, sans-serif',
+                'body_font' => 'Inter, sans-serif',
+                'font_size_base' => '16px'
+            ]
+        ]
+    ];
+}
+
+function apply_theme_preset(array $theme, string $presetKey): array {
+    $presets = theme_presets();
+    if (!isset($presets[$presetKey])) {
+        return $theme;
+    }
+    return array_replace($theme, $presets[$presetKey]['values'], ['theme_preset' => $presetKey]);
+}
+
 function ensure_upload_dirs(): void {
     foreach ([UPLOADS_DIR, UPLOADS_COVER_DIR, UPLOADS_MUSIC_DIR, UPLOADS_GALLERY_DIR, UPLOADS_BACKGROUND_DIR, UPLOADS_LOVE_STORY_DIR] as $dir) {
         if (!is_dir($dir)) {
@@ -329,6 +434,9 @@ function load_config(): array {
             }
         }
         unset($section);
+    }
+    if (empty($config['theme']['theme_preset'])) {
+        $config['theme']['theme_preset'] = 'elegant';
     }
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);

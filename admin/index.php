@@ -165,10 +165,18 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 }
                 break;
             case 'save_theme':
+                $selectedPreset = trim((string)($_POST['theme_preset'] ?? ($config['theme']['theme_preset'] ?? 'elegant')));
+                if ($selectedPreset !== 'custom' && array_key_exists($selectedPreset, theme_presets())) {
+                    $config['theme'] = apply_theme_preset($config['theme'], $selectedPreset);
+                    break;
+                }
+                $config['theme']['theme_preset'] = 'custom';
                 $config['theme']['primary_color'] = trim((string)($_POST['primary_color'] ?? '')) ?: $config['theme']['primary_color'];
                 $config['theme']['secondary_color'] = trim((string)($_POST['secondary_color'] ?? '')) ?: $config['theme']['secondary_color'];
                 $config['theme']['accent_color'] = trim((string)($_POST['accent_color'] ?? '')) ?: $config['theme']['accent_color'];
                 $config['theme']['background_color'] = trim((string)($_POST['background_color'] ?? '')) ?: $config['theme']['background_color'];
+                $config['theme']['paper_color'] = trim((string)($_POST['paper_color'] ?? '')) ?: ($config['theme']['paper_color'] ?? '#ffffff');
+                $config['theme']['muted_color'] = trim((string)($_POST['muted_color'] ?? '')) ?: ($config['theme']['muted_color'] ?? '#806f66');
                 $config['theme']['text_color'] = trim((string)($_POST['text_color'] ?? '')) ?: $config['theme']['text_color'];
                 $config['theme']['link_color'] = trim((string)($_POST['link_color'] ?? '')) ?: $config['theme']['link_color'];
                 $config['theme']['heading_font'] = trim((string)($_POST['heading_font'] ?? '')) ?: $config['theme']['heading_font'];
@@ -480,6 +488,12 @@ $backgroundSectionPreviews = [
 ];
 $qrisPreview = $config['gift']['qris_image'];
 $customCss = load_custom_css();
+$themePresetPreviewData = [];
+foreach (theme_presets() as $presetKey => $preset) {
+    $themePresetPreviewData[$presetKey] = $preset['values'];
+}
+$themePreviewConfig = $config['theme'] ?? [];
+
 
 ?><!DOCTYPE html>
 <html lang="id">
@@ -651,16 +665,32 @@ $customCss = load_custom_css();
 
                     <section id="theme" class="card panel-section">
                         <h2>Theme Settings</h2>
-                        <form method="post">
+                        <p class="section-description">Ubah pengaturan tema dan lihat hasilnya langsung di preview tanpa menyimpan konfigurasi.</p>
+                        <div class="theme-editor-layout">
+                        <form method="post" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme">
                             
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Theme Preset</h3>
+                            <div class="form-row">
+                                <label>Preset Tema</label>
+                                <select name="theme_preset">
+                                    <?php foreach (theme_presets() as $presetKey => $preset): ?>
+                                        <option value="<?php echo escape_html($presetKey); ?>" <?php echo ($config['theme']['theme_preset'] ?? 'elegant') === $presetKey ? 'selected' : ''; ?>><?php echo escape_html($preset['label']); ?> - <?php echo escape_html($preset['description']); ?></option>
+                                    <?php endforeach; ?>
+                                    <option value="custom" <?php echo ($config['theme']['theme_preset'] ?? '') === 'custom' ? 'selected' : ''; ?>>Custom - Gunakan nilai manual di bawah</option>
+                                </select>
+                                <small>Preset mengubah variabel CSS tema. Pilih Custom jika ingin menyimpan nilai manual pada field berikut.</small>
+                            </div>
+
                             <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Colors</h3>
                             <div class="form-grid">
                                 <div class="form-row"><label>Primary Color</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
                                 <div class="form-row"><label>Secondary Color</label><input type="color" name="secondary_color" value="<?php echo escape_html($config['theme']['secondary_color']); ?>" style="width:100%;height:40px;"></div>
                                 <div class="form-row"><label>Accent Color</label><input type="color" name="accent_color" value="<?php echo escape_html($config['theme']['accent_color']); ?>" style="width:100%;height:40px;"></div>
                                 <div class="form-row"><label>Background Color</label><input type="color" name="background_color" value="<?php echo escape_html($config['theme']['background_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Paper Color</label><input type="color" name="paper_color" value="<?php echo escape_html($config['theme']['paper_color'] ?? '#ffffff'); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Muted Color</label><input type="color" name="muted_color" value="<?php echo escape_html($config['theme']['muted_color'] ?? '#806f66'); ?>" style="width:100%;height:40px;"></div>
                                 <div class="form-row"><label>Text Color</label><input type="color" name="text_color" value="<?php echo escape_html($config['theme']['text_color']); ?>" style="width:100%;height:40px;"></div>
                                 <div class="form-row"><label>Link Color</label><input type="color" name="link_color" value="<?php echo escape_html($config['theme']['link_color']); ?>" style="width:100%;height:40px;"></div>
                             </div>
@@ -723,8 +753,20 @@ $customCss = load_custom_css();
                                 </label>
                             </div>
 
-                            <button type="submit" style="margin-top:1.5rem;">Simpan Theme</button>
+                            <div class="theme-actions">
+                                <button type="submit">Save</button>
+                                <button type="button" class="button small-button" id="themePreviewReset">Reset</button>
+                                <button type="button" class="button small-button" id="themePreviewCancel">Cancel Preview</button>
+                            </div>
                         </form>
+                        <aside class="theme-preview-panel" aria-label="Live theme preview">
+                            <div class="theme-preview-panel__header">
+                                <strong>Live Preview</strong>
+                                <span>Perubahan sementara, belum tersimpan.</span>
+                            </div>
+                            <iframe id="themePreviewFrame" src="/?theme_preview=1" title="Preview tema undangan" loading="lazy"></iframe>
+                        </aside>
+                        </div>
                     </section>
 
 
