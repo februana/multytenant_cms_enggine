@@ -51,6 +51,13 @@ $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Un
 $countdownTarget = $config['schedule']['countdown_target'] ?: ($akadDate . 'T' . $akadTime . '+07:00');
 $brideParents = trim(escape_html($config['parents']['bride_father'] . ' & ' . $config['parents']['bride_mother']));
 $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $config['parents']['groom_mother']));
+$themeClasses = [
+    'theme-button-' . preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['button_style'] ?? 'rounded')),
+    'theme-navbar-' . preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['navbar_style'] ?? 'transparent')),
+    'theme-card-' . preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['card_style'] ?? 'elevated')),
+    'theme-footer-' . preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['footer_style'] ?? 'centered')),
+    empty($config['theme']['animation_enabled']) ? 'theme-animation-off' : 'theme-animation-on'
+];
 
 // If the site is loaded through index.html URL, keep it visible but serve dynamic PHP.
 ?>
@@ -85,7 +92,8 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   <link href="<?php echo escape_html($fontsUrl); ?>" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <?php
-  // Generate CSS variables from theme settings
+  // Generate CSS variables from theme settings. Presets are stored as resolved
+  // values in config, so custom CSS can still load afterwards and override them.
   $theme = $config['theme'] ?? [];
   ?>
   <style id="theme-variables">
@@ -94,6 +102,9 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       --secondary: <?php echo escape_html($theme['secondary_color'] ?? '#f0c2a1'); ?>;
       --accent: <?php echo escape_html($theme['accent_color'] ?? '#f0c2a1'); ?>;
       --bg: <?php echo escape_html($theme['background_color'] ?? '#fff8f2'); ?>;
+      --paper: <?php echo escape_html($theme['paper_color'] ?? '#ffffff'); ?>;
+      --paper-solid: <?php echo escape_html($theme['paper_color'] ?? '#ffffff'); ?>;
+      --muted: <?php echo escape_html($theme['muted_color'] ?? '#806f66'); ?>;
       --text: <?php echo escape_html($theme['text_color'] ?? '#2f2424'); ?>;
       --link: <?php echo escape_html($theme['link_color'] ?? '#c84c47'); ?>;
       --shadow: <?php echo escape_html($theme['shadow'] ?? '0 22px 60px rgba(73,45,34,.14)'); ?>;
@@ -108,7 +119,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
       font-family: var(--font-body);
       font-size: var(--font-size-base);
       color: var(--text);
-      background-color: var(--bg);
+      background: var(--bg);
     }
     h1, h2, h3, h4, h5, h6, .label, .eyebrow {
       font-family: var(--font-heading);
@@ -124,7 +135,7 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
   <?php echo $schema; ?>
   </script>
 </head>
-<body>
+<body class="<?php echo escape_html(implode(' ', $themeClasses)); ?>">
   <header class="topbar">
     <a class="brand" href="#hero"><?php echo escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']); ?></a>
     <nav>
@@ -388,6 +399,60 @@ $groomParents = trim(escape_html($config['parents']['groom_father'] . ' & ' . $c
 
   <audio id="backgroundMusic" src="<?php echo escape_html($musicSrc); ?>" preload="auto" loop></audio>
   <script src="script.js" defer></script>
+
+  <script>
+  (function() {
+    const variableMap = {
+      primary_color: '--primary',
+      secondary_color: '--secondary',
+      accent_color: '--accent',
+      background_color: '--bg',
+      paper_color: '--paper',
+      muted_color: '--muted',
+      text_color: '--text',
+      link_color: '--link',
+      shadow: '--shadow',
+      border_radius: '--radius',
+      container_width: '--container-width',
+      section_spacing: '--section-spacing',
+      heading_font: '--font-heading',
+      body_font: '--font-body',
+      font_size_base: '--font-size-base'
+    };
+    const styleClassPrefixes = ['theme-button-', 'theme-navbar-', 'theme-card-', 'theme-footer-', 'theme-animation-'];
+
+    function replaceThemeClass(prefix, value) {
+      document.body.classList.forEach(function(className) {
+        if (className.indexOf(prefix) === 0) {
+          document.body.classList.remove(className);
+        }
+      });
+      if (value) {
+        document.body.classList.add(prefix + value);
+      }
+    }
+
+    window.addEventListener('message', function(event) {
+      if (event.origin !== window.location.origin || !event.data || event.data.type !== 'theme-preview:update') {
+        return;
+      }
+      const theme = event.data.theme || {};
+      Object.keys(variableMap).forEach(function(key) {
+        if (theme[key] !== undefined && theme[key] !== '') {
+          document.documentElement.style.setProperty(variableMap[key], theme[key]);
+          if (key === 'paper_color') {
+            document.documentElement.style.setProperty('--paper-solid', theme[key]);
+          }
+        }
+      });
+      replaceThemeClass('theme-button-', theme.button_style || 'rounded');
+      replaceThemeClass('theme-navbar-', theme.navbar_style || 'transparent');
+      replaceThemeClass('theme-card-', theme.card_style || 'elevated');
+      replaceThemeClass('theme-footer-', theme.footer_style || 'centered');
+      replaceThemeClass('theme-animation-', theme.animation_enabled ? 'on' : 'off');
+    });
+  })();
+  </script>
   <script>
   // Load Love Story dynamically
   (function() {

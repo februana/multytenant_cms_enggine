@@ -66,6 +66,13 @@ This application officially supports two production-ready web servers:
 - `alias` - URL aliasing
 - `socache_shmcb` - SSL session caching
 
+
+## Theme Presets and Custom CSS
+
+The admin panel includes a **Theme Settings** section with preset-based styling. Presets such as Elegant, Dark, Floral, and Minimal update the stored theme variables for colors, typography, button shape, spacing, accent, background, radius, and shadow values. These presets are resolved into `config.json` so the public website can render the selected theme automatically on each request.
+
+Custom CSS remains separate in `custom.css` and is loaded after the default stylesheet and generated theme variables. This keeps user-authored CSS compatible with presets while still allowing advanced overrides when needed. Theme Settings also includes an isolated iframe live preview: form edits are debounced and posted to the preview only, so `config.json` changes only after pressing Save; Reset restores the saved form values, while Cancel Preview clears the temporary preview without saving. The main stylesheet is organized by category (Root Variables, Layout, Typography, Navigation, Hero, Sections, Cards, Buttons, Forms, Gallery, RSVP, Footer, Utilities, and Responsive) so future theme work should reuse variables instead of adding hardcoded component values.
+
 ## WebDAV Support
 
 ### Apache WebDAV
