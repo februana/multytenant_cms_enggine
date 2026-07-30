@@ -282,6 +282,13 @@ function config_defaults(): array {
         'love_story' => [
             'items' => []
         ],
+        'dresscode' => [
+            'enabled' => true,
+            'title' => 'Dresscode',
+            'color' => 'Putih / Pastel',
+            'rule' => 'Rapi dan sopan',
+            'description' => 'Kenakan busana terbaikmu untuk momen spesial.'
+        ],
         'custom_css' => ''
     ];
 }
