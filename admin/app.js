@@ -299,7 +299,8 @@ if (themeSettingsForm && themePreviewFrame) {
     'theme_preset', 'primary_color', 'secondary_color', 'accent_color', 'background_color',
     'paper_color', 'muted_color', 'text_color', 'link_color', 'heading_font', 'body_font',
     'font_size_base', 'container_width', 'section_spacing', 'border_radius', 'shadow',
-    'button_style', 'navbar_style', 'card_style', 'footer_style', 'animation_enabled'
+    'button_style', 'navbar_style', 'card_style', 'footer_style', 'animation_enabled',
+    'hero_image_fit', 'hero_image_position'
   ];
   const savedTheme = JSON.parse(themeSettingsForm.dataset.savedTheme || '{}');
   const themePresets = JSON.parse(themeSettingsForm.dataset.themePresets || '{}');
