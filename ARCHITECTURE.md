@@ -9,31 +9,35 @@ This wedding invitation application uses a **Single-Root Architecture** designed
 ```
 / (Document Root)
 ├── index.php              # Frontend Entry Point (Public)
-├── admin.php              # Admin Panel Entry Point (Public)
-├── save.php               # AJAX Save Handler (Public)
-├── messages.php           # Messages API Handler (Public)
-├── gallery.php            # Gallery API Handler (Public)
+├── admin.php              # Admin Panel Redirect (Public) → redirects to /admin/
+├── save.php               # AJAX Save Handler (Public) → includes app/save.php
+├── messages.php           # Messages API Handler (Public) → includes app/messages.php
+├── gallery.php            # Gallery API Handler (Public) → includes app/gallery.php
 ├── config.php             # Configuration Loader (Private Logic)
 ├── .htaccess              # Apache Security Rules
 │
+├── admin/                 # Admin Panel Implementation (PRIVATE - Blocked by Web Server)
+│   ├── index.php          # Main Admin Panel UI
+│   ├── backup.php         # Backup Handler
+│   ├── restore.php        # Restore Handler
+│   ├── qr.php             # QR Code Generator
+│   ├── app.js             # Admin JavaScript
+│   └── style.css          # Admin Stylesheet
+│
 ├── app/                   # Application Logic (PRIVATE - Blocked by Web Server)
 │   ├── config.php         # Internal Configuration Helper
-│   ├── admin.php          # Admin Panel Implementation
 │   ├── save.php           # Save Logic Implementation
 │   ├── messages.php       # Messages Logic Implementation
 │   ├── gallery.php        # Gallery Logic Implementation
-│   └── index.php          # Frontend Rendering Logic
-│
-├── assets/                # Static Assets (Public)
-│   ├── css/
-│   ├── js/
-│   └── images/
+│   ├── love-story.php     # Love Story API Implementation
+│   └── index.php          # Frontend Rendering Logic (legacy, not used)
 │
 ├── uploads/               # User Media Uploads (Public)
 │   ├── cover/             # Cover Images
 │   ├── music/             # Audio Files
 │   ├── gallery/           # Gallery Photos
-│   └── background/        # Background Images
+│   ├── background/        # Background Images
+│   └── love-story/        # Love Story Images
 │
 ├── config.json            # Main Configuration (PRIVATE - Blocked)
 ├── guest-links.json       # Guest Link Data (PRIVATE - Blocked)
@@ -46,8 +50,8 @@ This wedding invitation application uses a **Single-Root Architecture** designed
     ├── install.sh         # Installation Script
     ├── backup.sh          # Backup Script
     ├── restore.sh         # Restore Script
-    ├── health-check.sh    # Health Check Script
-    └── nginx-site.conf    # Nginx Configuration Template
+    ├── update.sh          # Update Script
+    └── health-check.sh    # Health Check Script
 ```
 
 ## Request Flow
@@ -60,8 +64,8 @@ User → Web Server → /uploads/cover/image.jpg → Served Directly
 
 ### 2. Dynamic Pages
 ```
-User → Web Server → / → index.php → include app/index.php → Render HTML
-User → Web Server → /admin.php → admin.php → include app/admin.php → Admin UI
+User → Web Server → / → index.php → load config.php → Render HTML
+User → Web Server → /admin.php → redirects to /admin/index.php → Admin UI
 ```
 
 ### 3. API Endpoints
