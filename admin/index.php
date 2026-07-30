@@ -116,6 +116,13 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['gift']['e_wallet_label'] = trim((string)($_POST['e_wallet_label'] ?? '')) ?: $config['gift']['e_wallet_label'];
                 $config['gift']['e_wallet_number'] = trim((string)($_POST['e_wallet_number'] ?? '')) ?: $config['gift']['e_wallet_number'];
                 break;
+            case 'save_dresscode':
+                $config['dresscode']['enabled'] = !empty($_POST['dresscode_enabled']);
+                $config['dresscode']['title'] = trim((string)($_POST['dresscode_title'] ?? '')) ?: $config['dresscode']['title'];
+                $config['dresscode']['color'] = trim((string)($_POST['dresscode_color'] ?? '')) ?: $config['dresscode']['color'];
+                $config['dresscode']['rule'] = trim((string)($_POST['dresscode_rule'] ?? '')) ?: $config['dresscode']['rule'];
+                $config['dresscode']['description'] = trim((string)($_POST['dresscode_description'] ?? '')) ?: $config['dresscode']['description'];
+                break;
             case 'save_whatsapp':
                 $config['whatsapp']['phone'] = trim((string)($_POST['whatsapp_phone'] ?? '')) ?: $config['whatsapp']['phone'];
                 $config['whatsapp']['message'] = trim((string)($_POST['whatsapp_message'] ?? '')) ?: $config['whatsapp']['message'];
@@ -1047,6 +1054,44 @@ if (!isset($themePreviewConfig['hero_image_position'])) {
                         <?php else: ?>
                             <div class="image-preview"><img id="qrisPreviewImg" alt="QRIS preview" style="display:none;"></div>
                         <?php endif; ?>
+                    </section>
+
+                    <section id="dresscode" class="card panel-section">
+                        <h2>Dresscode</h2>
+                        <p class="section-description">Kelola aturan berpakaian untuk acara pernikahan Anda.</p>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_dresscode">
+                            
+                            <div class="form-row checkbox-row">
+                                <label>
+                                    <input type="checkbox" name="dresscode_enabled" <?php echo !empty($config['dresscode']['enabled']) ? 'checked' : ''; ?>>
+                                    Aktifkan Dresscode
+                                </label>
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Judul</label>
+                                <input type="text" name="dresscode_title" value="<?php echo escape_html($config['dresscode']['title']); ?>" placeholder="Contoh: Dresscode">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Warna/Pakaian</label>
+                                <input type="text" name="dresscode_color" value="<?php echo escape_html($config['dresscode']['color']); ?>" placeholder="Contoh: Putih / Pastel">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Aturan Berpakaian</label>
+                                <input type="text" name="dresscode_rule" value="<?php echo escape_html($config['dresscode']['rule']); ?>" placeholder="Contoh: Rapi dan sopan">
+                            </div>
+                            
+                            <div class="form-row">
+                                <label>Deskripsi Tambahan</label>
+                                <textarea name="dresscode_description" rows="3" placeholder="Kenakan busana terbaikmu untuk momen spesial."><?php echo escape_html($config['dresscode']['description']); ?></textarea>
+                            </div>
+                            
+                            <button type="submit">Simpan Dresscode</button>
+                        </form>
                     </section>
 
                     <section id="maps" class="card panel-section">
