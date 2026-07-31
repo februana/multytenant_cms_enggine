@@ -35,7 +35,22 @@ $musicSrc = $config['media']['music'] ?: 'music/lagu.mp3';
 $coverPath = $config['media']['cover'] ?: 'uploads/cover/cover.jpg';
 $ogImage = $ogImage ?: $coverPath;
 $heroBackground = $config['media']['background_hero'] ?: $coverPath;
-$heroStyle = $heroBackground ? 'style="--hero-bg:url(&quot;' . escape_html($heroBackground) . '&quot;);"' : '';
+
+// Hero theme settings with defaults for backward compatibility
+$themeHeroHeight = $config['theme']['hero_height'] ?? '100vh';
+$themeHeroVAlign = $config['theme']['hero_vertical_alignment'] ?? 'center';
+$themeHeroContentWidth = $config['theme']['hero_content_width'] ?? '900px';
+$themeHeroImageFit = $config['theme']['hero_image_fit'] ?? 'cover';
+$themeHeroImagePosition = $config['theme']['hero_image_position'] ?? 'center';
+
+$themeMobileHeroHeight = $config['theme']['mobile_hero_height'] ?? '85vh';
+$themeMobileHeroVAlign = $config['theme']['mobile_hero_vertical_alignment'] ?? 'center';
+$themeMobileHeroContentWidth = $config['theme']['mobile_hero_content_width'] ?? '100%';
+$themeMobileHeroImageFit = $config['theme']['mobile_hero_image_fit'] ?? 'cover';
+$themeMobileHeroImagePosition = $config['theme']['mobile_hero_image_position'] ?? 'center top';
+
+$buttonsMobileLayout = $config['buttons']['mobile_layout'] ?? '2-columns';
+$heroStyle = $heroBackground ? 'style="--hero-bg:url(' . escape_html($heroBackground) . ');--hero-height:' . escape_html($themeHeroHeight) . ';--hero-v-align:' . escape_html($themeHeroVAlign) . ';--hero-content-width:' . escape_html($themeHeroContentWidth) . ';--hero-image-fit:' . escape_html($themeHeroImageFit) . ';--hero-image-position:' . escape_html($themeHeroImagePosition) . ';--mobile-hero-height:' . escape_html($themeMobileHeroHeight) . ';--mobile-hero-v-align:' . escape_html($themeMobileHeroVAlign) . ';--mobile-hero-content-width:' . escape_html($themeMobileHeroContentWidth) . ';--mobile-hero-image-fit:' . escape_html($themeMobileHeroImageFit) . ';--mobile-hero-image-position:' . escape_html($themeMobileHeroImagePosition) . ';--buttons-mobile-layout:' . escape_html($buttonsMobileLayout) . ';"' : '';
 $sectionBackgrounds = [
     $config['media']['background_sections'][0] ?? '',
     $config['media']['background_sections'][1] ?? '',
