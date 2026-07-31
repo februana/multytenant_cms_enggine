@@ -42,16 +42,16 @@ a{color:var(--primary);text-decoration:none;font-weight:700}
 .topbar nav{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end}
 .topbar nav a{color:var(--muted);font-size:.95rem}
 .hero{
-  min-height:calc(100vh - 80px);
+  min-height:var(--hero-height, calc(100vh - 80px));
   display:flex;
-  align-items:center;
+  align-items:var(--hero-v-align, center);
   justify-content:center;
   padding:42px 7vw;
   background:
     linear-gradient(180deg,rgba(48,20,18,.36),rgba(48,20,18,.65)),
     var(--hero-bg, url('assets/cover.webp'));
-  background-size:cover;
-  background-position:center;
+  background-size:var(--hero-image-fit, cover);
+  background-position:var(--hero-image-position, center);
   position:relative;
 }
 .hero::after{
@@ -65,7 +65,7 @@ a{color:var(--primary);text-decoration:none;font-weight:700}
 .hero-card{
   position:relative;
   z-index:1;
-  width:min(100%,900px);
+  width:min(100%, var(--hero-content-width, 900px));
   text-align:center;
   color:#fff;
   padding:46px 38px;
@@ -204,8 +204,11 @@ input,select,textarea{
 @media(max-width:760px){
   .topbar{align-items:flex-start;flex-direction:column;padding:18px 6vw}
   .topbar nav{justify-content:flex-start;gap:14px}.topbar nav a{font-size:.92rem}
-  .hero{min-height:82vh;padding:30px 5vw}.hero-card{padding:34px 20px;border-radius:28px}
-  .hero-actions{flex-direction:column;align-items:stretch}.hero-actions>*{width:100%}
+  .hero{min-height:var(--mobile-hero-height, 82vh);padding:30px 5vw;align-items:var(--mobile-hero-v-align, center);background-size:var(--mobile-hero-image-fit, cover);background-position:var(--mobile-hero-image-position, center top)}
+  .hero-card{width:min(100%, var(--mobile-hero-content-width, 100%));padding:34px 20px;border-radius:28px}
+  .hero-actions{flex-direction:var(--buttons-mobile-layout, column);align-items:stretch;gap:14px}.hero-actions>*{width:100%}
+  .hero-buttons-horizontal .hero-actions{flex-direction:row;flex-wrap:wrap;justify-content:center}.hero-buttons-horizontal .hero-actions>*{width:auto}
+  .hero-buttons-1-column .hero-actions{flex-direction:column}.hero-buttons-1-column .hero-actions>*{width:100%}
   .countdown{grid-template-columns:repeat(2,1fr)}
   .cards-grid,.timeline,.location-grid{grid-template-columns:1fr}
   .section{padding:52px 5vw}.panel{padding:28px 22px}

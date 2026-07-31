@@ -300,7 +300,12 @@ if (themeSettingsForm && themePreviewFrame) {
     'paper_color', 'muted_color', 'text_color', 'link_color', 'heading_font', 'body_font',
     'font_size_base', 'container_width', 'section_spacing', 'border_radius', 'shadow',
     'button_style', 'navbar_style', 'card_style', 'footer_style', 'animation_enabled',
-    'hero_image_fit', 'hero_image_position'
+    // Hero settings - Desktop
+    'hero_height', 'hero_vertical_alignment', 'hero_content_width',
+    'hero_image_fit', 'hero_image_position',
+    // Hero settings - Mobile
+    'mobile_hero_height', 'mobile_hero_vertical_alignment', 'mobile_hero_content_width',
+    'mobile_hero_image_fit', 'mobile_hero_image_position'
   ];
   const savedTheme = JSON.parse(themeSettingsForm.dataset.savedTheme || '{}');
   const themePresets = JSON.parse(themeSettingsForm.dataset.themePresets || '{}');
@@ -337,9 +342,15 @@ if (themeSettingsForm && themePreviewFrame) {
       }
       const field = themeSettingsForm.elements[name];
       if (!field) return;
-      if (selectedPreset !== 'custom' && presetValues[name] !== undefined) return;
+      // Always use form field value if it exists (manual override)
       theme[name] = fieldValue(name);
     });
+    // Also include buttons.mobile_layout in the collected theme
+    const mobileLayoutField = themeSettingsForm.elements['buttons_mobile_layout'];
+    if (mobileLayoutField) {
+      theme.buttons = theme.buttons || {};
+      theme.buttons.mobile_layout = mobileLayoutField.value;
+    }
     return theme;
   }
 

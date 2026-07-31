@@ -175,6 +175,42 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $selectedPreset = trim((string)($_POST['theme_preset'] ?? ($config['theme']['theme_preset'] ?? 'elegant')));
                 if ($selectedPreset !== 'custom' && array_key_exists($selectedPreset, theme_presets())) {
                     $config['theme'] = apply_theme_preset($config['theme'], $selectedPreset);
+                    // After applying preset, set theme_preset to the selected value but keep manual edits possible
+                    $config['theme']['theme_preset'] = $selectedPreset;
+                    // Also update hero settings from POST if provided (allow override after preset)
+                    if (isset($_POST['hero_height'])) {
+                        $config['theme']['hero_height'] = trim((string)$_POST['hero_height']) ?: ($config['theme']['hero_height'] ?? '100vh');
+                    }
+                    if (isset($_POST['hero_vertical_alignment'])) {
+                        $config['theme']['hero_vertical_alignment'] = trim((string)$_POST['hero_vertical_alignment']) ?: ($config['theme']['hero_vertical_alignment'] ?? 'center');
+                    }
+                    if (isset($_POST['hero_content_width'])) {
+                        $config['theme']['hero_content_width'] = trim((string)$_POST['hero_content_width']) ?: ($config['theme']['hero_content_width'] ?? '900px');
+                    }
+                    if (isset($_POST['hero_image_fit'])) {
+                        $config['theme']['hero_image_fit'] = trim((string)$_POST['hero_image_fit']) ?: ($config['theme']['hero_image_fit'] ?? 'cover');
+                    }
+                    if (isset($_POST['hero_image_position'])) {
+                        $config['theme']['hero_image_position'] = trim((string)$_POST['hero_image_position']) ?: ($config['theme']['hero_image_position'] ?? 'center');
+                    }
+                    if (isset($_POST['mobile_hero_height'])) {
+                        $config['theme']['mobile_hero_height'] = trim((string)$_POST['mobile_hero_height']) ?: ($config['theme']['mobile_hero_height'] ?? '85vh');
+                    }
+                    if (isset($_POST['mobile_hero_vertical_alignment'])) {
+                        $config['theme']['mobile_hero_vertical_alignment'] = trim((string)$_POST['mobile_hero_vertical_alignment']) ?: ($config['theme']['mobile_hero_vertical_alignment'] ?? 'center');
+                    }
+                    if (isset($_POST['mobile_hero_content_width'])) {
+                        $config['theme']['mobile_hero_content_width'] = trim((string)$_POST['mobile_hero_content_width']) ?: ($config['theme']['mobile_hero_content_width'] ?? '100%');
+                    }
+                    if (isset($_POST['mobile_hero_image_fit'])) {
+                        $config['theme']['mobile_hero_image_fit'] = trim((string)$_POST['mobile_hero_image_fit']) ?: ($config['theme']['mobile_hero_image_fit'] ?? 'cover');
+                    }
+                    if (isset($_POST['mobile_hero_image_position'])) {
+                        $config['theme']['mobile_hero_image_position'] = trim((string)$_POST['mobile_hero_image_position']) ?: ($config['theme']['mobile_hero_image_position'] ?? 'center top');
+                    }
+                    if (isset($_POST['buttons_mobile_layout'])) {
+                        $config['buttons']['mobile_layout'] = trim((string)$_POST['buttons_mobile_layout']) ?: ($config['buttons']['mobile_layout'] ?? '2-columns');
+                    }
                     break;
                 }
                 $config['theme']['theme_preset'] = 'custom';
@@ -199,12 +235,17 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['theme']['footer_style'] = trim((string)($_POST['footer_style'] ?? '')) ?: $config['theme']['footer_style'];
                 $config['theme']['animation_enabled'] = !empty($_POST['animation_enabled']);
                 // Desktop hero settings
+                $config['theme']['hero_height'] = trim((string)($_POST['hero_height'] ?? '')) ?: ($config['theme']['hero_height'] ?? '100vh');
+                $config['theme']['hero_vertical_alignment'] = trim((string)($_POST['hero_vertical_alignment'] ?? '')) ?: ($config['theme']['hero_vertical_alignment'] ?? 'center');
+                $config['theme']['hero_content_width'] = trim((string)($_POST['hero_content_width'] ?? '')) ?: ($config['theme']['hero_content_width'] ?? '900px');
                 $config['theme']['hero_image_fit'] = trim((string)($_POST['hero_image_fit'] ?? '')) ?: ($config['theme']['hero_image_fit'] ?? 'cover');
                 $config['theme']['hero_image_position'] = trim((string)($_POST['hero_image_position'] ?? '')) ?: ($config['theme']['hero_image_position'] ?? 'center');
                 // Mobile hero settings
+                $config['theme']['mobile_hero_height'] = trim((string)($_POST['mobile_hero_height'] ?? '')) ?: ($config['theme']['mobile_hero_height'] ?? '85vh');
+                $config['theme']['mobile_hero_vertical_alignment'] = trim((string)($_POST['mobile_hero_vertical_alignment'] ?? '')) ?: ($config['theme']['mobile_hero_vertical_alignment'] ?? 'center');
+                $config['theme']['mobile_hero_content_width'] = trim((string)($_POST['mobile_hero_content_width'] ?? '')) ?: ($config['theme']['mobile_hero_content_width'] ?? '100%');
                 $config['theme']['mobile_hero_image_fit'] = trim((string)($_POST['mobile_hero_image_fit'] ?? '')) ?: ($config['theme']['mobile_hero_image_fit'] ?? 'cover');
                 $config['theme']['mobile_hero_image_position'] = trim((string)($_POST['mobile_hero_image_position'] ?? '')) ?: ($config['theme']['mobile_hero_image_position'] ?? 'center top');
-                $config['theme']['mobile_hero_height'] = trim((string)($_POST['mobile_hero_height'] ?? '')) ?: ($config['theme']['mobile_hero_height'] ?? '85vh');
                 // Mobile button layout
                 $config['buttons']['mobile_layout'] = trim((string)($_POST['buttons_mobile_layout'] ?? '')) ?: ($config['buttons']['mobile_layout'] ?? '2-columns');
                 break;
@@ -509,12 +550,43 @@ foreach (theme_presets() as $presetKey => $preset) {
     $themePresetPreviewData[$presetKey] = $preset['values'];
 }
 $themePreviewConfig = $config['theme'] ?? [];
-// Ensure hero image settings are included in preview config
+// Ensure hero settings are included in preview config for backward compatibility
+if (!isset($themePreviewConfig['hero_height'])) {
+    $themePreviewConfig['hero_height'] = '100vh';
+}
+if (!isset($themePreviewConfig['hero_vertical_alignment'])) {
+    $themePreviewConfig['hero_vertical_alignment'] = 'center';
+}
+if (!isset($themePreviewConfig['hero_content_width'])) {
+    $themePreviewConfig['hero_content_width'] = '900px';
+}
 if (!isset($themePreviewConfig['hero_image_fit'])) {
     $themePreviewConfig['hero_image_fit'] = 'cover';
 }
 if (!isset($themePreviewConfig['hero_image_position'])) {
     $themePreviewConfig['hero_image_position'] = 'center';
+}
+if (!isset($themePreviewConfig['mobile_hero_height'])) {
+    $themePreviewConfig['mobile_hero_height'] = '85vh';
+}
+if (!isset($themePreviewConfig['mobile_hero_vertical_alignment'])) {
+    $themePreviewConfig['mobile_hero_vertical_alignment'] = 'center';
+}
+if (!isset($themePreviewConfig['mobile_hero_content_width'])) {
+    $themePreviewConfig['mobile_hero_content_width'] = '100%';
+}
+if (!isset($themePreviewConfig['mobile_hero_image_fit'])) {
+    $themePreviewConfig['mobile_hero_image_fit'] = 'cover';
+}
+if (!isset($themePreviewConfig['mobile_hero_image_position'])) {
+    $themePreviewConfig['mobile_hero_image_position'] = 'center top';
+}
+// Ensure buttons settings are included in preview config
+if (!isset($themePreviewConfig['buttons'])) {
+    $themePreviewConfig['buttons'] = [];
+}
+if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
+    $themePreviewConfig['buttons']['mobile_layout'] = '2-columns';
 }
 
 

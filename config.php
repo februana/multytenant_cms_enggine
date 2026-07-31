@@ -176,7 +176,22 @@ function config_defaults(): array {
             'animation_enabled' => true,
             'navbar_style' => 'transparent',
             'card_style' => 'elevated',
-            'footer_style' => 'centered'
+            'footer_style' => 'centered',
+            // Hero settings - Desktop
+            'hero_height' => '100vh',
+            'hero_vertical_alignment' => 'center',
+            'hero_content_width' => '900px',
+            'hero_image_fit' => 'cover',
+            'hero_image_position' => 'center',
+            // Hero settings - Mobile
+            'mobile_hero_height' => '85vh',
+            'mobile_hero_vertical_alignment' => 'center',
+            'mobile_hero_content_width' => '100%',
+            'mobile_hero_image_fit' => 'cover',
+            'mobile_hero_image_position' => 'center top'
+        ],
+        'buttons' => [
+            'mobile_layout' => '2-columns'
         ],
         'sections' => [
             [
@@ -444,6 +459,41 @@ function load_config(): array {
     }
     if (empty($config['theme']['theme_preset'])) {
         $config['theme']['theme_preset'] = 'elegant';
+    }
+    // Ensure hero settings exist for backward compatibility
+    if (!isset($config['theme']['hero_height'])) {
+        $config['theme']['hero_height'] = '100vh';
+    }
+    if (!isset($config['theme']['hero_vertical_alignment'])) {
+        $config['theme']['hero_vertical_alignment'] = 'center';
+    }
+    if (!isset($config['theme']['hero_content_width'])) {
+        $config['theme']['hero_content_width'] = '900px';
+    }
+    if (!isset($config['theme']['hero_image_fit'])) {
+        $config['theme']['hero_image_fit'] = 'cover';
+    }
+    if (!isset($config['theme']['hero_image_position'])) {
+        $config['theme']['hero_image_position'] = 'center';
+    }
+    if (!isset($config['theme']['mobile_hero_height'])) {
+        $config['theme']['mobile_hero_height'] = '85vh';
+    }
+    if (!isset($config['theme']['mobile_hero_vertical_alignment'])) {
+        $config['theme']['mobile_hero_vertical_alignment'] = 'center';
+    }
+    if (!isset($config['theme']['mobile_hero_content_width'])) {
+        $config['theme']['mobile_hero_content_width'] = '100%';
+    }
+    if (!isset($config['theme']['mobile_hero_image_fit'])) {
+        $config['theme']['mobile_hero_image_fit'] = 'cover';
+    }
+    if (!isset($config['theme']['mobile_hero_image_position'])) {
+        $config['theme']['mobile_hero_image_position'] = 'center top';
+    }
+    // Ensure buttons settings exist for backward compatibility
+    if (!isset($config['buttons']['mobile_layout'])) {
+        $config['buttons']['mobile_layout'] = '2-columns';
     }
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
