@@ -35,11 +35,28 @@ $musicSrc = $config['media']['music'] ?: 'music/lagu.mp3';
 $coverPath = $config['media']['cover'] ?: 'uploads/cover/cover.jpg';
 $ogImage = $ogImage ?: $coverPath;
 $heroBackground = $config['media']['background_hero'] ?: $coverPath;
+
+// Hero theme settings with defaults for backward compatibility
+$themeHeroHeight = $config['theme']['hero_height'] ?? 'calc(100vh - 80px)';
+$themeHeroVAlign = $config['theme']['hero_vertical_alignment'] ?? 'center';
+$themeHeroContentWidth = $config['theme']['hero_content_width'] ?? '900px';
 $heroImageFit = $config['theme']['hero_image_fit'] ?? 'cover';
 $heroImagePosition = $config['theme']['hero_image_position'] ?? 'center';
 $heroBgSize = $heroImageFit === 'contain' ? 'contain' : ($heroImageFit === 'auto' ? 'auto' : 'cover');
 $heroBgRepeat = $heroImageFit !== 'cover' ? 'no-repeat' : 'repeat';
-$bgHero = $heroBackground ? 'style="background-image:url(' . escape_html($heroBackground) . ');background-size:' . $heroBgSize . ';background-position:' . escape_html($heroImagePosition) . ';background-repeat:' . $heroBgRepeat . ';"' : '';
+$heroOverlayStart = $config['theme']['hero_overlay_start'] ?? 'rgba(22,12,10,.45)';
+$heroOverlayMid = $config['theme']['hero_overlay_mid'] ?? 'rgba(40,20,18,.55)';
+$heroOverlayEnd = $config['theme']['hero_overlay_end'] ?? 'rgba(55,28,24,.72)';
+
+$themeMobileHeroHeight = $config['theme']['mobile_hero_height'] ?? '82vh';
+$themeMobileHeroVAlign = $config['theme']['mobile_hero_vertical_alignment'] ?? 'center';
+$themeMobileHeroContentWidth = $config['theme']['mobile_hero_content_width'] ?? '100%';
+$themeMobileHeroImageFit = $config['theme']['mobile_hero_image_fit'] ?? 'cover';
+$themeMobileHeroImagePosition = $config['theme']['mobile_hero_image_position'] ?? 'center top';
+
+$buttonsMobileLayout = $config['buttons']['mobile_layout'] ?? 'column';
+
+$bgHero = $heroBackground ? 'style="--hero-bg:url(' . escape_html($heroBackground) . ');--hero-height:' . escape_html($themeHeroHeight) . ';--hero-v-align:' . escape_html($themeHeroVAlign) . ';--hero-content-width:' . escape_html($themeHeroContentWidth) . ';--hero-image-fit:' . escape_html($heroImageFit) . ';--hero-image-position:' . escape_html($heroImagePosition) . ';--hero-bg-repeat:' . escape_html($heroBgRepeat) . ';--hero-overlay-start:' . escape_html($heroOverlayStart) . ';--hero-overlay-mid:' . escape_html($heroOverlayMid) . ';--hero-overlay-end:' . escape_html($heroOverlayEnd) . ';--mobile-hero-height:' . escape_html($themeMobileHeroHeight) . ';--mobile-hero-v-align:' . escape_html($themeMobileHeroVAlign) . ';--mobile-hero-content-width:' . escape_html($themeMobileHeroContentWidth) . ';--mobile-hero-image-fit:' . escape_html($themeMobileHeroImageFit) . ';--mobile-hero-image-position:' . escape_html($themeMobileHeroImagePosition) . ';--buttons-mobile-layout:' . escape_html($buttonsMobileLayout) . ';"' : '';
 $sectionBackgrounds = [
     $config['media']['background_sections'][0] ?? '',
     $config['media']['background_sections'][1] ?? '',
@@ -209,14 +226,22 @@ $themeClasses = [
           <a class="whatsapp-btn" href="<?php echo escape_html($whatsappLink); ?>" target="_blank" rel="noopener noreferrer">Hubungi WA</a>
         </div>
 
-        <div id="countdown" class="countdown" data-countdown="<?php echo escape_html($countdownTarget); ?>" aria-label="Hitung mundur acara">
-          <div><strong>00</strong><span>Hari</span></div>
-          <div><strong>00</strong><span>Jam</span></div>
-          <div><strong>00</strong><span>Menit</span></div>
-          <div><strong>00</strong><span>Detik</span></div>
-        </div>
-
         <button class="music-btn" type="button" id="musicBtn">Putar Musik</button>
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <?php if (is_section_enabled($config, 'countdown')): ?>
+    <section id="countdown-section" class="section countdown-section">
+      <div class="section-head">
+        <p class="label">Menuju Hari Bahagia</p>
+        <h2>Hitung Mundur Pernikahan</h2>
+      </div>
+      <div id="countdown" class="countdown" data-countdown="<?php echo escape_html($countdownTarget); ?>" aria-label="Hitung mundur acara">
+        <div><strong>00</strong><span>Hari</span></div>
+        <div><strong>00</strong><span>Jam</span></div>
+        <div><strong>00</strong><span>Menit</span></div>
+        <div><strong>00</strong><span>Detik</span></div>
       </div>
     </section>
     <?php endif; ?>
