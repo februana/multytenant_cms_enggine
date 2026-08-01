@@ -204,8 +204,10 @@ update_application() {
     for f in "${PRESERVE_FILES[@]}"; do [ -f "$TEMP_DIR/_preserve/$f" ] && cp -a "$TEMP_DIR/_preserve/$f" "$CANONICAL_TARGET/"; done
     for d in "${PRESERVE_DIRS[@]}"; do [ -d "$TEMP_DIR/_preserve/$d" ] && { [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$TEMP_DIR/_preserve/$d/"* "$CANONICAL_TARGET/$d/" 2>/dev/null || cp -a "$TEMP_DIR/_preserve/$d" "$CANONICAL_TARGET/"; }; done
     
-    [ -f "$CANONICAL_TARGET/app/style.css" ] && cp "$CANONICAL_TARGET/app/style.css" "$CANONICAL_TARGET/style.css"
-    [ -f "$CANONICAL_TARGET/app/script.js" ] && cp "$CANONICAL_TARGET/app/script.js" "$CANONICAL_TARGET/script.js"
+    # Canonical frontend assets live in the document root (style.css, script.js).
+    # Do NOT copy from legacy $CANONICAL_TARGET/app/ which may exist on older installs
+    # as that could overwrite the canonical files controlled by this repository.
+    # Legacy app/* files must never overwrite document-root assets.
     
     chown -R www-data:www-data "$CANONICAL_TARGET"
     find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;

@@ -90,7 +90,7 @@ All URLs have changed due to the root consolidation:
 | `/app/save.php` | `/save.php` |
 | `/app/messages.php` | `/messages.php` |
 | `/app/gallery.php` | `/gallery.php` |
-| `/app/assets/css/style.css` | `/assets/css/style.css` |
+| `/app/assets/css/style.css` | `/style.css` |
 | `/app/uploads/cover/image.jpg` | `/uploads/cover/image.jpg` |
 
 **Action Required**: Update any bookmarks, links, or integrations using old URLs.

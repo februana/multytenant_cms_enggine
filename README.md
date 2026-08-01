@@ -237,7 +237,8 @@ The update script is **idempotent** - safe to run multiple times.
 │   └── background/
 ├── webdav/                # WebDAV storage (separate from CMS uploads)
 ├── app/                   # Application logic (protected)
-├── assets/                # Static CSS/JS/images
+├── style.css              # Main stylesheet (canonical frontend)
+├── script.js              # Main JavaScript (canonical frontend)
 ├── backups/               # Automated backups
 └── deploy/                # Deployment scripts
 ```

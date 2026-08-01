@@ -14,7 +14,7 @@ This guide explains how to backup and restore your wedding invitation applicatio
 - `event.ics` - Generated calendar event
 
 ### Excluded Files
-- Source code (`app/`, `assets/`)
+- Source code (`app/`, root frontend files: `style.css`, `script.js`)
 - Deployment scripts (`deploy/`)
 - Documentation
 - Backup archives themselves

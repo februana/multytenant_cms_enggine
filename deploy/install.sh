@@ -249,12 +249,19 @@ if [ -d "$CANONICAL_TARGET" ] && [ "$SOURCE_DIR" = "$CANONICAL_TARGET" ]; then
   WORKING_DIR="$CANONICAL_TARGET"
   CLEANUP_SOURCE=false
 
-  # Copy public assets from app/ to runtime root
-  # style.css and script.js must be in the document root for index.php to load them
-  cp "$WORKING_DIR/app/style.css" "$WORKING_DIR/style.css"
-  cp "$WORKING_DIR/app/script.js" "$WORKING_DIR/script.js"
-  chown www-data:www-data "$WORKING_DIR/style.css" "$WORKING_DIR/script.js"
-  chmod 644 "$WORKING_DIR/style.css" "$WORKING_DIR/script.js"
+  # Ensure canonical frontend assets are present at the document root.
+  # Preserve backward compatibility for very old installs, but NEVER overwrite
+  # existing document-root assets with legacy app/* files.
+  if [ -f "$WORKING_DIR/app/style.css" ] && [ ! -f "$WORKING_DIR/style.css" ]; then
+    cp "$WORKING_DIR/app/style.css" "$WORKING_DIR/style.css"
+    chown www-data:www-data "$WORKING_DIR/style.css"
+    chmod 644 "$WORKING_DIR/style.css"
+  fi
+  if [ -f "$WORKING_DIR/app/script.js" ] && [ ! -f "$WORKING_DIR/script.js" ]; then
+    cp "$WORKING_DIR/app/script.js" "$WORKING_DIR/script.js"
+    chown www-data:www-data "$WORKING_DIR/script.js"
+    chmod 644 "$WORKING_DIR/script.js"
+  fi
 elif [ -d "$CANONICAL_TARGET" ]; then
   # Target exists but running from different source
   echo "ERROR: $CANONICAL_TARGET already exists." >&2
@@ -277,12 +284,19 @@ else
   WORKING_DIR="$CANONICAL_TARGET"
   CLEANUP_SOURCE=true
 
-  # Copy public assets from app/ to runtime root
-  # style.css and script.js must be in the document root for index.php to load them
-  cp "$WORKING_DIR/app/style.css" "$WORKING_DIR/style.css"
-  cp "$WORKING_DIR/app/script.js" "$WORKING_DIR/script.js"
-  chown www-data:www-data "$WORKING_DIR/style.css" "$WORKING_DIR/script.js"
-  chmod 644 "$WORKING_DIR/style.css" "$WORKING_DIR/script.js"
+  # Ensure canonical frontend assets are present at the document root.
+  # Preserve backward compatibility for very old installs, but NEVER overwrite
+  # existing document-root assets with legacy app/* files.
+  if [ -f "$WORKING_DIR/app/style.css" ] && [ ! -f "$WORKING_DIR/style.css" ]; then
+    cp "$WORKING_DIR/app/style.css" "$WORKING_DIR/style.css"
+    chown www-data:www-data "$WORKING_DIR/style.css"
+    chmod 644 "$WORKING_DIR/style.css"
+  fi
+  if [ -f "$WORKING_DIR/app/script.js" ] && [ ! -f "$WORKING_DIR/script.js" ]; then
+    cp "$WORKING_DIR/app/script.js" "$WORKING_DIR/script.js"
+    chown www-data:www-data "$WORKING_DIR/script.js"
+    chmod 644 "$WORKING_DIR/script.js"
+  fi
 fi
 
 # Install Composer dependencies

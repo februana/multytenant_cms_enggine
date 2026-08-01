@@ -58,7 +58,7 @@ This wedding invitation application uses a **Single-Root Architecture** designed
 
 ### 1. Static Assets
 ```
-User → Web Server → /assets/css/style.css → Served Directly
+User → Web Server → /style.css and /script.js → Served Directly
 User → Web Server → /uploads/cover/image.jpg → Served Directly
 ```
 
