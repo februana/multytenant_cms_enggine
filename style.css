@@ -129,7 +129,7 @@ body{
 .invitation-frame .ornament-corner.bottom-right{ bottom:6px; right:6px; border-bottom:1px solid rgba(240,194,161,0.35); border-right:1px solid rgba(240,194,161,0.35); border-radius:0 0 5px 0 }
 
 
-/* Narrative sections: make them feel open (no heavy cards). Decorative edge only, center stays integrated with background */
+/* Narrative sections: COMPLETELY remove all framing - content flows directly on decorative background */
 .section.intro-section .invitation-frame,
 #undangan .invitation-frame,
 #cerita .invitation-frame,
@@ -139,85 +139,157 @@ body{
   -webkit-backdrop-filter:none;
   border:0;
   box-shadow:none;
-  padding:64px 0;
+  padding:40px 0;
   border-radius:0;
   position:relative;
 }
-/* Subtle edge lines for narrative sections so content reads like printed paper */
+/* Remove all decorative lines from narrative section frames */
 .section.intro-section .invitation-frame::before,
-#undangan .invitation-frame::before,
-#cerita .invitation-frame::before,
-#galeri .invitation-frame::before{
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  top:0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,rgba(200,150,120,0.08),transparent);
-  pointer-events:none;
-}
 .section.intro-section .invitation-frame::after,
+#undangan .invitation-frame::before,
 #undangan .invitation-frame::after,
+#cerita .invitation-frame::before,
 #cerita .invitation-frame::after,
+#galeri .invitation-frame::before,
 #galeri .invitation-frame::after{
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,rgba(200,150,120,0.05),transparent);
-  pointer-events:none;
+  display:none;
+}
+/* Remove corner ornaments from narrative sections */
+.section.intro-section .ornament-corner,
+#undangan .ornament-corner,
+#cerita .ornament-corner,
+#galeri .ornament-corner{
+  display:none;
 }
 
 /* Strong visual separation between Invitation (#undangan) and Schedule (#acara) sections */
+/* These must be perceived as completely different chapters of the invitation */
 #undangan{
-  margin-bottom:140px;
+  margin-bottom:180px;
   position:relative;
 }
-/* Decorative divider after Invitation section - ornamental flourish */
+/* Dramatic ornamental divider after Invitation section - creates chapter break */
 #undangan::after{
   content:'';
   display:block;
-  width:200px;
-  height:2px;
-  background:linear-gradient(90deg,transparent,rgba(196,140,110,0.4),transparent);
-  margin:60px auto 0;
+  width:280px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(196,140,110,0.5),rgba(212,175,55,0.7),rgba(196,140,110,0.5),transparent);
+  margin:80px auto 0;
   position:relative;
 }
-/* Add a subtle ornamental element at the center of the divider */
+/* Add generous padding to invitation frame for breathing room */
 #undangan .invitation-frame{
-  padding-bottom:100px;
+  padding-bottom:120px;
 }
 
-/* Ornamental center piece for the divider - diamond shape */
+/* Ornamental center piece for the divider - elegant diamond flourish */
 #undangan::before{
   content:'';
   position:absolute;
   left:50%;
-  bottom:40px;
+  bottom:75px;
   transform:translateX(-50%);
-  width:12px;
-  height:12px;
-  background:linear-gradient(135deg,rgba(212,175,55,0.6),rgba(180,140,110,0.3));
+  width:16px;
+  height:16px;
+  background:linear-gradient(135deg,rgba(212,175,55,0.8),rgba(180,140,110,0.4));
   transform:translateX(-50%) rotate(45deg);
   border-radius:2px;
   z-index:1;
+  box-shadow:0 2px 8px rgba(180,140,110,0.3);
 }
 
-/* Information sections: keep lighter, elegant containers */
+/* Additional ornamental flourishes around the divider */
+#undangan .invitation-frame::after{
+  /* Bottom ornamental accent */
+  content:'';
+  position:absolute;
+  left:50%;
+  bottom:100px;
+  transform:translateX(-50%);
+  width:80px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);
+}
+
+/* Information sections: elegant lightweight decorative frames with transparent centers */
+/* These sections use ornamental frames but keep the center transparent to show background artwork */
 #acara .invitation-frame,
 #lokasi .invitation-frame,
 #amplop .invitation-frame,
 #rsvp .invitation-frame,
 .panel .invitation-frame{
-  background:rgba(255,255,255,0.45);
-  border:1px solid rgba(180,140,110,0.06);
-  box-shadow:0 3px 10px rgba(0,0,0,0.02);
-  padding:14px 16px;
-  border-radius:var(--radius-md);
+  position:relative;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:60px 40px;
+  border-radius:0;
 }
+/* Create ornamental frame around information sections using pseudo-elements */
+#acara .invitation-frame::before,
+#lokasi .invitation-frame::before,
+#amplop .invitation-frame::before,
+#rsvp .invitation-frame::before,
+.panel .invitation-frame::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  border:1px solid rgba(212,175,55,0.3);
+  border-radius:8px;
+  pointer-events:none;
+}
+/* Add corner flourishes to information section frames */
+#acara .invitation-frame::after,
+#lokasi .invitation-frame::after,
+#amplop .invitation-frame::after,
+#rsvp .invitation-frame::after,
+.panel .invitation-frame::after{
+  content:'';
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  border:1px solid rgba(212,175,55,0.15);
+  border-radius:4px;
+  pointer-events:none;
+}
+/* Corner ornaments for information sections */
+#acara .ornament-corner,
+#lokasi .ornament-corner,
+#amplop .ornament-corner,
+#rsvp .ornament-corner,
+.panel .ornament-corner{
+  position:absolute;
+  width:24px;
+  height:24px;
+  pointer-events:none;
+  opacity:0.35;
+}
+#acara .ornament-corner.top-left,
+#lokasi .ornament-corner.top-left,
+#amplop .ornament-corner.top-left,
+#rsvp .ornament-corner.top-left,
+.panel .ornament-corner.top-left{ top:8px; left:8px; border-top:2px solid rgba(212,175,55,0.5); border-left:2px solid rgba(212,175,55,0.5); border-radius:4px 0 0 0 }
+#acara .ornament-corner.top-right,
+#lokasi .ornament-corner.top-right,
+#amplop .ornament-corner.top-right,
+#rsvp .ornament-corner.top-right,
+.panel .ornament-corner.top-right{ top:8px; right:8px; border-top:2px solid rgba(212,175,55,0.5); border-right:2px solid rgba(212,175,55,0.5); border-radius:0 4px 0 0 }
+#acara .ornament-corner.bottom-left,
+#lokasi .ornament-corner.bottom-left,
+#amplop .ornament-corner.bottom-left,
+#rsvp .ornament-corner.bottom-left,
+.panel .ornament-corner.bottom-left{ bottom:8px; left:8px; border-bottom:2px solid rgba(212,175,55,0.5); border-left:2px solid rgba(212,175,55,0.5); border-radius:0 0 0 4px }
+#acara .ornament-corner.bottom-right,
+#lokasi .ornament-corner.bottom-right,
+#amplop .ornament-corner.bottom-right,
+#rsvp .ornament-corner.bottom-right,
+.panel .ornament-corner.bottom-right{ bottom:8px; right:8px; border-bottom:2px solid rgba(212,175,55,0.5); border-right:2px solid rgba(212,175,55,0.5); border-radius:0 0 4px 0 }
 
 /* Ensure hero spacing responds to header state so header never covers hero */
 .topbar + main .hero{ padding:calc(var(--header-height) + 42px) 7vw 42px; }
@@ -332,50 +404,50 @@ h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 12px;white-spac
 .section-head p:not(.label){font-size:1.3rem;line-height:1.9;font-weight:300;white-space:pre-line}
 .section-head h2{margin-bottom:18px}
 
-/* Cards */
+/* Cards - transparent with subtle decorative borders for information sections */
 .card,.panel{
-  /* Cards remain elegant but subtle: lighter background, thinner border, minimal shadow */
-  background:rgba(255,255,255,0.48);
-  border:1px solid rgba(180,140,110,0.05);
-  border-radius:var(--radius-md);
-  box-shadow:0 3px 10px rgba(0,0,0,0.02);
+  /* Cards are transparent to show background artwork, with delicate ornamental borders */
+  background:transparent;
+  border:1px solid rgba(212,175,55,0.2);
+  border-radius:8px;
+  box-shadow:none;
 }
-.card{padding:14px}
-.card h3{margin:0 0 8px;font-size:1.05rem}
-.card p{margin:.35rem 0}
+.card{padding:18px}
+.card h3{margin:0 0 8px;font-size:1.05rem;color:var(--text)}
+.card p{margin:.35rem 0;color:var(--muted)}
 .panel{padding:22px}
 .timeline-item{
   padding:22px;
-  border-radius:var(--radius);
-  background:linear-gradient(135deg,var(--invitation-bg),#fff2eb);
-  backdrop-filter:var(--invitation-blur);
-  -webkit-backdrop-filter:var(--invitation-blur);
-  border:1px solid var(--invitation-border);
-  box-shadow:var(--invitation-shadow);
+  border-radius:8px;
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  border:1px solid rgba(212,175,55,0.18);
+  box-shadow:none;
 }
 .timeline-item span,.message strong,.amplop-header{color:var(--primary);font-weight:800}
 .message{
-  background:var(--invitation-bg);
-  backdrop-filter:var(--invitation-blur);
-  -webkit-backdrop-filter:var(--invitation-blur);
-  border-radius:var(--radius-lg);
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  border-radius:8px;
   padding:14px;
-  border:1px solid var(--invitation-border);
+  border:1px solid rgba(212,175,55,0.18);
 }
 .message strong{display:block}
 .amplop-card{
-  background:linear-gradient(135deg,#fff8f5,#fffaf8);
-  border:1px solid #f0d4c0;
-  border-radius:var(--radius-lg);
+  background:transparent;
+  border:1px solid rgba(212,175,55,0.2);
+  border-radius:8px;
   padding:18px;
-  box-shadow:0 4px 16px rgba(200,150,120,.08);
+  box-shadow:none;
 }
 .amplop-header{margin-bottom:16px;font-size:1.1rem}
 .amplop-item{display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-size:.95rem}
 .amplop-item label{font-weight:600;margin-right:12px}
 .amplop-item span{font-weight:700;color:var(--text);font-family:var(--font-mono);word-break:break-all}
 .amplop-feedback{display:none;color:#4CAF50;font-size:12px;margin-top:8px}
-.qris-image-wrap img{width:100%;display:block;border-radius:var(--radius-md);object-fit:contain;background:var(--paper)}
+.qris-image-wrap img{width:100%;display:block;border-radius:8px;object-fit:contain;background:transparent}
 
 /* Buttons */
 button,.calendar-btn,.whatsapp-btn,.music-btn,.amplop-copy-btn,.data-saver-btn,.load-gallery-btn{cursor:pointer;transition:var(--transition)}
@@ -394,18 +466,18 @@ button:hover,.calendar-btn:hover,.whatsapp-btn:hover,.load-gallery-btn:hover{tra
 .data-saver-btn.active{background:var(--primary);color:var(--hero-text)}
 .load-gallery-btn{display:none;margin:20px auto;padding:10px 20px}
 
-/* Forms */
+/* Forms - transparent inputs with delicate borders */
 .rsvp-form{gap:16px;max-width:680px}
 .rsvp-form label{display:grid;gap:8px;font-weight:700;color:var(--text)}
-input,select,textarea{width:100%;border:1px solid var(--input-border);border-radius:var(--radius-md);padding:14px 16px;font:inherit;background:var(--paper);color:var(--text)}
+input,select,textarea{width:100%;border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:14px 16px;font:inherit;background:transparent;color:var(--text)}
 .rsvp-form button{width:max-content;background:var(--primary);color:var(--hero-text)}
 .form-message{font-weight:700}
 .form-message.success{color:#155724;background:rgba(212,237,218,.4);padding:10px;border-radius:10px;border:1px solid rgba(40,167,69,.12)}
 .form-message.error{color:var(--danger);background:rgba(248,215,218,.4);padding:10px;border-radius:10px;border:1px solid rgba(220,53,69,.12)}
 
-/* Gallery */
+/* Gallery - images displayed directly on decorative background */
 .gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:22px}
-.gallery-grid img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:12px;box-shadow:0 8px 18px rgba(0,0,0,0.06);background:#f6f2ef;cursor:pointer;transition:var(--transition)}
+.gallery-grid img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;box-shadow:none;background:transparent;cursor:pointer;transition:var(--transition);border:1px solid rgba(212,175,55,0.15)}
 .gallery-grid img:hover{transform:scale(1.02)}
 .gallery-grid.masonry{display:block;column-gap:18px;column-count:3}
 .gallery-grid.masonry img{display:inline-block;margin:0 0 18px;aspect-ratio:unset}
@@ -459,13 +531,16 @@ iframe{width:100%;height:100%;min-height:360px;border:0;display:block}
   .cards-grid,.timeline,.location-grid{grid-template-columns:1fr}
   .section{padding:80px 5vw}
   .panel{padding:22px 18px}
-  .invitation-frame{padding:18px 16px}
-  .invitation-frame .ornament-corner{width:28px;height:28px}
+  /* Keep invitation frames minimal on mobile */
+  .invitation-frame{padding:40px 20px}
+  .invitation-frame .ornament-corner{width:20px;height:20px}
   /* Reduce spacing between Invitation and Schedule on mobile but keep visual separation */
-  #undangan{margin-bottom:80px}
-  #undangan::after{width:140px;margin:40px auto 0}
-  #undangan::before{bottom:30px;width:10px;height:10px}
-  #undangan .invitation-frame{padding-bottom:60px}
+  #undangan{margin-bottom:100px}
+  #undangan::after{width:180px;margin:50px auto 0}
+  #undangan::before{bottom:45px;width:12px;height:12px}
+  #undangan .invitation-frame{padding-bottom:80px}
+  /* Remove ornamental frame pseudo-elements on mobile for cleaner look */
+  #acara .invitation-frame::after,#lokasi .invitation-frame::after,#amplop .invitation-frame::after,#rsvp .invitation-frame::after,.panel .invitation-frame::after{display:none}
 }
 @media(max-width:600px){
   .gallery-grid.masonry{column-count:1}
@@ -479,9 +554,9 @@ iframe{width:100%;height:100%;min-height:360px;border:0;display:block}
   .card{padding:16px}
   .section{padding:52px 5vw}
   /* Maintain visual separation on smallest screens */
-  #undangan{margin-bottom:60px}
-  #undangan::after{width:100px;margin:30px auto 0}
-  #undangan::before{bottom:25px;width:8px;height:8px}
-  #undangan .invitation-frame{padding-bottom:50px}
+  #undangan{margin-bottom:80px}
+  #undangan::after{width:140px;margin:40px auto 0}
+  #undangan::before{bottom:35px;width:10px;height:10px}
+  #undangan .invitation-frame{padding-bottom:60px}
 }
 
