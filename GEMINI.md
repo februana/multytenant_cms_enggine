@@ -28,11 +28,13 @@ The website's user interface and experience must resemble a luxury printed weddi
 
 # Repository Architecture
 
-The project employs a single-root public wrapper pattern where root files act as thin entry points for the core application behavior.
+The repository follows the current production architecture.
 
 - **Canonical Frontend Assets:** `style.css` and `script.js` located at the root of the repository are the single canonical frontend assets.
-- **Legacy Compatibility:** While legacy structures or compatibility layers may exist in the codebase, future development must not reintroduce duplicate frontend assets.
-- **No Duplication:** Do not encourage or implement duplicate frontend sources (such as `app/style.css` or `app/script.js`), preventing maintenance drift.
+- **Legacy Compatibility:** Legacy compatibility may exist for some runtime wrappers, but they are not the canonical development target.
+- **No Duplication:** Future development must not introduce duplicate frontend assets.
+- **Extension Rule:** New features should extend the current architecture instead of recreating legacy wrapper structures.
+- **Primary Focus:** Development focuses on the root-level structure; do not imply that `app/` is the primary application architecture.
 
 ---
 
