@@ -1,6 +1,8 @@
 # Copilot instructions for februana/webserver_undangan
 
-Purpose: give future Copilot sessions the repo-specific commands, high-level architecture, and conventions needed to make safe, accurate edits.
+Purpose: give future Copilot sessions the repo-specific commands, high-level architecture, and conventions needed to make safe, accurate edits. This file is the canonical source of repository-specific guardrails — update it only when the project architecture or conventions change.
+
+NOTE: Only modify this file for policy or architecture changes. Do not modify other repository files when updating guidance.
 
 1) Build / test / lint (what exists)
 
@@ -13,8 +15,7 @@ Purpose: give future Copilot sessions the repo-specific commands, high-level arc
   - Composer validation (if composer.json present):
     composer validate --strict
 
-- Lint/tests: No automated unit tests or linters found. Use the above php -l and composer validate for quick checks. If adding tests, document how to run a single test in this file.
-
+- Lint/tests: No automated unit tests or linters found. Use php -l and composer validate for quick checks. If adding tests, document how to run a single test and update CI accordingly.
 
 2) High-level architecture (single-root, short overview)
 
@@ -28,7 +29,7 @@ Purpose: give future Copilot sessions the repo-specific commands, high-level arc
   These are protected by webserver rules and file-permission conventions.
 - Admin UI lives under admin/ (UI, JS, backup endpoints). Admin operations update config.json and database.sqlite.
 - Deployment scripts in deploy/: install.sh (ONE-TIME installer), update.sh (use for updates), backup.sh, restore.sh, health-check.sh. Installer auto-creates .env (from .env.example) and may generate an initial admin password.
-- Web server support: Nginx (recommended) and Apache (full WebDAV on Apache). Templates live under deploy/templates/..
+- Web server support: Nginx (recommended) and Apache (full WebDAV on Apache). Templates live under deploy/templates/.
 
 3) Key repository conventions and safety rules
 
@@ -47,6 +48,7 @@ Purpose: give future Copilot sessions the repo-specific commands, high-level arc
 
 - Upload handling:
   - Uploads are static assets only; PHP execution in uploads/ is disabled. Keep upload validation in app/ and ensure filenames are sanitized.
+  - The canonical upload pipeline is based on upload_file(). Future media processing must extend or call upload_file() rather than replacing it.
 
 - Theme and UI config:
   - Admin theme presets write into config.json. Theme previewing uses an iframe and is debounce-posted before save; prefer editing theme presets through admin UI unless changing stored schema.
@@ -78,176 +80,81 @@ Purpose: give future Copilot sessions the repo-specific commands, high-level arc
 - README.md, ARCHITECTURE.md, DEPLOYMENT.md, BACKUP_RESTORE.md, SECURITY.md, .github/workflows/php.yaml
 
 ---
-If you (the developer) want additional coverage (example: documenting a specific app/* module, adding recommended linters or test harness), say which area and Copilot will extend this file accordingly.
 
-========================================================
-PROJECT IDENTITY
-========================================================
+NEW / ENFORCED GUIDANCE (preserve project architecture & design philosophy)
 
-This project is a professional Wedding Invitation CMS.
+1. Project Identity
 
-The goal is NOT to build a blog, landing page, SaaS dashboard, company profile, or generic website.
+- This project is a premium digital wedding invitation. Every change must honour that identity.
+- The product MUST NOT be reshaped into a dashboard, landing page, blog, or company profile. Avoid any UX or structural decisions that make it feel like those products.
 
-The goal is to create premium digital wedding invitations that preserve the emotional feeling of a printed invitation while maintaining the flexibility of a modern CMS.
+2. Frontend Design (strict)
 
-Every implementation should support this vision.
+- Narrative sections (Hero, Invitation, Story, Gallery) must remain open and elegant. They are the primary emotional canvas.
+- Avoid large white/off-white cards that visually box or constrict narrative sections.
+- Decorative backgrounds (image, texture, ornaments, overlays) should be the primary visual element for narrative sections.
+- Cards are appropriate only for information-oriented items: Schedule, Location, Gift, RSVP. When used, cards must be lightweight, subtle, and decorative.
+- Favor CSS refinements (layout, spacing, shadows, masks) instead of adding or restructuring HTML wrappers. Do not introduce unnecessary DOM wrappers.
 
-========================================================
-UI PHILOSOPHY
-========================================================
+3. CMS (preserve existing CMS architecture)
 
-The website should feel like opening a premium printed wedding invitation.
+- Preserve the current CMS architecture and JSON schema. Do not redesign the stored JSON schema unless there is a compelling, backward-compatible migration plan reviewed with maintainers.
+- Reuse existing upload functions and APIs. Do not duplicate upload logic or create parallel upload endpoints.
+- Do not create duplicate frontend assets or duplicate canonical sources for CSS/JS.
 
-Not a website.
+4. Frontend Assets (canonical sources)
 
-Every visual decision should reinforce:
+- Canonical frontend assets are: style.css and script.js at their existing canonical locations.
+- Never introduce app/style.css or app/script.js as new canonical sources — avoid duplicate canonical files that create maintenance drift.
 
-- elegance
-- warmth
-- romance
-- simplicity
-- luxury
-- timeless design
+5. Deployment
 
-Avoid unnecessary visual effects.
+- Keep deploy/install.sh, deploy/update.sh and deploy/health-check.sh synchronized with repository architecture and backward compatible.
+- Preserve backward compatibility for existing installs: update.sh should create backups and perform migrations safely; install.sh must remain a one-time installer.
 
-Prefer elegant simplicity over complexity.
+6. Upload Architecture
 
-========================================================
-SECTION ARCHITECTURE
-========================================================
+- The current upload pipeline is based on upload_file(). Future media processing must extend or wrap this function rather than replacing it, preserving upload behavior, validation, and file locations.
+- Any additional processing (WebP conversion, EXIF orientation, resizing) should be implemented as post-upload processors invoked by upload_file() hooks or clearly documented extension points.
 
-Do NOT remove or merge sections.
+7. Planned Roadmap (compatibility requirements)
 
-The existing section architecture is correct.
+Planned features and how they must behave relative to existing systems:
+- MediaProcessor
+- Imagick support
+- GD fallback
+- Automatic WebP conversion
+- EXIF auto orientation
+- Media presets
+- Upload Manager / Media Library
 
-Each section must remain independent because it is required by:
+Compatibility constraints:
+- These features must preserve compatibility with Theme Builder, Live Preview, QR Generator, Guest Links, and Backup/Restore.
+- Implement feature flags or opt-in behavior to avoid changing default runtime behavior for existing installs.
 
-- CMS
-- Theme Builder
-- Live Preview
-- Future background customization
-- Future decoration customization
+8. Coding Rules
 
-========================================================
-BACKGROUND
-========================================================
+- Reuse existing code whenever possible. Avoid copy/paste of logic; prefer extracting shared helpers.
+- Never modify vendor/ packages. If vendor changes are required, propose patches or PRs upstream and use composer overrides only with maintainer approval.
+- Audit existing implementation before introducing new architecture. Create a short migration/compatibility plan for any change affecting persisted data or public endpoints.
 
-Each section should continue supporting independent backgrounds.
+9. Visual & UX Validation
 
-Possible backgrounds include:
+- Do not claim visual validation without rendering in a browser. If rendering isn't available, state that visual verification could not be completed.
+- For changes to visual components, include a short checklist with screenshots or a test HTML page that can be rendered locally during review.
 
-- image
-- texture
-- color
-- overlay
-- ornaments
+Updated instruction summary
 
-Avoid automatically using background-size: cover when it crops decorative artwork.
+- Project Identity: premium wedding invitation; never a dashboard/landing/blog/company site.
+- Frontend Design: keep narrative sections open; use decorative backgrounds; cards only for Schedule/Location/Gift/RSVP and must be subtle.
+- CMS: preserve architecture and JSON schema; reuse upload functions; no duplicate frontend assets.
+- Frontend Assets: canonical style.css and script.js only.
+- Deployment: keep install/update/health-check scripts backward compatible and synchronized.
+- Uploads: extend upload_file(), do not replace it.
+- Roadmap: planned media features must remain compatible with existing systems.
+- Coding Rules: reuse code, avoid duplicates, never change vendor, audit before large changes.
 
-Choose the most appropriate sizing strategy depending on the image.
+---
 
-========================================================
-VISUAL HIERARCHY
-========================================================
+If additional details are needed (for example, explicit extension points for upload_file or migration strategies for JSON schema), request them and include a short compatibility plan. Do not modify any other repository files when updating these instructions.
 
-Highest priority:
-
-- Bride & Groom
-- Hero
-- Wedding announcement
-
-Medium priority:
-
-- Story
-- Ceremony
-- Reception
-- Gallery
-
-Supporting priority:
-
-- Countdown
-- Gift
-- Maps
-- RSVP
-
-The visitor should remember the couple.
-
-Not the countdown.
-
-========================================================
-COUNTDOWN
-========================================================
-
-Countdown is a supporting component.
-
-It should never visually dominate the page.
-
-Avoid oversized countdown cards.
-
-Avoid oversized numbers.
-
-Keep it elegant and compact.
-
-========================================================
-HEADER
-========================================================
-
-Required behavior:
-
-Top:
-Large header.
-
-Scrolling:
-Compact header.
-
-Scroll down:
-Hide smoothly.
-
-Scroll up:
-Show smoothly.
-
-Back to top:
-Restore original size.
-
-Never cover Hero content.
-
-Verify behavior before considering the implementation complete.
-
-========================================================
-CONTENT LAYOUT
-========================================================
-
-Narrative sections should feel open.
-
-Examples:
-
-- Hero
-- Invitation
-- Story
-- Gallery
-- Closing
-
-Avoid wrapping these sections inside oversized article-style cards.
-
-Information-oriented sections may still use elegant cards.
-
-Examples:
-
-- Ceremony
-- Reception
-- Dresscode
-- Gift
-- RSVP
-
-========================================================
-VALIDATION
-========================================================
-
-Never claim visual verification unless the website has actually been rendered.
-
-If browser rendering is unavailable,
-
-explicitly state that visual verification could not be completed.
-
-Do not infer visual quality from source code alone.
