@@ -247,82 +247,112 @@ $themeClasses = [
     <?php endif; ?>
 
     <section class="section intro-section" style="background:#f9f6f0;padding:40px 20px">
-      <div class="section-head">
-        <p class="label">Kepada Yth.</p>
-        <h2 id="guestNameDisplay"><?php echo escape_html($guestFallback); ?></h2>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head">
+          <p class="label">Kepada Yth.</p>
+          <h2 id="guestNameDisplay"><?php echo escape_html($guestFallback); ?></h2>
+        </div>
       </div>
     </section>
 
     <?php if (is_section_enabled($config, 'undangan')): ?>
     <section id="undangan" class="section intro-section" <?php echo $sectionStyles[0]; ?>>
-      <div class="section-head">
-        <p class="label"><?php echo escape_html(get_section_title($config, 'undangan', 'Undangan Pernikahan')); ?></p>
-        <h2><?php echo nl2br(escape_html(get_section_subtitle($config, 'undangan', $config['wedding']['quote']))); ?></h2>
-        <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
-      </div>
-      <div class="cards-grid">
-        <article class="card">
-          <h3>Akad Nikah</h3>
-          <p><?php echo date('j F Y', strtotime($akadDate)); ?></p>
-          <p><?php echo escape_html($akadTime); ?> WIB</p>
-          <p><?php echo escape_html($locationAddress); ?></p>
-        </article>
-        <article class="card">
-          <h3>Resepsi</h3>
-          <p><?php echo date('j F Y', strtotime($receptionDate)); ?></p>
-          <p><?php echo escape_html($receptionTime); ?> WIB - Selesai</p>
-          <p><?php echo escape_html($locationAddress); ?></p>
-        </article>
-        <article class="card">
-          <h3>Dresscode</h3>
-          <p>Putih / Pastel</p>
-          <p>Rapi dan sopan</p>
-          <p>Kenakan busana terbaikmu untuk momen spesial.</p>
-        </article>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'undangan', 'Undangan Pernikahan')); ?></p>
+          <h2><?php echo nl2br(escape_html(get_section_subtitle($config, 'undangan', $config['wedding']['quote']))); ?></h2>
+          <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
+        </div>
+        <div class="cards-grid">
+          <article class="card">
+            <h3>Akad Nikah</h3>
+            <p><?php echo date('j F Y', strtotime($akadDate)); ?></p>
+            <p><?php echo escape_html($akadTime); ?> WIB</p>
+            <p><?php echo escape_html($locationAddress); ?></p>
+          </article>
+          <article class="card">
+            <h3>Resepsi</h3>
+            <p><?php echo date('j F Y', strtotime($receptionDate)); ?></p>
+            <p><?php echo escape_html($receptionTime); ?> WIB - Selesai</p>
+            <p><?php echo escape_html($locationAddress); ?></p>
+          </article>
+          <article class="card">
+            <h3>Dresscode</h3>
+            <p>Putih / Pastel</p>
+            <p>Rapi dan sopan</p>
+            <p>Kenakan busana terbaikmu untuk momen spesial.</p>
+          </article>
+        </div>
       </div>
     </section>
     <?php endif; ?>
 
     <?php if (is_section_enabled($config, 'cerita')): ?>
     <section id="cerita" class="section panel" <?php echo $sectionStyles[1]; ?>>
-      <p class="label"><?php echo escape_html(get_section_title($config, 'cerita', 'Cerita Kami')); ?></p>
-      <h2><?php echo escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')); ?></h2>
-      <div id="loveStoryContainer">
-        <p class="loading">Memuat cerita...</p>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <p class="label"><?php echo escape_html(get_section_title($config, 'cerita', 'Cerita Kami')); ?></p>
+        <h2><?php echo escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')); ?></h2>
+        <div id="loveStoryContainer">
+          <p class="loading">Memuat cerita...</p>
+        </div>
       </div>
     </section>
     <?php endif; ?>
 
     <?php if (is_section_enabled($config, 'galeri')): ?>
     <section id="galeri" class="section panel" <?php echo $sectionStyles[2]; ?>>
-      <div class="section-head left">
-        <p class="label"><?php echo escape_html(get_section_title($config, 'galeri', 'Galeri')); ?></p>
-        <h2><?php echo escape_html(get_section_subtitle($config, 'galeri', 'Prewedding Kami')); ?></h2>
-        <p>Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p>
-      </div>
-      <button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button>
-      <div id="galleryGrid" class="gallery-grid">
-        <p class="loading">Memuat galeri...</p>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head left">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'galeri', 'Galeri')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'galeri', 'Prewedding Kami')); ?></h2>
+          <p>Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p>
+        </div>
+        <button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button>
+        <div id="galleryGrid" class="gallery-grid">
+          <p class="loading">Memuat galeri...</p>
+        </div>
       </div>
     </section>
     <?php endif; ?>
 
     <?php if (is_section_enabled($config, 'acara')): ?>
     <section id="acara" class="section">
-      <div class="section-head">
-        <p class="label"><?php echo escape_html(get_section_title($config, 'acara', 'Jadwal Acara')); ?></p>
-        <h2><?php echo escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')); ?></h2>
-      </div>
-      <div class="timeline">
-        <div class="timeline-item">
-          <span><?php echo escape_html($akadTime); ?> WIB</span>
-          <h3>Akad Nikah</h3>
-          <p>Prosesi akad nikah keluarga.</p>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'acara', 'Jadwal Acara')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')); ?></h2>
         </div>
-        <div class="timeline-item">
-          <span><?php echo escape_html($receptionTime); ?> WIB</span>
-          <h3>Resepsi</h3>
-          <p>Ramahan dan doa bersama tamu undangan.</p>
+        <div class="timeline">
+          <div class="timeline-item">
+            <span><?php echo escape_html($akadTime); ?> WIB</span>
+            <h3>Akad Nikah</h3>
+            <p>Prosesi akad nikah keluarga.</p>
+          </div>
+          <div class="timeline-item">
+            <span><?php echo escape_html($receptionTime); ?> WIB</span>
+            <h3>Resepsi</h3>
+            <p>Ramahan dan doa bersama tamu undangan.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -330,27 +360,33 @@ $themeClasses = [
 
     <?php if (is_section_enabled($config, 'lokasi')): ?>
     <section id="lokasi" class="section panel">
-      <div class="section-head left">
-        <p class="label"><?php echo escape_html(get_section_title($config, 'lokasi', 'Lokasi')); ?></p>
-        <h2><?php echo escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')); ?></h2>
-      </div>
-      <div class="location-grid">
-        <div class="card">
-          <h3>Alamat</h3>
-          <p><?php echo escape_html($venue); ?></p>
-          <p><?php echo escape_html($locationAddress); ?></p>
-          <p><a href="<?php echo escape_html($mapsUrl); ?>" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head left">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'lokasi', 'Lokasi')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')); ?></h2>
         </div>
-        <div class="card">
-          <h3>QR Lokasi</h3>
-          <p class="location-qr">
-            <strong>Scan untuk arah</strong><br />
-            <img id="qrLokasiImg" src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=<?php echo $qrData; ?>" alt="QR kode lokasi pernikahan" loading="lazy" decoding="async" />
-          </p>
-        </div>
-        <div class="map-wrap">
-          <iframe src="<?php echo escape_html($mapsEmbed); ?>" title="Lokasi acara" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-          <div class="map-footnote">Titik lokasi tepat: <?php echo escape_html($mapsUrl); ?></div>
+        <div class="location-grid">
+          <div class="card">
+            <h3>Alamat</h3>
+            <p><?php echo escape_html($venue); ?></p>
+            <p><?php echo escape_html($locationAddress); ?></p>
+            <p><a href="<?php echo escape_html($mapsUrl); ?>" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p>
+          </div>
+          <div class="card">
+            <h3>QR Lokasi</h3>
+            <p class="location-qr">
+              <strong>Scan untuk arah</strong><br />
+              <img id="qrLokasiImg" src="https://api.qrserver.com/v1/create-qr-code/?size=210x210&data=<?php echo $qrData; ?>" alt="QR kode lokasi pernikahan" loading="lazy" decoding="async" />
+            </p>
+          </div>
+          <div class="map-wrap">
+            <iframe src="<?php echo escape_html($mapsEmbed); ?>" title="Lokasi acara" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div class="map-footnote">Titik lokasi tepat: <?php echo escape_html($mapsUrl); ?></div>
+          </div>
         </div>
       </div>
     </section>
@@ -358,11 +394,16 @@ $themeClasses = [
 
     <?php if (is_section_enabled($config, 'amplop')): ?>
     <section id="amplop" class="section panel">
-      <div class="section-head left">
-        <p class="label"><?php echo escape_html(get_section_title($config, 'amplop', 'Amplop Digital')); ?></p>
-        <h2><?php echo escape_html(get_section_subtitle($config, 'amplop', 'Tanda Terima Kasih')); ?></h2>
-        <p>Jika ingin memberikan amplop digital, berikut data rekening:</p>
-      </div>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head left">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'amplop', 'Amplop Digital')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'amplop', 'Tanda Terima Kasih')); ?></h2>
+          <p>Jika ingin memberikan amplop digital, berikut data rekening:</p>
+        </div>
       <div class="amplop-container">
         <div class="amplop-card">
           <div class="amplop-header">Untuk <?php echo escape_html($config['wedding']['bride_name']); ?></div>
@@ -396,25 +437,31 @@ $themeClasses = [
 
     <?php if (is_section_enabled($config, 'rsvp')): ?>
     <section id="rsvp" class="section panel">
-      <div class="section-head left">
-        <p class="label"><?php echo escape_html(get_section_title($config, 'rsvp', 'RSVP')); ?></p>
-        <h2><?php echo escape_html(get_section_subtitle($config, 'rsvp', 'Konfirmasi Kehadiran')); ?></h2>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head left">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'rsvp', 'RSVP')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'rsvp', 'Konfirmasi Kehadiran')); ?></h2>
+        </div>
+        <form id="rsvpForm" class="rsvp-form">
+          <input type="hidden" name="csrf_token" id="csrfToken" />
+          <label>Nama<input type="text" name="nama" placeholder="Nama Anda" required /></label>
+          <label>Kehadiran
+            <select name="status" required>
+              <option value="Hadir">Hadir</option>
+              <option value="Tidak Hadir">Tidak Hadir</option>
+            </select>
+          </label>
+          <label>Ucapan<textarea name="ucapan" rows="4" placeholder="Tulis ucapan dan doa"></textarea></label>
+          <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none">
+          <button type="submit">Kirim RSVP</button>
+          <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
+        </form>
+        <div id="messages" class="messages"></div>
       </div>
-      <form id="rsvpForm" class="rsvp-form">
-        <input type="hidden" name="csrf_token" id="csrfToken" />
-        <label>Nama<input type="text" name="nama" placeholder="Nama Anda" required /></label>
-        <label>Kehadiran
-          <select name="status" required>
-            <option value="Hadir">Hadir</option>
-            <option value="Tidak Hadir">Tidak Hadir</option>
-          </select>
-        </label>
-        <label>Ucapan<textarea name="ucapan" rows="4" placeholder="Tulis ucapan dan doa"></textarea></label>
-        <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none">
-        <button type="submit">Kirim RSVP</button>
-        <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
-      </form>
-      <div id="messages" class="messages"></div>
     </section>
     <?php endif; ?>
   </main>

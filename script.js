@@ -16,6 +16,42 @@ const galleryGrid = document.getElementById('galleryGrid');
 const guestNameDisplay = document.getElementById('guestNameDisplay');
 
 let isDataSaver = false;
+let lastScrollTop = 0;
+let scrollTimeout;
+
+// Smart Header Scroll Behavior
+function initSmartHeader() {
+  const header = document.querySelector('.topbar');
+  if (!header) return;
+
+  window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimeout);
+    
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrolled = scrollTop > 50;
+    
+    // Hide header when scrolling down, show when scrolling up
+    if (scrollTop > lastScrollTop && scrollTop > 100) {
+      header.classList.add('header-hidden');
+    } else {
+      header.classList.remove('header-hidden');
+    }
+    
+    // Add scrolled state for shrink effect
+    if (scrolled) {
+      header.classList.add('header-scrolled');
+    } else {
+      header.classList.remove('header-scrolled');
+    }
+    
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    
+    // Reset header visibility after scroll stops
+    scrollTimeout = setTimeout(function() {
+      header.classList.remove('header-hidden');
+    }, 1000);
+  }, { passive: true });
+}
 
 function pad(n){ return String(n).padStart(2,'0'); }
 function escapeHTML(text){
@@ -308,3 +344,6 @@ function removeInteractionListeners(){
 }
 
 setTimeout(tryAutoplay, 300);
+
+// Initialize smart header behavior
+initSmartHeader();
