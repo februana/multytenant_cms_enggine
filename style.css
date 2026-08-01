@@ -19,7 +19,7 @@
   --shadow-soft:0 10px 28px rgba(0,0,0,.12);
   --shadow-media:0 12px 34px rgba(73,45,34,.14);
   --container-width:1180px;
-  --section-spacing:96px;
+  --section-spacing:120px;
   --font-heading:'Allura',cursive;
   --font-body:'Inter',Arial,sans-serif;
   --font-mono:monospace;
@@ -59,7 +59,13 @@ body{
   line-height:1.6;
 }
 .section{padding:var(--section-spacing) 7vw;max-width:var(--container-width);margin:0 auto}
-.section.intro-section{padding:40px 20px}
+.section.intro-section{padding:56px 20px}
+/* Narrative sections (Hero, Invitation, Story, Gallery) should feel open - no boxed containers */
+#hero,#undangan,#cerita,#galeri{
+  max-width:100%;
+  padding-left:7vw;
+  padding-right:7vw;
+}
 .section.intro-section,.section.panel{
   background-image:var(--section-bg);
   background-repeat:no-repeat;
@@ -133,7 +139,7 @@ body{
   -webkit-backdrop-filter:none;
   border:0;
   box-shadow:none;
-  padding:24px 0;
+  padding:64px 0;
   border-radius:0;
   position:relative;
 }
@@ -165,6 +171,41 @@ body{
   pointer-events:none;
 }
 
+/* Strong visual separation between Invitation (#undangan) and Schedule (#acara) sections */
+#undangan{
+  margin-bottom:140px;
+  position:relative;
+}
+/* Decorative divider after Invitation section - ornamental flourish */
+#undangan::after{
+  content:'';
+  display:block;
+  width:200px;
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(196,140,110,0.4),transparent);
+  margin:60px auto 0;
+  position:relative;
+}
+/* Add a subtle ornamental element at the center of the divider */
+#undangan .invitation-frame{
+  padding-bottom:100px;
+}
+
+/* Ornamental center piece for the divider - diamond shape */
+#undangan::before{
+  content:'';
+  position:absolute;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%);
+  width:12px;
+  height:12px;
+  background:linear-gradient(135deg,rgba(212,175,55,0.6),rgba(180,140,110,0.3));
+  transform:translateX(-50%) rotate(45deg);
+  border-radius:2px;
+  z-index:1;
+}
+
 /* Information sections: keep lighter, elegant containers */
 #acara .invitation-frame,
 #lokasi .invitation-frame,
@@ -181,6 +222,11 @@ body{
 /* Ensure hero spacing responds to header state so header never covers hero */
 .topbar + main .hero{ padding:calc(var(--header-height) + 42px) 7vw 42px; }
 .topbar.header-scrolled + main .hero{ padding:calc(var(--header-height-scrolled) + 26px) 7vw 34px; }
+
+/* Narrative sections should have transparent backgrounds to let decorative artwork show through */
+#hero,#undangan,#cerita,#galeri{
+  background:transparent !important;
+}
 
 /* Decorative backgrounds: prefer preserving artwork except for hero which may use cover by design. Override inline background-size for non-hero sections when CMS doesn't set variables. */
 .section.panel:not(#hero),
@@ -205,7 +251,7 @@ h1{
   background-clip:text;
   text-shadow:1px 1px 1px rgba(70,50,15,.25);
 }
-h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 18px;white-space:pre-line}
+h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 12px;white-space:pre-line}
 .eyebrow,.label{letter-spacing:.28em;text-transform:uppercase;font-weight:800;color:var(--primary);font-size:.82rem}
 .loading,.empty,.card p,.amplop-item label{color:var(--muted)}
 
@@ -284,6 +330,7 @@ h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 18px;white-spac
 .section-head{text-align:center;max-width:760px;margin:0 auto 34px}
 .section-head.left{text-align:left;margin-left:0}
 .section-head p:not(.label){font-size:1.3rem;line-height:1.9;font-weight:300;white-space:pre-line}
+.section-head h2{margin-bottom:18px}
 
 /* Cards */
 .card,.panel{
@@ -410,10 +457,15 @@ iframe{width:100%;height:100%;min-height:360px;border:0;display:block}
   .countdown{grid-template-columns:repeat(2,1fr)}
   .countdown-section{padding:40px 5vw}
   .cards-grid,.timeline,.location-grid{grid-template-columns:1fr}
-  .section{padding:64px 5vw}
+  .section{padding:80px 5vw}
   .panel{padding:22px 18px}
   .invitation-frame{padding:18px 16px}
   .invitation-frame .ornament-corner{width:28px;height:28px}
+  /* Reduce spacing between Invitation and Schedule on mobile but keep visual separation */
+  #undangan{margin-bottom:80px}
+  #undangan::after{width:140px;margin:40px auto 0}
+  #undangan::before{bottom:30px;width:10px;height:10px}
+  #undangan .invitation-frame{padding-bottom:60px}
 }
 @media(max-width:600px){
   .gallery-grid.masonry{column-count:1}
@@ -426,4 +478,10 @@ iframe{width:100%;height:100%;min-height:360px;border:0;display:block}
   h2{font-size:clamp(1.6rem,4vw,2.4rem)}
   .card{padding:16px}
   .section{padding:52px 5vw}
+  /* Maintain visual separation on smallest screens */
+  #undangan{margin-bottom:60px}
+  #undangan::after{width:100px;margin:30px auto 0}
+  #undangan::before{bottom:25px;width:8px;height:8px}
+  #undangan .invitation-frame{padding-bottom:50px}
 }
+

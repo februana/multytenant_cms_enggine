@@ -63,9 +63,9 @@ $sectionBackgrounds = [
     $config['media']['background_sections'][2] ?? ''
 ];
 $sectionStyles = [
-    $sectionBackgrounds[0] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[0]) . ');background-size:cover;background-position:center;"' : '',
-    $sectionBackgrounds[1] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[1]) . ');background-size:cover;background-position:center;"' : '',
-    $sectionBackgrounds[2] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[2]) . ');background-size:cover;background-position:center;"' : ''
+    $sectionBackgrounds[0] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[0]) . ');background-size:contain;background-position:center;"' : '',
+    $sectionBackgrounds[1] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[1]) . ');background-size:contain;background-position:center;"' : '',
+    $sectionBackgrounds[2] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[2]) . ');background-size:contain;background-position:center;"' : ''
 ];
 $qrData = rawurlencode($mapsUrl ?: 'https://www.google.com/maps');
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
@@ -246,7 +246,7 @@ $themeClasses = [
     </section>
     <?php endif; ?>
 
-    <section class="section intro-section" style="background:#f9f6f0;padding:40px 20px">
+    <section id="guest-intro" class="section intro-section" style="background:transparent;padding:60px 20px 40px">
       <div class="invitation-frame">
         <div class="ornament-corner top-left"></div>
         <div class="ornament-corner top-right"></div>
@@ -259,7 +259,6 @@ $themeClasses = [
       </div>
     </section>
 
-    <?php if (is_section_enabled($config, 'undangan')): ?>
     <section id="undangan" class="section intro-section" <?php echo $sectionStyles[0]; ?>>
       <div class="invitation-frame">
         <div class="ornament-corner top-left"></div>
@@ -269,7 +268,21 @@ $themeClasses = [
         <div class="section-head">
           <p class="label"><?php echo escape_html(get_section_title($config, 'undangan', 'Undangan Pernikahan')); ?></p>
           <h2><?php echo nl2br(escape_html(get_section_subtitle($config, 'undangan', $config['wedding']['quote']))); ?></h2>
-          <p><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
+        </div>
+        <p style="max-width:680px;margin:0 auto 34px;font-size:1.15rem;line-height:1.9;text-align:center;color:var(--muted);white-space:pre-line"><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
+      </div>
+    </section>
+
+    <?php if (is_section_enabled($config, 'acara')): ?>
+    <section id="acara" class="section panel">
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'acara', 'Jadwal Acara')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')); ?></h2>
         </div>
         <div class="cards-grid">
           <article class="card">
@@ -291,58 +304,7 @@ $themeClasses = [
             <p>Kenakan busana terbaikmu untuk momen spesial.</p>
           </article>
         </div>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <?php if (is_section_enabled($config, 'cerita')): ?>
-    <section id="cerita" class="section panel" <?php echo $sectionStyles[1]; ?>>
-      <div class="invitation-frame">
-        <div class="ornament-corner top-left"></div>
-        <div class="ornament-corner top-right"></div>
-        <div class="ornament-corner bottom-left"></div>
-        <div class="ornament-corner bottom-right"></div>
-        <p class="label"><?php echo escape_html(get_section_title($config, 'cerita', 'Cerita Kami')); ?></p>
-        <h2><?php echo escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')); ?></h2>
-        <div id="loveStoryContainer">
-          <p class="loading">Memuat cerita...</p>
-        </div>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <?php if (is_section_enabled($config, 'galeri')): ?>
-    <section id="galeri" class="section panel" <?php echo $sectionStyles[2]; ?>>
-      <div class="invitation-frame">
-        <div class="ornament-corner top-left"></div>
-        <div class="ornament-corner top-right"></div>
-        <div class="ornament-corner bottom-left"></div>
-        <div class="ornament-corner bottom-right"></div>
-        <div class="section-head left">
-          <p class="label"><?php echo escape_html(get_section_title($config, 'galeri', 'Galeri')); ?></p>
-          <h2><?php echo escape_html(get_section_subtitle($config, 'galeri', 'Prewedding Kami')); ?></h2>
-          <p>Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p>
-        </div>
-        <button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button>
-        <div id="galleryGrid" class="gallery-grid">
-          <p class="loading">Memuat galeri...</p>
-        </div>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <?php if (is_section_enabled($config, 'acara')): ?>
-    <section id="acara" class="section">
-      <div class="invitation-frame">
-        <div class="ornament-corner top-left"></div>
-        <div class="ornament-corner top-right"></div>
-        <div class="ornament-corner bottom-left"></div>
-        <div class="ornament-corner bottom-right"></div>
-        <div class="section-head">
-          <p class="label"><?php echo escape_html(get_section_title($config, 'acara', 'Jadwal Acara')); ?></p>
-          <h2><?php echo escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')); ?></h2>
-        </div>
-        <div class="timeline">
+        <div class="timeline" style="margin-top:28px">
           <div class="timeline-item">
             <span><?php echo escape_html($akadTime); ?> WIB</span>
             <h3>Akad Nikah</h3>
@@ -353,6 +315,44 @@ $themeClasses = [
             <h3>Resepsi</h3>
             <p>Ramahan dan doa bersama tamu undangan.</p>
           </div>
+        </div>
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <?php if (is_section_enabled($config, 'cerita')): ?>
+    <section id="cerita" class="section intro-section" <?php echo $sectionStyles[1]; ?>>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'cerita', 'Cerita Kami')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')); ?></h2>
+        </div>
+        <div id="loveStoryContainer">
+          <p class="loading">Memuat cerita...</p>
+        </div>
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <?php if (is_section_enabled($config, 'galeri')): ?>
+    <section id="galeri" class="section intro-section" <?php echo $sectionStyles[2]; ?>>
+      <div class="invitation-frame">
+        <div class="ornament-corner top-left"></div>
+        <div class="ornament-corner top-right"></div>
+        <div class="ornament-corner bottom-left"></div>
+        <div class="ornament-corner bottom-right"></div>
+        <div class="section-head left">
+          <p class="label"><?php echo escape_html(get_section_title($config, 'galeri', 'Galeri')); ?></p>
+          <h2><?php echo escape_html(get_section_subtitle($config, 'galeri', 'Prewedding Kami')); ?></h2>
+          <p style="max-width:680px;margin:0 auto 34px;font-size:1.15rem;line-height:1.9;text-align:center;color:var(--muted)">Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p>
+        </div>
+        <button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button>
+        <div id="galleryGrid" class="gallery-grid">
+          <p class="loading">Memuat galeri...</p>
         </div>
       </div>
     </section>
