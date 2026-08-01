@@ -19,7 +19,7 @@
   --shadow-soft:0 10px 28px rgba(0,0,0,.12);
   --shadow-media:0 12px 34px rgba(73,45,34,.14);
   --container-width:1180px;
-  --section-spacing:72px;
+  --section-spacing:56px;
   --font-heading:'Allura',cursive;
   --font-body:'Inter',Arial,sans-serif;
   --font-mono:monospace;
@@ -56,11 +56,18 @@ body{
   font-family:var(--font-body);
   background:radial-gradient(circle at top left, rgba(255,230,214,.85), transparent 38%),linear-gradient(180deg,var(--bg) 0%,#f8efe8 100%);
   color:var(--text);
-  line-height:1.7;
+  line-height:1.6;
 }
 .section{padding:var(--section-spacing) 7vw;max-width:var(--container-width);margin:0 auto}
 .section.intro-section{padding:40px 20px}
-.section.intro-section,.section.panel{background-image:var(--section-bg);background-repeat:no-repeat;background-size:cover;background-position:center}
+.section.intro-section,.section.panel{
+  background-image:var(--section-bg);
+  background-repeat:no-repeat;
+  /* Prefer preserving artwork: allow CMS to set --section-bg-size/--section-bg-position per section.
+     Default to 'contain' to avoid aggressive cropping of decorative ornaments. */
+  background-size:var(--section-bg-size, contain);
+  background-position:var(--section-bg-position, center);
+}
 .cards-grid,.timeline,.location-grid,.messages,.amplop-container,.rsvp-form{display:grid}
 .cards-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
 .timeline{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
@@ -101,38 +108,77 @@ body{
 /* Elegant Decorations - Ornament layers (can be customized via CMS later) */
 .invitation-frame .ornament-corner{
   position:absolute;
-  width:60px;
-  height:60px;
+  width:44px;
+  height:44px;
   pointer-events:none;
-  opacity:0.6;
+  opacity:0.45;
 }
 .invitation-frame .ornament-corner.top-left{
   top:8px;
   left:8px;
-  border-top:2px solid var(--accent);
-  border-left:2px solid var(--accent);
+  border-top:1px solid rgba(240,194,161,0.6);
+  border-left:1px solid rgba(240,194,161,0.6);
   border-radius:8px 0 0 0;
 }
 .invitation-frame .ornament-corner.top-right{
   top:8px;
   right:8px;
-  border-top:2px solid var(--accent);
-  border-right:2px solid var(--accent);
+  border-top:1px solid rgba(240,194,161,0.6);
+  border-right:1px solid rgba(240,194,161,0.6);
   border-radius:0 8px 0 0;
 }
 .invitation-frame .ornament-corner.bottom-left{
   bottom:8px;
   left:8px;
-  border-bottom:2px solid var(--accent);
-  border-left:2px solid var(--accent);
+  border-bottom:1px solid rgba(240,194,161,0.6);
+  border-left:1px solid rgba(240,194,161,0.6);
   border-radius:0 0 0 8px;
 }
 .invitation-frame .ornament-corner.bottom-right{
   bottom:8px;
   right:8px;
-  border-bottom:2px solid var(--accent);
-  border-right:2px solid var(--accent);
+  border-bottom:1px solid rgba(240,194,161,0.6);
+  border-right:1px solid rgba(240,194,161,0.6);
   border-radius:0 0 8px 0;
+}
+
+/* Narrative sections: make them feel open (no heavy cards) */
+.section.intro-section .invitation-frame,
+#undangan .invitation-frame,
+#cerita .invitation-frame,
+#galeri .invitation-frame{
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  border:0;
+  box-shadow:none;
+  padding:8px 0;
+  border-radius:12px;
+}
+
+/* Information sections: keep lighter, elegant containers */
+#acara .invitation-frame,
+#lokasi .invitation-frame,
+#amplop .invitation-frame,
+#rsvp .invitation-frame,
+.panel .invitation-frame{
+  background:var(--invitation-bg);
+  border:1px solid rgba(0,0,0,0.04);
+  box-shadow:0 6px 20px rgba(0,0,0,0.06);
+  padding:22px;
+  border-radius:var(--radius-md);
+}
+
+/* Ensure hero spacing responds to header state so header never covers hero */
+.topbar + main .hero{ padding:calc(var(--header-height) + 42px) 7vw 42px; }
+.topbar.header-scrolled + main .hero{ padding:calc(var(--header-height-scrolled) + 26px) 7vw 34px; }
+
+/* Decorative backgrounds: prefer preserving artwork except for hero which may use cover by design. Override inline background-size for non-hero sections when CMS doesn't set variables. */
+.section.panel:not(#hero),
+.section.intro-section:not(#hero){
+  background-size:var(--section-bg-size, contain) !important;
+  background-position:var(--section-bg-position, center) !important;
+  background-repeat:no-repeat !important;
 }
 
 /* Typography */
@@ -140,7 +186,7 @@ a{color:var(--link);text-decoration:none;font-weight:700}
 h1{
   margin:8px 0 14px;
   font-family:var(--font-heading);
-  font-size:clamp(4.8rem,13vw,8rem);
+  font-size:clamp(3.6rem,11vw,6rem);
   font-weight:400;
   line-height:1;
   color:var(--gold-3);
@@ -172,7 +218,7 @@ h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 18px;white-spac
   transition:transform 0.3s ease,height 0.3s ease,padding 0.3s ease,box-shadow 0.3s ease;
 }
 .topbar.header-hidden{
-  transform:translateY(-100%);
+  transform:translateY(-110%);
 }
 .topbar.header-scrolled{
   height:var(--header-height-scrolled);
@@ -194,6 +240,7 @@ h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 18px;white-spac
   justify-content:center;
   padding:calc(var(--header-height) + 42px) 7vw 42px;
   background:linear-gradient(180deg,var(--hero-overlay-start) 0%,var(--hero-overlay-mid) 45%,var(--hero-overlay-end) 100%),var(--hero-bg, url('assets/cover.webp'));
+  /* Allow theme/CMS to choose fitting strategy; hero photos default to 'cover' for composition but can be overridden with --hero-image-fit */
   background-size:var(--hero-image-fit, cover);
   background-position:var(--hero-image-position, center);
   background-repeat:var(--hero-bg-repeat, no-repeat);
@@ -217,10 +264,11 @@ h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 18px;white-spac
 .hero-card .eyebrow{color:var(--hero-accent);text-shadow:0 2px 6px rgba(0,0,0,.6)}
 .hero-text{color:var(--hero-text);font-size:1.05rem;text-shadow:0 2px 6px rgba(0,0,0,.6)}
 .hero-actions,.buttons{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin:28px 0 22px}
-.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px auto 16px;max-width:800px}
-.countdown div{padding:16px 10px;border-radius:var(--radius-lg);background:var(--paper);border:1px solid var(--border-soft);box-shadow:var(--shadow-soft)}
-.countdown strong{display:block;font-size:2rem;line-height:1;color:var(--primary)}
-.countdown span{font-size:.92rem;color:var(--muted)}
+/* Countdown: reduced visual weight so the couple remains primary focus */
+.countdown{display:flex;justify-content:center;gap:8px;margin:10px auto 6px;max-width:420px}
+.countdown div{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,0.92);border:1px solid rgba(0,0,0,0.03);box-shadow:0 6px 18px rgba(0,0,0,0.04);backdrop-filter:blur(3px);min-width:56px;text-align:center}
+.countdown strong{display:block;font-size:1.1rem;line-height:1;color:var(--primary);font-weight:700}
+.countdown span{font-size:.78rem;color:var(--muted)}
 .music-note{font-size:.86rem;color:rgba(255,255,255,.7);margin:8px 0 0}
 
 /* Sections */

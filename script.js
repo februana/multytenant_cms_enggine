@@ -24,33 +24,44 @@ function initSmartHeader() {
   const header = document.querySelector('.topbar');
   if (!header) return;
 
-  window.addEventListener('scroll', function() {
-    clearTimeout(scrollTimeout);
-    
+  let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
+  let ticking = false;
+  const hideThreshold = 100; // px before hiding on downward scroll
+  const scrolledThreshold = 30; // px to apply compact header
+
+  function handleScroll() {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrolled = scrollTop > 50;
-    
-    // Hide header when scrolling down, show when scrolling up
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-      header.classList.add('header-hidden');
-    } else {
-      header.classList.remove('header-hidden');
+
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const goingDown = scrollTop > lastScroll;
+
+        if (scrollTop <= 10) {
+          // At top — large header, fully visible
+          header.classList.remove('header-hidden');
+          header.classList.remove('header-scrolled');
+        } else {
+          // Hide when scrolling down past threshold
+          if (goingDown && scrollTop > hideThreshold) {
+            header.classList.add('header-hidden');
+          }
+          // Reveal when scrolling up
+          if (!goingDown) {
+            header.classList.remove('header-hidden');
+          }
+          // Apply compact header when scrolled a bit
+          if (scrollTop > scrolledThreshold) header.classList.add('header-scrolled');
+          else header.classList.remove('header-scrolled');
+        }
+
+        lastScroll = scrollTop <= 0 ? 0 : scrollTop;
+        ticking = false;
+      });
+      ticking = true;
     }
-    
-    // Add scrolled state for shrink effect
-    if (scrolled) {
-      header.classList.add('header-scrolled');
-    } else {
-      header.classList.remove('header-scrolled');
-    }
-    
-    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-    
-    // Reset header visibility after scroll stops
-    scrollTimeout = setTimeout(function() {
-      header.classList.remove('header-hidden');
-    }, 1000);
-  }, { passive: true });
+  }
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
 }
 
 function pad(n){ return String(n).padStart(2,'0'); }
