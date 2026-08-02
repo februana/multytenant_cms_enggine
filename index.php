@@ -37,35 +37,35 @@ $ogImage = $ogImage ?: $coverPath;
 $heroBackground = $config['media']['background_hero'] ?: $coverPath;
 
 // Hero theme settings with defaults for backward compatibility
-$themeHeroHeight = $config['theme']['hero_height'] ?? 'calc(100vh - 80px)';
-$themeHeroVAlign = $config['theme']['hero_vertical_alignment'] ?? 'center';
-$themeHeroContentWidth = $config['theme']['hero_content_width'] ?? '900px';
-$heroImageFit = $config['theme']['hero_image_fit'] ?? 'cover';
-$heroImagePosition = $config['theme']['hero_image_position'] ?? 'center';
+$themeHeroHeight = trim((string)($config['theme']['hero_height'] ?? '')) ?: 'calc(100vh - 80px)';
+$themeHeroVAlign = trim((string)($config['theme']['hero_vertical_alignment'] ?? '')) ?: 'center';
+$themeHeroContentWidth = trim((string)($config['theme']['hero_content_width'] ?? '')) ?: '900px';
+$heroImageFit = trim((string)($config['theme']['hero_image_fit'] ?? '')) ?: 'cover';
+$heroImagePosition = trim((string)($config['theme']['hero_image_position'] ?? '')) ?: 'center';
 $heroBgSize = $heroImageFit === 'contain' ? 'contain' : ($heroImageFit === 'auto' ? 'auto' : 'cover');
-$heroBgRepeat = $heroImageFit !== 'cover' ? 'no-repeat' : 'repeat';
-$heroOverlayStart = $config['theme']['hero_overlay_start'] ?? 'rgba(22,12,10,.45)';
-$heroOverlayMid = $config['theme']['hero_overlay_mid'] ?? 'rgba(40,20,18,.55)';
-$heroOverlayEnd = $config['theme']['hero_overlay_end'] ?? 'rgba(55,28,24,.72)';
+$heroBgRepeat = 'no-repeat';
+$heroOverlayStart = trim((string)($config['theme']['hero_overlay_start'] ?? '')) ?: 'rgba(22,12,10,.45)';
+$heroOverlayMid = trim((string)($config['theme']['hero_overlay_mid'] ?? '')) ?: 'rgba(40,20,18,.55)';
+$heroOverlayEnd = trim((string)($config['theme']['hero_overlay_end'] ?? '')) ?: 'rgba(55,28,24,.72)';
 
-$themeMobileHeroHeight = $config['theme']['mobile_hero_height'] ?? '82vh';
-$themeMobileHeroVAlign = $config['theme']['mobile_hero_vertical_alignment'] ?? 'center';
-$themeMobileHeroContentWidth = $config['theme']['mobile_hero_content_width'] ?? '100%';
-$themeMobileHeroImageFit = $config['theme']['mobile_hero_image_fit'] ?? 'cover';
-$themeMobileHeroImagePosition = $config['theme']['mobile_hero_image_position'] ?? 'center top';
+$themeMobileHeroHeight = trim((string)($config['theme']['mobile_hero_height'] ?? '')) ?: '82vh';
+$themeMobileHeroVAlign = trim((string)($config['theme']['mobile_hero_vertical_alignment'] ?? '')) ?: 'center';
+$themeMobileHeroContentWidth = trim((string)($config['theme']['mobile_hero_content_width'] ?? '')) ?: '100%';
+$themeMobileHeroImageFit = trim((string)($config['theme']['mobile_hero_image_fit'] ?? '')) ?: 'cover';
+$themeMobileHeroImagePosition = trim((string)($config['theme']['mobile_hero_image_position'] ?? '')) ?: 'center top';
 
-$buttonsMobileLayout = $config['buttons']['mobile_layout'] ?? 'column';
+$buttonsMobileLayout = trim((string)($config['buttons']['mobile_layout'] ?? '')) ?: 'column';
 
-$bgHero = $heroBackground ? 'style="--hero-bg:url(' . escape_html($heroBackground) . ');--hero-height:' . escape_html($themeHeroHeight) . ';--hero-v-align:' . escape_html($themeHeroVAlign) . ';--hero-content-width:' . escape_html($themeHeroContentWidth) . ';--hero-image-fit:' . escape_html($heroImageFit) . ';--hero-image-position:' . escape_html($heroImagePosition) . ';--hero-bg-repeat:' . escape_html($heroBgRepeat) . ';--hero-overlay-start:' . escape_html($heroOverlayStart) . ';--hero-overlay-mid:' . escape_html($heroOverlayMid) . ';--hero-overlay-end:' . escape_html($heroOverlayEnd) . ';--mobile-hero-height:' . escape_html($themeMobileHeroHeight) . ';--mobile-hero-v-align:' . escape_html($themeMobileHeroVAlign) . ';--mobile-hero-content-width:' . escape_html($themeMobileHeroContentWidth) . ';--mobile-hero-image-fit:' . escape_html($themeMobileHeroImageFit) . ';--mobile-hero-image-position:' . escape_html($themeMobileHeroImagePosition) . ';--buttons-mobile-layout:' . escape_html($buttonsMobileLayout) . ';"' : '';
+$bgHero = $heroBackground ? 'style="--hero-bg:url(\'' . escape_html(public_path($heroBackground)) . '\');--hero-height:' . escape_html($themeHeroHeight) . ';--hero-v-align:' . escape_html($themeHeroVAlign) . ';--hero-content-width:' . escape_html($themeHeroContentWidth) . ';--hero-image-fit:' . escape_html($heroBgSize) . ';--hero-image-position:' . escape_html($heroImagePosition) . ';--hero-bg-repeat:' . escape_html($heroBgRepeat) . ';--hero-overlay-start:' . escape_html($heroOverlayStart) . ';--hero-overlay-mid:' . escape_html($heroOverlayMid) . ';--hero-overlay-end:' . escape_html($heroOverlayEnd) . ';--mobile-hero-height:' . escape_html($themeMobileHeroHeight) . ';--mobile-hero-v-align:' . escape_html($themeMobileHeroVAlign) . ';--mobile-hero-content-width:' . escape_html($themeMobileHeroContentWidth) . ';--mobile-hero-image-fit:' . escape_html($themeMobileHeroImageFit) . ';--mobile-hero-image-position:' . escape_html($themeMobileHeroImagePosition) . ';--buttons-mobile-layout:' . escape_html($buttonsMobileLayout) . ';"' : '';
 $sectionBackgrounds = [
     $config['media']['background_sections'][0] ?? '',
     $config['media']['background_sections'][1] ?? '',
     $config['media']['background_sections'][2] ?? ''
 ];
 $sectionStyles = [
-    $sectionBackgrounds[0] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[0]) . ');background-size:contain;background-position:center;"' : '',
-    $sectionBackgrounds[1] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[1]) . ');background-size:contain;background-position:center;"' : '',
-    $sectionBackgrounds[2] ? 'style="background-image:url(' . escape_html($sectionBackgrounds[2]) . ');background-size:contain;background-position:center;"' : ''
+    $sectionBackgrounds[0] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[0])) . '\');background-size:contain;background-position:center;background-repeat:no-repeat;"' : '',
+    $sectionBackgrounds[1] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[1])) . '\');background-size:contain;background-position:center;background-repeat:no-repeat;"' : '',
+    $sectionBackgrounds[2] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[2])) . '\');background-size:contain;background-position:center;background-repeat:no-repeat;"' : ''
 ];
 $qrData = rawurlencode($mapsUrl ?: 'https://www.google.com/maps');
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
@@ -533,7 +533,7 @@ $themeClasses = [
         var heroFit = theme.hero_image_fit || 'cover';
         var heroPosition = theme.hero_image_position || 'center';
         var bgSize = heroFit === 'contain' ? 'contain' : (heroFit === 'auto' ? 'auto' : 'cover');
-        var bgRepeat = heroFit !== 'cover' ? 'no-repeat' : 'repeat';
+        var bgRepeat = 'no-repeat';
         heroSection.style.backgroundSize = bgSize;
         heroSection.style.backgroundPosition = heroPosition;
         heroSection.style.backgroundRepeat = bgRepeat;
