@@ -1,153 +1,75 @@
 # Project Overview
 
-This project is a professional CMS-based premium digital wedding invitation built with PHP. The repository is designed to remain lightweight, self-hosted, production-ready, and fully compatible with both Virtual Private Servers (VPS) and shared hosting environments.
+This project is a professional CMS-based premium digital wedding invitation built with PHP and SQLite.
+The repository root is the canonical application source, and the application runs from root-level public entrypoints.
 
----
+## Architecture Summary
 
-# Design Philosophy
+- Single-root application with the repository root as the canonical document root
+- Public entrypoints:
+  - `index.php`
+  - `admin.php`
+  - `save.php`
+  - `messages.php`
+  - `gallery.php`
+- Canonical frontend assets:
+  - `style.css`
+  - `script.js`
+- Core backend:
+  - `config.php`
+- Configuration file:
+  - `config.json`
+- Upload directory:
+  - `uploads/`
+- Database:
+  - `database.sqlite`
 
-The website's user interface and experience must resemble a luxury printed wedding invitation. It must focus on high aesthetic standards and visual elegance.
+## Runtime Layout
 
-- **Strict Boundaries:** Under no circumstances should this project evolve into a:
-  - Dashboard
-  - Landing Page
-  - Blog
-  - Company Profile
-- **Narrative Sections:** The core narrative sections (**Hero, Invitation, Story, Gallery**) must remain visually open and flowing. Avoid wrapping or boxing narrative sections inside large, stark white cards.
-- **Visual Elements:** 
-  - Decorative backgrounds (such as high-quality images, textures, patterns, and subtle overlays) serve as the primary visual element.
-  - Typography, delicate borders, subtle ornaments, and elegant spacing should carry the visual hierarchy.
-- **Card Constraints:** Cards are strictly reserved for information-heavy components:
-  - **Schedule**
-  - **Location**
-  - **Gift**
-  - **RSVP**
-  - *Rule:* When used, cards must be lightweight, subtle, highly decorative, and transparent where possible to blend elegantly with the backgrounds.
+- `index.php` renders the public invitation and injects theme variables from `config.json`
+- `admin.php` redirects to the admin UI at `/admin/`
+- `save.php`, `messages.php`, and `gallery.php` are thin public wrappers that include private logic from `app/`
+- `app/` is a private compatibility layer, not the primary frontend architecture
 
----
+## CMS Ownership Rules
 
-# Repository Architecture
+The CMS owns:
 
-The repository follows the current production architecture.
+- uploaded media
+- background rendering
+- image fit
+- image position
+- repeat mode
+- desktop background configuration
+- mobile background configuration
+- future media configuration
 
-- **Canonical Frontend Assets:** `style.css` and `script.js` located at the root of the repository are the single canonical frontend assets.
-- **Legacy Compatibility:** Legacy compatibility may exist for some runtime wrappers, but they are not the canonical development target.
-- **No Duplication:** Future development must not introduce duplicate frontend assets.
-- **Extension Rule:** New features should extend the current architecture instead of recreating legacy wrapper structures.
-- **Primary Focus:** Development focuses on the root-level structure; do not imply that `app/` is the primary application architecture.
+The frontend owns:
 
-## Canonical Project Structure
+- layout
+- spacing
+- typography
+- overlays
+- ornaments
+- animation
+- presentation
 
-- **Canonical Application Root:** The repository root is the canonical application.
-- **Primary Frontend Files:** `index.php`, `style.css`, and `script.js` are the primary frontend files.
-- **Primary Backend Files:** Primary backend files include `config.php`, `config.json`, `admin/`, and `deploy/`.
-- **`app/` Limitation:** Do not assume that `app/` is the primary application architecture. The `app/` directory may exist only for deployment compatibility or legacy wrappers; it is not the primary development target.
-- **Root Development Target:** Never move active development into `app/`. All new frontend development must target the canonical root files unless explicitly instructed otherwise.
-- **No Parallel Frontends:** Never create duplicate frontend assets inside `app/`, never create parallel implementations between the repository root and `app/`, and never reintroduce a dual frontend architecture.
-- **Deployment Wrapper Synchronization:** If deployment wrappers require updates, synchronize them from the canonical implementation instead of developing inside `app/`.
+Frontend must always consume values from the CMS and must never become the source of truth.
 
-## Background Ownership
+## Deployment and Maintenance
 
-- **CMS Source of Truth:** The CMS is the single source of truth for all media rendering. Frontend must never become the source of truth.
-- **CMS-Owned Media Rendering:** The following are owned exclusively by the CMS: background images, uploaded media, hero images, section backgrounds, desktop background configuration, mobile background configuration, image fit, image position, repeat mode, attachment mode, and future media configuration.
-- **Frontend Consumption Only:** Frontend may only consume values exposed by the CMS. Frontend must never replace, emulate, redefine, or duplicate CMS rendering.
-- **No Rendering Fallback Drift:** Frontend may use CSS variables, inline styles, or other values generated by the CMS, but must never invent fallback behaviour that changes how uploaded media is rendered.
-- **Presentation vs Rendering:** Presentation belongs to the frontend; rendering belongs to the CMS. Frontend is responsible only for layout, spacing, typography, ornaments, decorative overlays, borders, shadows, transparency, and animation.
-- **Decorative Effects:** If a visual effect is required, implement it using `::before`, `::after`, overlays, or decorative elements. Never replace CMS rendering with frontend rendering.
-- **No CMS Behaviour Hardcoding:** Never hardcode behaviour that belongs to the CMS.
+- `deploy/install.sh` is the recommended fresh install path
+- `deploy/update.sh` is the preferred update path for existing installations
+- `deploy/backup.sh` and `deploy/restore.sh` manage user-data backups
 
-## Regression Policy
+## Future Development
 
-- **Protected Files:** Before modifying `index.php`, `style.css`, `script.js`, or `config.php`, the AI must verify that no existing CMS functionality is affected.
-- **CMS Functionality Checks:** This verification includes Theme Builder, Live Preview, Upload Manager, Hero upload, and Section background upload.
+- Do not add duplicate frontend assets under `app/`
+- Do not create parallel root and `app/` implementations
+- Keep `style.css` and `script.js` as canonical frontend sources
+- Preserve the CMS-based theme builder and live preview behavior
+- Implement new media features by extending the CMS upload pipeline, not bypassing it
 
----
+## Notes
 
-# Upload Architecture
-
-- **Single Entry Point:** `upload_file()` is the absolute, single canonical upload entry point for the repository.
-- **Pipeline Integration:** Any and all future upload features or validation rules must extend this function directly.
-- **Strict Limitation:** Never create parallel upload pipelines or duplicate file-receiving scripts.
-
----
-
-# Media Processor (Roadmap)
-
-To enhance file handling, a future `MediaProcessor` helper will be integrated directly into the upload pipeline:
-
-- **Integration Point:** Must integrate directly into `upload_file()`.
-- **Processing Time:** Media processing must occur exclusively during uploads (on-upload only).
-- **Libraries:**
-  - **Imagick:** The preferred image engine.
-  - **GD:** Automatic fallback if Imagick is not available.
-- **Feature Set:**
-  - EXIF auto orientation
-  - Image resizing
-  - Performance optimization
-  - WebP conversion
-  - Image presets
-
----
-
-# Media Presets
-
-When the media processor is active, uploads will be processed according to these planned presets:
-
-| Preset Name | Target Use / Output Rule |
-| :--- | :--- |
-| **Hero** | Large widescreen splash images |
-| **Cover** | Standard layout cover banners |
-| **Gallery** | Gallery photos (optimized aspect ratios) |
-| **Section Background** | Low-contrast background textures / images |
-| **Thumbnail** | Low-resolution previews |
-| **QRIS** | Must strictly remain PNG format (no WebP conversion) |
-| **Music** | Audio uploads (must never be processed or optimized) |
-
----
-
-# Upload Manager (Media Library)
-
-The repository distinguishes between system configuration management and media management:
-
-- **CMS Role:** The CMS acts strictly as a **Configuration Manager** (editing the JSON schema and text parameters). Do not redesign the CMS architecture.
-- **Upload Manager Role:** A future Media Library/Upload Manager will handle all assets and is responsible for:
-  - Uploading new files
-  - Replacing existing files
-  - Renaming files safely
-  - Deleting files and purging orphaned assets
-  - Assigning assets to sections
-  - Copying assets directly to the gallery
-  - Tracking asset usage throughout the website
-- **Extension Constraint:** The Media Library must extend the current single-root and JSON configuration architecture without altering the underlying CMS schema logic.
-
----
-
-# Deployment
-
-The core deployment utilities under the `deploy/` directory must remain aligned with the repository architecture:
-- `deploy/install.sh`
-- `deploy/update.sh`
-- `deploy/health-check.sh`
-
-**Environment Detection Requirements:**
-The deployment scripts must automatically detect the presence of:
-- `Imagick` extension
-- `GD` library
-- `EXIF` extension / PHP support
-
-*Rule:* During deployment and runtime check phases, `Imagick` is always preferred, with `GD` as the automatic fallback if Imagick is missing.
-
----
-
-# Backward Compatibility
-
-All future features, optimizations, and refactors must preserve the integrity and functionality of existing systems. Never break:
-- **Theme Builder**
-- **Live Preview**
-- **QR Generator**
-- **Guest Links**
-- **Backup**
-- **Restore**
-- **Deployment**
-- **Existing JSON structure**
-- **Existing uploads / user media files**
+This file reflects the current repository architecture and is synchronized with `README.md`, `ARCHITECTURE.md`, `DEPLOYMENT.md`, `BACKUP_RESTORE.md`, and `.github/copilot-instructions.md`.

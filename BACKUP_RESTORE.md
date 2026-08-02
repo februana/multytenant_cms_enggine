@@ -1,298 +1,116 @@
 # Backup & Restore Guide
 
-## Overview
-
-This guide explains how to backup and restore your wedding invitation application data. The backup system focuses on **user data** (configuration, database, uploads) while excluding version-controlled source code.
+This guide explains the current backup and restore process for the wedding invitation application.
 
 ## What Gets Backed Up
 
-### Included Files
-- `config.json` - All application settings
-- `guest-links.json` - Personalized guest link data
-- `database.sqlite` - RSVP submissions and messages
-- `uploads/` - All uploaded media (covers, music, gallery, backgrounds)
-- `event.ics` - Generated calendar event
+The backup script preserves user data and configuration while excluding source code.
 
-### Excluded Files
-- Source code (`app/`, root frontend files: `style.css`, `script.js`)
-- Deployment scripts (`deploy/`)
-- Documentation
-- Backup archives themselves
+### Included files
+
+- `config.json`
+- `custom.css`
+- `guest-links.json`
+- `database.sqlite`
+- `uploads/`
+- `webdav/` (if present)
+- `event.ics`
+- `/etc/apache2/.davpasswd` (if present)
+
+### Excluded files
+
+- Application source code (`admin/`, `app/`, root PHP files, `deploy/`, documentation)
+- Backup archive files themselves
 - Temporary files and logs
 
-**Rationale**: Source code is managed via Git. Backups focus on irreplaceable user data.
+## Creating a Backup
 
-## Automated Backups
-
-### Daily Cron Job
-
-Set up automated daily backups at 2 AM:
-
-```bash
-crontab -e
-```
-
-Add this line:
-
-```cron
-0 2 * * * cd /var/www/wedding && ./deploy/backup.sh
-```
-
-### Backup Retention
-
-By default, backups accumulate in `backups/` directory. Set up cleanup for old backups:
-
-```bash
-# Delete backups older than 30 days
-find /var/www/wedding/backups -name "*.tar.gz" -mtime +30 -delete
-```
-
-Add to crontab:
-
-```cron
-0 3 * * * find /var/www/wedding/backups -name "*.tar.gz" -mtime +30 -delete
-```
-
-## Manual Backup
-
-### Create Backup
+Run:
 
 ```bash
 cd /var/www/wedding
 ./deploy/backup.sh
 ```
 
-Output example:
-```
-Backup created: /var/www/wedding/backups/wedding_20240115_143022.tar.gz
-Size: 15M
-Files included: config.json, guest-links.json, database.sqlite, uploads/
-```
+The script creates a timestamped `tar.gz` archive in `backups/`, applies secure permissions, and keeps the archive owner-readable.
 
-### Verify Backup Integrity
+### Backup retention
 
-Check the backup archive contents:
+The backup script retains the most recent 10 archives and removes older files automatically.
+
+## Verifying a Backup
+
+Inspect the archive contents:
 
 ```bash
 tar -tzf backups/wedding_YYYYMMDD_HHMMSS.tar.gz
 ```
 
-Expected output:
-```
-config.json
-guest-links.json
-database.sqlite
-uploads/
-uploads/cover/
-uploads/music/
-uploads/gallery/
-uploads/background/
-```
+Expected entries include:
 
-### Off-Site Storage
+- `config.json`
+- `custom.css`
+- `guest-links.json`
+- `database.sqlite`
+- `uploads/`
+- `webdav/` (if present)
+- `event.ics`
 
-**Critical**: Always store backups off-server. Examples:
+## Restoring from Backup
 
-#### SCP to Remote Server
-
-```bash
-scp backups/wedding_*.tar.gz user@backup-server:/backups/wedding/
-```
-
-#### Upload to Cloud Storage (AWS S3)
-
-```bash
-aws s3 cp backups/wedding_*.tar.gz s3://your-bucket/wedding-backups/
-```
-
-#### Rsync to NAS
-
-```bash
-rsync -avz backups/wedding_*.tar.gz user@nas:/volume1/backups/
-```
-
-## Restore from Backup
-
-### Full Restore
-
-**Warning**: This will overwrite all current data. Ensure you have a recent backup before proceeding.
+### Full restore
 
 ```bash
 cd /var/www/wedding
 ./deploy/restore.sh /path/to/backup.tar.gz
 ```
 
-The restore script will:
-1. Extract files to repository root
-2. Restore correct file permissions
-3. Set ownership to web server user
-4. Verify critical files exist
+This restores backed-up user data and configuration, preserving the application source code.
 
-### Selective Restore
+### Selective restore
 
-To restore only specific files (e.g., just the database):
+To restore individual files from a backup archive:
 
 ```bash
-# Extract only database.sqlite
-tar -xzf backup.tar.gz database.sqlite
-
-# Extract only config.json
 tar -xzf backup.tar.gz config.json
-
-# Extract only uploads directory
+tar -xzf backup.tar.gz database.sqlite
 tar -xzf backup.tar.gz uploads/
 ```
 
-Then fix permissions:
+Then restore permissions:
 
 ```bash
-chown www-data:www-data database.sqlite config.json
-chmod 600 database.sqlite config.json
-chown -R www-data:www-data uploads/
-chmod -R 755 uploads/
+sudo chown www-data:www-data config.json database.sqlite
+sudo chmod 600 config.json database.sqlite
+sudo chown -R www-data:www-data uploads/
+sudo chmod -R 755 uploads/
 ```
 
-### Restore to New Server
+## Disaster Recovery
 
-1. **Install Fresh Code**:
-   ```bash
-   git clone <repository-url> /var/www/wedding
-   cd /var/www/wedding
-   ./deploy/install.sh
-   ```
+### Server failure
 
-2. **Restore Data**:
-   ```bash
-   ./deploy/restore.sh /path/to/backup.tar.gz
-   ```
+1. Provision a new server with the same OS and PHP version
+2. Clone the repository
+3. Retrieve the latest backup
+4. Run the installer if needed
+5. Run `deploy/restore.sh` with the backup archive
+6. Verify with `deploy/health-check.sh`
 
-3. **Verify**:
-   ```bash
-   ./deploy/health-check.sh
-   ```
+### Accidental deletion
 
-## Disaster Recovery Plan
-
-### Scenario: Server Failure
-
-1. **Provision New Server** with same OS and PHP version
-2. **Clone Repository**
-3. **Retrieve Latest Backup** from off-site storage
-4. **Run Installation Script**
-5. **Restore from Backup**
-6. **Update DNS** to point to new server IP
-7. **Verify Functionality**
-
-### Scenario: Accidental Data Deletion
-
-1. **Stop Application** temporarily (maintenance mode)
-2. **Identify Latest Good Backup** before deletion
-3. **Restore Only Affected Files** (selective restore)
-4. **Verify Data Integrity**
-5. **Resume Application**
-
-### Scenario: Corrupted Configuration
-
-1. **Backup Current State** (even if corrupted)
-2. **Extract config.json** from previous backup
-3. **Review Configuration** for errors
-4. **Replace Corrupted File**
-5. **Clear Cache** (if using opcode cache)
-6. **Test Admin Panel**
+1. Stop the application if possible
+2. Locate the latest good backup
+3. Restore the affected files
+4. Verify the site and data
 
 ## Backup Schedule Recommendations
 
-| Frequency | Type | Retention | Storage |
-|-----------|------|-----------|---------|
-| Daily | Full | 7 days | Local + Off-site |
-| Weekly | Full | 4 weeks | Off-site |
-| Monthly | Full | 12 months | Off-site + Archive |
-| Before Updates | Full | Permanent | Off-site |
+- Daily full backups with 7-day retention
+- Weekly backups with 4-week retention
+- Monthly backups with 12-month retention
+- Always create a backup before updates
 
-## Monitoring & Alerts
+## Monitoring
 
-### Verify Backup Success
-
-Add to monitoring system:
-
-```bash
-#!/bin/bash
-# Check if backup was created in last 24 hours
-if [ $(find /var/www/wedding/backups -name "*.tar.gz" -mtime -1 | wc -l) -eq 0 ]; then
-    echo "ALERT: No recent backup found!"
-    # Send email/slack notification
-fi
-```
-
-### Test Restore Periodically
-
-Quarterly, perform a test restore to a staging environment:
-
-```bash
-# Create test directory
-mkdir -p /tmp/wedding-restore
-
-# Extract backup
-tar -xzf latest-backup.tar.gz -C /tmp/wedding-restore
-
-# Verify files
-test -f /tmp/wedding-restore/config.json && echo "Config OK"
-test -f /tmp/wedding-restore/database.sqlite && echo "Database OK"
-test -d /tmp/wedding-restore/uploads && echo "Uploads OK"
-
-# Cleanup
-rm -rf /tmp/wedding-restore
-```
-
-## Troubleshooting
-
-### Backup Script Fails
-
-1. **Check Permissions**:
-   ```bash
-   ls -la deploy/backup.sh
-   chmod +x deploy/backup.sh
-   ```
-
-2. **Check Disk Space**:
-   ```bash
-   df -h
-   ```
-
-3. **Check Write Access**:
-   ```bash
-   touch backups/test && rm backups/test
-   ```
-
-### Restore Script Fails
-
-1. **Verify Backup File**:
-   ```bash
-   tar -tzf backup.tar.gz > /dev/null && echo "Archive valid"
-   ```
-
-2. **Check Destination Permissions**:
-   ```bash
-   ls -la /var/www/wedding/
-   ```
-
-3. **Manual Extraction**:
-   If script fails, try manual extract:
-   ```bash
-   tar -xzf backup.tar.gz -C /var/www/wedding/
-   ```
-
-## Best Practices
-
-1. **Always Test Backups**: Periodically verify backups can be restored
-2. **Off-Site Storage**: Never rely solely on local backups
-3. **Encrypt Sensitive Data**: Use encrypted storage for backups containing guest information
-4. **Document Procedures**: Keep this guide updated and accessible
-5. **Automate Everything**: Reduce human error with cron jobs and scripts
-6. **Monitor Backup Health**: Set up alerts for failed backups
-
-## Related Documentation
-
-- `DEPLOYMENT.md` - Initial setup and configuration
-- `SECURITY.md` - Security policies and best practices
-- `ARCHITECTURE.md` - System architecture overview
+Verify backups are created successfully and stored off-server whenever possible.

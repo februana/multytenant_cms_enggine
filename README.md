@@ -1,506 +1,157 @@
-# Wedding Invitation Web Application
+# Project Overview
 
-A modern, single-page wedding invitation web application built with PHP and SQLite.
+This project is a premium digital wedding invitation CMS built with PHP and SQLite.
+It renders the public invitation from root-level files while storing content, theme settings, media references, and guest data in the CMS backend.
 
-# Supported Web Servers
+# Architecture Overview
 
-This application officially supports two production-ready web servers:
+This is a **single-root application**.
+The repository root is the canonical application source and the public document root.
 
-## Nginx (Recommended)
+## Canonical public entrypoints
 
-**Pros:**
-- High performance with low memory footprint
-- Excellent static file serving
-- Built-in caching capabilities
-- Simple configuration syntax
-- Better handling of concurrent connections
+- `index.php`
+- `admin.php`
+- `save.php`
+- `messages.php`
+- `gallery.php`
 
-**Cons:**
-- No `.htaccess` support (requires full config reload for changes)
-- Dynamic module loading requires recompilation in some cases
+## Canonical frontend
 
-**Features:**
-- PHP-FPM integration
-- HTTPS with Let's Encrypt
-- HTTP to HTTPS redirect
-- Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
-- Upload size limits (20MB default)
-- Static file caching (7 days)
-- URL rewriting
-- Hidden file protection
-- Database and backup file protection
+- `style.css`
+- `script.js`
 
-## Apache
+## Core backend
 
-**Pros:**
-- `.htaccess` support for per-directory configuration
-- Extensive module ecosystem
-- Easy dynamic module loading
-- Full WebDAV support with PROPFIND, PUT, DELETE, COPY, MOVE, MKCOL, LOCK, UNLOCK
+- `config.php`
 
-**Cons:**
-- Higher memory usage compared to Nginx
-- Slightly lower performance under high concurrency
+## Configuration
 
-**Features:**
-- PHP-FPM via mod_proxy_fcgi
-- HTTPS with Let's Encrypt
-- HTTP to HTTPS redirect
-- Security headers
-- Upload size limits (20MB default)
-- Static file caching
-- URL rewriting via mod_rewrite
-- Hidden file protection
-- Database and backup file protection
-- **Full WebDAV support** for remote file management
+- `config.json`
 
-**Required Apache Modules:**
-- `rewrite` - URL rewriting
-- `headers` - Security headers
-- `ssl` - HTTPS support
-- `proxy_fcgi` - PHP-FPM integration
-- `setenvif` - Environment variables
-- `dav` - WebDAV core
-- `dav_fs` - WebDAV filesystem
-- `auth_basic` - Basic authentication for WebDAV
-- `alias` - URL aliasing
-- `socache_shmcb` - SSL session caching
+## Uploads
 
+- `uploads/`
 
-## Theme Presets and Custom CSS
+## Database
 
-The admin panel includes a **Theme Settings** section with preset-based styling. Presets such as Elegant, Dark, Floral, and Minimal update the stored theme variables for colors, typography, button shape, spacing, accent, background, radius, and shadow values. These presets are resolved into `config.json` so the public website can render the selected theme automatically on each request.
+- `database.sqlite`
 
-Custom CSS remains separate in `custom.css` and is loaded after the default stylesheet and generated theme variables. This keeps user-authored CSS compatible with presets while still allowing advanced overrides when needed. Theme Settings also includes an isolated iframe live preview: form edits are debounced and posted to the preview only, so `config.json` changes only after pressing Save; Reset restores the saved form values, while Cancel Preview clears the temporary preview without saving. The main stylesheet is organized by category (Root Variables, Layout, Typography, Navigation, Hero, Sections, Cards, Buttons, Forms, Gallery, RSVP, Footer, Utilities, and Responsive) so future theme work should reuse variables instead of adding hardcoded component values.
+## Theme Builder
 
-## WebDAV Support
+The CMS stores theme presets and resolved theme variables in `config.json`.
+`index.php` injects theme values into the public page, while `style.css` and `script.js` remain the canonical frontend presentation layer.
 
-### Apache WebDAV
+## Live Preview
 
-Apache provides full WebDAV support with all standard methods:
-- PROPFIND - List files and properties
-- PUT - Upload files
-- DELETE - Remove files
-- COPY - Copy files/folders
-- MOVE - Move files/folders
-- MKCOL - Create collections (folders)
-- LOCK - Lock resources
-- UNLOCK - Unlock resources
+The admin UI supports live preview behavior. Changes are previewed before save and are only persisted to `config.json` when the administrator saves.
 
-To enable WebDAV:
-1. Ensure Apache is selected as your web server
-2. WebDAV modules are automatically enabled during installation
-3. Create a WebDAV password file: `htpasswd -c /etc/apache2/.davpasswd username`
-4. Access WebDAV at `http://your-domain/webdav`
+# Repository Structure
 
-### Nginx WebDAV
-
-Nginx has limited WebDAV support through the `ngx_http_dav_module`:
-- Supports: PUT, DELETE, MKCOL, COPY, MOVE
-- Does NOT support: PROPFIND (full), LOCK, UNLOCK
-
-For full WebDAV functionality, Apache is recommended.
-
-
-### Installation & Update Flow
+The repository root is the authoritative application.
+Root-level files and directories are the primary development target.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    DEPLOYMENT LIFECYCLE                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  FRESH INSTALLATION                 UPDATES                     │
-│  ─────────────────                  ───────                     │
-│                                                                 │
-│  1. Clone repository                1. Run update script        │
-│     git clone <repo>                   sudo ./deploy/update.sh  │
-│     cd webserver_undangan                                       │
-│                                     2. Creates backup           │
-│  2. Run installer (ONCE)            3. Downloads latest code    │
-│     sudo ./deploy/install.sh        4. Runs composer install    │
-│                                     5. Preserves user data:     │
-│  3. Application deployed               - config.json            │
-│     to /var/www/wedding              - guest-links.json         │
-│                                     - database.sqlite          │
-│  4. Save credentials                - uploads/                 │
-│     shown at end of install          - backups/               │
-│                                     - .env                     │
-│  ✅ Installation complete           6. Restarts services        │
-│                                     7. Runs health check        │
-│                                                                 │
-│  ⚠️  install.sh is ONE-TIME ONLY    ✅ Safe to run repeatedly   │
-│     Do NOT use for updates                                      │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### One-Command Installation (Fresh Install Only)
-
-```bash
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-sudo bash deploy/install.sh
-```
-
-The installer will:
-1. Detect the repository location automatically
-2. Install Nginx, PHP-FPM, and required extensions
-3. Deploy the application to `/var/www/wedding`
-4. Configure Nginx with security rules
-5. Set proper file permissions
-6. Initialize the database and configuration
-7. **Generate a cryptographically secure administrator password** (if .env doesn't exist)
-
-After installation, visit `http://your-server-ip/` to see your invitation.
-
-> **Important**: If this is a fresh installation, the installer will display the generated administrator credentials at the end. **Save these credentials immediately** as they will not be displayed again.
-
-### Updating an Existing Installation
-
-**DO NOT use `install.sh` for updates.** It is designed for one-time installation only and will refuse to run if the application is already installed.
-
-To update your installation safely:
-
-```bash
-cd /var/www/wedding
-sudo ./deploy/update.sh
-```
-
-Or from any location:
-
-```bash
-sudo /var/www/wedding/deploy/update.sh
-```
-
-The update script will:
-1. ✅ Verify the application is installed at `/var/www/wedding`
-2. ✅ Create a backup using `backup.sh` before proceeding
-3. ✅ Download the latest source code from GitHub
-4. ✅ Run `composer install --no-dev --optimize-autoloader`
-5. ✅ Copy only application files (preserving user data)
-6. ✅ Preserve critical user data:
-   - `config.json` - Your configuration
-   - `guest-links.json` - Guest link data
-   - `database.sqlite` - All RSVP and message data
-   - `.env` - Environment settings
-   - `event.ics` - Event calendar
-   - `uploads/` - All uploaded media (images, music, etc.)
-   - `backups/` - Previous backups
-   - `storage/` - Storage directory if exists
-7. ✅ Set correct ownership (`www-data`) and permissions
-8. ✅ Restart PHP-FPM (auto-detects PHP version)
-9. ✅ Reload Nginx configuration
-10. ✅ Run health check to verify deployment
-11. ✅ Clean up temporary files
-
-If the health check fails, the script will:
-- Display clear error messages
-- Preserve the backup (do NOT delete it)
-- Exit without removing the backup
-
-The update script is **idempotent** - safe to run multiple times.
-
-## Features
-
-- 🎨 Beautiful single-page design
-- 💌 RSVP management with SQLite database
-- 📸 Photo gallery
-- 🎵 Background music support
-- 📅 Event calendar (.ics download)
-- 🔒 Secure admin panel with password hashing
-- 📱 Mobile-responsive design
-
-## Documentation
-
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Detailed deployment guide
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical architecture overview
-- **[SECURITY.md](SECURITY.md)** - Security policies and best practices
-- **[BACKUP_RESTORE.md](BACKUP_RESTORE.md)** - Backup and restore procedures
-
-## Directory Structure
-
-```
-/var/www/wedding/           # Deployment directory
-├── index.php              # Frontend entry point
-├── admin.php              # Admin panel
-├── save.php               # AJAX save handler
-├── messages.php           # Messages endpoint
-├── gallery.php            # Gallery endpoint
-├── config.json            # Configuration (protected)
-├── database.sqlite        # Database (protected)
-├── .env                   # Environment variables (protected)
-├── .env.example           # Example environment file
-├── uploads/               # User media (public)
-│   ├── cover/
-│   ├── music/
-│   ├── gallery/
-│   └── background/
-├── webdav/                # WebDAV storage (separate from CMS uploads)
-├── app/                   # Application logic (protected)
-├── style.css              # Main stylesheet (canonical frontend)
-├── script.js              # Main JavaScript (canonical frontend)
-├── backups/               # Automated backups
+/ (Document Root)
+├── index.php              # Public frontend renderer
+├── admin.php              # Redirect wrapper to /admin/
+├── save.php               # AJAX save wrapper
+├── messages.php           # Messages API wrapper
+├── gallery.php            # Gallery API wrapper
+├── config.php             # Configuration loader and helpers
+├── config.json            # Stored CMS configuration
+├── database.sqlite        # RSVP/message storage
+├── uploads/               # Public media uploads
+├── admin/                 # Admin UI and backup endpoints
+├── app/                   # Private implementation / legacy compatibility
+├── style.css              # Canonical stylesheet
+├── script.js              # Canonical JavaScript
+├── backups/               # Backup archive storage
 └── deploy/                # Deployment scripts
 ```
 
-## Administration
-
-Access the admin panel at `http://your-domain/admin`.
-
-### Administrator Credentials
-
-#### Fresh Installation
-
-During first installation, if no `.env` file exists:
-
-1. The installer copies `.env.example` to `.env`
-2. A cryptographically secure random password is generated using `openssl rand -base64 24`
-3. The credentials are written to `.env`:
-   ```bash
-   ADMIN_USER=admin
-   ADMIN_PASS=<generated random password>
-   ```
-4. The credentials are displayed once at the end of installation:
-   ```
-   ======================================
-   Administrator account created
-   
-   Username:
-   admin
-   
-   Password:
-   xxxxxxxxxxxxxxxxxxxxxxxx
-   
-   Credentials have been saved to:
-   
-   /var/www/wedding/.env
-   
-   Save these credentials now.
-   ======================================
-   ```
-
-**Save these credentials immediately** - they will not be displayed again.
-
-The `.env` file serves as a recovery mechanism for:
-- Initial login before password change
-- Recovery if password is forgotten
-- Maintenance operations
-- Reinstallation scenarios
-
-#### Existing Installation
-
-For existing installations with `.env` already present:
-- Username: `admin` (or as configured in `.env`)
-- Password: As set in `.env` or changed via admin panel
-
-### Authentication Priority
-
-The authentication system uses the following priority:
-
-1. **Priority 1**: `config.json` → `admin.password_hash`
-   - If a password has been changed via the admin panel, this takes precedence
-   - Uses secure bcrypt hashing
-   - Once set, `ADMIN_PASS` in `.env` is ignored for login
-
-2. **Priority 2**: `.env` file → `ADMIN_USER` + `ADMIN_PASS`
-   - Used for initial login before password change
-   - Falls back to default username `admin` if `ADMIN_USER` not set
-   - Remains available for recovery purposes
-
-3. **No Fallback**: If neither is configured, login is rejected
-   - No hardcoded passwords
-   - No silent fallback to insecure defaults
-
-### Changing Administrator Password
-
-1. Log into the admin panel
-2. Navigate to Settings
-3. Enter a new password in the "Admin Password" field
-4. Save changes
-
-After changing the password:
-- The new password hash is stored in `config.json` under `admin.password_hash`
-- The `.env` `ADMIN_PASS` is **ignored** for authentication
-- Changing `ADMIN_PASS` in `.env` after setting a password hash will **NOT** change the login password
-- The `.env` file remains for recovery, maintenance, and reinstallation purposes only
-
-## Security
-
-- Sensitive files (`config.json`, `database.sqlite`, `.env`) are blocked from public access
-- PHP execution is disabled in the `uploads/` directory
-- File permissions are automatically set to secure defaults
-- Passwords are hashed using `password_hash()` with bcrypt
-- Regular backups are recommended
+## `app/` and Legacy Compatibility
 
-See [SECURITY.md](SECURITY.md) for detailed security information.
+The `app/` directory contains private implementation and legacy logic.
+It is not the primary frontend architecture.
+Developers must not treat `app/` as the main public application or duplicate root-level frontend assets there.
 
-## .env File Configuration
+# CMS Ownership Rules
 
-The `.env` file supports optional environment configuration:
+The CMS is the single source of truth for media and rendering configuration.
 
-```bash
-# Administrator credentials (used until password is changed via admin panel)
-ADMIN_USER=admin
-ADMIN_PASS=your-secure-password-here
+The CMS owns:
 
-# WhatsApp configuration
-WHATSAPP_NUMBER=6285162909164
-WHATSAPP_MESSAGE=Assalamu'alaikum...
+- uploaded media
+- background rendering
+- image fit
+- image position
+- repeat mode
+- desktop background configuration
+- mobile background configuration
+- future media configuration
 
-# Optional: Database path
-UNDANGAN_DB_PATH=/var/www/private/database.sqlite
+The frontend owns:
 
-# Upload settings
-MAX_UPLOAD_SIZE=5242880
-SESSION_TIMEOUT=3600
-ALLOWED_IMAGE_TYPES=jpg,jpeg,png,gif,webp
-```
+- layout
+- spacing
+- typography
+- overlays
+- ornaments
+- animation
+- presentation
 
-### Creating .env Manually
+The frontend must only consume CMS-provided values and must never replace CMS rendering.
 
-If you need to create `.env` manually:
+# Future Development
 
-```bash
-cp .env.example .env
-# Edit .env and set ADMIN_PASS to a secure password
-chmod 600 .env
-chown www-data:www-data .env
-```
+Future media and upload features must extend the CMS upload pipeline and not bypass it.
+Do not create parallel media rendering or duplicate frontend assets in `app/`.
 
-## Backup & Restore
+Example future features:
 
-### Create Backup
-```bash
-sudo /var/www/wedding/deploy/backup.sh
-```
+- Upload Manager / Media Library
+- ImageMagick support
+- GD fallback
+- Automatic WebP conversion
+- AVIF support
+- EXIF auto orientation
+- Responsive images
+- Media metadata
+- Thumbnail generation
 
-### Restore Backup
-```bash
-sudo /var/www/wedding/deploy/restore.sh /path/to/backup.tar.gz
-```
+# Deployment
 
-See [BACKUP_RESTORE.md](BACKUP_RESTORE.md) for more details.
+- Use `deploy/install.sh` for fresh installations.
+- Use `deploy/update.sh` for existing installations.
+- `deploy/backup.sh` creates user-data backups.
+- `deploy/restore.sh` restores backups.
+- `deploy/health-check.sh` verifies deployment health.
 
-## Health Check
+`deploy/install.sh` deploys the application to `/var/www/wedding` by default.
+`deploy/update.sh` preserves user data and configuration while updating application files.
 
-Verify your deployment:
-```bash
-sudo /var/www/wedding/deploy/health-check.sh
-```
+# Backup & Restore
 
-## Deployment Scripts Summary
+Backups preserve user data and configuration while excluding source code.
 
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `deploy/install.sh` | Fresh installation | **ONE-TIME ONLY** - Initial setup on new server |
-| `deploy/update.sh` | Update existing installation | Every time you want to update to latest version |
-| `deploy/backup.sh` | Create backup | Before updates, or regularly for safety |
-| `deploy/restore.sh` | Restore from backup | When you need to recover from a backup |
-| `deploy/health-check.sh` | Verify deployment health | After install/update, or anytime to check status |
+Backed up items include:
 
-### Quick Reference
+- `config.json`
+- `custom.css`
+- `guest-links.json`
+- `database.sqlite`
+- `uploads/`
+- `webdav/` (if present)
+- `event.ics`
+- `/etc/apache2/.davpasswd` (if present)
 
-```bash
-# Fresh installation (run ONCE)
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-sudo ./deploy/install.sh
+# Notes
 
-# Update existing installation (safe to run repeatedly)
-sudo /var/www/wedding/deploy/update.sh
+- `admin.php` is a redirect wrapper, not a controller.
+- `save.php`, `messages.php`, and `gallery.php` are public wrappers that include private `app/` logic.
+- `style.css` and `script.js` are the canonical frontend assets.
+- `config.php` is the core configuration loader used by the public frontend and admin UI.
+- `config.json` is the CMS configuration store.
 
-# Create backup before making changes
-sudo /var/www/wedding/deploy/backup.sh
-
-# Verify deployment health
-sudo /var/www/wedding/deploy/health-check.sh
-```
-
-## Requirements
-
-- PHP 8.1+ with extensions: `sqlite3`, `gd`, `mbstring`, `curl`
-- Nginx web server
-- SQLite3
-- `jq` for health checks
-- `openssl` for password generation during installation
-
-## License
-
-MIT License - See LICENSE file for details.
-
-## Support
-
-For issues and feature requests, please open an issue on GitHub.
-
-## Fresh Installation
-
-Run the installer and select your preferred web server:
-
-```bash
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-sudo bash deploy/install.sh
-```
-
-The installer will prompt you to choose between Nginx (recommended) or Apache.
-
-## Deployment Manager
-
-For existing installations, use the Deployment Manager:
-
-```bash
-sudo /var/www/wedding/deploy/update.sh
-```
-
-The menu provides four options:
-
-1. **Update Application** - Updates source code without changing the web server
-2. **Change Web Server** - Migrate between Nginx and Apache
-3. **Reconfigure Web Server** - Rebuild configuration from templates
-4. **Exit**
-
-## Migrating Nginx -> Apache
-
-1. Run `sudo /var/www/wedding/deploy/update.sh`
-2. Select option 2 (Change Web Server)
-3. Choose Apache as the target
-4. The script will:
-   - Create a backup
-   - Install Apache and required modules
-   - Deploy Apache configuration
-   - Preserve SSL certificates from Let's Encrypt
-   - Maintain PHP-FPM settings
-   - Test configuration before switching
-   - Stop Nginx and start Apache
-   - Run health check
-5. If any step fails, automatic rollback occurs
-
-## Migrating Apache -> Nginx
-
-1. Run `sudo /var/www/wedding/deploy/update.sh`
-2. Select option 2 (Change Web Server)
-3. Choose Nginx as the target
-4. The script will:
-   - Create a backup
-   - Install Nginx
-   - Deploy Nginx configuration
-   - Preserve SSL certificates
-   - Maintain PHP-FPM settings
-   - Test configuration before switching
-   - Stop Apache and start Nginx
-   - Run health check
-5. If any step fails, automatic rollback occurs
-
-## Reconfigure Web Server
-
-Use this option if you've made manual configuration changes and want to restore the default configuration:
-
-1. Run `sudo /var/www/wedding/deploy/update.sh`
-2. Select option 3 (Reconfigure Web Server)
-3. Confirm the action
-4. The script will:
-   - Generate fresh configuration from templates
-   - Test the configuration
-   - Reload the web server
-
-⚠️ **Warning:** Any manual configuration changes will be lost.
+See `ARCHITECTURE.md`, `DEPLOYMENT.md`, `BACKUP_RESTORE.md`, and `.github/copilot-instructions.md` for synchronized architecture guidance.

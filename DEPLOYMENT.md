@@ -1,238 +1,179 @@
 # Deployment Guide
 
-This guide provides step-by-step instructions for deploying the Wedding Invitation application on Ubuntu 24.04.
+This document describes how to deploy the wedding invitation application using the current repository architecture.
 
 ## Prerequisites
 
-- Ubuntu 24.04 server (fresh installation recommended)
-- Root or sudo access
-- Domain name pointing to your server (optional, for production)
-- At least 512MB RAM and 5GB disk space
-- Composer installed (required for QR code functionality)
-
-### Installing Composer
-
-Before running the deployment script, ensure Composer is installed:
-
-```bash
-# Download and install Composer
-curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Verify installation
-composer --version
-```
-
-The deployment script will fail with a clear error if Composer is not available, preventing a broken deployment.
+- Linux server with root or sudo access
+- PHP 8.1 or higher with SQLite support
+- Composer installed for QR code functionality
+- Web server with PHP-FPM (Nginx or Apache)
+- Git installed if using the update script
 
 ## Quick Installation
 
-### Step 1: Clone and Install
+### Step 1: Clone the repository
 
 ```bash
 git clone https://github.com/februana/webserver_undangan.git
 cd webserver_undangan
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-sudo bash deploy/install.sh
 ```
 
-The installer will automatically:
-- Verify Composer is installed (required for QR code functionality)
-- Install Nginx, PHP-FPM 8.x, and required extensions
-- Create the deployment directory at `/var/www/wedding`
-- Copy all application files including `composer.json`
-- Run `composer install --no-dev --optimize-autoloader` to install dependencies
-- Configure Nginx with security rules
-- Set secure file permissions
-- Initialize the database and configuration files
-- Enable the site and reload Nginx
+### Step 2: Run the installer
 
-### Step 2: Verify Installation
+```bash
+sudo ./deploy/install.sh
+```
+
+The installer deploys the application to `/var/www/wedding` by default.
+
+### What the installer does
+
+- Verifies Composer is installed
+- Creates or preserves `.env`
+- Copies application files to `/var/www/wedding`
+- Configures web server settings for Nginx or Apache
+- Sets secure permissions on runtime files
+- Initializes the database and default configuration
+- Generates administrator credentials if `.env` does not already exist
+- Optionally configures WebDAV for Apache
+
+### Step 3: Verify the installation
 
 ```bash
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-Expected output:
+Expected checks include:
+
+- Required files and directories
+- `config.json` protection
+- `database.sqlite` protection
+- `.env` existence and password
+- WebDAV configuration if enabled
+
+### Step 4: Access the application
+
+- Public site: `http://your-server-ip/`
+- Admin panel: `http://your-server-ip/admin/`
+
+## Updating an Existing Installation
+
+Use `deploy/update.sh` for updates.
+
+```bash
+sudo /var/www/wedding/deploy/update.sh
 ```
-=== Deployment Health Check ===
-✓ Deployment directory exists
-✓ File exists: index.php
-✓ File exists: admin.php
-...
-✓ config.json blocked from public access
-✓ database.sqlite blocked from public access
 
-DEPLOYMENT HEALTHY
-```
+The update script will:
 
-### Step 3: Access the Application
+- create a backup using `deploy/backup.sh`
+- download the latest source code from GitHub
+- run `composer install --no-dev --optimize-autoloader`
+- preserve user data and configuration
+- restart PHP-FPM and reload the web server
+- run `deploy/health-check.sh`
 
-Open your browser and navigate to:
-- `http://your-server-ip/` for the invitation
-- `http://your-server-ip/admin.php` for the admin panel
+### Files preserved during update
 
-## Manual Installation (Alternative)
+- `config.json`
+- `guest-links.json`
+- `database.sqlite`
+- `.env`
+- `event.ics`
+- `uploads/`
+- `backups/`
+- `webdav/`
 
-If you prefer manual control:
+## Installer vs Updater
 
-### Step 1: Install Dependencies
+- `deploy/install.sh` is the recommended path for fresh installations.
+- `deploy/update.sh` is the preferred path for existing installations.
+- `deploy/install.sh` can detect and run from the canonical target `/var/www/wedding`, but `deploy/update.sh` remains the safer update workflow.
+
+## Optional WebDAV
+
+Apache can optionally provide WebDAV support. The installer prompts for WebDAV configuration and creates `/etc/apache2/.davpasswd` when enabled.
+
+Nginx may serve static content and limited WebDAV methods but is not the recommended WebDAV platform.
+
+## Manual Installation
+
+### 1. Install dependencies
 
 ```bash
 sudo apt update
-sudo apt install -y nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq git
+sudo apt install -y nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl git composer
 ```
 
-### Step 2: Clone Repository
+### 2. Clone the repository
 
 ```bash
 sudo mkdir -p /var/www/wedding
-sudo git clone https://github.com/yourusername/wedding-invitation.git /var/www/wedding
+sudo git clone https://github.com/februana/webserver_undangan.git /var/www/wedding
 ```
 
-### Step 3: Set Permissions
+### 3. Set permissions
 
 ```bash
 sudo chown -R www-data:www-data /var/www/wedding
 sudo find /var/www/wedding -type d -exec chmod 755 {} \;
-sudo find /var/www/wedding -type f -name "*.php" -exec chmod 644 {} \;
+sudo find /var/www/wedding -type f -exec chmod 644 {} \;
 sudo chmod 600 /var/www/wedding/config.json
 ```
 
-### Step 4: Install Composer Dependencies
-
-**This step is critical for QR code functionality.**
+### 4. Install Composer dependencies
 
 ```bash
 cd /var/www/wedding
 composer install --no-dev --optimize-autoloader
 ```
 
-If Composer is not installed, install it first:
-```bash
-curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-```
+### 5. Configure the web server
 
-### Step 5: Configure Nginx
+- For Nginx: use the templates in `deploy/templates/nginx/`
+- For Apache: use the templates in `deploy/templates/apache/`
 
-Copy the provided Nginx configuration:
-
-```bash
-sudo cp /var/www/wedding/deploy/nginx-site.conf /etc/nginx/sites-available/wedding
-sudo ln -sf /etc/nginx/sites-available/wedding /etc/nginx/sites-enabled/wedding
-sudo rm -f /etc/nginx/sites-enabled/default
-```
-
-Edit `/etc/nginx/sites-available/wedding` if you need to customize the server name.
-
-### Step 6: Test and Reload
+### 6. Test and reload
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## Configuration
+## SSL/HTTPS Setup
 
-### Database
-
-The application uses SQLite. The database file is created automatically at `/var/www/wedding/database.sqlite`.
-
-### Configuration File
-
-Edit `/var/www/wedding/config.json` to customize:
-- Site title and description
-- Wedding details (couple names, date, location)
-- Media paths (cover image, music, background)
-- Gallery images
-- Gift/bank account information
-
-### Uploads
-
-User-uploaded media is stored in:
-- `/var/www/wedding/uploads/cover/` - Cover images
-- `/var/www/wedding/uploads/music/` - Background music
-- `/var/www/wedding/uploads/gallery/` - Gallery photos
-- `/var/www/wedding/uploads/background/` - Background images
-
-## SSL/HTTPS Setup (Recommended)
-
-For production deployments, enable HTTPS using Certbot:
+For production, enable HTTPS with Certbot.
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d your-domain.com
 ```
 
-Certbot will automatically:
-- Obtain a free SSL certificate
-- Configure HTTPS redirect
-- Set up automatic renewal
-
-## Firewall Configuration
-
-If UFW is enabled:
-
-```bash
-sudo ufw allow 'Nginx Full'
-sudo ufw allow 'Nginx HTTPS'  # If using SSL
-sudo ufw enable
-```
-
 ## Troubleshooting
 
-### Application Not Loading
+### Application not loading
 
-1. Check Nginx status: `sudo systemctl status nginx`
-2. Check PHP-FPM status: `sudo systemctl status php*-fpm`
-3. Check logs: `sudo tail -f /var/log/nginx/wedding.error.log`
+- Check Nginx or Apache status
+- Check PHP-FPM status
+- Inspect web server logs
 
-### Permission Denied Errors
+### Permission denied
 
 ```bash
 sudo chown -R www-data:www-data /var/www/wedding
-sudo find /var/www/wedding -type f -name "*.json" -exec chmod 600 {} \;
+sudo chmod 600 /var/www/wedding/config.json
 ```
 
-### Database Errors
+### Database errors
 
-Ensure the database file exists and is writable:
+Ensure `/var/www/wedding/database.sqlite` exists and is writable by the web server.
 
-```bash
-ls -la /var/www/wedding/database.sqlite
-sudo chown www-data:www-data /var/www/wedding/database.sqlite
-sudo chmod 600 /var/www/wedding/database.sqlite
-```
+### 403 forbidden on config or database
 
-### 403 Forbidden on Config/Database
-
-This is expected and correct! These files should be blocked from public access.
-
-### 502 Bad Gateway
-
-Check that PHP-FPM is running and the socket path in Nginx config matches:
-
-```bash
-sudo systemctl status php*-fpm
-find /run/php -name "*.sock"
-```
-
-Update the `fastcgi_pass` directive in `/etc/nginx/sites-available/wedding` if needed.
-
-## Updating
-
-To update from Git:
-
-```bash
-cd /var/www/wedding
-sudo git pull
-sudo systemctl reload nginx
-```
+This is expected. These files should be blocked from public access.
 
 ## Next Steps
 
-- [Architecture Overview](ARCHITECTURE.md)
-- [Security Best Practices](SECURITY.md)
-- [Backup & Restore Procedures](BACKUP_RESTORE.md)
+- Review `ARCHITECTURE.md` for the current repository design.
+- Review `BACKUP_RESTORE.md` for backup and restore procedures.
