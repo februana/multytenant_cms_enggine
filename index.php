@@ -304,18 +304,6 @@ $themeClasses = [
             <p>Kenakan busana terbaikmu untuk momen spesial.</p>
           </article>
         </div>
-        <div class="timeline" style="margin-top:28px">
-          <div class="timeline-item">
-            <span><?php echo escape_html($akadTime); ?> WIB</span>
-            <h3>Akad Nikah</h3>
-            <p>Prosesi akad nikah keluarga.</p>
-          </div>
-          <div class="timeline-item">
-            <span><?php echo escape_html($receptionTime); ?> WIB</span>
-            <h3>Resepsi</h3>
-            <p>Ramahan dan doa bersama tamu undangan.</p>
-          </div>
-        </div>
       </div>
     </section>
     <?php endif; ?>
