@@ -1,143 +1,98 @@
 # Architecture Documentation
 
+# Architecture
+
 ## Overview
 
-This wedding invitation application uses a **single-root architecture**.
-The repository root is the canonical application source. Frontend rendering, configuration loading, and public entrypoints all originate from root-level files.
+This application uses a single-root CMS-first architecture. The repository root is the canonical application source and the public document root.
 
-## Canonical Public Entry Points
+## Canonical public entrypoints
 
 - `index.php` — public frontend renderer
-- `admin.php` — redirect to the admin UI (`/admin/`)
-- `save.php` — AJAX save endpoint
-- `messages.php` — messages API endpoint
-- `gallery.php` — gallery API endpoint
+- `admin.php` — redirect to `/admin/`
+- `save.php` — public wrapper for save actions
+- `messages.php` — public wrapper for message APIs
+- `gallery.php` — public wrapper for gallery APIs
 
-## Canonical Frontend Assets
+## Canonical frontend and runtime files
 
-- `style.css`
-- `script.js`
+- `style.css` — canonical stylesheet
+- `script.js` — canonical frontend JavaScript
+- `config.php` — config loader and runtime helper logic
+- `config.json` — single source of truth for CMS values
+- `database.sqlite` — database for RSVP and messages
+- `guest-links.json` — guest link store
+- `uploads/` — canonical media directory
+- `admin/` — CMS UI and admin operations
+- `deploy/` — deployment and health-check scripts
 
-## Core Backend
+## Repository structure
 
-- `config.php`
-- `config.json`
-- `database.sqlite`
-- `uploads/`
-- `admin/`
-- `deploy/`
-
-## Repository Structure
-
+```text
+/
+├── index.php
+├── admin.php
+├── save.php
+├── messages.php
+├── gallery.php
+├── config.php
+├── config.json
+├── database.sqlite
+├── guest-links.json
+├── uploads/
+├── admin/
+├── app/
+├── style.css
+├── script.js
+├── custom.css
+├── backups/
+├── deploy/
+└── legacy docs / compatibility notes
 ```
-/ (Document Root)
-├── index.php              # Frontend entry point
-├── admin.php              # Redirect to /admin/
-├── save.php               # AJAX save wrapper
-├── messages.php           # Messages wrapper
-├── gallery.php            # Gallery wrapper
-├── config.php             # Configuration loader and helpers
-├── config.json            # Stored CMS configuration
-├── database.sqlite        # RSVP and message storage
-├── uploads/               # Public media uploads
-├── admin/                 # Admin UI and backup endpoints
-├── app/                   # Private implementation / legacy compatibility
-├── style.css              # Canonical stylesheet
-├── script.js              # Canonical JavaScript
-├── backups/               # Backup storage
-└── deploy/                # Deployment scripts
-```
 
-### `app/` and compatibility
+## Request flow
 
-The `app/` directory is a private implementation layer and is not the canonical frontend architecture.
-Root-level files remain the development target. Do not move active frontend development into `app/`.
+- Public pages render via `index.php` using `config.php` and `config.json`.
+- Admin UI is served from `admin/index.php`.
+- Public wrappers call private app logic as needed, but root-level files remain the public interface.
+- Frontend styles and behavior remain canonical in root-level `style.css` and `script.js`.
 
-## Request Flow
+## CMS ownership rules
 
-- Static assets are served directly from the root: `style.css`, `script.js`, `uploads/*`
-- The public invitation is rendered by `index.php` using values from `config.json`
-- `admin.php` redirects to `admin/index.php`
-- `save.php`, `messages.php`, and `gallery.php` include private app logic for API operations
+The CMS is the source of truth for:
 
-## Configuration and CMS
+- section visibility
+- media references and upload metadata
+- hero/background media
+- theme preset resolution
+- guest links and saved content
+- live preview state
 
-- `config.php` loads `config.json`, applies defaults, and saves configuration changes
-- `config.json` stores site content, wedding details, theme values, and media paths
-- `custom.css` can override frontend presentation after theme variables load
-
-## Background Ownership Rules
-
-The CMS is the source of truth for media rendering.
-
-The CMS owns:
-
-- uploaded media
-- background images
-- hero images
-- section backgrounds
-- desktop background settings
-- mobile background settings
-- image fit
-- image position
-- repeat mode
-- future media configuration
-
-The frontend owns:
-
-- layout
-- spacing
-- typography
-- overlays
-- ornaments
-- animation
-- presentation
-
-Frontend must only consume values produced by the CMS. It must never replace CMS rendering.
-
-## Upload Flow
-
-- Admin uploads media through the admin UI
-- `upload_file()` is the canonical upload pipeline
-- Uploaded files are stored under `uploads/`
-- Media references are saved in `config.json`
-- The public site reads those references from `config.json`
+The frontend consumes these values and must not replace the CMS-owned rendering logic.
 
 ## Deployment
 
-- `deploy/install.sh` — recommended for fresh installs to `/var/www/wedding`
-- `deploy/update.sh` — recommended update path for existing installations
-- `deploy/health-check.sh` — verifies runtime health
-- `deploy/backup.sh` — creates user-data backups
-- `deploy/restore.sh` — restores backups
+- `deploy/install.sh` — fresh install
+- `deploy/update.sh` — update existing site
+- `deploy/backup.sh` — backup runtime data
+- `deploy/restore.sh` — restore runtime data
+- `deploy/health-check.sh` — verify critical deployment dependencies
 
-## Backup & Restore
+## Backups and runtime data
 
-Backups are stored in `backups/` and include user data, not source code.
-The canonical backup path is `deploy/backup.sh`, and restore is `deploy/restore.sh`.
+Backups preserve user and runtime data without replacing the source code. Current runtime data includes:
 
-## Rules for Future Development
+- `config.json`
+- `guest-links.json`
+- `database.sqlite`
+- `uploads/`
+- `event.ics`
+- `custom.css` when present
 
-- Do not duplicate frontend assets in `app/`
-- Do not create parallel implementations between root and `app/`
-- New frontend work must target root-level files unless explicitly instructed otherwise
-- If deployment wrappers require updates, synchronize them from canonical files
-- Preserve existing theme builder and live preview behavior
+## Security notes
 
-## Maintenance Notes
-
-- Root files are the authoritative public APIs
-- `app/` is private/legacy and may support internal implementations, but it is not the primary public architecture
-- `admin.php` is a redirect, not a controller wrapper like `save.php`
-
-## Security Notes
-
-- Sensitive runtime files are protected by `.htaccess` and permissions:
-  - `config.json`
-  - `database.sqlite`
-  - `.env`
-  - `guest-links.json`
-  - `backups/`
-
-- `uploads/` should remain writable by the web server but not executable
+- Sensitive runtime files must remain blocked from direct public access.
+- `uploads/` is static content only; PHP execution should remain disabled there.
+- `config.json`, `database.sqlite`, and `guest-links.json` require restrictive permissions.
+- `app/` remains private implementation and legacy compatibility; it is not a public-facing frontend architecture.
 

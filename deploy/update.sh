@@ -211,7 +211,10 @@ update_application() {
     
     chown -R www-data:www-data "$CANONICAL_TARGET"
     find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;
-    find "$CANONICAL_TARGET" -type f \( -name "*.php" -o -name "*.json" -o -name "*.sqlite" -o -name ".env" \) -exec chmod 644 {} \;
+    find "$CANONICAL_TARGET" -type f -name "*.php" -exec chmod 644 {} \;
+    find "$CANONICAL_TARGET" -type f \( -name "config.json" -o -name "guest-links.json" -o -name "database.sqlite" -o -name ".env" \) -exec chmod 600 {} \;
+    chmod 644 "$CANONICAL_TARGET/custom.css" 2>/dev/null || true
+    chmod 644 "$CANONICAL_TARGET/event.ics" 2>/dev/null || true
     
     PHP_VER=$(get_php_fpm_socket | grep -oP 'php\d\.\d' | head -1)
     [ -n "$PHP_VER" ] && systemctl restart "${PHP_VER}-fpm" 2>/dev/null || systemctl restart php-fpm 2>/dev/null || true

@@ -29,6 +29,10 @@ $giftAccount = $config['gift']['account_number'];
 $giftHolder = $config['gift']['account_holder'];
 $giftEwalletLabel = $config['gift']['e_wallet_label'];
 $giftEwalletNumber = $config['gift']['e_wallet_number'];
+$dresscodeTitle = trim((string)($config['dresscode']['title'] ?? 'Dresscode')) ?: 'Dresscode';
+$dresscodeColor = trim((string)($config['dresscode']['color'] ?? 'Putih / Pastel')) ?: 'Putih / Pastel';
+$dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')) ?: 'Rapi dan sopan';
+$dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
 $whatsappLink = build_whatsapp_link($config);
 $calendarLink = build_google_calendar_link($config);
 $musicSrc = $config['media']['music'] ?: 'music/lagu.mp3';
@@ -54,7 +58,12 @@ $themeMobileHeroContentWidth = trim((string)($config['theme']['mobile_hero_conte
 $themeMobileHeroImageFit = trim((string)($config['theme']['mobile_hero_image_fit'] ?? '')) ?: 'cover';
 $themeMobileHeroImagePosition = trim((string)($config['theme']['mobile_hero_image_position'] ?? '')) ?: 'center top';
 
-$buttonsMobileLayout = trim((string)($config['buttons']['mobile_layout'] ?? '')) ?: 'column';
+$buttonsMobileLayoutRaw = trim((string)($config['buttons']['mobile_layout'] ?? '')) ?: 'column';
+$buttonsMobileLayout = match ($buttonsMobileLayoutRaw) {
+    'horizontal', '2-columns' => 'row',
+    '1-column' => 'column',
+    default => 'column'
+};
 
 $bgHero = $heroBackground ? 'style="--hero-bg:url(\'' . escape_html(public_path($heroBackground)) . '\');--hero-height:' . escape_html($themeHeroHeight) . ';--hero-v-align:' . escape_html($themeHeroVAlign) . ';--hero-content-width:' . escape_html($themeHeroContentWidth) . ';--hero-image-fit:' . escape_html($heroBgSize) . ';--hero-image-position:' . escape_html($heroImagePosition) . ';--hero-bg-repeat:' . escape_html($heroBgRepeat) . ';--hero-overlay-start:' . escape_html($heroOverlayStart) . ';--hero-overlay-mid:' . escape_html($heroOverlayMid) . ';--hero-overlay-end:' . escape_html($heroOverlayEnd) . ';--mobile-hero-height:' . escape_html($themeMobileHeroHeight) . ';--mobile-hero-v-align:' . escape_html($themeMobileHeroVAlign) . ';--mobile-hero-content-width:' . escape_html($themeMobileHeroContentWidth) . ';--mobile-hero-image-fit:' . escape_html($themeMobileHeroImageFit) . ';--mobile-hero-image-position:' . escape_html($themeMobileHeroImagePosition) . ';--buttons-mobile-layout:' . escape_html($buttonsMobileLayout) . ';"' : '';
 $sectionBackgrounds = [
@@ -62,10 +71,13 @@ $sectionBackgrounds = [
     $config['media']['background_sections'][1] ?? '',
     $config['media']['background_sections'][2] ?? ''
 ];
+$sectionBackgroundSize = $heroBgSize;
+$sectionBackgroundPosition = $heroImagePosition;
+$sectionBackgroundRepeat = $heroBgRepeat;
 $sectionStyles = [
-    $sectionBackgrounds[0] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[0])) . '\');background-size:contain;background-position:center;background-repeat:no-repeat;"' : '',
-    $sectionBackgrounds[1] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[1])) . '\');background-size:contain;background-position:center;background-repeat:no-repeat;"' : '',
-    $sectionBackgrounds[2] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[2])) . '\');background-size:contain;background-position:center;background-repeat:no-repeat;"' : ''
+    $sectionBackgrounds[0] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[0])) . '\');background-size:' . escape_html($sectionBackgroundSize) . ';background-position:' . escape_html($sectionBackgroundPosition) . ';background-repeat:' . escape_html($sectionBackgroundRepeat) . ';"' : '',
+    $sectionBackgrounds[1] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[1])) . '\');background-size:' . escape_html($sectionBackgroundSize) . ';background-position:' . escape_html($sectionBackgroundPosition) . ';background-repeat:' . escape_html($sectionBackgroundRepeat) . ';"' : '',
+    $sectionBackgrounds[2] ? 'style="background-image:url(\'' . escape_html(public_path($sectionBackgrounds[2])) . '\');background-size:' . escape_html($sectionBackgroundSize) . ';background-position:' . escape_html($sectionBackgroundPosition) . ';background-repeat:' . escape_html($sectionBackgroundRepeat) . ';"' : ''
 ];
 $qrData = rawurlencode($mapsUrl ?: 'https://www.google.com/maps');
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
@@ -171,41 +183,41 @@ $themeClasses = [
   </header>
 
   <?php
-  // Section visibility helper function
-  function is_section_enabled($config, $sectionId) {
+  function get_section_entry($config, $sectionId) {
+      $targetId = normalize_section_id((string)$sectionId);
       if (!isset($config['sections']) || !is_array($config['sections'])) {
-          return true; // Default: all sections enabled for backward compatibility
+          return null;
       }
       foreach ($config['sections'] as $section) {
-          if (($section['id'] ?? '') === $sectionId) {
-              return !empty($section['enabled']);
+          if (normalize_section_id((string)($section['id'] ?? '')) === $targetId) {
+              return $section;
           }
       }
-      return true; // Unknown sections default to enabled
+      return null;
+  }
+
+  function is_section_enabled($config, $sectionId) {
+      $section = get_section_entry($config, $sectionId);
+      if ($section === null) {
+          return true;
+      }
+      return !empty($section['enabled']);
   }
   
   function get_section_title($config, $sectionId, $defaultTitle) {
-      if (!isset($config['sections']) || !is_array($config['sections'])) {
+      $section = get_section_entry($config, $sectionId);
+      if ($section === null) {
           return $defaultTitle;
       }
-      foreach ($config['sections'] as $section) {
-          if (($section['id'] ?? '') === $sectionId) {
-              return !empty($section['custom_title']) ? $section['custom_title'] : $defaultTitle;
-          }
-      }
-      return $defaultTitle;
+      return !empty($section['custom_title']) ? $section['custom_title'] : ($section['title'] ?? $defaultTitle);
   }
   
   function get_section_subtitle($config, $sectionId, $defaultSubtitle) {
-      if (!isset($config['sections']) || !is_array($config['sections'])) {
+      $section = get_section_entry($config, $sectionId);
+      if ($section === null) {
           return $defaultSubtitle;
       }
-      foreach ($config['sections'] as $section) {
-          if (($section['id'] ?? '') === $sectionId) {
-              return !empty($section['custom_subtitle']) ? $section['custom_subtitle'] : $defaultSubtitle;
-          }
-      }
-      return $defaultSubtitle;
+      return !empty($section['custom_subtitle']) ? $section['custom_subtitle'] : ($section['subtitle'] ?? $defaultSubtitle);
   }
   ?>
 
@@ -226,7 +238,9 @@ $themeClasses = [
           <a class="whatsapp-btn" href="<?php echo escape_html($whatsappLink); ?>" target="_blank" rel="noopener noreferrer">Hubungi WA</a>
         </div>
 
+        <?php if (is_section_enabled($config, 'music')): ?>
         <button class="music-btn" type="button" id="musicBtn">Putar Musik</button>
+        <?php endif; ?>
       </div>
     </section>
     <?php endif; ?>
@@ -246,6 +260,7 @@ $themeClasses = [
     </section>
     <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'guest_intro')): ?>
     <section id="guest-intro" class="section intro-section" style="background:transparent;padding:60px 20px 40px">
       <div class="invitation-frame">
         <div class="ornament-corner top-left"></div>
@@ -253,12 +268,14 @@ $themeClasses = [
         <div class="ornament-corner bottom-left"></div>
         <div class="ornament-corner bottom-right"></div>
         <div class="section-head">
-          <p class="label">Kepada Yth.</p>
+          <p class="label"><?php echo escape_html(get_section_title($config, 'guest_intro', 'Kepada Yth.')); ?></p>
           <h2 id="guestNameDisplay"><?php echo escape_html($guestFallback); ?></h2>
         </div>
       </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (is_section_enabled($config, 'undangan')): ?>
     <section id="undangan" class="section intro-section" <?php echo $sectionStyles[0]; ?>>
       <div class="invitation-frame">
         <div class="ornament-corner top-left"></div>
@@ -272,6 +289,7 @@ $themeClasses = [
         <p style="max-width:680px;margin:0 auto 34px;font-size:1.15rem;line-height:1.9;text-align:center;color:var(--muted);white-space:pre-line"><?php echo nl2br(escape_html($config['wedding']['opening_text'])); ?></p>
       </div>
     </section>
+    <?php endif; ?>
 
     <?php if (is_section_enabled($config, 'acara')): ?>
     <section id="acara" class="section panel">
@@ -297,12 +315,14 @@ $themeClasses = [
             <p><?php echo escape_html($receptionTime); ?> WIB - Selesai</p>
             <p><?php echo escape_html($locationAddress); ?></p>
           </article>
+          <?php if (!empty($config['dresscode']['enabled'])): ?>
           <article class="card">
-            <h3>Dresscode</h3>
-            <p>Putih / Pastel</p>
-            <p>Rapi dan sopan</p>
-            <p>Kenakan busana terbaikmu untuk momen spesial.</p>
+            <h3><?php echo escape_html($dresscodeTitle); ?></h3>
+            <p><?php echo escape_html($dresscodeColor); ?></p>
+            <p><?php echo escape_html($dresscodeRule); ?></p>
+            <p><?php echo escape_html($dresscodeDescription); ?></p>
           </article>
+          <?php endif; ?>
         </div>
       </div>
     </section>
@@ -448,7 +468,9 @@ $themeClasses = [
           <button type="submit">Kirim RSVP</button>
           <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
         </form>
+        <?php if (is_section_enabled($config, 'messages')): ?>
         <div id="messages" class="messages"></div>
+        <?php endif; ?>
       </div>
     </section>
     <?php endif; ?>
@@ -461,7 +483,9 @@ $themeClasses = [
     </div>
   </div>
 
+  <?php if (is_section_enabled($config, 'music')): ?>
   <audio id="backgroundMusic" src="<?php echo escape_html($musicSrc); ?>" preload="auto" loop></audio>
+  <?php endif; ?>
   <script src="script.js" defer></script>
 
   <script>
@@ -526,6 +550,10 @@ $themeClasses = [
         heroSection.style.backgroundPosition = heroPosition;
         heroSection.style.backgroundRepeat = bgRepeat;
       }
+
+      const mobileLayoutRaw = (theme.buttons && theme.buttons.mobile_layout) ? theme.buttons.mobile_layout : 'column';
+      const mobileLayout = mobileLayoutRaw === 'horizontal' || mobileLayoutRaw === '2-columns' ? 'row' : 'column';
+      document.documentElement.style.setProperty('--buttons-mobile-layout', mobileLayout);
     });
   })();
   </script>

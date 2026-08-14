@@ -1,179 +1,122 @@
 # Deployment Guide
 
-This document describes how to deploy the wedding invitation application using the current repository architecture.
+This document reflects the current single-root CMS-first repository structure.
 
 ## Prerequisites
 
 - Linux server with root or sudo access
-- PHP 8.1 or higher with SQLite support
-- Composer installed for QR code functionality
-- Web server with PHP-FPM (Nginx or Apache)
-- Git installed if using the update script
+- PHP 8.1+ with SQLite support
+- Composer installed for QR support
+- Nginx or Apache with PHP-FPM
+- Git available for repository updates
 
-## Quick Installation
+## Repository layout used by deployment
 
-### Step 1: Clone the repository
+The canonical public root is the repository root itself:
+
+- `index.php`
+- `admin.php`
+- `save.php`
+- `messages.php`
+- `gallery.php`
+- `style.css`
+- `script.js`
+
+Private and legacy implementation remains in `app/` and is not the canonical frontend.
+
+## Fresh install
 
 ```bash
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-```
-
-### Step 2: Run the installer
-
-```bash
+cd /path/to/repository
 sudo ./deploy/install.sh
 ```
 
-The installer deploys the application to `/var/www/wedding` by default.
+The installer deploys to `/var/www/wedding` by default and:
 
-### What the installer does
+- installs required PHP packages
+- creates database and config defaults when missing
+- creates required upload directories
+- sets secure permissions on configuration and SQLite files
+- creates `.env` when needed
+- configures Nginx or Apache from the templates in `deploy/templates/`
 
-- Verifies Composer is installed
-- Creates or preserves `.env`
-- Copies application files to `/var/www/wedding`
-- Configures web server settings for Nginx or Apache
-- Sets secure permissions on runtime files
-- Initializes the database and default configuration
-- Generates administrator credentials if `.env` does not already exist
-- Optionally configures WebDAV for Apache
-
-### Step 3: Verify the installation
-
-```bash
-sudo /var/www/wedding/deploy/health-check.sh
-```
-
-Expected checks include:
-
-- Required files and directories
-- `config.json` protection
-- `database.sqlite` protection
-- `.env` existence and password
-- WebDAV configuration if enabled
-
-### Step 4: Access the application
-
-- Public site: `http://your-server-ip/`
-- Admin panel: `http://your-server-ip/admin/`
-
-## Updating an Existing Installation
-
-Use `deploy/update.sh` for updates.
+## Update existing install
 
 ```bash
 sudo /var/www/wedding/deploy/update.sh
 ```
 
-The update script will:
-
-- create a backup using `deploy/backup.sh`
-- download the latest source code from GitHub
-- run `composer install --no-dev --optimize-autoloader`
-- preserve user data and configuration
-- restart PHP-FPM and reload the web server
-- run `deploy/health-check.sh`
-
-### Files preserved during update
+The updater should preserve runtime data and user config while updating the application source. The current protected files include:
 
 - `config.json`
 - `guest-links.json`
 - `database.sqlite`
-- `.env`
-- `event.ics`
 - `uploads/`
+- `event.ics`
+- `custom.css`
 - `backups/`
-- `webdav/`
 
-## Installer vs Updater
-
-- `deploy/install.sh` is the recommended path for fresh installations.
-- `deploy/update.sh` is the preferred path for existing installations.
-- `deploy/install.sh` can detect and run from the canonical target `/var/www/wedding`, but `deploy/update.sh` remains the safer update workflow.
-
-## Optional WebDAV
-
-Apache can optionally provide WebDAV support. The installer prompts for WebDAV configuration and creates `/etc/apache2/.davpasswd` when enabled.
-
-Nginx may serve static content and limited WebDAV methods but is not the recommended WebDAV platform.
-
-## Manual Installation
-
-### 1. Install dependencies
+## Health check
 
 ```bash
-sudo apt update
-sudo apt install -y nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl git composer
+sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-### 2. Clone the repository
+The health check validates only the critical deployment requirements for the repository as it exists now:
+
+- application root and public files exist
+- config and database are readable and secure
+- required upload directories exist and are writable
+- public routes respond
+- sensitive files remain blocked from public access
+
+WebDAV is optional and should not fail a deployment when it is not enabled.
+
+## Web server templates
+
+- Nginx template: `deploy/templates/nginx/wedding.conf`
+- Apache templates: `deploy/templates/apache/`
+
+The templates must align with the current canonical paths and should not assume a legacy `app/` document root architecture.
+
+## Backup and restore
 
 ```bash
-sudo mkdir -p /var/www/wedding
-sudo git clone https://github.com/februana/webserver_undangan.git /var/www/wedding
+sudo /var/www/wedding/deploy/backup.sh
+sudo /var/www/wedding/deploy/restore.sh /path/to/backup.tar.gz
 ```
 
-### 3. Set permissions
+## Security and permissions
+
+Minimum runtime permissions should remain aligned with the server configuration:
 
 ```bash
-sudo chown -R www-data:www-data /var/www/wedding
-sudo find /var/www/wedding -type d -exec chmod 755 {} \;
-sudo find /var/www/wedding -type f -exec chmod 644 {} \;
-sudo chmod 600 /var/www/wedding/config.json
+chmod 600 /var/www/wedding/config.json
+chmod 600 /var/www/wedding/database.sqlite
+chmod 600 /var/www/wedding/guest-links.json
+chown -R www-data:www-data /var/www/wedding/uploads
 ```
 
-### 4. Install Composer dependencies
-
-```bash
-cd /var/www/wedding
-composer install --no-dev --optimize-autoloader
-```
-
-### 5. Configure the web server
-
-- For Nginx: use the templates in `deploy/templates/nginx/`
-- For Apache: use the templates in `deploy/templates/apache/`
-
-### 6. Test and reload
-
-```bash
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-## SSL/HTTPS Setup
-
-For production, enable HTTPS with Certbot.
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
-```
+Public access must remain blocked for sensitive files such as `config.json`, `database.sqlite`, and `guest-links.json`.
 
 ## Troubleshooting
 
-### Application not loading
+### Site does not load
 
-- Check Nginx or Apache status
-- Check PHP-FPM status
-- Inspect web server logs
+- verify the web server is active
+- verify PHP-FPM is active
+- run `deploy/health-check.sh`
+- confirm the document root points to the repository root and not a legacy subdirectory
 
-### Permission denied
+### Permissions problem
 
 ```bash
 sudo chown -R www-data:www-data /var/www/wedding
 sudo chmod 600 /var/www/wedding/config.json
+sudo chmod 600 /var/www/wedding/database.sqlite
+sudo chmod 600 /var/www/wedding/guest-links.json
 ```
 
-### Database errors
+### 403 on config or database
 
-Ensure `/var/www/wedding/database.sqlite` exists and is writable by the web server.
-
-### 403 forbidden on config or database
-
-This is expected. These files should be blocked from public access.
-
-## Next Steps
-
-- Review `ARCHITECTURE.md` for the current repository design.
-- Review `BACKUP_RESTORE.md` for backup and restore procedures.
+This is expected and is a required security condition.

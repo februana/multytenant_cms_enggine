@@ -204,11 +204,29 @@ function config_defaults(): array {
                 'custom_subtitle' => ''
             ],
             [
+                'id' => 'guest_intro',
+                'title' => 'Kepada Yth.',
+                'subtitle' => '',
+                'enabled' => true,
+                'order' => 2,
+                'custom_title' => '',
+                'custom_subtitle' => ''
+            ],
+            [
+                'id' => 'undangan',
+                'title' => 'Undangan Pernikahan',
+                'subtitle' => 'Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir pada hari istimewa kami.',
+                'enabled' => true,
+                'order' => 3,
+                'custom_title' => '',
+                'custom_subtitle' => ''
+            ],
+            [
                 'id' => 'bride_groom',
                 'title' => 'Bride & Groom',
                 'subtitle' => 'Mempelai',
                 'enabled' => true,
-                'order' => 2,
+                'order' => 4,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
@@ -217,43 +235,43 @@ function config_defaults(): array {
                 'title' => 'Countdown',
                 'subtitle' => 'Menuju Hari Bahagia',
                 'enabled' => true,
-                'order' => 3,
-                'custom_title' => '',
-                'custom_subtitle' => ''
-            ],
-            [
-                'id' => 'love_story',
-                'title' => 'Love Story',
-                'subtitle' => 'Cerita Kami',
-                'enabled' => true,
-                'order' => 4,
-                'custom_title' => '',
-                'custom_subtitle' => ''
-            ],
-            [
-                'id' => 'gallery',
-                'title' => 'Gallery',
-                'subtitle' => 'Galeri Foto',
-                'enabled' => true,
                 'order' => 5,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
             [
-                'id' => 'events',
-                'title' => 'Events',
-                'subtitle' => 'Acara',
+                'id' => 'cerita',
+                'title' => 'Love Story',
+                'subtitle' => 'Cerita Kami',
                 'enabled' => true,
                 'order' => 6,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
             [
-                'id' => 'location',
+                'id' => 'galeri',
+                'title' => 'Gallery',
+                'subtitle' => 'Galeri Foto',
+                'enabled' => true,
+                'order' => 7,
+                'custom_title' => '',
+                'custom_subtitle' => ''
+            ],
+            [
+                'id' => 'acara',
+                'title' => 'Events',
+                'subtitle' => 'Acara',
+                'enabled' => true,
+                'order' => 8,
+                'custom_title' => '',
+                'custom_subtitle' => ''
+            ],
+            [
+                'id' => 'lokasi',
                 'title' => 'Location',
                 'subtitle' => 'Lokasi Acara',
                 'enabled' => true,
-                'order' => 7,
+                'order' => 9,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
@@ -262,25 +280,34 @@ function config_defaults(): array {
                 'title' => 'RSVP',
                 'subtitle' => 'Konfirmasi Kehadiran',
                 'enabled' => true,
-                'order' => 8,
+                'order' => 10,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
             [
-                'id' => 'gift',
+                'id' => 'amplop',
                 'title' => 'Gift',
                 'subtitle' => 'Ucapan & Hadiah',
                 'enabled' => true,
-                'order' => 9,
+                'order' => 11,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
             [
-                'id' => 'guest_wishes',
+                'id' => 'messages',
                 'title' => 'Guest Wishes',
                 'subtitle' => 'Ucapan Tamu',
                 'enabled' => true,
-                'order' => 10,
+                'order' => 12,
+                'custom_title' => '',
+                'custom_subtitle' => ''
+            ],
+            [
+                'id' => 'music',
+                'title' => 'Music',
+                'subtitle' => 'Musik Latar',
+                'enabled' => true,
+                'order' => 13,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ],
@@ -289,7 +316,7 @@ function config_defaults(): array {
                 'title' => 'Footer',
                 'subtitle' => '',
                 'enabled' => true,
-                'order' => 11,
+                'order' => 14,
                 'custom_title' => '',
                 'custom_subtitle' => ''
             ]
@@ -446,8 +473,11 @@ function load_config(): array {
     if (!is_array($config['sections'])) {
         $config['sections'] = $defaults['sections'];
     } else {
-        // Ensure each section has custom_title and custom_subtitle keys for backward compatibility
         foreach ($config['sections'] as &$section) {
+            if (!is_array($section)) {
+                continue;
+            }
+            $section['id'] = normalize_section_id((string)($section['id'] ?? ''));
             if (!isset($section['custom_title'])) {
                 $section['custom_title'] = '';
             }
@@ -670,6 +700,39 @@ function get_config_value(array $config, string $path, $default = '') {
     return $value;
 }
 
+function normalize_section_id(string $id): string {
+    $id = strtolower(trim($id));
+    $aliases = [
+        'bride_groom' => 'bride_groom',
+        'couple' => 'bride_groom',
+        'events' => 'acara',
+        'schedule' => 'acara',
+        'acara' => 'acara',
+        'love_story' => 'cerita',
+        'story' => 'cerita',
+        'cerita' => 'cerita',
+        'gallery' => 'galeri',
+        'galeri' => 'galeri',
+        'location' => 'lokasi',
+        'lokasi' => 'lokasi',
+        'gift' => 'amplop',
+        'amplop' => 'amplop',
+        'guest_wishes' => 'messages',
+        'messages' => 'messages',
+        'guest_intro' => 'guest_intro',
+        'guest-intro' => 'guest_intro',
+        'undangan' => 'undangan',
+        'opening' => 'undangan',
+        'music' => 'music',
+        'musik' => 'music',
+        'rsvp' => 'rsvp',
+        'hero' => 'hero',
+        'countdown' => 'countdown',
+        'footer' => 'footer'
+    ];
+    return $aliases[$id] ?? $id;
+}
+
 function build_full_url(string $path): string {
     $path = ltrim($path, '/');
     $config = load_config();
@@ -693,6 +756,170 @@ function generate_safe_filename(string $originalName, string $prefix = ''): stri
         $prefix .= '-';
     }
     return $prefix . $random . '.' . $extension;
+}
+
+function normalize_image_orientation(string $sourcePath): ?string {
+    $ext = strtolower(pathinfo($sourcePath, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+        return null;
+    }
+
+    $orientation = null;
+    if (function_exists('exif_read_data') && in_array($ext, ['jpg', 'jpeg'], true)) {
+        $exif = @exif_read_data($sourcePath, 'IFD0');
+        if (is_array($exif) && isset($exif['Orientation'])) {
+            $orientation = (int)$exif['Orientation'];
+        }
+    }
+
+    if ($orientation === null || $orientation === 1) {
+        return null;
+    }
+
+    if (!extension_loaded('gd')) {
+        return null;
+    }
+
+    $image = @imagecreatefromstring(@file_get_contents($sourcePath));
+    if (!$image) {
+        return null;
+    }
+
+    $rotated = $image;
+    switch ($orientation) {
+        case 3:
+            $rotated = imagerotate($image, 180, 0);
+            break;
+        case 6:
+            $rotated = imagerotate($image, -90, 0);
+            break;
+        case 8:
+            $rotated = imagerotate($image, 90, 0);
+            break;
+    }
+
+    if ($rotated !== false) {
+        $tmp = $sourcePath . '.orient.tmp';
+        $ok = imagejpeg($rotated, $tmp, 90);
+        imagedestroy($rotated);
+        imagedestroy($image);
+        if ($ok) {
+            @rename($tmp, $sourcePath);
+            return $sourcePath;
+        }
+        @unlink($tmp);
+    }
+
+    imagedestroy($image);
+    return null;
+}
+
+function find_imagemagick_binary(): ?string {
+    $candidates = ['magick', 'convert'];
+    foreach ($candidates as $binary) {
+        $output = [];
+        @exec('command -v ' . escapeshellarg($binary) . ' 2>/dev/null', $output, $code);
+        if ($code === 0 && !empty($output[0])) {
+            return trim((string) $output[0]);
+        }
+    }
+    return null;
+}
+
+function process_uploaded_image(string $sourcePath): bool {
+    if (!is_file($sourcePath)) {
+        return false;
+    }
+
+    $extension = strtolower(pathinfo($sourcePath, PATHINFO_EXTENSION));
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+        return false;
+    }
+
+    if ($extension === 'webp' && function_exists('imagewebp')) {
+        return true;
+    }
+
+    $webpPath = preg_replace('/\.[^.]+$/', '.webp', $sourcePath) ?: ($sourcePath . '.webp');
+
+    if (class_exists('Imagick')) {
+        try {
+            $imagick = new Imagick($sourcePath);
+            $imagick->stripImage();
+            $imagick->setImageCompressionQuality(82);
+            $imagick->setImageFormat('webp');
+            $imagick->writeImage($webpPath);
+            $imagick->clear();
+            $imagick->destroy();
+            return file_exists($webpPath);
+        } catch (Throwable $e) {
+            error_log('MediaProcessor Imagick failed: ' . $e->getMessage());
+            @unlink($webpPath);
+        }
+    }
+
+    $binary = find_imagemagick_binary();
+    if ($binary !== null) {
+        $escapedBinary = escapeshellarg($binary);
+        $escapedSource = escapeshellarg($sourcePath);
+        $escapedWebp = escapeshellarg($webpPath);
+        $command = $escapedBinary . ' ' . $escapedSource . ' -strip -quality 82 ' . $escapedWebp;
+        $process = proc_open($command, [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ], $pipes);
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[2]);
+            $exitCode = proc_close($process);
+            if ($exitCode === 0 && file_exists($webpPath) && filesize($webpPath) > 0) {
+                return true;
+            }
+            @unlink($webpPath);
+            if ($stderr !== '') {
+                error_log('MediaProcessor ImageMagick CLI failed: ' . trim($stderr));
+            }
+            return false;
+        }
+        @unlink($webpPath);
+        return false;
+    }
+
+    if (!extension_loaded('gd')) {
+        return false;
+    }
+
+    $data = @file_get_contents($sourcePath);
+    if ($data === false) {
+        return false;
+    }
+
+    $image = @imagecreatefromstring($data);
+    if (!$image) {
+        return false;
+    }
+
+    $width = imagesx($image);
+    $height = imagesy($image);
+    if ($width <= 0 || $height <= 0) {
+        imagedestroy($image);
+        return false;
+    }
+
+    $tmp = $webpPath . '.tmp';
+    $ok = @imagewebp($image, $tmp, 82);
+    imagedestroy($image);
+    if (!$ok) {
+        @unlink($tmp);
+        return false;
+    }
+
+    @rename($tmp, $webpPath);
+    return file_exists($webpPath);
 }
 
 function verify_admin_password(string $password, array $config): bool {
@@ -818,6 +1045,12 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
     if (!move_uploaded_file($file['tmp_name'], $dest)) {
         return ['error' => 'Gagal menyimpan file.'];
     }
+
+    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+        normalize_image_orientation($dest);
+        process_uploaded_image($dest);
+    }
+
     return ['path' => $dest, 'name' => $safeName, 'extension' => $extension, 'mime' => $mime];
 }
 
@@ -868,6 +1101,254 @@ function get_gallery_items(array $config): array {
         return $a['order'] <=> $b['order'];
     });
     return $items;
+}
+
+function delete_uploaded_asset(string $relativePath): bool {
+    $normalized = trim((string) $relativePath);
+    $normalized = str_replace('\\', '/', $normalized);
+    $normalized = ltrim($normalized, '/');
+    if ($normalized === '' || str_contains($normalized, '..')) {
+        return false;
+    }
+    $fullPath = ROOT_DIR . '/' . $normalized;
+    if (!is_file($fullPath)) {
+        return false;
+    }
+    $allowedRoots = [
+        UPLOADS_COVER_DIR,
+        UPLOADS_BACKGROUND_DIR,
+        UPLOADS_GALLERY_DIR,
+        UPLOADS_LOVE_STORY_DIR,
+        UPLOADS_MUSIC_DIR
+    ];
+    $realPath = realpath($fullPath);
+    foreach ($allowedRoots as $root) {
+        $realRoot = realpath($root);
+        if ($realRoot !== false && $realPath !== false && str_starts_with($realPath, $realRoot . DIRECTORY_SEPARATOR)) {
+            return @unlink($fullPath);
+        }
+    }
+    return false;
+}
+
+function normalize_media_relative_path(string $relativePath): ?string {
+    $normalized = trim((string) $relativePath);
+    $normalized = str_replace('\\', '/', $normalized);
+    $normalized = ltrim($normalized, '/');
+    if ($normalized === '' || str_contains($normalized, '..')) {
+        return null;
+    }
+    return $normalized;
+}
+
+function detect_media_usage(array $config, string $relativePath): array {
+    $normalized = normalize_media_relative_path($relativePath);
+    if ($normalized === null) {
+        return [];
+    }
+    $usage = [];
+    $checks = [
+        'Cover' => $config['media']['cover'] ?? '',
+        'Hero Background' => $config['media']['background_hero'] ?? '',
+        'Open Graph Image' => $config['site']['open_graph_image'] ?? '',
+        'Music' => $config['media']['music'] ?? '',
+        'QR Gift' => $config['gift']['qris_image'] ?? '',
+    ];
+    foreach ($checks as $label => $value) {
+        if ($value !== '' && normalize_media_relative_path($value) === $normalized) {
+            $usage[] = $label;
+        }
+    }
+    foreach (($config['media']['background_sections'] ?? []) as $index => $value) {
+        if ($value !== '' && normalize_media_relative_path($value) === $normalized) {
+            $usage[] = 'Background #' . ($index + 1);
+        }
+    }
+    foreach (($config['gallery']['items'] ?? []) as $item) {
+        $filename = (string)($item['filename'] ?? '');
+        if ($filename !== '' && normalize_media_relative_path($filename) === $normalized) {
+            $usage[] = 'Gallery';
+        }
+    }
+    foreach (($config['love_story']['items'] ?? []) as $item) {
+        $image = (string)($item['image'] ?? '');
+        if ($image !== '' && basename($image) === basename($normalized) && dirname($image) === dirname($normalized)) {
+            $usage[] = 'Love Story';
+        }
+    }
+    $usage = array_values(array_unique($usage));
+    return $usage;
+}
+
+function list_media_library(array $options = []): array {
+    $search = strtolower(trim((string)($options['search'] ?? '')));
+    $typeFilter = strtolower(trim((string)($options['type'] ?? 'all')));
+    $groupFilter = strtolower(trim((string)($options['group'] ?? 'all')));
+    $config = load_config();
+    $groups = [
+        'cover' => ['dir' => UPLOADS_COVER_DIR, 'label' => 'Cover', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'background' => ['dir' => UPLOADS_BACKGROUND_DIR, 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'gallery' => ['dir' => UPLOADS_GALLERY_DIR, 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'love_story' => ['dir' => UPLOADS_LOVE_STORY_DIR, 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'music' => ['dir' => UPLOADS_MUSIC_DIR, 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
+    ];
+
+    $items = [];
+    foreach ($groups as $groupKey => $group) {
+        if (!is_dir($group['dir']) || ($groupFilter !== 'all' && $groupKey !== $groupFilter)) {
+            continue;
+        }
+        $files = glob($group['dir'] . '/*') ?: [];
+        sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+        foreach ($files as $filePath) {
+            if (!is_file($filePath)) {
+                continue;
+            }
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            if (!in_array($ext, $group['allowed'], true)) {
+                continue;
+            }
+            $path = relative_path($filePath);
+            $name = basename($filePath);
+            if ($search !== '' && stripos($name, $search) === false && stripos($path, $search) === false) {
+                continue;
+            }
+            $mediaType = in_array($ext, ALLOWED_AUDIO_TYPES, true) ? 'audio' : 'image';
+            if ($typeFilter !== 'all' && $typeFilter !== $mediaType) {
+                continue;
+            }
+            $usage = detect_media_usage($config, $path);
+            $dimensions = null;
+            if ($mediaType === 'image') {
+                $imageInfo = @getimagesize($filePath);
+                if (is_array($imageInfo)) {
+                    $dimensions = $imageInfo[0] . ' × ' . $imageInfo[1];
+                }
+            }
+            $items[] = [
+                'group' => $groupKey,
+                'label' => $group['label'],
+                'type' => $mediaType,
+                'path' => $path,
+                'name' => $name,
+                'size' => filesize($filePath),
+                'mime' => safe_image_mime($filePath) ?: mime_content_type($filePath),
+                'dimensions' => $dimensions,
+                'created_at' => filemtime($filePath),
+                'used_by' => $usage,
+                'is_used' => !empty($usage),
+                'status' => empty($usage) ? 'Unused' : 'Used',
+            ];
+        }
+    }
+
+    usort($items, function (array $a, array $b): int {
+        $groupOrder = ['cover' => 1, 'background' => 2, 'gallery' => 3, 'love_story' => 4, 'music' => 5];
+        $groupDiff = ($groupOrder[$a['group']] ?? 99) <=> ($groupOrder[$b['group']] ?? 99);
+        return $groupDiff !== 0 ? $groupDiff : strcmp($a['name'], $b['name']);
+    });
+
+    return $items;
+}
+
+function rename_uploaded_asset(string $relativePath, string $newName): array {
+    $normalized = normalize_media_relative_path($relativePath);
+    if ($normalized === null) {
+        return ['success' => false, 'error' => 'Path media tidak valid.'];
+    }
+    $fullPath = ROOT_DIR . '/' . $normalized;
+    if (!is_file($fullPath)) {
+        return ['success' => false, 'error' => 'File media tidak ditemukan.'];
+    }
+    $safeName = trim((string)$newName);
+    if ($safeName === '') {
+        return ['success' => false, 'error' => 'Nama file baru wajib diisi.'];
+    }
+    $originalExt = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+    $newBaseName = preg_replace('/[^A-Za-z0-9_.-]+/', '-', $safeName);
+    $newBaseName = trim($newBaseName, '.-_ ');
+    if ($newBaseName === '') {
+        return ['success' => false, 'error' => 'Nama file baru tidak valid.'];
+    }
+    if (!str_ends_with(strtolower($newBaseName), '.' . $originalExt) && $originalExt !== '') {
+        $newBaseName .= '.' . $originalExt;
+    }
+    $targetDir = dirname($fullPath);
+    $targetPath = $targetDir . '/' . $newBaseName;
+    if ($targetPath === $fullPath) {
+        return ['success' => true, 'path' => $normalized];
+    }
+    if (file_exists($targetPath)) {
+        return ['success' => false, 'error' => 'Nama file sudah dipakai.'];
+    }
+    if (!@rename($fullPath, $targetPath)) {
+        return ['success' => false, 'error' => 'Gagal mengganti nama file.'];
+    }
+    return ['success' => true, 'path' => relative_path($targetPath)];
+}
+
+function replace_uploaded_asset(string $relativePath, array $file): array {
+    $normalized = normalize_media_relative_path($relativePath);
+    if ($normalized === null) {
+        return ['success' => false, 'error' => 'Path media tidak valid.'];
+    }
+    $fullPath = ROOT_DIR . '/' . $normalized;
+    if (!is_file($fullPath)) {
+        return ['success' => false, 'error' => 'File media tidak ditemukan.'];
+    }
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
+        return ['success' => false, 'error' => 'File pengganti tidak valid.'];
+    }
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowedMap = [
+        'cover' => ALLOWED_IMAGE_TYPES,
+        'background' => ALLOWED_IMAGE_TYPES,
+        'gallery' => ALLOWED_IMAGE_TYPES,
+        'love_story' => ALLOWED_IMAGE_TYPES,
+        'music' => ALLOWED_AUDIO_TYPES,
+    ];
+    $group = 'cover';
+    foreach ($allowedMap as $key => $allowed) {
+        if (str_contains($normalized, $key . '/')) {
+            $group = $key;
+            break;
+        }
+    }
+    if ($group === 'music' && !in_array($extension, ALLOWED_AUDIO_TYPES, true)) {
+        return ['success' => false, 'error' => 'Format media musik tidak diizinkan.'];
+    }
+    if ($group !== 'music' && !in_array($extension, ALLOWED_IMAGE_TYPES, true)) {
+        return ['success' => false, 'error' => 'Format media gambar tidak diizinkan.'];
+    }
+    $mime = safe_image_mime($file['tmp_name']);
+    if ($mime === null) {
+        return ['success' => false, 'error' => 'Tipe file tidak dapat diverifikasi.'];
+    }
+    $maxSize = $group === 'music' ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE;
+    if ($file['size'] > $maxSize) {
+        return ['success' => false, 'error' => 'Ukuran file terlalu besar.'];
+    }
+    $backupPath = $fullPath . '.bak';
+    @copy($fullPath, $backupPath);
+    $tempTarget = $fullPath . '.tmp';
+    if (!@move_uploaded_file($file['tmp_name'], $tempTarget)) {
+        @unlink($backupPath);
+        return ['success' => false, 'error' => 'Gagal mempersiapkan file pengganti.'];
+    }
+    if (@rename($tempTarget, $fullPath)) {
+        if ($group !== 'music' && in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            normalize_image_orientation($fullPath);
+            process_uploaded_image($fullPath);
+        }
+        @unlink($backupPath);
+        return ['success' => true, 'path' => $normalized];
+    }
+    @unlink($tempTarget);
+    if (file_exists($backupPath)) {
+        @copy($backupPath, $fullPath);
+    }
+    @unlink($backupPath);
+    return ['success' => false, 'error' => 'Gagal mengganti file lama.'];
 }
 
 function write_event_ics(array $config): void {

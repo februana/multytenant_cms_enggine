@@ -3,6 +3,7 @@ set -euo pipefail
 
 # deploy/health-check.sh
 # Validates a production deployment at /var/www/wedding
+# Critical checks are limited to the current single-root CMS-first architecture.
 
 DEPLOY_DIR="/var/www/wedding"
 PASS_COUNT=0
@@ -33,8 +34,8 @@ else
   fail "Deployment directory missing: $DEPLOY_DIR"
 fi
 
-# Check 2: Required files exist
-for file in index.php admin.php save.php messages.php gallery.php config.json database.sqlite; do
+# Check 2: Required root files exist
+for file in index.php admin.php save.php messages.php gallery.php config.php config.json database.sqlite; do
   if [ -f "$DEPLOY_DIR/$file" ]; then
     pass "File exists: $file"
   else
@@ -42,8 +43,8 @@ for file in index.php admin.php save.php messages.php gallery.php config.json da
   fi
 done
 
-# Check 3: Uploads directories exist and are writable
-for dir in cover music gallery background; do
+# Check 3: Required upload directories exist and are writable
+for dir in cover music gallery background love-story; do
   if [ -d "$DEPLOY_DIR/uploads/$dir" ] && [ -w "$DEPLOY_DIR/uploads/$dir" ]; then
     pass "Upload directory writable: uploads/$dir"
   else
@@ -51,14 +52,18 @@ for dir in cover music gallery background; do
   fi
 done
 
-# Check 4: WebDAV directory exists and is writable
-if [ -d "$DEPLOY_DIR/webdav" ] && [ -w "$DEPLOY_DIR/webdav" ]; then
-  pass "WebDAV directory exists and is writable"
+# Check 4: Optional WebDAV should not be treated as a critical dependency
+if [ -d "$DEPLOY_DIR/webdav" ]; then
+  if [ -w "$DEPLOY_DIR/webdav" ]; then
+    pass "WebDAV directory exists and is writable"
+  else
+    fail "WebDAV directory exists but is not writable: webdav/"
+  fi
 else
-  fail "WebDAV directory missing or not writable: webdav/"
+  pass "WebDAV not configured (optional; not a blocker)"
 fi
 
-# Check 5: Permissions check (config should be 600)
+# Check 5: Permissions checks
 CONFIG_PERMS=$(stat -c %a "$DEPLOY_DIR/config.json" 2>/dev/null || echo "000")
 if [[ "$CONFIG_PERMS" == "600" ]] || [[ "$CONFIG_PERMS" == "640" ]]; then
   pass "Config file permissions secure ($CONFIG_PERMS)"
@@ -66,7 +71,13 @@ else
   fail "Config file permissions insecure ($CONFIG_PERMS), expected 600 or 640"
 fi
 
-# Check 5: Ownership check
+DB_PERMS=$(stat -c %a "$DEPLOY_DIR/database.sqlite" 2>/dev/null || echo "000")
+if [[ "$DB_PERMS" == "600" ]] || [[ "$DB_PERMS" == "640" ]]; then
+  pass "Database permissions secure ($DB_PERMS)"
+else
+  fail "Database permissions insecure ($DB_PERMS), expected 600 or 640"
+fi
+
 OWNER=$(stat -c %U "$DEPLOY_DIR" 2>/dev/null || echo "unknown")
 if [ "$OWNER" = "www-data" ]; then
   pass "Directory owned by www-data"
@@ -174,9 +185,9 @@ if command -v curl &> /dev/null; then
         else
             fail "Frontend not responding (HTTP $HTTP_CODE)"
         fi
-        
-        # Admin panel
-        HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/admin.php" 2>/dev/null || echo "000")
+
+        # Admin panel: canonical admin entry is /admin/; admin.php is a redirect wrapper.
+        HTTP_CODE=$(curl -H "Host: $SITE_HOST" -s -o /dev/null -w "%{http_code}" "$HTTP_BASE/admin/" 2>/dev/null || echo "000")
         if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
             pass "Admin panel accessible (HTTP $HTTP_CODE)"
         else

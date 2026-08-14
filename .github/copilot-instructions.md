@@ -1,5 +1,15 @@
 # Copilot instructions for februana/webserver_undangan
 
+Note: This repository uses a CMS-first master prompt. See [AGENTS.md](../AGENTS.md) and [master_prompt_cms_first_architecture.txt](../master_prompt_cms_first_architecture.txt) for project-specific agent rules.
+
+**Project Instruction — CMS-First (authoritative)**
+The file [master_prompt_cms_first_architecture.txt](../master_prompt_cms_first_architecture.txt) is the authoritative project instruction and goal. All agents and automation MUST follow its Phase 0 audit-first workflow before making code changes. Key requirements:
+- Always run PHASE 0 (repository audit & freeze) before edits.
+- Treat `config.json` as single source of truth for sections and theme.
+- Ensure disabled sections (`sections.* = false`) produce no HTML in frontend.
+- Live Preview must use the same renderer as production.
+
+
 Purpose: give future Copilot sessions the repo-specific commands, high-level architecture, and conventions needed to make safe, accurate edits. This file is the canonical source of repository-specific guardrails — update it only when the project architecture or conventions change.
 
 NOTE: Only modify this file for policy or architecture changes. Do not modify other repository files when updating guidance.

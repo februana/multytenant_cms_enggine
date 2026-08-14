@@ -351,6 +351,10 @@ if (themeSettingsForm && themePreviewFrame) {
       theme.buttons = theme.buttons || {};
       theme.buttons.mobile_layout = mobileLayoutField.value;
     }
+    // Keep preview in sync with the production renderer contract; the CSS uses a valid flex-direction value.
+    if (theme.buttons && theme.buttons.mobile_layout) {
+      theme.buttons.mobile_layout = theme.buttons.mobile_layout === 'horizontal' || theme.buttons.mobile_layout === '2-columns' ? 'row' : 'column';
+    }
     return theme;
   }
 
