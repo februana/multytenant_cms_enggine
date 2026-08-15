@@ -12,7 +12,6 @@ $guestFallback = 'Bapak/Ibu/Saudara/i';
 
 $akadDate = $config['schedule']['akad_date'] ?? '';
 $akadTime = $config['schedule']['akad_time'] ?? '';
-$mapsUrl = $config['location']['maps_url'] ?? '';
 
 $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
@@ -80,4 +79,5 @@ $themePageShared = [
     'weddingTitle' => $weddingTitle,
 ];
 
-echo render_theme_layout($config, $themePageShared);
+$renderedTheme = render_theme_layout($config, $themePageShared);
+echo finalize_theme_output($renderedTheme, $config);
