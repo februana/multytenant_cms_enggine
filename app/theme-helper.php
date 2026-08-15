@@ -108,7 +108,15 @@ function finalize_theme_output(string $html, array $config): string {
     container_width: '--container-width', section_spacing: '--section-spacing',
     heading_font: '--font-heading', body_font: '--font-body', font_size_base: '--font-size-base'
   };
-  const classPrefixes = ['theme-button-', 'theme-navbar-', 'theme-card-', 'theme-footer-', 'theme-animation-'];
+  const classValuesFor = function (theme) {
+    return {
+      'theme-button-': theme.button_style || 'rounded',
+      'theme-navbar-': theme.navbar_style || 'transparent',
+      'theme-card-': theme.card_style || 'elevated',
+      'theme-footer-': theme.footer_style || 'centered',
+      'theme-animation-': theme.animation_enabled ? 'on' : 'off'
+    };
+  };
   window.addEventListener('message', function (event) {
     if (event.origin !== window.location.origin || !event.data || event.data.type !== 'theme-preview:update') return;
     const theme = event.data.theme || {};
@@ -118,19 +126,26 @@ function finalize_theme_output(string $html, array $config): string {
         if (key === 'paper_color') document.documentElement.style.setProperty('--paper-solid', theme[key]);
       }
     });
-    const classValues = {
-      'theme-button-': theme.button_style,
-      'theme-navbar-': theme.navbar_style,
-      'theme-card-': theme.card_style,
-      'theme-footer-': theme.footer_style,
-      'theme-animation-': theme.animation_enabled ? 'on' : 'off'
-    };
-    classPrefixes.forEach(function (prefix) {
-      document.body.classList.forEach(function (name) {
+
+    const classValues = classValuesFor(theme);
+    Object.keys(classValues).forEach(function (prefix) {
+      Array.from(document.body.classList).forEach(function (name) {
         if (name.indexOf(prefix) === 0) document.body.classList.remove(name);
       });
-      if (classValues[prefix] !== undefined && classValues[prefix] !== '') document.body.classList.add(prefix + classValues[prefix]);
+      document.body.classList.add(prefix + classValues[prefix]);
     });
+
+    const heroSection = document.getElementById('hero');
+    if (heroSection) {
+      const heroFit = theme.hero_image_fit || 'cover';
+      heroSection.style.backgroundSize = heroFit === 'contain' ? 'contain' : (heroFit === 'auto' ? 'auto' : 'cover');
+      heroSection.style.backgroundPosition = theme.hero_image_position || 'center';
+      heroSection.style.backgroundRepeat = 'no-repeat';
+    }
+
+    const mobileLayoutRaw = theme.buttons && theme.buttons.mobile_layout ? theme.buttons.mobile_layout : theme.mobile_layout;
+    const mobileLayout = mobileLayoutRaw === 'horizontal' || mobileLayoutRaw === '2-columns' ? 'row' : 'column';
+    document.documentElement.style.setProperty('--buttons-mobile-layout', mobileLayout);
   });
 })();
 </script>
