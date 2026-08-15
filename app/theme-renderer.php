@@ -158,6 +158,18 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
 
 function render_theme_layout(array $config, array $shared): string {
     $presetKey = resolve_theme_preset_key($config);
+    
+    // Try to load theme layout from themes/<preset>/layout.php
+    $layoutFile = __DIR__ . '/../themes/' . $presetKey . '/layout.php';
+    
+    if ($presetKey !== 'custom' && file_exists($layoutFile)) {
+        // Load the theme layout template
+        ob_start();
+        include $layoutFile;
+        return ob_get_clean();
+    }
+    
+    // Fallback to inline renderer for custom mode or missing layouts
     $parts = [];
     $themeOrder = theme_preset_layout_order($presetKey);
     $parts[] = render_theme_header($config, $presetKey);

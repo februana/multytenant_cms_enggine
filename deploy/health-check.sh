@@ -43,7 +43,31 @@ for file in index.php admin.php save.php messages.php gallery.php config.php con
   fi
 done
 
-# Check 3: Required upload directories exist and are writable
+# Check 3: Themes directory and required themes exist
+if [ -d "$DEPLOY_DIR/themes" ]; then
+  pass "Themes directory exists"
+else
+  fail "Missing themes directory"
+fi
+
+for theme in dewankl elix rainier archak; do
+  if [ -d "$DEPLOY_DIR/themes/$theme" ]; then
+    pass "Theme directory exists: themes/$theme"
+  else
+    fail "Missing theme directory: themes/$theme"
+  fi
+  
+  # Check for required theme files
+  for tfile in layout.php style.css script.js; do
+    if [ -f "$DEPLOY_DIR/themes/$theme/$tfile" ]; then
+      pass "Theme file exists: themes/$theme/$tfile"
+    else
+      fail "Missing theme file: themes/$theme/$tfile"
+    fi
+  done
+done
+
+# Check 4: Required upload directories exist and are writable
 for dir in cover music gallery background love-story; do
   if [ -d "$DEPLOY_DIR/uploads/$dir" ] && [ -w "$DEPLOY_DIR/uploads/$dir" ]; then
     pass "Upload directory writable: uploads/$dir"

@@ -157,7 +157,7 @@ function config_defaults(): array {
         ],
         'theme' => [
             'mode' => 'preset',
-            'theme_preset' => 'elegant',
+            'theme_preset' => 'dewankl',
             'primary_color' => '#c84c47',
             'secondary_color' => '#f0c2a1',
             'accent_color' => '#f0c2a1',
@@ -640,7 +640,7 @@ function get_active_theme_meta(array $config = []): array {
         ];
     }
 
-    $selectedPreset = trim((string)($config['theme']['theme_preset'] ?? 'elegant')) ?: 'elegant';
+    $selectedPreset = trim((string)($config['theme']['theme_preset'] ?? 'dewankl')) ?: 'dewankl';
     $registry = theme_registry();
     if (isset($registry[$selectedPreset])) {
         return $registry[$selectedPreset];
@@ -721,7 +721,7 @@ function load_config(): array {
         unset($section);
     }
     if (empty($config['theme']['theme_preset'])) {
-        $config['theme']['theme_preset'] = 'elegant';
+        $config['theme']['theme_preset'] = 'dewankl';
     }
     if (empty($config['theme']['mode'])) {
         $config['theme']['mode'] = get_theme_mode($config);
