@@ -678,6 +678,29 @@ function ensure_upload_dirs(): void {
     }
 }
 
+function init_database(string $dbPath = DB_PATH): bool {
+    try {
+        $db = new SQLite3($dbPath, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+        $db->exec('CREATE TABLE IF NOT EXISTS tamu (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nama TEXT NOT NULL,
+            status TEXT NOT NULL,
+            ucapan TEXT,
+            visible INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )');
+        $checkCol = $db->querySingle("SELECT 1 FROM pragma_table_info('tamu') WHERE name='visible'");
+        if (!$checkCol) {
+            @$db->exec('ALTER TABLE tamu ADD COLUMN visible INTEGER DEFAULT 1');
+        }
+        $db->close();
+        return true;
+    } catch (Throwable $e) {
+        error_log('Database initialization failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
 function load_config(): array {
     ensure_upload_dirs();
     $defaults = config_defaults();
