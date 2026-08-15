@@ -105,15 +105,6 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     case 'cover':
                         $config['media']['cover'] = $path;
                         break;
-                    case 'bride_photo':
-                        $config['media']['bride_photo'] = $path;
-                        break;
-                    case 'groom_photo':
-                        $config['media']['groom_photo'] = $path;
-                        break;
-                    case 'couple_photo':
-                        $config['media']['couple_photo'] = $path;
-                        break;
                     case 'background_hero':
                         $config['media']['background_hero'] = $path;
                         break;
@@ -181,15 +172,6 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 switch ($mediaKey) {
                     case 'media.cover':
                         $config['media']['cover'] = $mediaValue;
-                        break;
-                    case 'media.bride_photo':
-                        $config['media']['bride_photo'] = $mediaValue;
-                        break;
-                    case 'media.groom_photo':
-                        $config['media']['groom_photo'] = $mediaValue;
-                        break;
-                    case 'media.couple_photo':
-                        $config['media']['couple_photo'] = $mediaValue;
                         break;
                     case 'media.music':
                         $config['media']['music'] = $mediaValue;
@@ -567,30 +549,6 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         $error = $result['error'];
                     } else {
                         $config['media']['cover'] = relative_path($result['path']);
-                    }
-                }
-                if (!empty($_FILES['bride_photo']['name'])) {
-                    $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
-                    if (!empty($result['error'])) {
-                        $error = $result['error'];
-                    } else {
-                        $config['media']['bride_photo'] = relative_path($result['path']);
-                    }
-                }
-                if (!empty($_FILES['groom_photo']['name'])) {
-                    $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
-                    if (!empty($result['error'])) {
-                        $error = $result['error'];
-                    } else {
-                        $config['media']['groom_photo'] = relative_path($result['path']);
-                    }
-                }
-                if (!empty($_FILES['couple_photo']['name'])) {
-                    $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
-                    if (!empty($result['error'])) {
-                        $error = $result['error'];
-                    } else {
-                        $config['media']['couple_photo'] = relative_path($result['path']);
                     }
                 }
                 break;

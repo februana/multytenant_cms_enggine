@@ -40,15 +40,6 @@
     const copyButtons = document.querySelectorAll('[data-copy-target]');
     const countdownDayEl = document.getElementById('hero-countdown-day');
 
-    function hideLoadingScreen() {
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            setTimeout(function() {
-                loadingScreen.style.display = 'none';
-            }, 500);
-        }
-    }
-
     // State
     let currentGalleryIndex = 0;
     let galleryItems = [];
@@ -57,7 +48,7 @@
     /**
      * Initialize everything when DOM is ready
      */
-    function init() {
+    document.addEventListener('DOMContentLoaded', function() {
         initWelcomeOverlay();
         initNavbar();
         initCountdown();
@@ -66,20 +57,9 @@
         initCopyButtons();
         initScrollEffects();
         
+        // Collect gallery items after AOS initializes
         setTimeout(collectGalleryItems, 500);
-    }
-
-    if (document.readyState === 'complete') {
-        hideLoadingScreen();
-    } else {
-        window.addEventListener('load', hideLoadingScreen);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
+    });
 
     /**
      * Welcome Overlay & Invitation Opening

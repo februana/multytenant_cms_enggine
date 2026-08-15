@@ -131,9 +131,6 @@ function config_defaults(): array {
         ],
         'media' => [
             'cover' => 'uploads/cover/cover.jpg',
-            'bride_photo' => '',
-            'groom_photo' => '',
-            'couple_photo' => '',
             'music' => 'music/lagu.mp3',
             'background_hero' => '',
             'background_sections' => []
@@ -1414,9 +1411,6 @@ function detect_media_usage(array $config, string $relativePath): array {
     $usage = [];
     $checks = [
         'Cover' => $config['media']['cover'] ?? '',
-        'Bride Photo' => $config['media']['bride_photo'] ?? '',
-        'Groom Photo' => $config['media']['groom_photo'] ?? '',
-        'Couple Photo' => $config['media']['couple_photo'] ?? '',
         'Hero Background' => $config['media']['background_hero'] ?? '',
         'Open Graph Image' => $config['site']['open_graph_image'] ?? '',
         'Music' => $config['media']['music'] ?? '',

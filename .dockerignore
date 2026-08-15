@@ -1,0 +1,15 @@
+.git
+.github
+.gitignore
+.env
+.env.*
+*.pem
+*.key
+backups/*
+webdav/*
+uploads/*
+*.log
+*.tmp
+*.swp
+node_modules
+vendor

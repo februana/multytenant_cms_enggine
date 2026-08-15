@@ -35,11 +35,8 @@ $giftHolder = escape_html($config['gift']['account_holder'] ?? '');
 $giftEwalletLabel = escape_html($config['gift']['e_wallet_label'] ?? '');
 $giftEwalletNumber = escape_html($config['gift']['e_wallet_number'] ?? '');
 $coverPath = $config['media']['cover'] ?? 'uploads/cover/cover.jpg';
-$bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
-$groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
-$couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
 $musicSrc = $config['media']['music'] ?? 'music/lagu.mp3';
-$heroBg = !empty($config['media']['background_hero']) ? $config['media']['background_hero'] : $couplePhoto;
+$heroBg = $config['media']['background_hero'] ?? $coverPath;
 
 $whatsappLink = build_whatsapp_link($config);
 $calendarLink = build_google_calendar_link($config);
