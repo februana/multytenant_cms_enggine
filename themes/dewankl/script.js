@@ -121,8 +121,7 @@
             }, 100);
         });
         
-        // Hide loading page when ready
-        window.addEventListener('load', function() {
+        function hideLoading() {
             if (loadingEl) {
                 loadingEl.style.transition = 'opacity 0.5s ease';
                 loadingEl.style.opacity = '0';
@@ -130,7 +129,13 @@
                     loadingEl.style.display = 'none';
                 }, 500);
             }
-        });
+        }
+
+        if (document.readyState === 'complete') {
+            hideLoading();
+        } else {
+            window.addEventListener('load', hideLoading);
+        }
     }
     
     // Copy to Clipboard

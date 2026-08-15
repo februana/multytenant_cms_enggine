@@ -45,7 +45,10 @@
         "cover": "uploads/cover/cover.jpg",
         "music": "music/lagu.mp3",
         "background_hero": "",
-        "background_sections": []
+        "background_sections": [],
+        "bride_photo": "",
+        "groom_photo": "",
+        "couple_photo": ""
     },
     "gallery": {
         "cover": "",
