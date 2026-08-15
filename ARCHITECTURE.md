@@ -1,98 +1,102 @@
 # Architecture Documentation
 
-# Architecture
-
 ## Overview
 
-This application uses a single-root CMS-first architecture. The repository root is the canonical application source and the public document root.
+The application uses a single-root, CMS-first architecture. The repository root is the canonical application source and is deployed as the public document root.
+
+## Canonical request flow
+
+```text
+CMS/admin
+   ↓
+config.json
+   ↓
+config.php
+   ↓
+index.php (controller/data preparation)
+   ↓
+theme resolver
+   ↓
+themes/<preset>/layout.php
+   ↓
+complete HTML document
+```
+
+`index.php` must not emit a second HTML document. Theme layouts own the complete frontend document.
+
+## Theme presets
+
+The canonical setting is `theme.theme_preset`.
+
+Supported official presets:
+
+- `dewankl`
+- `elix`
+- `rainier`
+- `archak`
+
+Unknown preset values fall back safely to `dewankl`. `custom` remains a separate renderer mode where supported by the existing configuration contract.
+
+Each theme owns its document layout and loads its own theme CSS/JS. Custom CSS is loaded after theme CSS so CMS overrides remain effective.
 
 ## Canonical public entrypoints
 
-- `index.php` — public frontend renderer
+- `index.php` — controller and theme delegation
 - `admin.php` — redirect to `/admin/`
-- `save.php` — public wrapper for save actions
-- `messages.php` — public wrapper for message APIs
-- `gallery.php` — public wrapper for gallery APIs
+- `save.php` — public save wrapper
+- `messages.php` — public message API wrapper
+- `gallery.php` — public gallery API wrapper
 
-## Canonical frontend and runtime files
+## Shared implementation
 
-- `style.css` — canonical stylesheet
-- `script.js` — canonical frontend JavaScript
-- `config.php` — config loader and runtime helper logic
+- `app/theme-helper.php` — canonical frontend helper functions
+- `app/theme-renderer.php` — theme resolver, shared section renderer, and layout loader
+- `config.php` — configuration loader and runtime helpers
 - `config.json` — single source of truth for CMS values
-- `database.sqlite` — database for RSVP and messages
-- `guest-links.json` — guest link store
-- `uploads/` — canonical media directory
-- `admin/` — CMS UI and admin operations
-- `deploy/` — deployment and health-check scripts
+- `themes/` — official frontend preset layouts and assets
 
-## Repository structure
+The helper is loaded once with `require_once`; theme layouts must not redefine shared helpers.
+
+## Preserved frontend contracts
+
+The single-renderer architecture preserves existing behavior including:
+
+- site SEO metadata and JSON-LD schema
+- theme live preview via `theme-preview:update`
+- section visibility
+- theme presentation settings
+- theme CSS followed by Custom CSS
+- gallery, music, RSVP, maps, gift, and other existing theme functionality
+
+## Deployment architecture
 
 ```text
-/
-├── index.php
-├── admin.php
-├── save.php
-├── messages.php
-├── gallery.php
-├── config.php
-├── config.json
-├── database.sqlite
-├── guest-links.json
-├── uploads/
-├── admin/
-├── app/
-├── style.css
-├── script.js
-├── custom.css
-├── backups/
-├── deploy/
-└── legacy docs / compatibility notes
+~/webserver_undangan
+        │
+        │ deploy/install.sh
+        ▼
+/var/www/wedding
 ```
 
-## Request flow
+The repository is the source tree. `/var/www/wedding` is deployment output and must not be used as the Git working tree.
 
-- Public pages render via `index.php` using `config.php` and `config.json`.
-- Admin UI is served from `admin/index.php`.
-- Public wrappers call private app logic as needed, but root-level files remain the public interface.
-- Frontend styles and behavior remain canonical in root-level `style.css` and `script.js`.
+`deploy/install.sh` creates/populates `/var/www/wedding`. `deploy/update.sh` synchronizes source while protecting runtime data. `deploy/health-check.sh` verifies the installed runtime.
 
-## CMS ownership rules
+## Runtime data
 
-The CMS is the source of truth for:
-
-- section visibility
-- media references and upload metadata
-- hero/background media
-- theme preset resolution
-- guest links and saved content
-- live preview state
-
-The frontend consumes these values and must not replace the CMS-owned rendering logic.
-
-## Deployment
-
-- `deploy/install.sh` — fresh install
-- `deploy/update.sh` — update existing site
-- `deploy/backup.sh` — backup runtime data
-- `deploy/restore.sh` — restore runtime data
-- `deploy/health-check.sh` — verify critical deployment dependencies
-
-## Backups and runtime data
-
-Backups preserve user and runtime data without replacing the source code. Current runtime data includes:
+Updates must preserve:
 
 - `config.json`
 - `guest-links.json`
 - `database.sqlite`
 - `uploads/`
 - `event.ics`
-- `custom.css` when present
+- `custom.css`
+- `backups/`
 
-## Security notes
+## Security
 
 - Sensitive runtime files must remain blocked from direct public access.
 - `uploads/` is static content only; PHP execution should remain disabled there.
 - `config.json`, `database.sqlite`, and `guest-links.json` require restrictive permissions.
-- `app/` remains private implementation and legacy compatibility; it is not a public-facing frontend architecture.
-
+- `app/` is private implementation, not a second public document root.
