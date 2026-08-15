@@ -88,7 +88,18 @@
         "animation_enabled": true,
         "navbar_style": "transparent",
         "card_style": "elevated",
-        "footer_style": "centered"
+        "footer_style": "centered",
+        "mode": "preset",
+        "hero_height": "100vh",
+        "hero_vertical_alignment": "center",
+        "hero_content_width": "900px",
+        "hero_image_fit": "cover",
+        "hero_image_position": "center",
+        "mobile_hero_height": "85vh",
+        "mobile_hero_vertical_alignment": "center",
+        "mobile_hero_content_width": "100%",
+        "mobile_hero_image_fit": "cover",
+        "mobile_hero_image_position": "center top"
     },
     "sections": [
         {
@@ -194,5 +205,8 @@
     "love_story": {
         "items": []
     },
-    "custom_css": ""
+    "custom_css": "",
+    "buttons": {
+        "mobile_layout": "2-columns"
+    }
 }
