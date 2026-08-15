@@ -5,14 +5,20 @@
     'use strict';
 
     // Preloader
-    window.addEventListener('load', function() {
+    function hidePreloader() {
         const preloader = document.getElementById('preloader');
         if (preloader) {
             setTimeout(function() {
                 preloader.classList.add('hidden');
-            }, 1500);
+            }, 500);
         }
-    });
+    }
+
+    if (document.readyState === 'complete') {
+        hidePreloader();
+    } else {
+        window.addEventListener('load', hidePreloader);
+    }
 
     // Navbar scroll effect
     const navbar = document.getElementById('navbar');
