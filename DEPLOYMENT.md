@@ -10,35 +10,40 @@ This document reflects the current single-root CMS-first repository structure.
 - Nginx or Apache with PHP-FPM
 - Git available for repository updates
 
-## Repository layout used by deployment
+## Source and runtime
 
-The canonical public root is the repository root itself:
+The Git working tree is separate from the deployed runtime:
 
-- `index.php`
-- `admin.php`
-- `save.php`
-- `messages.php`
-- `gallery.php`
-- `style.css`
-- `script.js`
+```text
+~/webserver_undangan
+        ↓ deploy/install.sh
+/var/www/wedding
+```
 
-Private and legacy implementation remains in `app/` and is not the canonical frontend.
+`/var/www/wedding` is deployment output. Do not run Git operations there and do not manually create it for a fresh install; `deploy/install.sh` creates it.
 
 ## Fresh install
 
+From the source repository:
+
 ```bash
-cd /path/to/repository
-sudo ./deploy/install.sh
+sudo rm -rf /var/www/wedding
+cd ~/webserver_undangan
+sudo bash deploy/install.sh
+sudo /var/www/wedding/deploy/health-check.sh
 ```
 
 The installer deploys to `/var/www/wedding` by default and:
 
 - installs required PHP packages
+- creates the runtime directory
 - creates database and config defaults when missing
 - creates required upload directories
 - sets secure permissions on configuration and SQLite files
 - creates `.env` when needed
 - configures Nginx or Apache from the templates in `deploy/templates/`
+
+The `rm -rf /var/www/wedding` step is appropriate only for a deliberate fresh-install test because it removes the current runtime. Do not use it for ordinary updates when runtime data must be preserved.
 
 ## Update existing install
 
@@ -46,7 +51,7 @@ The installer deploys to `/var/www/wedding` by default and:
 sudo /var/www/wedding/deploy/update.sh
 ```
 
-The updater should preserve runtime data and user config while updating the application source. The current protected files include:
+The updater should preserve runtime data and user config while updating application source. Protected runtime data includes:
 
 - `config.json`
 - `guest-links.json`
@@ -62,9 +67,10 @@ The updater should preserve runtime data and user config while updating the appl
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The health check validates only the critical deployment requirements for the repository as it exists now:
+The health check validates critical deployment requirements, including:
 
 - application root and public files exist
+- active theme files exist
 - config and database are readable and secure
 - required upload directories exist and are writable
 - public routes respond
@@ -72,12 +78,18 @@ The health check validates only the critical deployment requirements for the rep
 
 WebDAV is optional and should not fail a deployment when it is not enabled.
 
-## Web server templates
+## Theme deployment
 
-- Nginx template: `deploy/templates/nginx/wedding.conf`
-- Apache templates: `deploy/templates/apache/`
+Theme presets live in the repository under:
 
-The templates must align with the current canonical paths and should not assume a legacy `app/` document root architecture.
+```text
+/themes/dewankl/
+/themes/elix/
+/themes/rainier/
+/themes/archak/
+```
+
+`deploy/install.sh` and `deploy/update.sh` synchronize the `themes/` directory as application source. Runtime data remains protected separately.
 
 ## Backup and restore
 
@@ -101,17 +113,33 @@ Public access must remain blocked for sensitive files such as `config.json`, `da
 
 ## Troubleshooting
 
+### Site returns HTTP 500
+
+Run the PHP entrypoint directly to expose the underlying fatal error:
+
+```bash
+sudo php -d display_errors=1 -d log_errors=1 /var/www/wedding/index.php >/tmp/test-output.html 2>/tmp/test-error.txt
+cat /tmp/test-error.txt
+```
+
+Then run the full health check:
+
+```bash
+sudo /var/www/wedding/deploy/health-check.sh
+```
+
 ### Site does not load
 
 - verify the web server is active
-- verify PHP-FPM is active
-- run `deploy/health-check.sh`
-- confirm the document root points to the repository root and not a legacy subdirectory
+- verify PHP-FPM is active when used by the selected web server
+- verify the document root is `/var/www/wedding`
+- run `health-check.sh`
+- inspect the web server/PHP logs
 
 ### Permissions problem
 
 ```bash
-sudo chown -R www-data:www-data /var/www/wedding
+sudo chown -R www-data:www-data /var/www/wedding/uploads
 sudo chmod 600 /var/www/wedding/config.json
 sudo chmod 600 /var/www/wedding/database.sqlite
 sudo chmod 600 /var/www/wedding/guest-links.json
