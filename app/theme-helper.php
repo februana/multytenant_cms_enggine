@@ -2,31 +2,23 @@
 /**
  * Theme Helper Functions
  *
- * Shared utilities for all theme templates.
+ * Shared utilities for all theme templates and presentation output.
  */
 
-define('THEME_HELPER_LOADED', true);
+require_once dirname(__DIR__) . '/config.php';
+
+if (!defined('THEME_HELPER_LOADED')) {
+    define('THEME_HELPER_LOADED', true);
+}
 
 /** Escape HTML output. */
 function escape_html(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-/** Get public path for asset. */
-function public_path(string $path): string {
-    if (empty($path)) return '';
-    if (strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0) return $path;
-    return '/' . ltrim($path, '/');
-}
-
 /** Get theme asset URL. */
 function get_theme_asset_url(string $themeKey, string $filename): string {
     return '/themes/' . preg_replace('/[^a-z0-9_-]/i', '', $themeKey) . '/' . $filename;
-}
-
-/** Normalize section ID. */
-function normalize_section_id(string $id): string {
-    return strtolower(trim(preg_replace('/[^a-z0-9_-]/i', '', $id)));
 }
 
 /** Get a configured section entry by normalized ID. */
@@ -59,32 +51,6 @@ function get_section_subtitle(array $config, string $sectionId, string $defaultS
     $section = get_section_entry($config, $sectionId);
     if ($section === null) return $defaultSubtitle;
     return !empty($section['custom_subtitle']) ? (string)$section['custom_subtitle'] : (string)($section['subtitle'] ?? $defaultSubtitle);
-}
-
-/** Build WhatsApp link. */
-function build_whatsapp_link(array $config): string {
-    $phone = $config['whatsapp']['phone'] ?? '';
-    $message = $config['whatsapp']['message'] ?? '';
-    if (empty($phone)) return '#';
-    return 'https://wa.me/' . preg_replace('/[^0-9]/', '', $phone) . '?text=' . urlencode($message);
-}
-
-/** Build Google Calendar link. */
-function build_google_calendar_link(array $config): string {
-    $title = urlencode($config['site']['title'] ?? 'Undangan Pernikahan');
-    $dates = '';
-    if (!empty($config['schedule']['akad_date']) && !empty($config['schedule']['akad_time'])) {
-        $startDate = str_replace('-', '', $config['schedule']['akad_date']);
-        $startTime = str_replace(':', '', $config['schedule']['akad_time']);
-        $dates = $startDate . 'T' . $startTime . '00/' . $startDate . 'T' . date('Hi', strtotime($config['schedule']['akad_time']) + 7200) . '00';
-    }
-    return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' . $title . '&dates=' . $dates . '&details=' . urlencode($config['wedding']['opening_text'] ?? '') . '&location=' . urlencode($config['location']['address'] ?? '') . '&ctz=' . ($config['schedule']['timezone'] ?? 'Asia/Jakarta');
-}
-
-/** Load custom CSS from the canonical runtime file. */
-function load_custom_css(): string {
-    $customCssFile = __DIR__ . '/../custom.css';
-    return file_exists($customCssFile) ? file_get_contents($customCssFile) : '';
 }
 
 /**

@@ -35,12 +35,8 @@ if (mb_strlen($ucapan) > 500) respond(false, 'Ucapan terlalu panjang (maks 500 k
 if (!in_array($status, ['Hadir','Tidak Hadir'], true)) respond(false, 'Status tidak valid.');
 
 try {
-    $db = new SQLite3(DB_PATH, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-    $db->exec('CREATE TABLE IF NOT EXISTS tamu (id INTEGER PRIMARY KEY AUTOINCREMENT, nama TEXT NOT NULL, status TEXT NOT NULL, ucapan TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)');
-    $checkCol = $db->querySingle("SELECT 1 FROM pragma_table_info('tamu') WHERE name='visible'");
-    if (!$checkCol) {
-        @$db->exec('ALTER TABLE tamu ADD COLUMN visible INTEGER DEFAULT 1');
-    }
+    init_database();
+    $db = new SQLite3(DB_PATH, SQLITE3_OPEN_READWRITE);
     $stmt = $db->prepare('INSERT INTO tamu (nama,status,ucapan,visible) VALUES (:nama,:status,:ucapan,1)');
     $stmt->bindValue(':nama', $nama, SQLITE3_TEXT);
     $stmt->bindValue(':status', $status, SQLITE3_TEXT);

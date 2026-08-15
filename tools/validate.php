@@ -76,10 +76,11 @@ if (isset($config['sections']) && is_array($config['sections'])) {
     }
 }
 
-$rendererSource = @file_get_contents($root . '/index.php');
-if ($rendererSource === false) {
-    add_error('Unable to read index.php for renderer contract validation.');
+$rendererSource = (@file_get_contents($root . '/index.php') ?: '') . "\n" . (@file_get_contents($root . '/app/theme-renderer.php') ?: '');
+if (trim($rendererSource) === '') {
+    add_error('Unable to read index.php or app/theme-renderer.php for renderer contract validation.');
 } else {
+    $hasDynamicCheck = (strpos($rendererSource, 'is_section_enabled($config, $sectionId)') !== false);
     preg_match_all('/is_section_enabled\s*\(\s*\$config\s*,\s*[\'\"]([^\'\"]+)[\'\"]\s*\)/', $rendererSource, $matches);
     $rendererIds = [];
     foreach ($matches[1] as $id) {
@@ -97,7 +98,7 @@ if ($rendererSource === false) {
                 continue;
             }
             $knownRendererIds = ['hero', 'guest_intro', 'undangan', 'countdown', 'cerita', 'galeri', 'acara', 'lokasi', 'amplop', 'rsvp', 'messages', 'music', 'footer', 'bride_groom'];
-            if (in_array($id, $knownRendererIds, true) && !in_array($id, $rendererIds, true)) {
+            if (!$hasDynamicCheck && in_array($id, $knownRendererIds, true) && !in_array($id, $rendererIds, true)) {
                 add_warning("Renderer contract is missing the visibility check for section {$id}.");
             }
         }
