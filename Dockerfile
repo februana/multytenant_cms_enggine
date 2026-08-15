@@ -30,13 +30,10 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 # Layer 3: Install Mbstring
 RUN docker-php-ext-install -j"$(nproc)" mbstring
 
-# Layer 4: Install SQLite
-RUN docker-php-ext-install -j"$(nproc)" pdo_sqlite sqlite3
-
-# Layer 5: Install Zip
+# Layer 4: Install Zip
 RUN docker-php-ext-install -j"$(nproc)" zip
 
-# Layer 6: Enable Apache modules
+# Layer 5: Enable Apache modules
 RUN a2enmod rewrite headers expires
 
 # Copy Composer binary
@@ -44,7 +41,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Layer 7: Install Composer dependencies
+# Layer 6: Install Composer dependencies
 COPY composer.json composer.lock ./
 RUN composer install \
     --no-dev \
@@ -53,7 +50,7 @@ RUN composer install \
     --no-progress \
     --optimize-autoloader
 
-# Layer 8: Copy application files & entrypoint
+# Layer 7: Copy application files & entrypoint
 COPY . .
 COPY docker/render-entrypoint.sh /usr/local/bin/render-entrypoint.sh
 COPY docker/render-prepend.php /usr/local/bin/render-prepend.php
