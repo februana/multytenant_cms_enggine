@@ -322,6 +322,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'save_theme':
                 $selectedPreset = trim((string)($_POST['theme_preset'] ?? ($config['theme']['theme_preset'] ?? 'elegant')));
+                $config['theme']['mode'] = ($selectedPreset === 'custom') ? 'custom' : 'preset';
                 if ($selectedPreset !== 'custom' && array_key_exists($selectedPreset, theme_presets())) {
                     $config['theme'] = apply_theme_preset($config['theme'], $selectedPreset);
                     // After applying preset, set theme_preset to the selected value but keep manual edits possible
@@ -362,6 +363,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     }
                     break;
                 }
+                $config['theme']['mode'] = 'custom';
                 $config['theme']['theme_preset'] = 'custom';
                 $config['theme']['primary_color'] = trim((string)($_POST['primary_color'] ?? '')) ?: $config['theme']['primary_color'];
                 $config['theme']['secondary_color'] = trim((string)($_POST['secondary_color'] ?? '')) ?: $config['theme']['secondary_color'];
@@ -699,8 +701,12 @@ $qrisPreview = $config['gift']['qris_image'];
 $customCss = load_custom_css();
 $themePresetPreviewData = [];
 foreach (theme_presets() as $presetKey => $preset) {
-    $themePresetPreviewData[$presetKey] = $preset['values'];
+    $themePresetPreviewData[$presetKey] = $preset['values'] ?? [];
 }
+$themeRegistry = theme_registry();
+$themeMode = get_theme_mode($config);
+$themeMeta = get_active_theme_meta($config);
+$themePresentationCaps = theme_presentation_capabilities($config);
 $themePreviewConfig = $config['theme'] ?? [];
 // Ensure hero settings are included in preview config for backward compatibility
 if (!isset($themePreviewConfig['hero_height'])) {
@@ -922,16 +928,28 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             
                             <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Theme Preset</h3>
                             <div class="form-row">
+                                <label>Mode Tema</label>
+                                <select name="theme_mode" id="themeModeSelect">
+                                    <option value="preset" <?php echo $themeMode === 'preset' ? 'selected' : ''; ?>>Preset</option>
+                                    <option value="custom" <?php echo $themeMode === 'custom' ? 'selected' : ''; ?>>Custom</option>
+                                </select>
+                                <small>Pilihan mode menentukan apakah presentasi dikendalikan oleh preset yang dipilih atau manual editor di bawah ini.</small>
+                            </div>
+                            <div class="form-row">
                                 <label>Preset Tema</label>
                                 <select name="theme_preset">
                                     <?php foreach (theme_presets() as $presetKey => $preset): ?>
-                                        <option value="<?php echo escape_html($presetKey); ?>" <?php echo ($config['theme']['theme_preset'] ?? 'elegant') === $presetKey ? 'selected' : ''; ?>><?php echo escape_html($preset['label']); ?> - <?php echo escape_html($preset['description']); ?></option>
+                                        <option value="<?php echo escape_html($presetKey); ?>" <?php echo ($config['theme']['theme_preset'] ?? 'elegant') === $presetKey ? 'selected' : ''; ?>><?php echo escape_html($preset['label'] ?? $presetKey); ?> • <?php echo escape_html($preset['category'] ?? 'theme'); ?> • v<?php echo escape_html($preset['version'] ?? '1.0.0'); ?> • <?php echo escape_html($preset['description']); ?></option>
                                     <?php endforeach; ?>
                                     <option value="custom" <?php echo ($config['theme']['theme_preset'] ?? '') === 'custom' ? 'selected' : ''; ?>>Custom - Gunakan nilai manual di bawah</option>
                                 </select>
-                                <small>Preset mengubah variabel CSS tema. Pilih Custom jika ingin menyimpan nilai manual pada field berikut.</small>
+                                <small>Preset mengubah variabel CSS tema. Setiap preset mencatat metadata seperti kategori, versi, sumber, dan kompatibilitas untuk ekspansi tema di masa depan.</small>
                             </div>
+                            <?php if ($themeMode === 'preset'): ?>
+                                <div class="notice" style="margin:0.5rem 0 1rem;">Presentasi dikendalikan oleh preset yang dipilih. Kontrol manual tema disembunyikan agar tidak bertentangan dengan preset aktif.</div>
+                            <?php endif; ?>
 
+                            <?php if ($themeMode === 'custom'): ?>
                             <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Colors</h3>
                             <div class="form-grid">
                                 <div class="form-row"><label>Primary Color</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
@@ -1132,6 +1150,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Layout tombol CTA untuk mobile.</small>
                                 </div>
                             </div>
+
+                            <?php endif; ?>
 
                             <div class="theme-actions">
                                 <button type="submit">Save</button>

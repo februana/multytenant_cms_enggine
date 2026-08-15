@@ -156,6 +156,7 @@ function config_defaults(): array {
             'password_hash' => ''
         ],
         'theme' => [
+            'mode' => 'preset',
             'theme_preset' => 'elegant',
             'primary_color' => '#c84c47',
             'secondary_color' => '#f0c2a1',
@@ -336,11 +337,18 @@ function config_defaults(): array {
 }
 
 
-function theme_presets(): array {
+function theme_registry(): array {
     return [
         'elegant' => [
+            'id' => 'elegant',
+            'name' => 'Elegant',
             'label' => 'Elegant',
             'description' => 'Palet hangat dan klasik untuk undangan yang lembut.',
+            'version' => '1.0.0',
+            'author' => 'Februana Studio',
+            'source' => 'Built-in CMS preset',
+            'license' => 'Project-internal',
+            'category' => 'classic',
             'values' => [
                 'primary_color' => '#c84c47',
                 'secondary_color' => '#f0c2a1',
@@ -361,8 +369,15 @@ function theme_presets(): array {
             ]
         ],
         'dark' => [
+            'id' => 'dark',
+            'name' => 'Dark',
             'label' => 'Dark',
             'description' => 'Kontras gelap modern dengan aksen emas.',
+            'version' => '1.0.0',
+            'author' => 'Februana Studio',
+            'source' => 'Built-in CMS preset',
+            'license' => 'Project-internal',
+            'category' => 'modern',
             'values' => [
                 'primary_color' => '#d6a85f',
                 'secondary_color' => '#2b2430',
@@ -383,8 +398,15 @@ function theme_presets(): array {
             ]
         ],
         'floral' => [
+            'id' => 'floral',
+            'name' => 'Floral',
             'label' => 'Floral',
             'description' => 'Nuansa bunga pastel dengan aksen hijau sage.',
+            'version' => '1.0.0',
+            'author' => 'Februana Studio',
+            'source' => 'Built-in CMS preset',
+            'license' => 'Project-internal',
+            'category' => 'romantic',
             'values' => [
                 'primary_color' => '#a45c68',
                 'secondary_color' => '#e8b7c2',
@@ -405,8 +427,15 @@ function theme_presets(): array {
             ]
         ],
         'minimal' => [
+            'id' => 'minimal',
+            'name' => 'Minimal',
             'label' => 'Minimal',
             'description' => 'Tampilan bersih monokrom dengan aksen sederhana.',
+            'version' => '1.0.0',
+            'author' => 'Februana Studio',
+            'source' => 'Built-in CMS preset',
+            'license' => 'Project-internal',
+            'category' => 'minimal',
             'values' => [
                 'primary_color' => '#1f2937',
                 'secondary_color' => '#e5e7eb',
@@ -425,16 +454,220 @@ function theme_presets(): array {
                 'body_font' => 'Inter, sans-serif',
                 'font_size_base' => '16px'
             ]
+        ],
+        'dewankl' => [
+            'id' => 'dewankl',
+            'name' => 'DewanaKL',
+            'label' => 'DewanaKL',
+            'description' => 'Layout modern berkelas dengan fokus pada hero yang lebih ekspresif dan kartu informasi yang lebih terstruktur.',
+            'version' => '1.0.0',
+            'author' => 'DewanaKL adaptation',
+            'source' => 'dewanakl/undangan',
+            'license' => 'MIT (adapted in-project; source design reviewed as inspiration only)',
+            'category' => 'modern',
+            'values' => [
+                'primary_color' => '#7b4a3a',
+                'secondary_color' => '#d9c0a3',
+                'accent_color' => '#f2e4d3',
+                'background_color' => '#f5efe8',
+                'paper_color' => '#fcf8f3',
+                'muted_color' => '#6e5a52',
+                'text_color' => '#2a1f1c',
+                'link_color' => '#7b4a3a',
+                'button_style' => 'pill',
+                'border_radius' => '18px',
+                'shadow' => '0 18px 44px rgba(57,34,28,.12)',
+                'container_width' => '1200px',
+                'section_spacing' => '100px',
+                'heading_font' => 'Cormorant Garamond, serif',
+                'body_font' => 'Inter, sans-serif',
+                'font_size_base' => '16px'
+            ],
+            'capabilities' => [
+                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+        ],
+        'elix' => [
+            'id' => 'elix',
+            'name' => 'Elix',
+            'label' => 'Elix',
+            'description' => 'Layout modern airy dengan hero yang lebih terbuka, tulisan elegan, dan tata letak kartu yang lebih segar.',
+            'version' => '1.0.0',
+            'author' => 'Elix adaptation',
+            'source' => 'elix-stack/wedding-invitation-1',
+            'license' => 'Unverified external source; adapted in-project without copying source code',
+            'category' => 'airy-modern',
+            'values' => [
+                'primary_color' => '#d97774',
+                'secondary_color' => '#f4d9c6',
+                'accent_color' => '#a8c7b6',
+                'background_color' => '#f9f5f2',
+                'paper_color' => '#fffefb',
+                'muted_color' => '#6d5b56',
+                'text_color' => '#2b1f1d',
+                'link_color' => '#c26d62',
+                'button_style' => 'rounded',
+                'border_radius' => '22px',
+                'shadow' => '0 18px 42px rgba(81, 58, 50, .12)',
+                'container_width' => '1180px',
+                'section_spacing' => '96px',
+                'heading_font' => 'Georgia, serif',
+                'body_font' => 'Segoe UI, sans-serif',
+                'font_size_base' => '16px'
+            ],
+            'capabilities' => [
+                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+        ],
+        'rainier' => [
+            'id' => 'rainier',
+            'name' => 'Rainier',
+            'label' => 'Rainier',
+            'description' => 'Layout editorial modern dengan fokus pada hero split, ruang yang lebih dramatis, dan panel informasi yang terstruktur seperti karya seni.',
+            'version' => '1.0.0',
+            'author' => 'Rainier adaptation',
+            'source' => 'Rainier-PS/Invitation-Template',
+            'license' => 'Unverified external source; adapted in-project without copying source code',
+            'category' => 'editorial-modern',
+            'values' => [
+                'primary_color' => '#b8655d',
+                'secondary_color' => '#e6d7cd',
+                'accent_color' => '#7a8c7e',
+                'background_color' => '#f9f4f1',
+                'paper_color' => '#fffdfb',
+                'muted_color' => '#5c5255',
+                'text_color' => '#1d1b22',
+                'link_color' => '#b8655d',
+                'button_style' => 'pill',
+                'border_radius' => '20px',
+                'shadow' => '0 18px 40px rgba(23,20,28,.12)',
+                'container_width' => '1200px',
+                'section_spacing' => '92px',
+                'heading_font' => 'Georgia, serif',
+                'body_font' => 'Segoe UI, sans-serif',
+                'font_size_base' => '16px'
+            ],
+            'capabilities' => [
+                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+        ],
+        'archak' => [
+            'id' => 'archak',
+            'name' => 'Archak',
+            'label' => 'Archak',
+            'description' => 'Layout modern dengan hero dua kolom, detail ornamental yang lebih terstruktur, dan panel informasi yang terasa seperti editorial wedding brief.',
+            'version' => '1.0.0',
+            'author' => 'Archak adaptation',
+            'source' => 'archakNath/wedding-invitation-website',
+            'license' => 'Unverified external source; adapted in-project without copying source code',
+            'category' => 'editorial-luxury',
+            'values' => [
+                'primary_color' => '#8c5a4d',
+                'secondary_color' => '#f0d8c4',
+                'accent_color' => '#6e7c63',
+                'background_color' => '#f6f1eb',
+                'paper_color' => '#fffdfb',
+                'muted_color' => '#5d5350',
+                'text_color' => '#211d1a',
+                'link_color' => '#8c5a4d',
+                'button_style' => 'rounded',
+                'border_radius' => '18px',
+                'shadow' => '0 18px 46px rgba(30,25,24,.09)',
+                'container_width' => '1200px',
+                'section_spacing' => '94px',
+                'heading_font' => 'Georgia, serif',
+                'body_font' => 'Segoe UI, sans-serif',
+                'font_size_base' => '16px'
+            ],
+            'capabilities' => [
+                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
         ]
     ];
 }
 
-function apply_theme_preset(array $theme, string $presetKey): array {
+function theme_presets(): array {
+    $registry = theme_registry();
+    foreach ($registry as $key => $preset) {
+        $registry[$key] = array_replace([
+            'label' => $preset['name'] ?? ucfirst((string)$key),
+            'description' => 'Preset tema dengan gaya ' . ($preset['category'] ?? 'standar'),
+        ], $preset);
+    }
+    return $registry;
+}
+
+function get_theme_mode(array $config = []): string {
+    $mode = trim((string)($config['theme']['mode'] ?? ''));
+    if ($mode === 'preset' || $mode === 'custom') {
+        return $mode;
+    }
+
+    $preset = trim((string)($config['theme']['theme_preset'] ?? ''));
+    if ($preset === 'custom' || $preset === '') {
+        return 'custom';
+    }
+
+    return 'preset';
+}
+
+function get_active_theme_meta(array $config = []): array {
+    $mode = get_theme_mode($config);
+    if ($mode === 'custom') {
+        return [
+            'id' => 'custom',
+            'name' => 'Custom',
+            'label' => 'Custom',
+            'description' => 'Tema kustom berdasarkan parameter manual.',
+            'version' => '1.0.0',
+            'author' => 'Admin',
+            'source' => 'CMS manual override',
+            'license' => 'Project-internal',
+            'category' => 'custom',
+            'capabilities' => [
+                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation']
+        ];
+    }
+
+    $selectedPreset = trim((string)($config['theme']['theme_preset'] ?? 'elegant')) ?: 'elegant';
+    $registry = theme_registry();
+    if (isset($registry[$selectedPreset])) {
+        return $registry[$selectedPreset];
+    }
+    return [
+        'id' => 'custom',
+        'name' => 'Custom',
+        'label' => 'Custom',
+        'description' => 'Tema kustom berdasarkan parameter manual.',
+        'version' => '1.0.0',
+        'author' => 'Admin',
+        'source' => 'CMS manual override',
+        'license' => 'Project-internal',
+        'category' => 'custom'
+    ];
+}
+
+function resolve_theme_preset(array $theme, string $presetKey): array {
     $presets = theme_presets();
     if (!isset($presets[$presetKey])) {
         return $theme;
     }
     return array_replace($theme, $presets[$presetKey]['values'], ['theme_preset' => $presetKey]);
+}
+
+function apply_theme_preset(array $theme, string $presetKey): array {
+    return resolve_theme_preset($theme, $presetKey);
 }
 
 function ensure_upload_dirs(): void {
@@ -489,6 +722,12 @@ function load_config(): array {
     }
     if (empty($config['theme']['theme_preset'])) {
         $config['theme']['theme_preset'] = 'elegant';
+    }
+    if (empty($config['theme']['mode'])) {
+        $config['theme']['mode'] = get_theme_mode($config);
+    }
+    if (!in_array($config['theme']['mode'] ?? '', ['preset', 'custom'], true)) {
+        $config['theme']['mode'] = get_theme_mode($config);
     }
     // Ensure hero settings exist for backward compatibility
     if (!isset($config['theme']['hero_height'])) {
