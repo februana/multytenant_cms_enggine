@@ -69,16 +69,15 @@
         setTimeout(collectGalleryItems, 500);
     }
 
-    if (document.readyState === 'complete') {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
         hideLoadingScreen();
+        init();
     } else {
         window.addEventListener('load', hideLoadingScreen);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+        document.addEventListener('DOMContentLoaded', function() {
+            hideLoadingScreen();
+            init();
+        });
     }
 
     /**

@@ -187,7 +187,7 @@ $stories = $config['story']['items'] ?? [];
             <div class="couple-split-wrapper">
                 <div class="couple-person bride" data-slide-left>
                     <div class="person-image-wrapper">
-                        <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $brideName; ?>" class="person-image">
+                        <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="<?php echo $brideName; ?>" class="person-image">
                     </div>
                     <h3 class="person-name"><?php echo $brideName; ?></h3>
                     <p class="person-nickname"><?php echo $brideNickname; ?></p>
@@ -208,7 +208,7 @@ $stories = $config['story']['items'] ?? [];
                 
                 <div class="couple-person groom" data-slide-right>
                     <div class="person-image-wrapper">
-                        <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $groomName; ?>" class="person-image">
+                        <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="<?php echo $groomName; ?>" class="person-image">
                     </div>
                     <h3 class="person-name"><?php echo $groomName; ?></h3>
                     <p class="person-nickname"><?php echo $groomNickname; ?></p>

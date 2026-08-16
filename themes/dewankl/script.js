@@ -129,12 +129,17 @@
                     loadingEl.style.display = 'none';
                 }, 500);
             }
+            if (welcomeEl) {
+                welcomeEl.style.transition = 'opacity 0.5s ease';
+                welcomeEl.style.opacity = '1';
+            }
         }
 
-        if (document.readyState === 'complete') {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
             hideLoading();
         } else {
             window.addEventListener('load', hideLoading);
+            document.addEventListener('DOMContentLoaded', hideLoading);
         }
     }
     
