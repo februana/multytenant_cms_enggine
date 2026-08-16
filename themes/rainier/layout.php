@@ -207,7 +207,7 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
                 <div class="couple-grid">
                     <div class="couple-card glass-panel" data-aos="fade-right" data-aos-delay="100">
                         <div class="couple-image-wrapper">
-                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $brideName; ?>" class="couple-image" loading="lazy">
+                            <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="<?php echo $brideName; ?>" class="couple-image" loading="lazy">
                         </div>
                         <h3 class="couple-name"><?php echo $brideName; ?></h3>
                         <p class="couple-nickname"><?php echo $brideNickname; ?></p>
@@ -225,7 +225,7 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
                     
                     <div class="couple-card glass-panel" data-aos="fade-left" data-aos-delay="200">
                         <div class="couple-image-wrapper">
-                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $groomName; ?>" class="couple-image" loading="lazy">
+                            <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="<?php echo $groomName; ?>" class="couple-image" loading="lazy">
                         </div>
                         <h3 class="couple-name"><?php echo $groomName; ?></h3>
                         <p class="couple-nickname"><?php echo $groomNickname; ?></p>
