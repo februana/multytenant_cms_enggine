@@ -173,6 +173,15 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     case 'media.cover':
                         $config['media']['cover'] = $mediaValue;
                         break;
+                    case 'media.bride_photo':
+                        $config['media']['bride_photo'] = $mediaValue;
+                        break;
+                    case 'media.groom_photo':
+                        $config['media']['groom_photo'] = $mediaValue;
+                        break;
+                    case 'media.couple_photo':
+                        $config['media']['couple_photo'] = $mediaValue;
+                        break;
                     case 'media.music':
                         $config['media']['music'] = $mediaValue;
                         break;
@@ -480,6 +489,36 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     }
                 }
                 break;
+            case 'upload_bride_photo':
+                if (!empty($_FILES['bride_photo']['name'])) {
+                    $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    if (!empty($result['error'])) {
+                        $error = $result['error'];
+                    } else {
+                        $config['media']['bride_photo'] = relative_path($result['path']);
+                    }
+                }
+                break;
+            case 'upload_groom_photo':
+                if (!empty($_FILES['groom_photo']['name'])) {
+                    $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    if (!empty($result['error'])) {
+                        $error = $result['error'];
+                    } else {
+                        $config['media']['groom_photo'] = relative_path($result['path']);
+                    }
+                }
+                break;
+            case 'upload_couple_photo':
+                if (!empty($_FILES['couple_photo']['name'])) {
+                    $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    if (!empty($result['error'])) {
+                        $error = $result['error'];
+                    } else {
+                        $config['media']['couple_photo'] = relative_path($result['path']);
+                    }
+                }
+                break;
             case 'save_guest_link':
                 $saveConfig = false;
                 $guestName = trim((string)($_POST['guest_name'] ?? ''));
@@ -688,6 +727,9 @@ $mediaLibrary = list_media_library(['search' => $mediaSearch, 'type' => $mediaTy
 $invitationPreview = build_invitation_preview_url($config);
 $siteUrl = trim($config['site']['url']);
 $coverPreview = $config['media']['cover'] ?: 'uploads/cover/cover.jpg';
+$bridePhotoPreview = $config['media']['bride_photo'] ?? '';
+$groomPhotoPreview = $config['media']['groom_photo'] ?? '';
+$couplePhotoPreview = $config['media']['couple_photo'] ?? '';
 $ogPreview = $config['site']['open_graph_image'];
 $backgroundHeroPreview = $config['media']['background_hero'];
 $backgroundSectionPreviews = [
@@ -1258,6 +1300,27 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
+                                                <input type="hidden" name="media_key" value="media.bride_photo">
+                                                <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
+                                                <button type="submit" class="small-button">Set Bride</button>
+                                            </form>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="set_media_default">
+                                                <input type="hidden" name="media_key" value="media.groom_photo">
+                                                <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
+                                                <button type="submit" class="small-button">Set Groom</button>
+                                            </form>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="set_media_default">
+                                                <input type="hidden" name="media_key" value="media.couple_photo">
+                                                <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
+                                                <button type="submit" class="small-button">Set Couple</button>
+                                            </form>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.background_hero">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Set Hero</button>
@@ -1477,34 +1540,130 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     </section>
 
                     <section id="cover" class="card panel-section">
-                        <h2>Cover</h2>
-                        <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
-                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
-                            <input type="hidden" name="action" value="upload_cover">
-                            <div class="form-row"><label>Upload Cover Image</label><input type="file" name="cover_image" accept="image/*" data-preview-target="#coverPreviewImg"></div>
-                            <button type="submit">Unggah Cover</button>
-                        </form>
-                        <form method="post" style="margin-bottom:16px;">
-                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
-                            <input type="hidden" name="action" value="use_media_library_asset">
-                            <input type="hidden" name="media_target" value="cover">
-                            <div class="form-row">
-                                <label>Pilih dari File Manager</label>
-                                <select name="media_path">
-                                    <option value="">-- pilih asset --</option>
-                                    <?php foreach ($mediaLibrary as $libraryItem): ?>
-                                        <?php if ($libraryItem['type'] !== 'image') continue; ?>
-                                        <option value="<?php echo escape_html($libraryItem['path']); ?>"><?php echo escape_html($libraryItem['name']); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <button type="submit">Gunakan Asset Cover</button>
-                        </form>
-                        <?php if ($coverPreview): ?>
-                            <div class="image-preview"><img id="coverPreviewImg" src="/<?php echo escape_html($coverPreview); ?>" alt="Cover preview"></div>
-                        <?php else: ?>
-                            <div class="image-preview"><img id="coverPreviewImg" alt="Cover preview" style="display:none;"></div>
-                        <?php endif; ?>
+                        <h2>Cover & Photos</h2>
+                        <div style="margin-bottom: 24px;">
+                            <h3>Cover Image</h3>
+                            <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="upload_cover">
+                                <div class="form-row"><label>Upload Cover Image</label><input type="file" name="cover_image" accept="image/*" data-preview-target="#coverPreviewImg"></div>
+                                <button type="submit">Unggah Cover</button>
+                            </form>
+                            <form method="post" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="use_media_library_asset">
+                                <input type="hidden" name="media_target" value="cover">
+                                <div class="form-row">
+                                    <label>Pilih dari File Manager</label>
+                                    <select name="media_path">
+                                        <option value="">-- pilih asset --</option>
+                                        <?php foreach ($mediaLibrary as $libraryItem): ?>
+                                            <?php if ($libraryItem['type'] !== 'image') continue; ?>
+                                            <option value="<?php echo escape_html($libraryItem['path']); ?>"><?php echo escape_html($libraryItem['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <button type="submit">Gunakan Asset Cover</button>
+                            </form>
+                            <?php if ($coverPreview): ?>
+                                <div class="image-preview"><img id="coverPreviewImg" src="/<?php echo escape_html($coverPreview); ?>" alt="Cover preview"></div>
+                            <?php else: ?>
+                                <div class="image-preview"><img id="coverPreviewImg" alt="Cover preview" style="display:none;"></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <h3>Foto Mempela Wanita (Bride Photo)</h3>
+                            <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="upload_bride_photo">
+                                <div class="form-row"><label>Upload Bride Photo</label><input type="file" name="bride_photo" accept="image/*" data-preview-target="#bridePreviewImg"></div>
+                                <button type="submit">Unggah Foto Bride</button>
+                            </form>
+                            <form method="post" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="use_media_library_asset">
+                                <input type="hidden" name="media_target" value="bride_photo">
+                                <div class="form-row">
+                                    <label>Pilih dari File Manager</label>
+                                    <select name="media_path">
+                                        <option value="">-- pilih asset --</option>
+                                        <?php foreach ($mediaLibrary as $libraryItem): ?>
+                                            <?php if ($libraryItem['type'] !== 'image') continue; ?>
+                                            <option value="<?php echo escape_html($libraryItem['path']); ?>"><?php echo escape_html($libraryItem['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <button type="submit">Gunakan Asset Bride</button>
+                            </form>
+                            <?php if ($bridePhotoPreview): ?>
+                                <div class="image-preview"><img id="bridePreviewImg" src="/<?php echo escape_html($bridePhotoPreview); ?>" alt="Bride photo preview"></div>
+                            <?php else: ?>
+                                <div class="image-preview"><img id="bridePreviewImg" alt="Bride photo preview" style="display:none;"></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <h3>Foto Mempela Pria (Groom Photo)</h3>
+                            <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="upload_groom_photo">
+                                <div class="form-row"><label>Upload Groom Photo</label><input type="file" name="groom_photo" accept="image/*" data-preview-target="#groomPreviewImg"></div>
+                                <button type="submit">Unggah Foto Groom</button>
+                            </form>
+                            <form method="post" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="use_media_library_asset">
+                                <input type="hidden" name="media_target" value="groom_photo">
+                                <div class="form-row">
+                                    <label>Pilih dari File Manager</label>
+                                    <select name="media_path">
+                                        <option value="">-- pilih asset --</option>
+                                        <?php foreach ($mediaLibrary as $libraryItem): ?>
+                                            <?php if ($libraryItem['type'] !== 'image') continue; ?>
+                                            <option value="<?php echo escape_html($libraryItem['path']); ?>"><?php echo escape_html($libraryItem['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <button type="submit">Gunakan Asset Groom</button>
+                            </form>
+                            <?php if ($groomPhotoPreview): ?>
+                                <div class="image-preview"><img id="groomPreviewImg" src="/<?php echo escape_html($groomPhotoPreview); ?>" alt="Groom photo preview"></div>
+                            <?php else: ?>
+                                <div class="image-preview"><img id="groomPreviewImg" alt="Groom photo preview" style="display:none;"></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <h3>Foto Pasangan (Couple Photo)</h3>
+                            <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="upload_couple_photo">
+                                <div class="form-row"><label>Upload Couple Photo</label><input type="file" name="couple_photo" accept="image/*" data-preview-target="#couplePreviewImg"></div>
+                                <button type="submit">Unggah Foto Couple</button>
+                            </form>
+                            <form method="post" style="margin-bottom:16px;">
+                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                <input type="hidden" name="action" value="use_media_library_asset">
+                                <input type="hidden" name="media_target" value="couple_photo">
+                                <div class="form-row">
+                                    <label>Pilih dari File Manager</label>
+                                    <select name="media_path">
+                                        <option value="">-- pilih asset --</option>
+                                        <?php foreach ($mediaLibrary as $libraryItem): ?>
+                                            <?php if ($libraryItem['type'] !== 'image') continue; ?>
+                                            <option value="<?php echo escape_html($libraryItem['path']); ?>"><?php echo escape_html($libraryItem['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <button type="submit">Gunakan Asset Couple</button>
+                            </form>
+                            <?php if ($couplePhotoPreview): ?>
+                                <div class="image-preview"><img id="couplePreviewImg" src="/<?php echo escape_html($couplePhotoPreview); ?>" alt="Couple photo preview"></div>
+                            <?php else: ?>
+                                <div class="image-preview"><img id="couplePreviewImg" alt="Couple photo preview" style="display:none;"></div>
+                            <?php endif; ?>
+                        </div>
                     </section>
 
                     <section id="background" class="card panel-section">
