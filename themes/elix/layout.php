@@ -258,7 +258,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                     <!-- Groom -->
                     <div class="col-md-5 text-center" data-aos="fade-right">
                         <div class="couple-card">
-                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $groomName; ?>" class="couple-img rounded-circle mb-4">
+                            <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="<?php echo $groomName; ?>" class="couple-img rounded-circle mb-4">
                             <h3 class="couple-name font-primary"><?php echo $groomName; ?></h3>
                             <p class="couple-nickname"><?php echo $groomNickname; ?></p>
                             <p class="couple-parents">
@@ -279,7 +279,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                     <!-- Bride -->
                     <div class="col-md-5 text-center" data-aos="fade-left">
                         <div class="couple-card">
-                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $brideName; ?>" class="couple-img rounded-circle mb-4">
+                            <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="<?php echo $brideName; ?>" class="couple-img rounded-circle mb-4">
                             <h3 class="couple-name font-primary"><?php echo $brideName; ?></h3>
                             <p class="couple-nickname"><?php echo $brideNickname; ?></p>
                             <p class="couple-parents">

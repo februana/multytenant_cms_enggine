@@ -582,7 +582,6 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
     <!-- Theme JS -->
     <script src="<?php echo escape_html(get_theme_asset_url('dewankl', 'script.js')); ?>"></script>
     
-    <!-- Main App JS -->
-    <script src="script.js" defer></script>
+
 </body>
 </html>
