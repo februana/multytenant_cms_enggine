@@ -85,10 +85,9 @@ $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
 $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($receptionDate)) : '';
 
 // Preset options (theme_options)
-$dewanklOpts = $config['theme_options']['dewankl'] ?? [];
-$showBismillah = $dewanklOpts['show_bismillah'] ?? true;
-$enableConfetti = !empty($dewanklOpts['enable_confetti']) ? 'true' : 'false';
-$enableMouseAnimation = $dewanklOpts['enable_mouse_animation'] ?? true;
+$showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'show_bismillah', true) : ($config['theme_options']['dewankl']['show_bismillah'] ?? true);
+$enableConfetti = (function_exists('get_theme_option') ? get_theme_option($config, 'dewankl', 'enable_confetti', true) : ($config['theme_options']['dewankl']['enable_confetti'] ?? true)) ? 'true' : 'false';
+$enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'enable_mouse_animation', true) : ($config['theme_options']['dewankl']['enable_mouse_animation'] ?? true);
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="auto">

@@ -1240,21 +1240,26 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <div class="form-grid">
                                 <?php
                                 $activePresetKey = $config['theme']['theme_preset'] ?? 'dewankl';
-                                $activeOpts = $config['theme_options'][$activePresetKey] ?? [];
-                                foreach ($activeOpts as $optKey => $optVal):
+                                $defaultOpts = config_defaults()['theme_options'][$activePresetKey] ?? [];
+                                $activeOpts = array_replace($defaultOpts, $config['theme_options'][$activePresetKey] ?? []);
+                                if (empty($activeOpts)):
                                 ?>
-                                    <div class="form-row">
-                                        <label><?php echo escape_html(ucwords(str_replace('_', ' ', $optKey))); ?></label>
-                                        <?php if (is_bool($optVal)): ?>
-                                            <select name="theme_opts[<?php echo escape_html($optKey); ?>]">
-                                                <option value="1" <?php echo $optVal ? 'selected' : ''; ?>>Aktif (True)</option>
-                                                <option value="0" <?php echo !$optVal ? 'selected' : ''; ?>>Nonaktif (False)</option>
-                                            </select>
-                                        <?php else: ?>
-                                            <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>">
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endforeach; ?>
+                                    <p style="grid-column:1/-1;color:#806f66;font-style:italic;">Tidak ada opsi khusus untuk preset ini.</p>
+                                <?php else: ?>
+                                    <?php foreach ($activeOpts as $optKey => $optVal): ?>
+                                        <div class="form-row">
+                                            <label><?php echo escape_html(ucwords(str_replace('_', ' ', $optKey))); ?></label>
+                                            <?php if (is_bool($optVal)): ?>
+                                                <select name="theme_opts[<?php echo escape_html($optKey); ?>]">
+                                                    <option value="1" <?php echo $optVal ? 'selected' : ''; ?>>Aktif (True)</option>
+                                                    <option value="0" <?php echo !$optVal ? 'selected' : ''; ?>>Nonaktif (False)</option>
+                                                </select>
+                                            <?php else: ?>
+                                                <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>">
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                             <button type="submit" style="margin-top:1rem;">Simpan Opsi Preset</button>
                         </form>

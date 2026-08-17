@@ -999,6 +999,17 @@ function get_config_value(array $config, string $path, $default = '') {
     return $value;
 }
 
+function get_theme_option(array $config, string $presetKey, string $optionKey, $default = null) {
+    return $config['theme_options'][$presetKey][$optionKey] ?? $default;
+}
+
+function set_theme_option(array &$config, string $presetKey, string $optionKey, $value): void {
+    if (!isset($config['theme_options'][$presetKey])) {
+        $config['theme_options'][$presetKey] = [];
+    }
+    $config['theme_options'][$presetKey][$optionKey] = $value;
+}
+
 function normalize_section_id(string $id): string {
     $id = strtolower(trim($id));
     $aliases = [
