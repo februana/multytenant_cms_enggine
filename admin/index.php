@@ -236,9 +236,18 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['wedding']['bride_name'] = trim((string)($_POST['bride_name'] ?? '')) ?: $config['wedding']['bride_name'];
                 $config['wedding']['groom_name'] = trim((string)($_POST['groom_name'] ?? '')) ?: $config['wedding']['groom_name'];
                 $config['wedding']['title'] = trim((string)($_POST['title'] ?? '')) ?: $config['wedding']['title'];
-                $config['wedding']['opening_text'] = trim((string)($_POST['opening_text'] ?? '')) ?: $config['wedding']['opening_text'];
-                $config['wedding']['closing_text'] = trim((string)($_POST['closing_text'] ?? '')) ?: $config['wedding']['closing_text'];
-                $config['wedding']['quote'] = trim((string)($_POST['quote'] ?? '')) ?: $config['wedding']['quote'];
+                $config['wedding']['opening_text'] = str_replace("\r\n", "\n", (string)($_POST['opening_text'] ?? ''));
+                if (trim($config['wedding']['opening_text']) === '') {
+                    $config['wedding']['opening_text'] = config_defaults()['wedding']['opening_text'];
+                }
+                $config['wedding']['closing_text'] = str_replace("\r\n", "\n", (string)($_POST['closing_text'] ?? ''));
+                if (trim($config['wedding']['closing_text']) === '') {
+                    $config['wedding']['closing_text'] = config_defaults()['wedding']['closing_text'];
+                }
+                $config['wedding']['quote'] = str_replace("\r\n", "\n", (string)($_POST['quote'] ?? ''));
+                if (trim($config['wedding']['quote']) === '') {
+                    $config['wedding']['quote'] = config_defaults()['wedding']['quote'];
+                }
                 $config['wedding']['bride_nickname'] = trim((string)($_POST['bride_nickname'] ?? '')) ?: $config['wedding']['bride_nickname'];
                 $config['wedding']['groom_nickname'] = trim((string)($_POST['groom_nickname'] ?? '')) ?: $config['wedding']['groom_nickname'];
                 break;
@@ -270,7 +279,10 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'save_location':
                 $config['location']['venue'] = trim((string)($_POST['venue'] ?? '')) ?: $config['location']['venue'];
-                $config['location']['address'] = trim((string)($_POST['address'] ?? '')) ?: $config['location']['address'];
+                $config['location']['address'] = str_replace("\r\n", "\n", (string)($_POST['address'] ?? ''));
+                if (trim($config['location']['address']) === '') {
+                    $config['location']['address'] = config_defaults()['location']['address'];
+                }
                 $config['location']['maps_url'] = trim((string)($_POST['maps_url'] ?? '')) ?: $config['location']['maps_url'];
                 $config['location']['maps_embed'] = trim((string)($_POST['maps_embed'] ?? '')) ?: $config['location']['maps_embed'];
                 break;
@@ -286,11 +298,17 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['dresscode']['title'] = trim((string)($_POST['dresscode_title'] ?? '')) ?: $config['dresscode']['title'];
                 $config['dresscode']['color'] = trim((string)($_POST['dresscode_color'] ?? '')) ?: $config['dresscode']['color'];
                 $config['dresscode']['rule'] = trim((string)($_POST['dresscode_rule'] ?? '')) ?: $config['dresscode']['rule'];
-                $config['dresscode']['description'] = trim((string)($_POST['dresscode_description'] ?? '')) ?: $config['dresscode']['description'];
+                $config['dresscode']['description'] = str_replace("\r\n", "\n", (string)($_POST['dresscode_description'] ?? ''));
+                if (trim($config['dresscode']['description']) === '') {
+                    $config['dresscode']['description'] = config_defaults()['dresscode']['description'];
+                }
                 break;
             case 'save_whatsapp':
                 $config['whatsapp']['phone'] = trim((string)($_POST['whatsapp_phone'] ?? '')) ?: $config['whatsapp']['phone'];
-                $config['whatsapp']['message'] = trim((string)($_POST['whatsapp_message'] ?? '')) ?: $config['whatsapp']['message'];
+                $config['whatsapp']['message'] = str_replace("\r\n", "\n", (string)($_POST['whatsapp_message'] ?? ''));
+                if (trim($config['whatsapp']['message']) === '') {
+                    $config['whatsapp']['message'] = config_defaults()['whatsapp']['message'];
+                }
                 break;
             case 'save_theme_options':
                 $presetKey = trim((string)($_POST['preset_key'] ?? ($config['theme']['theme_preset'] ?? 'dewankl')));
@@ -298,17 +316,40 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     if (!isset($config['theme_options'][$presetKey])) {
                         $config['theme_options'][$presetKey] = [];
                     }
+                    $presetRegistry = theme_registry()[$presetKey] ?? [];
+                    $presetSchema = $presetRegistry['schema'] ?? [];
+
+                    foreach ($presetSchema as $schemaKey => $schemaDef) {
+                        if (($schemaDef['type'] ?? '') === 'image') {
+                            $fileKey = 'theme_opts_file_' . $schemaKey;
+                            if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
+                                $uploadRes = upload_file($_FILES[$fileKey], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                                if (empty($uploadRes['error'])) {
+                                    $config['theme_options'][$presetKey][$schemaKey] = relative_path($uploadRes['path']);
+                                }
+                            }
+                        }
+                    }
+
                     if (isset($_POST['theme_opts']) && is_array($_POST['theme_opts'])) {
                         foreach ($_POST['theme_opts'] as $optKey => $optVal) {
                             $optKey = preg_replace('/[^a-zA-Z0-9_-]/', '', $optKey);
                             if ($optKey === '') continue;
                             if (is_array($optVal)) continue;
+
+                            $fieldType = $presetSchema[$optKey]['type'] ?? '';
+                            $strVal = str_replace("\r\n", "\n", (string)$optVal);
+
+                            if ($fieldType === 'image' && trim($strVal) === '' && !empty($config['theme_options'][$presetKey][$optKey])) {
+                                continue;
+                            }
+
                             if ($optVal === '1' || $optVal === 'true') {
                                 $config['theme_options'][$presetKey][$optKey] = true;
                             } elseif ($optVal === '0' || $optVal === 'false') {
                                 $config['theme_options'][$presetKey][$optKey] = false;
                             } else {
-                                $config['theme_options'][$presetKey][$optKey] = trim((string)$optVal);
+                                $config['theme_options'][$presetKey][$optKey] = $strVal;
                             }
                         }
                     }
@@ -446,7 +487,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         'id' => uniqid('story_', true),
                         'title' => trim((string)($_POST['title'] ?? '')),
                         'subtitle' => trim((string)($_POST['subtitle'] ?? '')),
-                        'description' => trim((string)($_POST['description'] ?? '')),
+                        'description' => str_replace("\r\n", "\n", (string)($_POST['description'] ?? '')),
                         'event_date' => trim((string)($_POST['event_date'] ?? '')),
                         'image' => '',
                         'image_alt' => trim((string)($_POST['image_alt'] ?? '')),
@@ -462,7 +503,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         if (($item['id'] ?? '') === $storyId) {
                             $item['title'] = trim((string)($_POST['title'] ?? $item['title']));
                             $item['subtitle'] = trim((string)($_POST['subtitle'] ?? $item['subtitle']));
-                            $item['description'] = trim((string)($_POST['description'] ?? $item['description']));
+                            $item['description'] = str_replace("\r\n", "\n", (string)($_POST['description'] ?? $item['description']));
                             $item['event_date'] = trim((string)($_POST['event_date'] ?? $item['event_date']));
                             $item['image_alt'] = trim((string)($_POST['image_alt'] ?? $item['image_alt']));
                             $item['image_caption'] = trim((string)($_POST['image_caption'] ?? $item['image_caption']));
@@ -1232,7 +1273,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
 
                         <h3 style="margin:2rem 0 1rem;color:#c84c47;">Opsi Khusus Preset Active (Theme Options)</h3>
-                        <form method="post" style="margin-bottom:2rem;">
+                        <form method="post" enctype="multipart/form-data" style="margin-bottom:2rem;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme_options">
                             <input type="hidden" name="preset_key" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'dewankl'); ?>">
@@ -1240,6 +1281,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <div class="form-grid">
                                 <?php
                                 $activePresetKey = $config['theme']['theme_preset'] ?? 'dewankl';
+                                $presetMeta = theme_registry()[$activePresetKey] ?? [];
+                                $presetSchema = $presetMeta['schema'] ?? [];
                                 $defaultOpts = config_defaults()['theme_options'][$activePresetKey] ?? [];
                                 $activeOpts = array_replace($defaultOpts, $config['theme_options'][$activePresetKey] ?? []);
                                 if (empty($activeOpts)):
@@ -1247,15 +1290,39 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <p style="grid-column:1/-1;color:#806f66;font-style:italic;">Tidak ada opsi khusus untuk preset ini.</p>
                                 <?php else: ?>
                                     <?php foreach ($activeOpts as $optKey => $optVal): ?>
+                                        <?php
+                                        $fieldSchema = $presetSchema[$optKey] ?? [];
+                                        $fieldType = $fieldSchema['type'] ?? (is_bool($optVal) ? 'boolean' : 'text');
+                                        $fieldLabel = $fieldSchema['label'] ?? ucwords(str_replace('_', ' ', $optKey));
+                                        $fieldDesc = $fieldSchema['description'] ?? '';
+                                        ?>
                                         <div class="form-row">
-                                            <label><?php echo escape_html(ucwords(str_replace('_', ' ', $optKey))); ?></label>
-                                            <?php if (is_bool($optVal)): ?>
+                                            <label><?php echo escape_html($fieldLabel); ?></label>
+                                            <?php if ($fieldType === 'boolean'): ?>
                                                 <select name="theme_opts[<?php echo escape_html($optKey); ?>]">
                                                     <option value="1" <?php echo $optVal ? 'selected' : ''; ?>>Aktif (True)</option>
                                                     <option value="0" <?php echo !$optVal ? 'selected' : ''; ?>>Nonaktif (False)</option>
                                                 </select>
+                                            <?php elseif ($fieldType === 'color'): ?>
+                                                <input type="color" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>" style="width:100%;height:40px;">
+                                            <?php elseif ($fieldType === 'textarea'): ?>
+                                                <textarea name="theme_opts[<?php echo escape_html($optKey); ?>]" rows="4"><?php echo escape_html((string)$optVal); ?></textarea>
+                                            <?php elseif ($fieldType === 'select'): ?>
+                                                <select name="theme_opts[<?php echo escape_html($optKey); ?>]">
+                                                    <?php foreach (($fieldSchema['options'] ?? []) as $valKey => $valLabel): ?>
+                                                        <option value="<?php echo escape_html((string)$valKey); ?>" <?php echo (string)$optVal === (string)$valKey ? 'selected' : ''; ?>><?php echo escape_html((string)$valLabel); ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            <?php elseif ($fieldType === 'image'): ?>
+                                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                                    <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>" placeholder="Path gambar">
+                                                    <input type="file" name="theme_opts_file_<?php echo escape_html($optKey); ?>" accept="image/*">
+                                                </div>
                                             <?php else: ?>
                                                 <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>">
+                                            <?php endif; ?>
+                                            <?php if ($fieldDesc !== ''): ?>
+                                                <small style="color:#806f66;display:block;margin-top:4px;"><?php echo escape_html($fieldDesc); ?></small>
                                             <?php endif; ?>
                                         </div>
                                     <?php endforeach; ?>

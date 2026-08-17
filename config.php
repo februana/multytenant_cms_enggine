@@ -339,20 +339,26 @@ function config_defaults(): array {
             'dewankl' => [
                 'show_bismillah' => true,
                 'enable_confetti' => true,
-                'enable_mouse_animation' => true
+                'enable_mouse_animation' => true,
+                'welcome_note' => ''
             ],
             'elix' => [
                 'timeline_style' => 'vertical',
-                'show_countdown_circle' => true
+                'show_countdown_circle' => true,
+                'header_greeting' => ''
             ],
             'rainier' => [
                 'glass_opacity' => '0.85',
-                'show_bismillah' => true
+                'show_bismillah' => true,
+                'hero_accent_color' => '#b8655d',
+                'quote_note' => ''
             ],
             'archak' => [
                 'enable_parallax' => true,
                 'enable_preloader' => true,
-                'divider_style' => 'ornament'
+                'divider_style' => 'ornament',
+                'header_badge_image' => '',
+                'archak_welcome_msg' => ''
             ]
         ],
         'custom_css' => ''
@@ -506,6 +512,32 @@ function theme_registry(): array {
                 'body_font' => 'Inter, sans-serif',
                 'font_size_base' => '16px'
             ],
+            'schema' => [
+                'show_bismillah' => [
+                    'type' => 'boolean',
+                    'label' => 'Tampilkan Bismillah',
+                    'description' => 'Tampilkan lafaz Bismillah di bagian atas pembuka.',
+                    'default' => true
+                ],
+                'enable_confetti' => [
+                    'type' => 'boolean',
+                    'label' => 'Efek Confetti',
+                    'description' => 'Aktifkan animasi efek serpihan confetti saat tombol buka undangan diklik.',
+                    'default' => true
+                ],
+                'enable_mouse_animation' => [
+                    'type' => 'boolean',
+                    'label' => 'Animasi Kursor Mouse',
+                    'description' => 'Aktifkan animasi jejak kursor mouse.',
+                    'default' => true
+                ],
+                'welcome_note' => [
+                    'type' => 'textarea',
+                    'label' => 'Pesan Sambutan Khusus',
+                    'description' => 'Teks ucapan atau pesan sambutan tambahan (dukungan multi-baris).',
+                    'default' => ''
+                ]
+            ],
             'capabilities' => [
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
@@ -539,6 +571,30 @@ function theme_registry(): array {
                 'heading_font' => 'Georgia, serif',
                 'body_font' => 'Segoe UI, sans-serif',
                 'font_size_base' => '16px'
+            ],
+            'schema' => [
+                'timeline_style' => [
+                    'type' => 'select',
+                    'label' => 'Gaya Timeline',
+                    'description' => 'Pilih tampilan layout untuk bagian cerita cinta.',
+                    'options' => [
+                        'vertical' => 'Vertikal',
+                        'horizontal' => 'Horizontal'
+                    ],
+                    'default' => 'vertical'
+                ],
+                'show_countdown_circle' => [
+                    'type' => 'boolean',
+                    'label' => 'Hitung Mundur Melingkar',
+                    'description' => 'Tampilkan animasi hitung mundur dalam desain lingkaran.',
+                    'default' => true
+                ],
+                'header_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Teks Catatan Header',
+                    'description' => 'Pesan ucapan atau catatan tajuk multi-baris di bagian atas.',
+                    'default' => ''
+                ]
             ],
             'capabilities' => [
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
@@ -574,6 +630,32 @@ function theme_registry(): array {
                 'body_font' => 'Segoe UI, sans-serif',
                 'font_size_base' => '16px'
             ],
+            'schema' => [
+                'glass_opacity' => [
+                    'type' => 'text',
+                    'label' => 'Opasitas Glassmorphism',
+                    'description' => 'Tingkat transparansi panel kaca (contoh: 0.85).',
+                    'default' => '0.85'
+                ],
+                'show_bismillah' => [
+                    'type' => 'boolean',
+                    'label' => 'Tampilkan Bismillah',
+                    'description' => 'Tampilkan lafaz Bismillah di awal.',
+                    'default' => true
+                ],
+                'hero_accent_color' => [
+                    'type' => 'color',
+                    'label' => 'Warna Aksen Kustom Hero',
+                    'description' => 'Aksen warna khusus pada hero Rainier.',
+                    'default' => '#b8655d'
+                ],
+                'quote_note' => [
+                    'type' => 'textarea',
+                    'label' => 'Catatan Editorial Quote',
+                    'description' => 'Teks kutipan/catatan tambahan berformat multi-baris.',
+                    'default' => ''
+                ]
+            ],
             'capabilities' => [
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
@@ -607,6 +689,43 @@ function theme_registry(): array {
                 'heading_font' => 'Georgia, serif',
                 'body_font' => 'Segoe UI, sans-serif',
                 'font_size_base' => '16px'
+            ],
+            'schema' => [
+                'enable_parallax' => [
+                    'type' => 'boolean',
+                    'label' => 'Efek Parallax',
+                    'description' => 'Aktifkan pergerakan efek parallax pada background.',
+                    'default' => true
+                ],
+                'enable_preloader' => [
+                    'type' => 'boolean',
+                    'label' => 'Tampilkan Preloader',
+                    'description' => 'Tampilkan animasi pemuatan layar pembuka.',
+                    'default' => true
+                ],
+                'divider_style' => [
+                    'type' => 'select',
+                    'label' => 'Gaya Pembatas (Divider)',
+                    'description' => 'Bentuk gaya ornamen pembatas antarseksi.',
+                    'options' => [
+                        'ornament' => 'Ornamen Mewah',
+                        'line' => 'Garis Minimalis',
+                        'none' => 'Tanpa Pembatas'
+                    ],
+                    'default' => 'ornament'
+                ],
+                'header_badge_image' => [
+                    'type' => 'image',
+                    'label' => 'Lencana/Emblem Header',
+                    'description' => 'Pilih/unggah gambar emblem khusus untuk seksi header.',
+                    'default' => ''
+                ],
+                'archak_welcome_msg' => [
+                    'type' => 'textarea',
+                    'label' => 'Pesan Sambutan Archak',
+                    'description' => 'Pesan ucapan multi-baris bergaya editorial Archak.',
+                    'default' => ''
+                ]
             ],
             'capabilities' => [
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],

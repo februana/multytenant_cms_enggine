@@ -2,10 +2,14 @@ FROM composer:2 AS composer
 
 FROM php:8.3-apache
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html \
-    PORT=10000 \
+# Optimized Dockerfile for Ubuntu & Armbian Servers (x86_64 / ARM64)
+# Non-interactive automated deployment setup bypassing interactive install.sh prompts
+
+ENV APACHE_DOCUMENT_ROOT=/var/www/wedding \
+    PORT=80 \
     UNDANGAN_DATA_DIR=/var/data \
-    UNDANGAN_DB_PATH=/var/data/database.sqlite
+    UNDANGAN_DB_PATH=/var/data/database.sqlite \
+    DEBIAN_FRONTEND=noninteractive
 
 # Layer 1: Install system packages and development libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -23,25 +27,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Layer 2: Configure & Install GD
+# Layer 2: Configure & Install PHP Extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" gd
+    && docker-php-ext-install -j"$(nproc)" gd mbstring zip pdo_sqlite
 
-# Layer 3: Install Mbstring
-RUN docker-php-ext-install -j"$(nproc)" mbstring
-
-# Layer 4: Install Zip
-RUN docker-php-ext-install -j"$(nproc)" zip
-
-# Layer 5: Enable Apache modules
+# Layer 3: Enable Apache modules
 RUN a2enmod rewrite headers expires
 
 # Copy Composer binary
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/html
+WORKDIR /var/www/wedding
 
-# Layer 6: Install Composer dependencies
+# Layer 4: Install Composer dependencies
 COPY composer.json composer.lock ./
 RUN composer install \
     --no-dev \
@@ -50,19 +48,18 @@ RUN composer install \
     --no-progress \
     --optimize-autoloader
 
-# Layer 7: Copy application files & entrypoint
+# Layer 5: Copy application files & entrypoint
 COPY . .
-COPY docker/render-entrypoint.sh /usr/local/bin/render-entrypoint.sh
-COPY docker/render-prepend.php /usr/local/bin/render-prepend.php
-COPY docker/render.ini /usr/local/etc/php/conf.d/zz-render.ini
-
-RUN chmod +x /usr/local/bin/render-entrypoint.sh \
-    && mkdir -p /var/data /var/www/html/uploads /var/www/html/backups /var/www/html/webdav \
-    && chown -R www-data:www-data /var/www/html /var/data
-
+COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-EXPOSE 10000
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && sed -i 's|/var/www/html|/var/www/wedding|g' /etc/apache2/apache2.conf \
+    && sed -i 's|/var/www/html|/var/www/wedding|g' /etc/apache2/conf-available/docker-php.conf \
+    && mkdir -p /var/data /var/www/wedding/uploads /var/www/wedding/backups \
+    && chown -R www-data:www-data /var/www/wedding /var/data
 
-ENTRYPOINT ["/usr/local/bin/render-entrypoint.sh"]
+EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

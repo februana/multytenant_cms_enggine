@@ -45,7 +45,7 @@ $countdownTarget = $config['schedule']['countdown_target'] ?? '';
 
 // Location
 $venue = escape_html($config['location']['venue'] ?? '');
-$address = escape_html($config['location']['address'] ?? '');
+$address = nl2br(escape_html($config['location']['address'] ?? ''));
 $mapsUrl = escape_html($config['location']['maps_url'] ?? '');
 $mapsEmbed = escape_html($config['location']['maps_embed'] ?? '');
 
