@@ -73,7 +73,13 @@ $dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')
 $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
 
 // Story data
-$stories = $config['story']['items'] ?? [];
+$stories = !empty($config['story']['items']) ? $config['story']['items'] : (!empty($config['love_story']['items']) ? $config['love_story']['items'] : ($config['story'] ?? []));
+
+// Preset options (theme_options)
+$archakOpts = $config['theme_options']['archak'] ?? [];
+$enableParallax = $archakOpts['enable_parallax'] ?? true;
+$enablePreloader = $archakOpts['enable_preloader'] ?? true;
+$dividerStyle = $archakOpts['divider_style'] ?? 'ornament';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -98,6 +104,7 @@ $stories = $config['story']['items'] ?? [];
 </head>
 <body class="archak-theme">
     <!-- Preloader -->
+    <?php if ($enablePreloader): ?>
     <div id="preloader" class="preloader">
         <div class="preloader-content">
             <div class="preloader-names">
@@ -108,6 +115,7 @@ $stories = $config['story']['items'] ?? [];
             <div class="preloader-bar"></div>
         </div>
     </div>
+    <?php endif; ?>
     
     <!-- Navigation -->
     <nav id="navbar" class="navbar-archak">
@@ -137,7 +145,7 @@ $stories = $config['story']['items'] ?? [];
     
     <!-- Hero Section -->
     <section id="home" class="hero-archak">
-        <div class="hero-bg-parallax" style="background-image: url('<?php echo escape_html(public_path($heroBg)); ?>');"></div>
+        <div class="<?php echo $enableParallax ? 'hero-bg-parallax' : 'hero-bg-static'; ?>" style="background-image: url('<?php echo escape_html(public_path($heroBg)); ?>');"></div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <div class="hero-split">
@@ -151,8 +159,8 @@ $stories = $config['story']['items'] ?? [];
                     <p class="hero-quote"><?php echo $openingText; ?></p>
                     <div class="hero-date-badge">
                         <span class="badge-day"><?php echo $akadDate ? date('d', strtotime($akadDate)) : '00'; ?></span>
-                        <span class="badge-month"><?php echo $akadDate ? date('M', strtotime($akadDate)) : 'JAN'; ?></span>
-                        <span class="badge-year"><?php echo $akadDate ? date('Y', strtotime($akadDate)) : '2024'; ?></span>
+                        <span class="badge-month"><?php echo $akadDate ? date('M', strtotime($akadDate)) : date('M'); ?></span>
+                        <span class="badge-year"><?php echo $akadDate ? date('Y', strtotime($akadDate)) : date('Y'); ?></span>
                     </div>
                 </div>
                 <div class="hero-image-side" data-reveal="right">

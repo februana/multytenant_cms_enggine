@@ -80,6 +80,11 @@ $isMapsEnabled = is_section_enabled($config, 'lokasi');
 // Format dates
 $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
 $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($receptionDate)) : '';
+
+// Preset options (theme_options)
+$elixOpts = $config['theme_options']['elix'] ?? [];
+$timelineStyle = $elixOpts['timeline_style'] ?? 'vertical';
+$showCountdownCircle = $elixOpts['show_countdown_circle'] ?? true;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -207,6 +212,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                             <?php echo $akadDateFormatted; ?>
                         </p>
                         
+                        <?php if ($showCountdownCircle): ?>
                         <!-- Countdown Circle -->
                         <div class="countdown-circle mx-auto mb-4" data-aos="zoom-in" data-aos-delay="300">
                             <div class="countdown-inner">
@@ -228,6 +234,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <div class="hero-actions mt-4" data-aos="fade-up" data-aos-delay="400">
                             <a href="<?php echo $calendarLink; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-calendar me-2">
@@ -306,7 +313,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                     </div>
                 </div>
                 
-                <div class="timeline">
+                <div class="timeline <?php echo $timelineStyle === 'horizontal' ? 'timeline-horizontal' : ''; ?>">
                     <!-- Akad -->
                     <div class="timeline-item" data-aos="fade-up">
                         <div class="timeline-marker">
@@ -346,7 +353,16 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
             </div>
         </section>
         
-        <?php if ($isStoryEnabled && !empty($config['story'])): ?>
+        <?php
+        $elixStories = !empty($config['story']) ? $config['story'] : array_map(function($item) {
+            return [
+                'date' => $item['event_date'] ?? ($item['date'] ?? ''),
+                'title' => $item['title'] ?? '',
+                'description' => $item['description'] ?? ''
+            ];
+        }, $config['love_story']['items'] ?? []);
+        if ($isStoryEnabled && !empty($elixStories)):
+        ?>
         <!-- Story Section -->
         <section id="story" class="story-section py-5">
             <div class="container">
@@ -360,7 +376,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                 </div>
                 
                 <div class="story-timeline">
-                    <?php foreach (($config['story'] ?? []) as $index => $story): ?>
+                    <?php foreach ($elixStories as $index => $story): ?>
                     <div class="story-item <?php echo $index % 2 === 0 ? 'left' : 'right'; ?>" data-aos="fade-<?php echo $index % 2 === 0 ? 'right' : 'left'; ?>">
                         <div class="story-content card border-0 shadow-sm">
                             <div class="card-body p-4">

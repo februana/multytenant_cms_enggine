@@ -83,6 +83,12 @@ $isMapsEnabled = is_section_enabled($config, 'lokasi');
 // Format dates
 $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
 $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($receptionDate)) : '';
+
+// Preset options (theme_options)
+$dewanklOpts = $config['theme_options']['dewankl'] ?? [];
+$showBismillah = $dewanklOpts['show_bismillah'] ?? true;
+$enableConfetti = !empty($dewanklOpts['enable_confetti']) ? 'true' : 'false';
+$enableMouseAnimation = $dewanklOpts['enable_mouse_animation'] ?? true;
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="auto">
@@ -137,7 +143,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
     </script>
 </head>
 
-<body data-key="" data-url="" data-audio="<?php echo escape_html($musicSrc); ?>" data-confetti="true" data-time="<?php echo escape_html($countdownTarget); ?>">
+<body data-key="" data-url="" data-audio="<?php echo escape_html($musicSrc); ?>" data-confetti="<?php echo $enableConfetti; ?>" data-time="<?php echo escape_html($countdownTarget); ?>">
     
     <!-- Root Invitation -->
     <div class="row m-0 p-0 opacity-0" id="root">
@@ -180,11 +186,13 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                             <i class="fa-solid fa-calendar-check me-2"></i>Save Google Calendar
                         </button>
                         
+                        <?php if ($enableMouseAnimation): ?>
                         <div class="d-flex justify-content-center align-items-center mt-4 mb-2">
                             <div class="mouse-animation border border-secondary border-2 rounded-5 px-2 py-1 opacity-50">
                                 <div class="scroll-animation rounded-4 bg-secondary"></div>
                             </div>
                         </div>
+                        <?php endif; ?>
                         
                         <p class="pb-4 m-0 text-secondary" style="font-size: 0.825rem;">Scroll Down</p>
                     </div>
@@ -199,7 +207,9 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                 
                 <!-- Bride & Groom Section -->
                 <section class="bg-white-black text-center" id="bride">
+                    <?php if ($showBismillah): ?>
                     <h2 class="font-arabic py-4 m-0" style="font-size: 2rem;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</h2>
+                    <?php endif; ?>
                     <h2 class="font-esthetic py-4 m-0" style="font-size: 2rem;">Assalamualaikum Warahmatullahi Wabarakatuh</h2>
                     <p class="pb-4 px-2 m-0" style="font-size: 0.95rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami:</p>
                     

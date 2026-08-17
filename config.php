@@ -335,6 +335,26 @@ function config_defaults(): array {
             'rule' => 'Rapi dan sopan',
             'description' => 'Kenakan busana terbaikmu untuk momen spesial.'
         ],
+        'theme_options' => [
+            'dewankl' => [
+                'show_bismillah' => true,
+                'enable_confetti' => true,
+                'enable_mouse_animation' => true
+            ],
+            'elix' => [
+                'timeline_style' => 'vertical',
+                'show_countdown_circle' => true
+            ],
+            'rainier' => [
+                'glass_opacity' => '0.85',
+                'show_bismillah' => true
+            ],
+            'archak' => [
+                'enable_parallax' => true,
+                'enable_preloader' => true,
+                'divider_style' => 'ornament'
+            ]
+        ],
         'custom_css' => ''
     ];
 }
@@ -790,11 +810,25 @@ function load_config(): array {
     if (!isset($config['buttons']['mobile_layout'])) {
         $config['buttons']['mobile_layout'] = '2-columns';
     }
+    if (!is_array($config['theme_options'] ?? null)) {
+        $config['theme_options'] = $defaults['theme_options'];
+    } else {
+        $config['theme_options'] = array_replace_recursive($defaults['theme_options'], $config['theme_options']);
+    }
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
     }
     if (!is_file(ROOT_DIR . '/event.ics')) {
         write_event_ics($config);
+    }
+    if (empty($config['story']) && !empty($config['love_story']['items'])) {
+        $config['story'] = array_map(function($item) {
+            return [
+                'date' => $item['event_date'] ?? ($item['date'] ?? ''),
+                'title' => $item['title'] ?? '',
+                'description' => $item['description'] ?? '',
+            ];
+        }, $config['love_story']['items']);
     }
     return $config;
 }

@@ -205,6 +205,26 @@
     "love_story": {
         "items": []
     },
+    "theme_options": {
+        "dewankl": {
+            "show_bismillah": true,
+            "enable_confetti": true,
+            "enable_mouse_animation": true
+        },
+        "elix": {
+            "timeline_style": "vertical",
+            "show_countdown_circle": true
+        },
+        "rainier": {
+            "glass_opacity": "0.85",
+            "show_bismillah": true
+        },
+        "archak": {
+            "enable_parallax": true,
+            "enable_preloader": true,
+            "divider_style": "ornament"
+        }
+    },
     "custom_css": "",
     "buttons": {
         "mobile_layout": "2-columns"
