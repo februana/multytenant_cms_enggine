@@ -203,7 +203,7 @@ $dividerStyle = function_exists('get_theme_option') ? (string)get_theme_option($
                     <p class="person-nickname"><?php echo $brideNickname; ?></p>
                     <?php if ($isParentsEnabled): ?>
                     <p class="person-parents">
-                        Daughter of<br>
+                        Putri dari<br>
                         <strong><?php echo $brideFather; ?></strong> & <strong><?php echo $brideMother; ?></strong>
                     </p>
                     <?php endif; ?>
@@ -224,7 +224,7 @@ $dividerStyle = function_exists('get_theme_option') ? (string)get_theme_option($
                     <p class="person-nickname"><?php echo $groomNickname; ?></p>
                     <?php if ($isParentsEnabled): ?>
                     <p class="person-parents">
-                        Son of<br>
+                        Putra dari<br>
                         <strong><?php echo $groomFather; ?></strong> & <strong><?php echo $groomMother; ?></strong>
                     </p>
                     <?php endif; ?>
