@@ -5,12 +5,12 @@
  * - Welcome overlay & invitation opening
  * - Music control
  * - Countdown timer
+ * - Dynamic Gallery loading & Lightbox modal
  * - Navigation (mobile toggle, scroll behavior)
- * - Gallery modal
  * - RSVP form submission
  * - Copy to clipboard
  * - Toast notifications
- * - Scroll animations
+ * - Smooth scroll effects
  */
 
 (function() {
@@ -24,25 +24,27 @@
     const navbar = document.getElementById('navbar');
     const navbarToggle = document.querySelector('.navbar-toggle');
     const navbarMenu = document.querySelector('.navbar-menu');
-    const musicControl = document.getElementById('music-control');
     const musicToggle = document.getElementById('music-toggle');
     const backgroundMusic = document.getElementById('background-music');
+    const galleryGrid = document.getElementById('gallery-grid') || document.querySelector('.gallery-grid');
     const galleryModal = document.getElementById('gallery-modal');
-    const modalImage = document.querySelector('.modal-image');
-    const modalCaption = document.querySelector('.modal-caption');
+    const modalImage = document.querySelector('.modal-image') || document.getElementById('modalImg');
+    const modalCaption = document.querySelector('.modal-caption') || document.getElementById('modalCaption');
     const modalClose = document.querySelector('.modal-close');
     const modalPrev = document.querySelector('.modal-prev');
     const modalNext = document.querySelector('.modal-next');
-    const rsvpForm = document.getElementById('rsvp-form');
-    const rsvpSuccess = document.getElementById('rsvp-success');
+    const rsvpForm = document.getElementById('rsvp-form') || document.getElementById('rsvpForm');
     const toast = document.getElementById('toast');
     const toastMessage = document.querySelector('.toast-message');
-    const copyButtons = document.querySelectorAll('[data-copy-target]');
-    const countdownDayEl = document.getElementById('hero-countdown-day');
+
+    // State
+    let currentGalleryIndex = 0;
+    let galleryItemsData = [];
+    let isMusicPlaying = false;
 
     function hideLoadingScreen() {
         try {
-            const screen = loadingScreen || document.getElementById('loading-screen') || document.getElementById('preloader');
+            const screen = loadingScreen || document.getElementById('loading-screen');
             if (screen) {
                 screen.classList.add('hidden');
                 setTimeout(function() {
@@ -56,52 +58,34 @@
         }
     }
 
-    // Fallback timer: force-hide preloader after 3 seconds no matter what
-    setTimeout(hideLoadingScreen, 3000);
-
-    // State
-    let currentGalleryIndex = 0;
-    let galleryItems = [];
-    let isMusicPlaying = false;
+    // Fallback timer: force-hide preloader after 1.5 seconds max
+    setTimeout(hideLoadingScreen, 1500);
 
     /**
      * Initialize everything when DOM is ready
      */
     function init() {
         try { initWelcomeOverlay(); } catch (e) { console.warn('Overlay init error:', e); }
+        try { initMusicControl(); } catch (e) { console.warn('Music init error:', e); }
         try { initNavbar(); } catch (e) { console.warn('Navbar init error:', e); }
         try { initCountdown(); } catch (e) { console.warn('Countdown init error:', e); }
-        try { initGallery(); } catch (e) { console.warn('Gallery init error:', e); }
+        try { initDynamicGallery(); } catch (e) { console.warn('Gallery init error:', e); }
         try { initRSVP(); } catch (e) { console.warn('RSVP init error:', e); }
         try { initCopyButtons(); } catch (e) { console.warn('Copy buttons init error:', e); }
         try { initScrollEffects(); } catch (e) { console.warn('Scroll effects init error:', e); }
-        
-        try { setTimeout(collectGalleryItems, 500); } catch (e) {}
     }
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        try {
-            hideLoadingScreen();
-            init();
-        } finally {
-            hideLoadingScreen();
-        }
+        hideLoadingScreen();
+        init();
     } else {
         window.addEventListener('load', function() {
-            try {
-                hideLoadingScreen();
-                init();
-            } finally {
-                hideLoadingScreen();
-            }
+            hideLoadingScreen();
+            init();
         });
         document.addEventListener('DOMContentLoaded', function() {
-            try {
-                hideLoadingScreen();
-                init();
-            } finally {
-                hideLoadingScreen();
-            }
+            hideLoadingScreen();
+            init();
         });
     }
 
@@ -112,22 +96,14 @@
         if (!openInvitationBtn || !welcomeOverlay || !mainContent) return;
 
         openInvitationBtn.addEventListener('click', function() {
-            // Hide welcome overlay
             welcomeOverlay.classList.add('hidden');
-            
-            // Show main content
             mainContent.classList.remove('hidden');
-            
-            // Enable body scroll
             document.body.classList.remove('hidden');
             
-            // Start music if enabled
-            if (backgroundMusic && musicControl) {
-                musicControl.classList.remove('hidden');
+            if (backgroundMusic) {
                 playMusic();
             }
             
-            // Update URL hash
             history.pushState(null, null, '#home');
         });
     }
@@ -135,6 +111,18 @@
     /**
      * Music Control
      */
+    function initMusicControl() {
+        if (!musicToggle || !backgroundMusic) return;
+
+        musicToggle.addEventListener('click', function() {
+            if (isMusicPlaying) {
+                pauseMusic();
+            } else {
+                playMusic();
+            }
+        });
+    }
+
     function playMusic() {
         if (!backgroundMusic) return;
         
@@ -154,28 +142,17 @@
         updateMusicIcon();
     }
 
-    function toggleMusic() {
-        if (isMusicPlaying) {
-            pauseMusic();
-        } else {
-            playMusic();
-        }
-    }
-
     function updateMusicIcon() {
         if (!musicToggle) return;
         
+        const iconSpan = musicToggle.querySelector('.music-icon');
         if (isMusicPlaying) {
-            musicToggle.innerHTML = '⏸️';
+            if (iconSpan) iconSpan.textContent = '⏸️';
             musicToggle.classList.add('playing');
         } else {
-            musicToggle.innerHTML = '🎵';
+            if (iconSpan) iconSpan.textContent = '🎵';
             musicToggle.classList.remove('playing');
         }
-    }
-
-    if (musicToggle) {
-        musicToggle.addEventListener('click', toggleMusic);
     }
 
     /**
@@ -184,13 +161,11 @@
     function initNavbar() {
         if (!navbar || !navbarToggle || !navbarMenu) return;
 
-        // Mobile menu toggle
         navbarToggle.addEventListener('click', function() {
             navbarMenu.classList.toggle('active');
             navbarToggle.classList.toggle('active');
         });
 
-        // Close mobile menu on link click
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.addEventListener('click', function() {
@@ -199,19 +174,12 @@
             });
         });
 
-        // Navbar scroll effect
-        let lastScrollY = window.scrollY;
-        
         window.addEventListener('scroll', function() {
-            const currentScrollY = window.scrollY;
-            
-            if (currentScrollY > 100) {
+            if (window.scrollY > 100) {
                 navbar.classList.add('scrolled');
             } else {
                 navbar.classList.remove('scrolled');
             }
-            
-            lastScrollY = currentScrollY;
         });
     }
 
@@ -219,13 +187,16 @@
      * Countdown Timer
      */
     function initCountdown() {
-        if (!countdownDayEl) return;
+        const cdDays = document.getElementById('cd-days') || document.getElementById('hero-countdown-day');
+        const cdHours = document.getElementById('cd-hours');
+        const cdMinutes = document.getElementById('cd-minutes');
+        const cdSeconds = document.getElementById('cd-seconds');
 
-        // Get countdown target from data attribute or config
+        if (!cdDays) return;
+
         const countdownTarget = document.body.dataset.countdownTarget || getConfigValue('countdown_target');
         
         if (!countdownTarget) {
-            countdownDayEl.textContent = '00';
             return;
         }
 
@@ -235,12 +206,22 @@
             const distance = target - now;
 
             if (distance < 0) {
-                countdownDayEl.textContent = '00';
+                if (cdDays) cdDays.textContent = '00';
+                if (cdHours) cdHours.textContent = '00';
+                if (cdMinutes) cdMinutes.textContent = '00';
+                if (cdSeconds) cdSeconds.textContent = '00';
                 return;
             }
 
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            countdownDayEl.textContent = String(days).padStart(2, '0');
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            if (cdDays) cdDays.textContent = String(days).padStart(2, '0');
+            if (cdHours) cdHours.textContent = String(hours).padStart(2, '0');
+            if (cdMinutes) cdMinutes.textContent = String(minutes).padStart(2, '0');
+            if (cdSeconds) cdSeconds.textContent = String(seconds).padStart(2, '0');
         }
 
         updateCountdown();
@@ -248,36 +229,99 @@
     }
 
     /**
-     * Gallery Modal
+     * Dynamic Gallery Loading & Modal Lightbox
      */
-    function collectGalleryItems() {
-        galleryItems = document.querySelectorAll('.gallery-item');
-        
-        galleryItems.forEach((item, index) => {
-            item.addEventListener('click', function() {
-                openModal(index);
+    function initDynamicGallery() {
+        if (!galleryGrid) return;
+
+        fetch('gallery.php')
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    galleryGrid.innerHTML = '<p class="no-gallery">Tidak ada foto galeri.</p>';
+                    return;
+                }
+
+                galleryItemsData = data.map(item => {
+                    if (typeof item === 'string') {
+                        return { src: item, thumb: item };
+                    }
+                    return { src: item.src, thumb: item.thumb || item.src };
+                });
+
+                galleryGrid.innerHTML = '';
+                galleryItemsData.forEach((item, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'gallery-item glass-panel';
+                    card.setAttribute('data-index', index);
+
+                    card.innerHTML = `
+                        <div class="gallery-image-wrapper">
+                            <img src="${item.thumb}" alt="Gallery photo ${index + 1}" class="gallery-image" loading="lazy">
+                        </div>
+                    `;
+
+                    card.addEventListener('click', function() {
+                        openModal(index);
+                    });
+
+                    galleryGrid.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching gallery:', err);
+                galleryGrid.innerHTML = '<p class="error">Gagal memuat galeri.</p>';
             });
+
+        initGalleryModalControls();
+    }
+
+    function initGalleryModalControls() {
+        if (modalClose) {
+            modalClose.addEventListener('click', closeModal);
+        }
+
+        if (modalPrev) {
+            modalPrev.addEventListener('click', showPrevImage);
+        }
+
+        if (modalNext) {
+            modalNext.addEventListener('click', showNextImage);
+        }
+
+        if (galleryModal) {
+            galleryModal.addEventListener('click', function(e) {
+                if (e.target === galleryModal) {
+                    closeModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!galleryModal || galleryModal.classList.contains('hidden')) return;
+
+            if (e.key === 'Escape') {
+                closeModal();
+            } else if (e.key === 'ArrowLeft') {
+                showPrevImage();
+            } else if (e.key === 'ArrowRight') {
+                showNextImage();
+            }
         });
     }
 
     function openModal(index) {
-        if (!galleryModal || !modalImage || index >= galleryItems.length) return;
+        if (!galleryModal || !modalImage || index < 0 || index >= galleryItemsData.length) return;
 
         currentGalleryIndex = index;
-        const item = galleryItems[index];
-        const img = item.querySelector('.gallery-image');
-        const caption = item.querySelector('.gallery-caption');
+        const item = galleryItemsData[index];
 
-        if (img) {
-            modalImage.src = img.src;
-            modalImage.alt = img.alt || '';
-        }
+        modalImage.src = item.src;
+        modalImage.alt = `Gallery photo ${index + 1}`;
 
-        if (caption) {
-            modalCaption.textContent = caption.textContent;
+        if (modalCaption) {
+            modalCaption.textContent = `Foto ${index + 1} dari ${galleryItemsData.length}`;
             modalCaption.style.display = 'block';
-        } else {
-            modalCaption.style.display = 'none';
         }
 
         galleryModal.classList.remove('hidden');
@@ -292,66 +336,27 @@
     }
 
     function showPrevImage() {
-        if (currentGalleryIndex > 0) {
-            openModal(currentGalleryIndex - 1);
-        } else {
-            openModal(galleryItems.length - 1);
-        }
+        if (galleryItemsData.length === 0) return;
+        const prevIndex = (currentGalleryIndex - 1 + galleryItemsData.length) % galleryItemsData.length;
+        openModal(prevIndex);
     }
 
     function showNextImage() {
-        if (currentGalleryIndex < galleryItems.length - 1) {
-            openModal(currentGalleryIndex + 1);
-        } else {
-            openModal(0);
-        }
+        if (galleryItemsData.length === 0) return;
+        const nextIndex = (currentGalleryIndex + 1) % galleryItemsData.length;
+        openModal(nextIndex);
     }
-
-    if (modalClose) {
-        modalClose.addEventListener('click', closeModal);
-    }
-
-    if (modalPrev) {
-        modalPrev.addEventListener('click', showPrevImage);
-    }
-
-    if (modalNext) {
-        modalNext.addEventListener('click', showNextImage);
-    }
-
-    // Close modal on background click
-    if (galleryModal) {
-        galleryModal.addEventListener('click', function(e) {
-            if (e.target === galleryModal) {
-                closeModal();
-            }
-        });
-    }
-
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-        if (!galleryModal || galleryModal.classList.contains('hidden')) return;
-
-        if (e.key === 'Escape') {
-            closeModal();
-        } else if (e.key === 'ArrowLeft') {
-            showPrevImage();
-        } else if (e.key === 'ArrowRight') {
-            showNextImage();
-        }
-    });
 
     /**
      * RSVP Form
      */
     function initRSVP() {
-        const form = rsvpForm || document.getElementById('rsvpForm') || document.getElementById('rsvp-form');
-        if (!form) return;
+        if (!rsvpForm) return;
 
-        form.addEventListener('submit', function(e) {
+        rsvpForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const formData = new FormData(form);
+            const formData = new FormData(rsvpForm);
             const msgEl = document.getElementById('formMessage');
             if (msgEl) {
                 msgEl.textContent = 'Mengirim...';
@@ -368,7 +373,7 @@
                         msgEl.textContent = data.message || 'Terima kasih! RSVP Anda telah terkirim.';
                         msgEl.className = 'form-message success';
                     }
-                    form.reset();
+                    rsvpForm.reset();
                     showToast('RSVP Berhasil Terkirim!');
                 } else {
                     if (msgEl) {
@@ -392,31 +397,36 @@
      * Copy to Clipboard
      */
     function initCopyButtons() {
+        const copyButtons = document.querySelectorAll('.btn-copy, [data-copy-target]');
         copyButtons.forEach(btn => {
             btn.addEventListener('click', function() {
+                let textToCopy = '';
                 const targetId = this.dataset.copyTarget;
-                const targetEl = document.getElementById(targetId);
+                const targetEl = targetId ? document.getElementById(targetId) : null;
                 
                 if (targetEl) {
-                    const textToCopy = targetEl.textContent.trim();
-                    
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        showToast('Berhasil disalin!');
-                        
-                        // Visual feedback
-                        const originalText = this.textContent;
-                        this.textContent = '✓ Disalin!';
-                        this.classList.add('copied');
-                        
-                        setTimeout(() => {
-                            this.textContent = originalText;
-                            this.classList.remove('copied');
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Failed to copy:', err);
-                        showToast('Gagal menyalin');
-                    });
+                    textToCopy = targetEl.textContent.trim();
+                } else if (this.dataset.account) {
+                    textToCopy = this.dataset.account.trim();
                 }
+
+                if (!textToCopy) return;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast('Berhasil disalin!');
+
+                    const originalText = this.textContent;
+                    this.textContent = '✓ Disalin!';
+                    this.classList.add('copied');
+
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    showToast('Gagal menyalin');
+                });
             });
         });
     }
@@ -425,11 +435,10 @@
      * Scroll Effects
      */
     function initScrollEffects() {
-        // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
                 const href = this.getAttribute('href');
-                if (href !== '#') {
+                if (href && href !== '#') {
                     e.preventDefault();
                     const target = document.querySelector(href);
                     if (target) {
@@ -447,9 +456,10 @@
      * Toast Notifications
      */
     function showToast(message) {
-        if (!toast || !toastMessage) return;
+        if (!toast) return;
 
-        toastMessage.textContent = message;
+        const msgSpan = toastMessage || toast.querySelector('.toast-message') || toast;
+        msgSpan.textContent = message;
         toast.classList.remove('hidden');
 
         setTimeout(() => {
