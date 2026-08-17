@@ -72,9 +72,8 @@ $dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')
 $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
 
 // Preset options (theme_options)
-$rainierOpts = $config['theme_options']['rainier'] ?? [];
-$glassOpacity = $rainierOpts['glass_opacity'] ?? '0.85';
-$showBismillah = $rainierOpts['show_bismillah'] ?? true;
+$glassOpacity = function_exists('get_theme_option') ? (string)get_theme_option($config, 'rainier', 'glass_opacity', '0.85') : ($config['theme_options']['rainier']['glass_opacity'] ?? '0.85');
+$showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'rainier', 'show_bismillah', true) : ($config['theme_options']['rainier']['show_bismillah'] ?? true);
 ?>
 <!DOCTYPE html>
 <html lang="id">

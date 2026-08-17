@@ -1,15 +1,15 @@
 # AGENTS — Developer & Agent Guidelines
 
-## Architecture Overview (CMS-First)
-- **Single Source of Truth**: `config.json` drives all application settings, sections, and theme options.
+## Dynamic CMS Architecture
+- **Dynamic Configuration**: `config.json` drives all application settings, sections, and theme options (`theme_options`).
+- **Extensible Presets**: Dynamic form inputs in CMS adapt based on the selected active theme preset (DewanaKL, Elix, Rainier, Archak, etc.).
+- **CMS-First Frontend**: All frontend templates strictly consume configuration from CMS without hardcoded content.
 - **Section Visibility**: Controlled by `sections.*.enabled`. Disabled sections must not render HTML elements on the frontend.
-- **Media Contract**: Logical keys (`media.cover`, `media.bride_photo`, `media.groom_photo`, `media.couple_photo`, `media.background_hero`, `media.music`) decouple theme templates from upload filenames.
-- **Theme Presets**: Rendered via `app/theme-renderer.php` loading `themes/<preset>/layout.php`.
-- **Live Preview**: Must use the exact same renderer as production (`app/theme-renderer.php`).
+- **Media Contract**: Logical keys (`media.cover`, `media.bride_photo`, `media.groom_photo`, `media.couple_photo`, `media.background_hero`, `media.music`) decouple theme templates from upload filenames. Groom and Bride assets must remain strictly isolated.
 
 ## Verification & Testing Commands
-- Check PHP syntax: `php -l index.php admin.php config.php app/theme-helper.php app/theme-renderer.php`
-- Validate CMS-first contracts: `php tools/validate.php`
+- Check PHP syntax: `php -l index.php admin/index.php config.php app/save.php app/theme-helper.php app/theme-renderer.php`
+- Validate CMS contracts: `php tools/validate.php`
 
 ## Key Entrypoints & Implementation
 - Public Entrypoint: `index.php`

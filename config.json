@@ -43,6 +43,9 @@
     },
     "media": {
         "cover": "uploads/cover/cover.jpg",
+        "bride_photo": "",
+        "groom_photo": "",
+        "couple_photo": "",
         "music": "music/lagu.mp3",
         "background_hero": "",
         "background_sections": []

@@ -76,10 +76,9 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
 $stories = !empty($config['story']['items']) ? $config['story']['items'] : (!empty($config['love_story']['items']) ? $config['love_story']['items'] : ($config['story'] ?? []));
 
 // Preset options (theme_options)
-$archakOpts = $config['theme_options']['archak'] ?? [];
-$enableParallax = $archakOpts['enable_parallax'] ?? true;
-$enablePreloader = $archakOpts['enable_preloader'] ?? true;
-$dividerStyle = $archakOpts['divider_style'] ?? 'ornament';
+$enableParallax = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'archak', 'enable_parallax', true) : ($config['theme_options']['archak']['enable_parallax'] ?? true);
+$enablePreloader = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'archak', 'enable_preloader', true) : ($config['theme_options']['archak']['enable_preloader'] ?? true);
+$dividerStyle = function_exists('get_theme_option') ? (string)get_theme_option($config, 'archak', 'divider_style', 'ornament') : ($config['theme_options']['archak']['divider_style'] ?? 'ornament');
 ?>
 <!DOCTYPE html>
 <html lang="id">

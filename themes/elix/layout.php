@@ -82,9 +82,8 @@ $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
 $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($receptionDate)) : '';
 
 // Preset options (theme_options)
-$elixOpts = $config['theme_options']['elix'] ?? [];
-$timelineStyle = $elixOpts['timeline_style'] ?? 'vertical';
-$showCountdownCircle = $elixOpts['show_countdown_circle'] ?? true;
+$timelineStyle = function_exists('get_theme_option') ? (string)get_theme_option($config, 'elix', 'timeline_style', 'vertical') : ($config['theme_options']['elix']['timeline_style'] ?? 'vertical');
+$showCountdownCircle = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'elix', 'show_countdown_circle', true) : ($config['theme_options']['elix']['show_countdown_circle'] ?? true);
 ?>
 <!DOCTYPE html>
 <html lang="id">

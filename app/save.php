@@ -37,6 +37,37 @@ if ($action !== '') {
         $config['media']['bride_photo'] = relative_path($result['path']);
         save_config($config);
         respond(true, 'Foto Mempelai Wanita (Bride) berhasil diunggah.', ['path' => $config['media']['bride_photo']]);
+    } elseif ($action === 'upload_couple_photo') {
+        if (empty($_FILES['couple_photo']['name'])) respond(false, 'File foto Pasangan (couple) tidak ditemukan.');
+        $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+        if (!empty($result['error'])) respond(false, $result['error']);
+        $config['media']['couple_photo'] = relative_path($result['path']);
+        save_config($config);
+        respond(true, 'Foto Pasangan berhasil diunggah.', ['path' => $config['media']['couple_photo']]);
+    } elseif ($action === 'save_theme_options') {
+        $presetKey = trim((string)($_POST['preset_key'] ?? ($config['theme']['theme_preset'] ?? 'dewankl')));
+        if ($presetKey !== '') {
+            if (!isset($config['theme_options'][$presetKey])) {
+                $config['theme_options'][$presetKey] = [];
+            }
+            if (isset($_POST['theme_opts']) && is_array($_POST['theme_opts'])) {
+                foreach ($_POST['theme_opts'] as $optKey => $optVal) {
+                    $optKey = preg_replace('/[^a-zA-Z0-9_-]/', '', $optKey);
+                    if ($optKey === '') continue;
+                    if (is_array($optVal)) continue;
+                    if ($optVal === '1' || $optVal === 'true') {
+                        $config['theme_options'][$presetKey][$optKey] = true;
+                    } elseif ($optVal === '0' || $optVal === 'false') {
+                        $config['theme_options'][$presetKey][$optKey] = false;
+                    } else {
+                        $config['theme_options'][$presetKey][$optKey] = trim((string)$optVal);
+                    }
+                }
+            }
+            save_config($config);
+            respond(true, 'Opsi preset berhasil disimpan.', ['theme_options' => $config['theme_options'][$presetKey]]);
+        }
+        respond(false, 'Preset key tidak valid.');
     }
 }
 
