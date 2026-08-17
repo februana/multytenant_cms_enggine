@@ -16,6 +16,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get_csrf'])) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') respond(false, 'Metode tidak valid.');
 if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'] ?? '')) respond(false, 'Token CSRF tidak valid.');
 
+// Handle admin photo upload actions if posted to save.php
+$action = trim((string)($_POST['action'] ?? ''));
+if ($action !== '') {
+    if (empty($_SESSION['admin'])) {
+        respond(false, 'Akses ditolak.');
+    }
+    $config = load_config();
+    if ($action === 'upload_groom_photo') {
+        if (empty($_FILES['groom_photo']['name'])) respond(false, 'File foto Mempelai Pria (groom) tidak ditemukan.');
+        $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+        if (!empty($result['error'])) respond(false, $result['error']);
+        $config['media']['groom_photo'] = relative_path($result['path']);
+        save_config($config);
+        respond(true, 'Foto Mempelai Pria (Groom) berhasil diunggah.', ['path' => $config['media']['groom_photo']]);
+    } elseif ($action === 'upload_bride_photo') {
+        if (empty($_FILES['bride_photo']['name'])) respond(false, 'File foto Mempelai Wanita (bride) tidak ditemukan.');
+        $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+        if (!empty($result['error'])) respond(false, $result['error']);
+        $config['media']['bride_photo'] = relative_path($result['path']);
+        save_config($config);
+        respond(true, 'Foto Mempelai Wanita (Bride) berhasil diunggah.', ['path' => $config['media']['bride_photo']]);
+    }
+}
+
 if (!empty($_SESSION['last_submit']) && (time() - (int)$_SESSION['last_submit']) < 10) {
     respond(false, 'Tolong tunggu beberapa detik sebelum mengirim lagi.');
 }

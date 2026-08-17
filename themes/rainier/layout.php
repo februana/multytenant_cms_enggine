@@ -70,6 +70,11 @@ $dresscodeTitle = trim((string)($config['dresscode']['title'] ?? 'Dresscode')) ?
 $dresscodeColor = trim((string)($config['dresscode']['color'] ?? 'Putih / Pastel')) ?: 'Putih / Pastel';
 $dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')) ?: 'Rapi dan sopan';
 $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
+
+// Preset options (theme_options)
+$rainierOpts = $config['theme_options']['rainier'] ?? [];
+$glassOpacity = $rainierOpts['glass_opacity'] ?? '0.85';
+$showBismillah = $rainierOpts['show_bismillah'] ?? true;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -90,10 +95,10 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
     <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
-    <!-- Custom CSS Override -->
-    <?php $customCss = load_custom_css(); if (!empty($customCss)): ?>
-    <style><?php echo $customCss; ?></style>
-    <?php endif; ?>
+    <style>
+        :root { --glass-panel-bg: rgba(255, 255, 255, <?php echo escape_html($glassOpacity); ?>); }
+        <?php echo load_custom_css(); ?>
+    </style>
 
     <!-- Global Config Injection -->
     <script>
@@ -113,9 +118,11 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
     <div id="welcome-overlay" class="welcome-overlay">
         <div class="overlay-background"></div>
         <div class="overlay-content glass-panel" data-aos="fade-up" data-aos-duration="1200">
+            <?php if ($showBismillah): ?>
             <div class="bismillah">
                 <span class="arabic-text">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>
             </div>
+            <?php endif; ?>
             <h2 class="overlay-title">The Wedding of</h2>
             <h1 class="overlay-couple-names">
                 <span class="name-first"><?php echo $brideNickname; ?></span>
@@ -183,8 +190,8 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
                     <p class="hero-quote"><?php echo $openingText; ?></p>
                     <div class="hero-date-display">
                         <span class="date-day" id="heroDay"><?php echo $akadDate ? date('d', strtotime($akadDate)) : '00'; ?></span>
-                        <span class="date-month"><?php echo $akadDate ? date('M', strtotime($akadDate)) : 'Jan'; ?></span>
-                        <span class="date-year"><?php echo $akadDate ? date('Y', strtotime($akadDate)) : '2024'; ?></span>
+                        <span class="date-month"><?php echo $akadDate ? date('M', strtotime($akadDate)) : date('M'); ?></span>
+                        <span class="date-year"><?php echo $akadDate ? date('Y', strtotime($akadDate)) : date('Y'); ?></span>
                     </div>
                     <div class="hero-actions">
                         <a href="#event" class="btn btn-primary">View Event</a>

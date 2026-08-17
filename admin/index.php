@@ -292,6 +292,28 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['whatsapp']['phone'] = trim((string)($_POST['whatsapp_phone'] ?? '')) ?: $config['whatsapp']['phone'];
                 $config['whatsapp']['message'] = trim((string)($_POST['whatsapp_message'] ?? '')) ?: $config['whatsapp']['message'];
                 break;
+            case 'save_theme_options':
+                $presetKey = trim((string)($_POST['preset_key'] ?? ($config['theme']['theme_preset'] ?? 'dewankl')));
+                if ($presetKey !== '') {
+                    if (!isset($config['theme_options'][$presetKey])) {
+                        $config['theme_options'][$presetKey] = [];
+                    }
+                    if (isset($_POST['theme_opts']) && is_array($_POST['theme_opts'])) {
+                        foreach ($_POST['theme_opts'] as $optKey => $optVal) {
+                            $optKey = preg_replace('/[^a-zA-Z0-9_-]/', '', $optKey);
+                            if ($optKey === '') continue;
+                            if (is_array($optVal)) continue;
+                            if ($optVal === '1' || $optVal === 'true') {
+                                $config['theme_options'][$presetKey][$optKey] = true;
+                            } elseif ($optVal === '0' || $optVal === 'false') {
+                                $config['theme_options'][$presetKey][$optKey] = false;
+                            } else {
+                                $config['theme_options'][$presetKey][$optKey] = trim((string)$optVal);
+                            }
+                        }
+                    }
+                }
+                break;
             case 'save_sections':
                 $newSections = $_POST['sections'] ?? [];
                 if (is_array($newSections) && !empty($newSections)) {
@@ -1207,6 +1229,34 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <button type="button" class="button small-button" id="themePreviewReset">Reset</button>
                                 <button type="button" class="button small-button" id="themePreviewCancel">Cancel Preview</button>
                             </div>
+                        </form>
+
+                        <h3 style="margin:2rem 0 1rem;color:#c84c47;">Opsi Khusus Preset Active (Theme Options)</h3>
+                        <form method="post" style="margin-bottom:2rem;">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_theme_options">
+                            <input type="hidden" name="preset_key" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'dewankl'); ?>">
+                            <p style="font-size:0.9rem;color:#6d5148;">Pengaturan unik untuk preset <strong><?php echo escape_html($config['theme']['theme_preset'] ?? 'dewankl'); ?></strong>:</p>
+                            <div class="form-grid">
+                                <?php
+                                $activePresetKey = $config['theme']['theme_preset'] ?? 'dewankl';
+                                $activeOpts = $config['theme_options'][$activePresetKey] ?? [];
+                                foreach ($activeOpts as $optKey => $optVal):
+                                ?>
+                                    <div class="form-row">
+                                        <label><?php echo escape_html(ucwords(str_replace('_', ' ', $optKey))); ?></label>
+                                        <?php if (is_bool($optVal)): ?>
+                                            <select name="theme_opts[<?php echo escape_html($optKey); ?>]">
+                                                <option value="1" <?php echo $optVal ? 'selected' : ''; ?>>Aktif (True)</option>
+                                                <option value="0" <?php echo !$optVal ? 'selected' : ''; ?>>Nonaktif (False)</option>
+                                            </select>
+                                        <?php else: ?>
+                                            <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>">
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="submit" style="margin-top:1rem;">Simpan Opsi Preset</button>
                         </form>
                         <aside class="theme-preview-panel" aria-label="Live theme preview">
                             <div class="theme-preview-panel__header">
