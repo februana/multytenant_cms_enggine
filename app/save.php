@@ -50,17 +50,40 @@ if ($action !== '') {
             if (!isset($config['theme_options'][$presetKey])) {
                 $config['theme_options'][$presetKey] = [];
             }
+            $presetRegistry = theme_registry()[$presetKey] ?? [];
+            $presetSchema = $presetRegistry['schema'] ?? [];
+
+            foreach ($presetSchema as $schemaKey => $schemaDef) {
+                if (($schemaDef['type'] ?? '') === 'image') {
+                    $fileKey = 'theme_opts_file_' . $schemaKey;
+                    if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
+                        $uploadRes = upload_file($_FILES[$fileKey], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                        if (empty($uploadRes['error'])) {
+                            $config['theme_options'][$presetKey][$schemaKey] = relative_path($uploadRes['path']);
+                        }
+                    }
+                }
+            }
+
             if (isset($_POST['theme_opts']) && is_array($_POST['theme_opts'])) {
                 foreach ($_POST['theme_opts'] as $optKey => $optVal) {
                     $optKey = preg_replace('/[^a-zA-Z0-9_-]/', '', $optKey);
                     if ($optKey === '') continue;
                     if (is_array($optVal)) continue;
+
+                    $fieldType = $presetSchema[$optKey]['type'] ?? '';
+                    $strVal = str_replace("\r\n", "\n", (string)$optVal);
+
+                    if ($fieldType === 'image' && trim($strVal) === '' && !empty($config['theme_options'][$presetKey][$optKey])) {
+                        continue;
+                    }
+
                     if ($optVal === '1' || $optVal === 'true') {
                         $config['theme_options'][$presetKey][$optKey] = true;
                     } elseif ($optVal === '0' || $optVal === 'false') {
                         $config['theme_options'][$presetKey][$optKey] = false;
                     } else {
-                        $config['theme_options'][$presetKey][$optKey] = trim((string)$optVal);
+                        $config['theme_options'][$presetKey][$optKey] = $strVal;
                     }
                 }
             }
