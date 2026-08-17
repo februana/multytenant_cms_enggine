@@ -150,6 +150,9 @@ $dividerStyle = function_exists('get_theme_option') ? (string)get_theme_option($
             <div class="hero-split">
                 <div class="hero-text-side" data-reveal="left">
                     <p class="hero-intro">We're Getting Married</p>
+                    <?php if (!empty($guestName)): ?>
+                    <p class="hero-guest">Kepada Yth. <strong><?php echo $guestName; ?></strong></p>
+                    <?php endif; ?>
                     <h1 class="hero-title">
                         <span class="hero-bride"><?php echo $brideName; ?></span>
                         <span class="hero-connector">&</span>

@@ -11,10 +11,10 @@
         "schema": "{\"@context\": \"https://schema.org\", \"@type\": \"Event\", \"name\": \"Undangan Pernikahan Andi & Februana\", \"startDate\": \"2026-12-29T09:00:00+07:00\", \"location\": {\"@type\": \"Place\", \"name\": \"PFR2+G9H Asinan\", \"address\": {\"@type\": \"PostalAddress\", \"addressLocality\": \"Kabupaten Semarang\", \"addressRegion\": \"Jawa Tengah\", \"addressCountry\": \"ID\"}}, \"description\": \"Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.\", \"eventStatus\": \"https://schema.org/EventScheduled\", \"eventAttendanceMode\": \"https://schema.org/OfflineEventAttendanceMode\"}"
     },
     "wedding": {
-        "bride_name": "Februana",
-        "groom_name": "Andi",
+        "bride_name": "E2E_BRIDE_SENTINEL",
+        "groom_name": "E2E_GROOM_SENTINEL",
         "title": "Undangan Pernikahan Andi & Februana",
-        "opening_text": "Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.",
+        "opening_text": "Baris 1\n\nBaris 3",
         "closing_text": "Kami sangat menghargai kehadiran dan doa restu Bapak/Ibu/Saudara/i agar hari ini menjadi lebih berkah.",
         "quote": "Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir pada hari istimewa kami.",
         "bride_nickname": "Februana",
@@ -71,7 +71,8 @@
         "password_hash": ""
     },
     "theme": {
-        "theme_preset": "dewankl",
+        "mode": "preset",
+        "theme_preset": "archak",
         "primary_color": "#c84c47",
         "secondary_color": "#f0c2a1",
         "accent_color": "#f0c2a1",
@@ -92,7 +93,6 @@
         "navbar_style": "transparent",
         "card_style": "elevated",
         "footer_style": "centered",
-        "mode": "preset",
         "hero_height": "100vh",
         "hero_vertical_alignment": "center",
         "hero_content_width": "900px",
@@ -103,6 +103,9 @@
         "mobile_hero_content_width": "100%",
         "mobile_hero_image_fit": "cover",
         "mobile_hero_image_position": "center top"
+    },
+    "buttons": {
+        "mobile_layout": "2-columns"
     },
     "sections": [
         {
@@ -133,7 +136,7 @@
             "custom_subtitle": ""
         },
         {
-            "id": "love_story",
+            "id": "cerita",
             "title": "Love Story",
             "subtitle": "Cerita Kami",
             "enabled": true,
@@ -142,7 +145,7 @@
             "custom_subtitle": ""
         },
         {
-            "id": "gallery",
+            "id": "galeri",
             "title": "Gallery",
             "subtitle": "Galeri Foto",
             "enabled": true,
@@ -151,7 +154,7 @@
             "custom_subtitle": ""
         },
         {
-            "id": "events",
+            "id": "acara",
             "title": "Events",
             "subtitle": "Acara",
             "enabled": true,
@@ -160,7 +163,7 @@
             "custom_subtitle": ""
         },
         {
-            "id": "location",
+            "id": "lokasi",
             "title": "Location",
             "subtitle": "Lokasi Acara",
             "enabled": true,
@@ -178,7 +181,7 @@
             "custom_subtitle": ""
         },
         {
-            "id": "gift",
+            "id": "amplop",
             "title": "Gift",
             "subtitle": "Ucapan & Hadiah",
             "enabled": true,
@@ -187,7 +190,7 @@
             "custom_subtitle": ""
         },
         {
-            "id": "guest_wishes",
+            "id": "messages",
             "title": "Guest Wishes",
             "subtitle": "Ucapan Tamu",
             "enabled": true,
@@ -203,33 +206,70 @@
             "order": 11,
             "custom_title": "",
             "custom_subtitle": ""
+        },
+        {
+            "id": "messages",
+            "title": "Guest Wishes",
+            "subtitle": "Ucapan Tamu",
+            "enabled": true,
+            "order": 12,
+            "custom_title": "",
+            "custom_subtitle": ""
+        },
+        {
+            "id": "music",
+            "title": "Music",
+            "subtitle": "Musik Latar",
+            "enabled": true,
+            "order": 13,
+            "custom_title": "",
+            "custom_subtitle": ""
+        },
+        {
+            "id": "footer",
+            "title": "Footer",
+            "subtitle": "",
+            "enabled": true,
+            "order": 14,
+            "custom_title": "",
+            "custom_subtitle": ""
         }
     ],
     "love_story": {
         "items": []
     },
+    "dresscode": {
+        "enabled": true,
+        "title": "Dresscode",
+        "color": "Putih / Pastel",
+        "rule": "Rapi dan sopan",
+        "description": "Kenakan busana terbaikmu untuk momen spesial."
+    },
     "theme_options": {
         "dewankl": {
             "show_bismillah": true,
             "enable_confetti": true,
-            "enable_mouse_animation": true
+            "enable_mouse_animation": true,
+            "welcome_note": ""
         },
         "elix": {
             "timeline_style": "vertical",
-            "show_countdown_circle": true
+            "show_countdown_circle": true,
+            "header_greeting": ""
         },
         "rainier": {
             "glass_opacity": "0.85",
-            "show_bismillah": true
+            "show_bismillah": true,
+            "hero_accent_color": "#b8655d",
+            "quote_note": ""
         },
         "archak": {
             "enable_parallax": true,
             "enable_preloader": true,
-            "divider_style": "ornament"
+            "divider_style": "ornament",
+            "header_badge_image": "",
+            "archak_welcome_msg": ""
         }
     },
-    "custom_css": "",
-    "buttons": {
-        "mobile_layout": "2-columns"
-    }
+    "custom_css": ""
 }
