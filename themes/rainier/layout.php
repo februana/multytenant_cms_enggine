@@ -59,11 +59,10 @@ $isParentsEnabled = is_section_enabled($config, 'parents');
 // Formatted dates
 $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
 $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($receptionDate)) : '';
-$countdownTarget = $config['schedule']['countdown_target'] ?? ($akadDate . 'T' . $akadTime . '+07:00');
+$countdownTarget = $config['schedule']['countdown_target'] ?? ($akadDate . 'T' . ($akadTime ?: '08:00') . '+07:00');
 
 // Guest name from URL
 $guestName = isset($_GET['to']) ? escape_html($_GET['to']) : '';
-$guestFallback = 'Bapak/Ibu/Saudara/i';
 
 // Dresscode
 $dresscodeTitle = trim((string)($config['dresscode']['title'] ?? 'Dresscode')) ?: 'Dresscode';
@@ -91,9 +90,6 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
     <!-- Theme CSS -->
     <link rel="stylesheet" href="<?php echo get_theme_asset_url('rainier', 'style.css'); ?>">
     
-    <!-- AOS Animation -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    
     <style>
         :root { --glass-panel-bg: rgba(255, 255, 255, <?php echo escape_html($glassOpacity); ?>); }
         <?php echo load_custom_css(); ?>
@@ -104,7 +100,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         window.WeddingConfig = <?php echo json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
     </script>
 </head>
-<body class="rainier-theme">
+<body class="rainier-theme" data-countdown-target="<?php echo escape_html($countdownTarget); ?>">
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
@@ -116,7 +112,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
     <!-- Welcome Overlay -->
     <div id="welcome-overlay" class="welcome-overlay">
         <div class="overlay-background"></div>
-        <div class="overlay-content glass-panel" data-aos="fade-up" data-aos-duration="1200">
+        <div class="overlay-content glass-panel">
             <?php if ($showBismillah): ?>
             <div class="bismillah">
                 <span class="arabic-text">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>
@@ -179,7 +175,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
             <div class="hero-background" style="background-image: url('<?php echo escape_html(public_path($heroBg)); ?>');"></div>
             <div class="hero-overlay"></div>
             <div class="hero-content">
-                <div class="hero-glass-panel glass-panel" data-aos="fade-up" data-aos-duration="1500">
+                <div class="hero-glass-panel glass-panel">
                     <p class="hero-eyebrow">We're Getting Married</p>
                     <h1 class="hero-title">
                         <span class="hero-bride"><?php echo $brideName; ?></span>
@@ -210,13 +206,13 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <?php if ($isCoupleEnabled): ?>
         <section id="couple" class="section couple-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Love Story</p>
                     <h2 class="section-title">Happy Couple</h2>
                 </div>
                 
                 <div class="couple-grid">
-                    <div class="couple-card glass-panel" data-aos="fade-right" data-aos-delay="100">
+                    <div class="couple-card glass-panel">
                         <div class="couple-image-wrapper">
                             <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="<?php echo $brideName; ?>" class="couple-image" loading="lazy">
                         </div>
@@ -230,11 +226,11 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                         <?php endif; ?>
                     </div>
                     
-                    <div class="couple-separator" data-aos="zoom-in">
+                    <div class="couple-separator">
                         <div class="separator-ornament">&</div>
                     </div>
                     
-                    <div class="couple-card glass-panel" data-aos="fade-left" data-aos-delay="200">
+                    <div class="couple-card glass-panel">
                         <div class="couple-image-wrapper">
                             <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="<?php echo $groomName; ?>" class="couple-image" loading="lazy">
                         </div>
@@ -250,7 +246,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                 </div>
                 
                 <?php if (!empty($quote)): ?>
-                <div class="couple-quote glass-panel" data-aos="fade-up">
+                <div class="couple-quote glass-panel">
                     <blockquote><?php echo $quote; ?></blockquote>
                 </div>
                 <?php endif; ?>
@@ -262,14 +258,14 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <?php if ($isEventEnabled): ?>
         <section id="event" class="section event-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Celebration</p>
                     <h2 class="section-title">Wedding Event</h2>
                 </div>
                 
                 <div class="event-grid">
                     <!-- Akad Card -->
-                    <div class="event-card glass-panel" data-aos="flip-left">
+                    <div class="event-card glass-panel">
                         <div class="event-icon">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -287,7 +283,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                     </div>
                     
                     <!-- Reception Card -->
-                    <div class="event-card glass-panel" data-aos="flip-right">
+                    <div class="event-card glass-panel">
                         <div class="event-icon">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -307,7 +303,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                 
                 <!-- Dresscode -->
                 <?php if (!empty($config['dresscode']['enabled'])): ?>
-                <div class="dresscode-card glass-panel" data-aos="fade-up">
+                <div class="dresscode-card glass-panel">
                     <h3><?php echo escape_html($dresscodeTitle); ?></h3>
                     <p class="dresscode-color"><?php echo escape_html($dresscodeColor); ?></p>
                     <p class="dresscode-rule"><?php echo escape_html($dresscodeRule); ?></p>
@@ -321,12 +317,12 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <!-- Countdown Section -->
         <section class="section countdown-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Counting Down</p>
                     <h2 class="section-title">To The Big Day</h2>
                 </div>
                 
-                <div class="countdown-container glass-panel" data-aos="zoom-in">
+                <div class="countdown-container glass-panel">
                     <div class="countdown-item">
                         <span class="countdown-number" id="cd-days">00</span>
                         <span class="countdown-label">Days</span>
@@ -351,14 +347,12 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <?php if ($isGalleryEnabled): ?>
         <section id="gallery" class="section gallery-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Memories</p>
                     <h2 class="section-title">Our Gallery</h2>
                 </div>
                 
-                <button type="button" id="loadGalleryBtn" class="btn btn-load-gallery" style="display:none;">Load Gallery</button>
-                
-                <div id="galleryGrid" class="gallery-grid">
+                <div id="gallery-grid" class="gallery-grid">
                     <p class="loading">Loading gallery...</p>
                 </div>
             </div>
@@ -369,20 +363,20 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <?php if ($isMapsEnabled): ?>
         <section id="location" class="section location-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Venue</p>
                     <h2 class="section-title">Event Location</h2>
                 </div>
                 
                 <div class="location-grid">
-                    <div class="location-info glass-panel" data-aos="fade-right">
+                    <div class="location-info glass-panel">
                         <h3>Venue Details</h3>
                         <p class="venue-name"><?php echo $venue; ?></p>
                         <p class="venue-address"><?php echo $address; ?></p>
                         <a href="<?php echo escape_html($mapsUrl); ?>" target="_blank" class="btn btn-primary">Get Directions</a>
                     </div>
                     
-                    <div class="location-map glass-panel" data-aos="fade-left">
+                    <div class="location-map glass-panel">
                         <iframe src="<?php echo escape_html($mapsEmbed); ?>" title="Location Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
                 </div>
@@ -394,14 +388,14 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <?php if ($isGiftEnabled): ?>
         <section id="gift" class="section gift-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Wedding Gift</p>
                     <h2 class="section-title">With Love</h2>
                 </div>
                 
                 <div class="gift-grid">
                     <!-- Bank Transfer -->
-                    <div class="gift-card glass-panel" data-aos="fade-up">
+                    <div class="gift-card glass-panel">
                         <h3>For <?php echo $brideName; ?></h3>
                         <div class="gift-details">
                             <div class="gift-row">
@@ -410,19 +404,18 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                             </div>
                             <div class="gift-row">
                                 <span class="gift-label">Account:</span>
-                                <span class="gift-value account-number" data-account="<?php echo $giftAccount; ?>"><?php echo $giftAccount; ?></span>
+                                <span id="gift-bank-account" class="gift-value account-number" data-account="<?php echo $giftAccount; ?>"><?php echo $giftAccount; ?></span>
                             </div>
                             <div class="gift-row">
                                 <span class="gift-label">Holder:</span>
                                 <span class="gift-value"><?php echo $giftHolder; ?></span>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-copy" data-account="<?php echo $giftAccount; ?>">Copy Account</button>
-                        <p class="copy-feedback" style="display:none;">✓ Copied!</p>
+                        <button type="button" class="btn btn-copy" data-copy-target="gift-bank-account" data-account="<?php echo $giftAccount; ?>">Copy Account</button>
                     </div>
                     
                     <!-- E-Wallet -->
-                    <div class="gift-card glass-panel" data-aos="fade-up" data-aos-delay="100">
+                    <div class="gift-card glass-panel">
                         <h3>For <?php echo $groomName; ?></h3>
                         <div class="gift-details">
                             <div class="gift-row">
@@ -431,11 +424,10 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                             </div>
                             <div class="gift-row">
                                 <span class="gift-label">Number:</span>
-                                <span class="gift-value account-number" data-account="<?php echo $giftEwalletNumber; ?>"><?php echo $giftEwalletNumber; ?></span>
+                                <span id="gift-ewallet-number" class="gift-value account-number" data-account="<?php echo $giftEwalletNumber; ?>"><?php echo $giftEwalletNumber; ?></span>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-copy" data-account="<?php echo $giftEwalletNumber; ?>">Copy Number</button>
-                        <p class="copy-feedback" style="display:none;">✓ Copied!</p>
+                        <button type="button" class="btn btn-copy" data-copy-target="gift-ewallet-number" data-account="<?php echo $giftEwalletNumber; ?>">Copy Number</button>
                     </div>
                 </div>
             </div>
@@ -446,12 +438,12 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <?php if ($isRsvpEnabled): ?>
         <section id="rsvp" class="section rsvp-section">
             <div class="section-container">
-                <div class="section-header" data-aos="fade-down">
+                <div class="section-header">
                     <p class="section-label">Confirmation</p>
                     <h2 class="section-title">RSVP</h2>
                 </div>
                 
-                <form id="rsvpForm" class="rsvp-form glass-panel" data-aos="fade-up">
+                <form id="rsvp-form" class="rsvp-form glass-panel">
                     <input type="hidden" name="csrf_token" id="csrfToken">
                     
                     <div class="form-group">
@@ -474,6 +466,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                     
                     <button type="submit" class="btn btn-primary btn-full">Send RSVP</button>
                     <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
+                    <div id="rsvp-success" class="rsvp-success hidden"></div>
                 </form>
                 
                 <?php if (is_section_enabled($config, 'messages')): ?>
@@ -486,7 +479,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         <!-- Closing Section -->
         <section class="section closing-section">
             <div class="section-container">
-                <div class="closing-content glass-panel" data-aos="fade-up">
+                <div class="closing-content glass-panel">
                     <div class="bismillah">
                         <span class="arabic-text">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>
                     </div>
@@ -507,32 +500,30 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
         
         <!-- Music Control -->
         <?php if ($isMusicEnabled): ?>
-        <button id="music-control" class="music-control" type="button" aria-label="Toggle music">
-            <svg class="music-icon-playing" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
-            </svg>
-            <svg class="music-icon-paused" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
-                <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
-            </svg>
+        <button id="music-toggle" class="music-control" type="button" aria-label="Toggle music">
+            <span class="music-icon">🎵</span>
         </button>
-        <audio id="bg-music" loop>
+        <audio id="background-music" loop>
             <source src="<?php echo escape_html(public_path($musicSrc)); ?>" type="audio/mp3">
         </audio>
         <?php endif; ?>
     </main>
     
     <!-- Gallery Modal -->
-    <div id="galleryModal" class="modal">
-        <span class="modal-close">&times;</span>
-        <img class="modal-content" id="modalImg">
+    <div id="gallery-modal" class="gallery-modal hidden">
+        <button type="button" class="modal-close" aria-label="Close modal">&times;</button>
+        <button type="button" class="modal-prev" aria-label="Previous image">&lt;</button>
+        <button type="button" class="modal-next" aria-label="Next image">&gt;</button>
+        <img class="modal-image" id="modalImg" alt="">
         <div class="modal-caption" id="modalCaption"></div>
     </div>
     
     <!-- Toast Notification -->
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast hidden">
+        <span class="toast-message"></span>
+    </div>
     
     <!-- Scripts -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="<?php echo get_theme_asset_url('rainier', 'script.js'); ?>"></script>
 </body>
 </html>
