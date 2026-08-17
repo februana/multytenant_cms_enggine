@@ -41,13 +41,23 @@
     const countdownDayEl = document.getElementById('hero-countdown-day');
 
     function hideLoadingScreen() {
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            setTimeout(function() {
-                loadingScreen.style.display = 'none';
-            }, 500);
+        try {
+            const screen = loadingScreen || document.getElementById('loading-screen') || document.getElementById('preloader');
+            if (screen) {
+                screen.classList.add('hidden');
+                setTimeout(function() {
+                    try {
+                        screen.style.display = 'none';
+                    } catch (e) {}
+                }, 500);
+            }
+        } catch (e) {
+            console.warn('Error hiding loading screen:', e);
         }
     }
+
+    // Fallback timer: force-hide preloader after 3 seconds no matter what
+    setTimeout(hideLoadingScreen, 3000);
 
     // State
     let currentGalleryIndex = 0;
@@ -58,25 +68,40 @@
      * Initialize everything when DOM is ready
      */
     function init() {
-        initWelcomeOverlay();
-        initNavbar();
-        initCountdown();
-        initGallery();
-        initRSVP();
-        initCopyButtons();
-        initScrollEffects();
+        try { initWelcomeOverlay(); } catch (e) { console.warn('Overlay init error:', e); }
+        try { initNavbar(); } catch (e) { console.warn('Navbar init error:', e); }
+        try { initCountdown(); } catch (e) { console.warn('Countdown init error:', e); }
+        try { initGallery(); } catch (e) { console.warn('Gallery init error:', e); }
+        try { initRSVP(); } catch (e) { console.warn('RSVP init error:', e); }
+        try { initCopyButtons(); } catch (e) { console.warn('Copy buttons init error:', e); }
+        try { initScrollEffects(); } catch (e) { console.warn('Scroll effects init error:', e); }
         
-        setTimeout(collectGalleryItems, 500);
+        try { setTimeout(collectGalleryItems, 500); } catch (e) {}
     }
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        hideLoadingScreen();
-        init();
-    } else {
-        window.addEventListener('load', hideLoadingScreen);
-        document.addEventListener('DOMContentLoaded', function() {
+        try {
             hideLoadingScreen();
             init();
+        } finally {
+            hideLoadingScreen();
+        }
+    } else {
+        window.addEventListener('load', function() {
+            try {
+                hideLoadingScreen();
+                init();
+            } finally {
+                hideLoadingScreen();
+            }
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                hideLoadingScreen();
+                init();
+            } finally {
+                hideLoadingScreen();
+            }
         });
     }
 
@@ -320,51 +345,47 @@
      * RSVP Form
      */
     function initRSVP() {
-        if (!rsvpForm) return;
+        const form = rsvpForm || document.getElementById('rsvpForm') || document.getElementById('rsvp-form');
+        if (!form) return;
 
-        rsvpForm.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const formData = new FormData(rsvpForm);
-            const data = Object.fromEntries(formData.entries());
-
-            // Validate
-            if (!data.name || !data.guests || !data.status) {
-                showToast('Mohon lengkapi semua field!');
-                return;
+            const formData = new FormData(form);
+            const msgEl = document.getElementById('formMessage');
+            if (msgEl) {
+                msgEl.textContent = 'Mengirim...';
             }
 
-            // Build WhatsApp message
-            const message = buildRSVPMessage(data);
-            
-            // Open WhatsApp
-            const whatsappNumber = getConfigValue('whatsapp_number') || '';
-            const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-            
-            window.open(whatsappUrl, '_blank');
-
-            // Show success
-            rsvpForm.classList.add('hidden');
-            if (rsvpSuccess) {
-                rsvpSuccess.classList.remove('hidden');
-            }
-
-            showToast('Konfirmasi akan dikirim ke WhatsApp');
+            fetch('save.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (msgEl) {
+                        msgEl.textContent = data.message || 'Terima kasih! RSVP Anda telah terkirim.';
+                        msgEl.className = 'form-message success';
+                    }
+                    form.reset();
+                    showToast('RSVP Berhasil Terkirim!');
+                } else {
+                    if (msgEl) {
+                        msgEl.textContent = data.message || 'Gagal mengirim RSVP.';
+                        msgEl.className = 'form-message error';
+                    }
+                    showToast(data.message || 'Gagal mengirim RSVP');
+                }
+            })
+            .catch(() => {
+                if (msgEl) {
+                    msgEl.textContent = 'Terjadi kesalahan koneksi.';
+                    msgEl.className = 'form-message error';
+                }
+                showToast('Terjadi kesalahan koneksi');
+            });
         });
-    }
-
-    function buildRSVPMessage(data) {
-        const config = window.invitationConfig || {};
-        const coupleNames = `${config.bride_nickname || ''} & ${config.groom_nickname || ''}`;
-        
-        return `*Konfirmasi Kehadiran*%0A%0A` +
-               `Kepada Yth.${'%0A'}${coupleNames}%0A%0A` +
-               `Dengan ini saya menyatakan:%0A%0A` +
-               `Nama: ${data.name}%0A` +
-               `Jumlah Tamu: ${data.guests} orang%0A` +
-               `Status: ${data.status}%0A` +
-               `${data.message ? `Ucapan: ${data.message}` : ''}%0A%0A` +
-               `Terima kasih.`;
     }
 
     /**
@@ -440,12 +461,16 @@
      * Helper: Get config value
      */
     function getConfigValue(key) {
-        // Try to get from global config object
+        if (window.WeddingConfig) {
+            if (window.WeddingConfig[key]) return window.WeddingConfig[key];
+            if (window.WeddingConfig.schedule && window.WeddingConfig.schedule[key]) return window.WeddingConfig.schedule[key];
+            if (window.WeddingConfig.wedding && window.WeddingConfig.wedding[key]) return window.WeddingConfig.wedding[key];
+        }
+
         if (window.invitationConfig && window.invitationConfig[key]) {
             return window.invitationConfig[key];
         }
         
-        // Try to get from meta tag
         const meta = document.querySelector(`meta[name="config-${key}"]`);
         if (meta) {
             return meta.content;

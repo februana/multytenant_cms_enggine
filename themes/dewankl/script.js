@@ -223,11 +223,14 @@
             // Get CSRF token
             const csrfToken = document.getElementById('csrfToken');
             if (csrfToken && !csrfToken.value) {
-                // Fetch CSRF token if not set
-                fetch('/api/csrf-token')
+                // Fetch CSRF token from save.php endpoint if not set
+                fetch('save.php?get_csrf=1')
                     .then(response => response.json())
                     .then(data => {
-                        csrfToken.value = data.token;
+                        if (data && data.csrf_token) {
+                            csrfToken.value = data.csrf_token;
+                            formData.set('csrf_token', data.csrf_token);
+                        }
                         submitForm(formData, messageEl);
                     })
                     .catch(function() {
@@ -240,32 +243,42 @@
         
         function submitForm(formData, messageEl) {
             const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Mengirim...';
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Mengirim...';
+            }
             
-            fetch('/api/rsvp', {
+            fetch('save.php', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    messageEl.textContent = 'Terima kasih! RSVP Anda telah terkirim.';
-                    messageEl.className = 'form-message text-center mt-3 text-success';
+                    if (messageEl) {
+                        messageEl.textContent = data.message || 'Terima kasih! RSVP Anda telah terkirim.';
+                        messageEl.className = 'form-message text-center mt-3 text-success';
+                    }
                     form.reset();
                 } else {
-                    messageEl.textContent = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
-                    messageEl.className = 'form-message text-center mt-3 text-danger';
+                    if (messageEl) {
+                        messageEl.textContent = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                        messageEl.className = 'form-message text-center mt-3 text-danger';
+                    }
                 }
             })
             .catch(function() {
-                messageEl.textContent = 'Terjadi kesalahan koneksi. Silakan coba lagi.';
-                messageEl.className = 'form-message text-center mt-3 text-danger';
+                if (messageEl) {
+                    messageEl.textContent = 'Terjadi kesalahan koneksi. Silakan coba lagi.';
+                    messageEl.className = 'form-message text-center mt-3 text-danger';
+                }
             })
             .finally(function() {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
             });
         }
     }

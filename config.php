@@ -99,20 +99,20 @@ function config_defaults(): array {
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         ],
         'wedding' => [
-            'bride_name' => 'Andi',
-            'groom_name' => 'Februana',
+            'bride_name' => 'Februana',
+            'groom_name' => 'Andi',
             'title' => 'Undangan Pernikahan Andi & Februana',
             'opening_text' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
             'closing_text' => 'Kami sangat menghargai kehadiran dan doa restu Bapak/Ibu/Saudara/i agar hari ini menjadi lebih berkah.',
             'quote' => 'Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir pada hari istimewa kami.',
-            'bride_nickname' => 'Andi',
-            'groom_nickname' => 'Februana'
+            'bride_nickname' => 'Februana',
+            'groom_nickname' => 'Andi'
         ],
         'parents' => [
-            'bride_father' => 'Ayah Andi',
-            'bride_mother' => 'Ibu Andi',
-            'groom_father' => 'Ayah Februana',
-            'groom_mother' => 'Ibu Februana'
+            'bride_father' => 'Ayah Februana',
+            'bride_mother' => 'Ibu Februana',
+            'groom_father' => 'Ayah Andi',
+            'groom_mother' => 'Ibu Andi'
         ],
         'schedule' => [
             'akad_date' => '2026-12-29',

@@ -130,6 +130,11 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
     <?php if (trim(load_custom_css()) !== ''): ?>
     <link rel="stylesheet" href="custom.css">
     <?php endif; ?>
+
+    <!-- Global Config Injection -->
+    <script>
+        window.WeddingConfig = <?php echo json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+    </script>
 </head>
 
 <body data-key="" data-url="" data-audio="<?php echo escape_html($musicSrc); ?>" data-confetti="true" data-time="<?php echo escape_html($countdownTarget); ?>">
@@ -210,7 +215,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                             <div data-aos="fade-right" data-aos-duration="2000" class="pb-1">
                                 <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="groom" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
                                 <h2 class="font-esthetic m-0" style="font-size: 2.125rem;"><?php echo $groomName; ?></h2>
-                                <p class="mt-3 mb-1" style="font-size: 1.25rem;">Putra ke-<?php echo escape_html($config['wedding']['groom_nickname'] ?? '2'); ?></p>
+                                <p class="mt-3 mb-1" style="font-size: 1.25rem;">Putra dari</p>
                                 <p class="mb-0" style="font-size: 0.95rem;"><?php echo $groomFather; ?></p>
                                 <p class="mb-0" style="font-size: 0.95rem;">dan</p>
                                 <p class="mb-0" style="font-size: 0.95rem;"><?php echo $groomMother; ?></p>
@@ -236,7 +241,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
                             <div data-aos="fade-left" data-aos-duration="2000" class="pb-1">
                                 <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="bride" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
                                 <h2 class="font-esthetic m-0" style="font-size: 2.125rem;"><?php echo $brideName; ?></h2>
-                                <p class="mt-3 mb-1" style="font-size: 1.25rem;">Putri ke-<?php echo escape_html($config['wedding']['bride_nickname'] ?? '1'); ?></p>
+                                <p class="mt-3 mb-1" style="font-size: 1.25rem;">Putri dari</p>
                                 <p class="mb-0" style="font-size: 0.95rem;"><?php echo $brideFather; ?></p>
                                 <p class="mb-0" style="font-size: 0.95rem;">dan</p>
                                 <p class="mb-0" style="font-size: 0.95rem;"><?php echo $brideMother; ?></p>
