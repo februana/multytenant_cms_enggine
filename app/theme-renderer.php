@@ -228,7 +228,7 @@ function render_dewankl_hero(array $config, array $shared): string {
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
         <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
         <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
-        <p class="hero-parents">Putra dari ' . $shared['brideParents'] . ' dan Putri dari ' . $shared['groomParents'] . '.</p>
+        <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
         <div class="hero-actions">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
           <a class="calendar-btn" href="' . escape_html($shared['calendarLink']) . '" target="_blank" rel="noreferrer noopener">Tambah ke Kalender</a>
@@ -291,7 +291,7 @@ function render_archak_hero(array $config, array $shared): string {
         </div>
         <div class="hero-card__meta">
           <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
-          <p class="hero-parents">Putra dari ' . $shared['brideParents'] . ' dan Putri dari ' . $shared['groomParents'] . '.</p>
+          <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
           <div class="hero-actions hero-actions--stack">
             <button type="button" id="openInvitationBtn">Buka Undangan</button>
             <a class="calendar-btn" href="' . escape_html($shared['calendarLink']) . '" target="_blank" rel="noreferrer noopener">Tambah ke Kalender</a>

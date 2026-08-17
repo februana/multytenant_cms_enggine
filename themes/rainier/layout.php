@@ -94,6 +94,11 @@ $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Ke
     <?php $customCss = load_custom_css(); if (!empty($customCss)): ?>
     <style><?php echo $customCss; ?></style>
     <?php endif; ?>
+
+    <!-- Global Config Injection -->
+    <script>
+        window.WeddingConfig = <?php echo json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+    </script>
 </head>
 <body class="rainier-theme">
     <!-- Loading Screen -->
