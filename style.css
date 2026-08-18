@@ -287,7 +287,7 @@ a{color:var(--link);text-decoration:none;font-weight:700}
 h1{
   margin:8px 0 14px;
   font-family:var(--font-heading);
-  font-size:clamp(3.6rem,11vw,6rem);
+  font-size:calc(clamp(3.6rem,11vw,6rem) * var(--hero-title-scale,1));
   font-weight:400;
   line-height:1;
   color:var(--gold-3);
@@ -296,6 +296,9 @@ h1{
   -webkit-text-fill-color:transparent;
   background-clip:text;
   text-shadow:1px 1px 1px rgba(70,50,15,.25);
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 12px;white-space:pre-line}
 .eyebrow,.label{letter-spacing:.28em;text-transform:uppercase;font-weight:800;color:var(--primary);font-size:.82rem}
@@ -329,8 +332,9 @@ h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.5;margin:8px 0 12px;white-spac
 .topbar.header-scrolled .brand{
   font-size:1.5rem;
 }
-.brand{font-family:var(--font-heading);font-size:2rem;color:var(--primary);white-space:nowrap;transition:font-size 0.3s ease}
-.topbar nav{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end}
+.brand{font-family:var(--font-heading);font-size:2rem;color:var(--primary);white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.2;max-width:100%;transition:font-size 0.3s ease}
+.brand-wrap{min-width:0;max-width:42%;flex:1 1 auto}
+.topbar nav{display:flex;gap:18px;flex-wrap:wrap;justify-content:flex-end;min-width:0;flex:0 1 auto}
 .topbar nav a{color:var(--muted);font-size:.95rem}
 
 /* Hero */
@@ -521,9 +525,10 @@ iframe{width:100%;height:100%;min-height:360px;border:0;display:block}
   .lightbox-close{top:10px;right:10px}
   .amplop-container{grid-template-columns:1fr}
   .topbar .data-saver-btn{padding:6px 12px;font-size:.8rem}
-  .brand{font-size:1.6rem}
+  .brand{font-size:1.6rem;white-space:normal;overflow-wrap:anywhere;word-break:break-word;max-width:100%;line-height:1.2}
+  .brand-wrap{min-width:0;max-width:100%;width:100%}
   .topbar.header-scrolled .brand{font-size:1.3rem}
-  h1{font-size:clamp(3rem,10vw,5rem)}
+  h1{font-size:calc(clamp(2.4rem,8vw,4rem) * var(--hero-title-scale,1));overflow-wrap:anywhere;word-break:break-word}
   h2{font-size:clamp(1.6rem,4vw,2.4rem)}
   .card{padding:16px}
   .section{padding:52px 5vw}

@@ -297,6 +297,8 @@ const themeSettingsForm = document.getElementById('themeSettingsForm');
 const themePreviewFrame = document.getElementById('themePreviewFrame');
 const themePreviewReset = document.getElementById('themePreviewReset');
 const themePreviewCancel = document.getElementById('themePreviewCancel');
+const globalThemePreset = document.getElementById('globalThemePreset');
+const themeOptionsPresetKey = document.getElementById('themeOptionsPresetKey');
 const previewViewportButtons = Array.from(document.querySelectorAll('[data-preview-viewport]'));
 
 function setPreviewViewport(viewport) {
@@ -323,23 +325,30 @@ if (themeSettingsForm && themePreviewFrame) {
     'paper_color', 'muted_color', 'text_color', 'link_color', 'heading_font', 'body_font',
     'font_size_base', 'container_width', 'section_spacing', 'border_radius', 'shadow',
     'button_style', 'navbar_style', 'card_style', 'footer_style', 'animation_enabled',
-    // Hero settings - Desktop
     'hero_height', 'hero_vertical_alignment', 'hero_content_width',
     'hero_image_fit', 'hero_image_position',
-    // Hero settings - Mobile
     'mobile_hero_height', 'mobile_hero_vertical_alignment', 'mobile_hero_content_width',
     'mobile_hero_image_fit', 'mobile_hero_image_position'
   ];
   const savedTheme = JSON.parse(themeSettingsForm.dataset.savedTheme || '{}');
+  const customTheme = JSON.parse(themeSettingsForm.dataset.customTheme || '{}');
   const themePresets = JSON.parse(themeSettingsForm.dataset.themePresets || '{}');
+  const themeLabels = JSON.parse(themeSettingsForm.dataset.themeLabels || '{}');
   const visualSchemas = JSON.parse(themeSettingsForm.dataset.visualSchemas || '{}');
   const savedVisualValues = JSON.parse(themeSettingsForm.dataset.visualValues || '{}');
-  const previewInputs = previewFieldNames
-    .map(name => themeSettingsForm.elements[name])
-    .filter(Boolean);
-  const visualInputs = Array.from(themeSettingsForm.querySelectorAll('[name^="visuals["]'));
-  const activeVisualPreset = themeSettingsForm.querySelector('[data-visual-panel]')?.dataset.visualPanel || themeSettingsForm.elements.theme_preset?.value || 'custom';
+  const visualPanel = document.getElementById('visualCapabilityPanel');
+  const visualTitle = document.getElementById('visualCapabilityTitle');
+  const visualFields = document.getElementById('visualCapabilityFields');
+  const customEditor = themeSettingsForm.querySelector('[data-custom-theme-editor]');
+  const hiddenPresetField = themeSettingsForm.elements.theme_preset;
+  let currentPreset = globalThemePreset?.value || hiddenPresetField?.value || visualPanel?.dataset.visualPanel || 'custom';
   let debounceTimer = null;
+  const unsavedVisualValues = {};
+
+  function getCurrentPreset() {
+    const selected = globalThemePreset?.value || hiddenPresetField?.value || currentPreset || 'custom';
+    return selected === 'custom' ? 'custom' : (visualSchemas[selected] ? selected : 'custom');
+  }
 
   function fieldValue(name) {
     const field = themeSettingsForm.elements[name];
@@ -358,19 +367,163 @@ if (themeSettingsForm && themePreviewFrame) {
     field.value = value ?? '';
   }
 
+  function updateVisualDecorations(input) {
+    if (!input) return;
+    if (input.dataset.fontPreview) input.style.fontFamily = input.value;
+    const output = document.querySelector(`[data-range-output="${input.id}"]`);
+    if (output) output.value = input.value;
+    const sample = document.querySelector(`[data-for="${input.id}"]`);
+    if (sample) sample.style.fontFamily = input.value;
+  }
+
+  function getStoredVisuals(preset) {
+    return {...(savedVisualValues[preset] || {}), ...(unsavedVisualValues[preset] || {})};
+  }
+
   function collectVisuals() {
     const values = {};
-    visualInputs.forEach((input) => {
+    if (!visualFields) return values;
+    visualFields.querySelectorAll('[name^="visuals["]').forEach((input) => {
       const match = input.name.match(/^visuals\[([^\]]+)\]$/);
       if (match) values[match[1]] = input.value;
     });
     return values;
   }
 
+  function captureCurrentVisuals() {
+    if (currentPreset) unsavedVisualValues[currentPreset] = collectVisuals();
+  }
+
+  function createVisualField(key, definition, value) {
+    const type = definition.type || 'text';
+    const row = document.createElement('div');
+    row.className = 'form-row visual-field';
+    row.dataset.visualKey = key;
+    const id = `visual-${key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+    const label = document.createElement('label');
+    label.htmlFor = id;
+    label.textContent = definition.label || key.replace(/_/g, ' ');
+    row.appendChild(label);
+
+    let input;
+    if (type === 'font') {
+      input = document.createElement('select');
+      input.dataset.fontPreview = '1';
+      Object.entries(definition.options || {}).forEach(([fontValue, fontLabel]) => {
+        const option = document.createElement('option');
+        option.value = fontValue;
+        option.textContent = fontLabel;
+        option.style.fontFamily = fontValue;
+        input.appendChild(option);
+      });
+    } else if (type === 'range') {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'display:flex;align-items:center;gap:0.65rem;';
+      input = document.createElement('input');
+      input.type = 'range';
+      input.min = definition.min ?? '0';
+      input.max = definition.max ?? '1';
+      input.step = definition.step ?? '0.05';
+      input.style.flex = '1';
+      const output = document.createElement('output');
+      output.dataset.rangeOutput = id;
+      output.value = value;
+      wrapper.append(input, output);
+      row.appendChild(wrapper);
+    } else if (type === 'color') {
+      input = document.createElement('input');
+      input.type = 'color';
+      input.style.cssText = 'width:100%;height:42px;';
+    } else if (type === 'image') {
+      input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Path media atau URL';
+      const file = document.createElement('input');
+      file.type = 'file';
+      file.name = `visual_file_${key}`;
+      file.accept = 'image/*';
+      file.style.marginTop = '0.45rem';
+      row.appendChild(file);
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+    }
+    input.id = id;
+    input.name = `visuals[${key}]`;
+    input.value = value ?? definition.default ?? '';
+    if (type === 'font') input.style.fontFamily = input.value;
+    if (type !== 'range') row.appendChild(input);
+
+    if (type === 'font') {
+      const sample = document.createElement('span');
+      sample.className = 'font-preview-sample';
+      sample.dataset.for = id;
+      sample.style.cssText = `display:block;margin-top:6px;font-family:${input.value};font-size:1.35rem;`;
+      sample.textContent = 'Aa Bb Cc — Februana & Andi';
+      row.appendChild(sample);
+    }
+    if (definition.description) {
+      const description = document.createElement('small');
+      description.textContent = definition.description;
+      row.appendChild(description);
+    }
+    input.addEventListener('input', () => {
+      updateVisualDecorations(input);
+      unsavedVisualValues[currentPreset] = collectVisuals();
+      schedulePreview();
+    });
+    input.addEventListener('change', () => {
+      updateVisualDecorations(input);
+      unsavedVisualValues[currentPreset] = collectVisuals();
+      schedulePreview(0);
+    });
+    return row;
+  }
+
+  function renderVisualPanel(preset) {
+    if (!visualPanel || !visualFields) return;
+    const schema = visualSchemas[preset] || {};
+    const values = getStoredVisuals(preset);
+    visualPanel.dataset.visualPanel = preset;
+    if (visualTitle) visualTitle.textContent = `Tampilan ${themeLabels[preset] || preset}`;
+    visualFields.replaceChildren();
+    Object.entries(schema).forEach(([key, definition]) => {
+      visualFields.appendChild(createVisualField(key, definition, values[key]));
+    });
+    visualPanel.hidden = false;
+  }
+
+  function getBaseTheme(preset) {
+    if (preset === 'custom') return {...savedTheme, ...customTheme, theme_preset: 'custom', mode: 'custom'};
+    return {...savedTheme, ...(themePresets[preset] || {}), theme_preset: preset, mode: 'preset'};
+  }
+
+  function restoreForm(theme) {
+    previewFieldNames.forEach(name => {
+      if (name in theme) setFieldValue(name, theme[name]);
+    });
+  }
+
+  function applyPresetToForm(preset) {
+    restoreForm(getBaseTheme(preset));
+    if (hiddenPresetField) hiddenPresetField.value = preset;
+    if (themeOptionsPresetKey) themeOptionsPresetKey.value = preset;
+    if (customEditor) customEditor.hidden = preset !== 'custom';
+  }
+
+  function selectPreset(preset, shouldPreview = true) {
+    const nextPreset = visualSchemas[preset] ? preset : 'custom';
+    if (currentPreset !== nextPreset) captureCurrentVisuals();
+    currentPreset = nextPreset;
+    if (globalThemePreset && globalThemePreset.value !== nextPreset) globalThemePreset.value = nextPreset;
+    applyPresetToForm(nextPreset);
+    renderVisualPanel(nextPreset);
+    if (shouldPreview) schedulePreview(0);
+  }
+
   function collectTheme() {
-    const selectedPreset = fieldValue('theme_preset');
-    const presetValues = selectedPreset && selectedPreset !== 'custom' ? (themePresets[selectedPreset] || {}) : {};
-    const theme = { ...savedTheme, ...presetValues };
+    const selectedPreset = getCurrentPreset();
+    const theme = getBaseTheme(selectedPreset);
     previewFieldNames.forEach(name => {
       if (name === 'theme_preset') {
         theme[name] = selectedPreset;
@@ -378,18 +531,16 @@ if (themeSettingsForm && themePreviewFrame) {
       }
       const field = themeSettingsForm.elements[name];
       if (!field) return;
-      // Always use form field value if it exists (manual override)
+      if (customEditor?.contains(field) && selectedPreset !== 'custom') return;
       theme[name] = fieldValue(name);
     });
-    // Also include buttons.mobile_layout in the collected theme
-    const mobileLayoutField = themeSettingsForm.elements['buttons_mobile_layout'];
+    const mobileLayoutField = themeSettingsForm.elements.buttons_mobile_layout;
     if (mobileLayoutField) {
       theme.buttons = theme.buttons || {};
       theme.buttons.mobile_layout = mobileLayoutField.value;
     }
-    // Keep preview in sync with the production renderer contract; the CSS uses a valid flex-direction value.
-    if (theme.buttons && theme.buttons.mobile_layout) {
-      theme.buttons.mobile_layout = theme.buttons.mobile_layout === 'horizontal' || theme.buttons.mobile_layout === '2-columns' ? 'row' : 'column';
+    if (theme.buttons?.mobile_layout) {
+      theme.buttons.mobile_layout = ['horizontal', '2-columns'].includes(theme.buttons.mobile_layout) ? 'row' : 'column';
     }
     theme.visuals = collectVisuals();
     return theme;
@@ -397,8 +548,7 @@ if (themeSettingsForm && themePreviewFrame) {
 
   function postThemePreview(theme) {
     const frameWindow = themePreviewFrame.contentWindow;
-    if (!frameWindow) return;
-    frameWindow.postMessage({ type: 'theme-preview:update', theme }, window.location.origin);
+    if (frameWindow) frameWindow.postMessage({type: 'theme-preview:update', theme}, window.location.origin);
   }
 
   function postPreview() {
@@ -410,64 +560,31 @@ if (themeSettingsForm && themePreviewFrame) {
     debounceTimer = window.setTimeout(postPreview, delay);
   }
 
-  function restoreForm(theme) {
-    previewFieldNames.forEach(name => {
-      if (name in theme) setFieldValue(name, theme[name]);
-    });
-  }
+  globalThemePreset?.addEventListener('change', () => selectPreset(globalThemePreset.value));
+  themeSettingsForm.elements.theme_preset?.addEventListener('change', () => selectPreset(themeSettingsForm.elements.theme_preset.value));
+  themePreviewFrame.addEventListener('load', postPreview);
 
-  function restoreVisuals(values) {
-    visualInputs.forEach((input) => {
-      const match = input.name.match(/^visuals\[([^\]]+)\]$/);
-      if (!match || values[match[1]] === undefined) return;
-      input.value = values[match[1]];
-      if (input.dataset.fontPreview) input.style.fontFamily = input.value;
-      const output = document.querySelector(`[data-range-output="${input.id}"]`);
-      if (output) output.value = input.value;
-      const sample = document.querySelector(`[data-for="${input.id}"]`);
-      if (sample) sample.style.fontFamily = input.value;
-    });
-  }
-
-  function applyPresetToForm() {
-    const selectedPreset = fieldValue('theme_preset');
-    if (!selectedPreset || selectedPreset === 'custom' || !themePresets[selectedPreset]) return;
-    Object.entries(themePresets[selectedPreset]).forEach(([name, value]) => setFieldValue(name, value));
-  }
-
-  [...previewInputs, ...visualInputs].forEach(input => {
-    input.addEventListener('input', () => {
-      if (input.name === 'theme_preset') applyPresetToForm();
-      schedulePreview();
-    });
-    input.addEventListener('change', () => {
-      if (input.name === 'theme_preset') applyPresetToForm();
-      schedulePreview(input.tagName === 'SELECT' || input.type === 'checkbox' ? 0 : 150);
-    });
-  });
-
-  themePreviewFrame.addEventListener('load', () => postPreview());
   themePreviewReset?.addEventListener('click', () => {
-    restoreForm(savedTheme);
-    restoreVisuals(savedVisualValues[activeVisualPreset] || {});
+    const preset = getCurrentPreset();
+    delete unsavedVisualValues[preset];
+    applyPresetToForm(preset);
+    renderVisualPanel(preset);
     postPreview();
   });
   themePreviewCancel?.addEventListener('click', () => {
-    const cancelled = { ...savedTheme, visuals: savedVisualValues[activeVisualPreset] || {} };
-    postThemePreview(cancelled);
+    const preset = getCurrentPreset();
+    delete unsavedVisualValues[preset];
+    applyPresetToForm(preset);
+    renderVisualPanel(preset);
+    postPreview();
   });
 
-  visualInputs.forEach((input) => {
-    input.addEventListener('input', () => {
-      if (input.dataset.fontPreview) input.style.fontFamily = input.value;
-      const output = document.querySelector(`[data-range-output="${input.id}"]`);
-      if (output) output.value = input.value;
-      const sample = document.querySelector(`[data-for="${input.id}"]`);
-      if (sample) sample.style.fontFamily = input.value;
-    });
-    input.addEventListener('change', () => {
-      if (input.dataset.fontPreview) input.style.fontFamily = input.value;
-      schedulePreview(0);
-    });
+  previewFieldNames.forEach(name => {
+    const input = themeSettingsForm.elements[name];
+    if (!input || input.name === 'theme_preset') return;
+    input.addEventListener('input', schedulePreview);
+    input.addEventListener('change', () => schedulePreview(input.tagName === 'SELECT' || input.type === 'checkbox' ? 0 : 150));
   });
+
+  selectPreset(currentPreset, false);
 }

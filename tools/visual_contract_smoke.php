@@ -63,6 +63,23 @@ visual_assert(theme_visual_public_path('https://cdn.example.test/hero.jpg') === 
 visual_assert(validate_theme_visual_value('#abcdef', ['type' => 'color']) === '#abcdef', 'Color validation accepts valid hex');
 visual_assert(validate_theme_visual_value('#not-a-color', ['type' => 'color']) === null, 'Color validation rejects invalid values');
 visual_assert(validate_theme_visual_value('1.50', ['type' => 'range', 'min' => '0', 'max' => '1']) === null, 'Range validation rejects out-of-range values');
+visual_assert(validate_theme_visual_value('Pacifico, cursive', theme_visual_capabilities_for_config($stored, 'archak')['heading_font']) === null, 'Unsupported Archak font is rejected');
+visual_assert(!array_key_exists('glass_opacity', theme_visual_values_for_config($stored, 'archak')), 'Unsupported visual capability is not resolved for Archak');
+
+$customState = $base;
+$customState['theme']['mode'] = 'custom';
+$customState['theme']['theme_preset'] = 'custom';
+$customState['theme']['accent_color'] = '#112233';
+$customState['theme']['heading_font'] = 'Cormorant Garamond, serif';
+$customState['site']['url'] = 'https://global.example.test';
+$customState['theme_custom'] = theme_custom_config($customState);
+foreach (['elix', 'rainier', 'archak', 'dewankl'] as $switchPreset) {
+    $customState = switch_active_theme_preset_config($customState, $switchPreset);
+    visual_assert(($customState['site']['url'] ?? '') === 'https://global.example.test', "global site URL survives Custom -> {$switchPreset}");
+}
+$customState = switch_active_theme_preset_config($customState, 'custom');
+visual_assert(($customState['theme']['accent_color'] ?? '') === '#112233', 'Custom accent survives switching away and back');
+visual_assert(($customState['theme']['heading_font'] ?? '') === 'Cormorant Garamond, serif', 'Custom font survives switching away and back');
 
 $shared = [
     'presetKey' => 'elix',
@@ -87,10 +104,15 @@ visual_assert(strpos($html, '--cms-elix-countdown-scale:0.66') !== false, 'Elix 
 
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
 $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');
+visual_assert(is_string($appSource) && !str_contains($appSource, 'const activeVisualPreset'), 'Admin does not cache the initial active visual preset');
+visual_assert(is_string($appSource) && str_contains($appSource, 'function getCurrentPreset'), 'Admin resolves the current preset at action time');
+visual_assert(is_string($appSource) && str_contains($appSource, 'visualFields.querySelectorAll'), 'Admin collects only the current visual panel inputs');
+visual_assert(is_string($appSource) && str_contains($appSource, 'globalThemePreset?.addEventListener'), 'Global preset selector updates the visual editor immediately');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'class="visual-capability-panel"'), 'Admin renders the preset visual capability panel');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual-schemas='), 'Admin exposes dynamic visual schemas to the editor');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset_visuals"'), 'Admin exposes per-preset visual reset');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');
+visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak'], 'Preset selector exposes only renderer-backed built-ins');
 
 foreach (['dewankl', 'rainier', 'archak'] as $preset) {
     $probe = $stored;
@@ -106,6 +128,28 @@ foreach (['dewankl', 'rainier', 'archak'] as $preset) {
     visual_assert(strpos($presetHtml, '#123456') !== false, ucfirst($preset) . ' render includes the stored accent bridge');
     visual_assert(strpos($presetHtml, 'uploads/background/hero.jpg') !== false, ucfirst($preset) . ' render includes the stored hero media bridge');
 }
+
+$customRenderConfig = $base;
+$customRenderConfig['theme']['mode'] = 'custom';
+$customRenderConfig['theme']['theme_preset'] = 'custom';
+$customRenderConfig['theme_visuals']['custom'] = [
+    'accent_color' => '#102030',
+    'background_color' => '#fefefe',
+    'paper_color' => '#fafafa',
+    'text_color' => '#203040',
+    'heading_font' => 'Georgia, serif',
+    'body_font' => 'Inter, sans-serif',
+    'hero_background' => 'uploads/background/custom.jpg',
+    'hero_overlay' => '0.20',
+    'hero_title_scale' => '1.10',
+];
+$customRender = render_theme_layout($customRenderConfig, $shared);
+$customAdapter = theme_custom_visual_style($customRenderConfig);
+visual_assert(str_contains($customAdapter, '--primary:#102030'), 'Custom accent reaches the production adapter');
+visual_assert(str_contains($customAdapter, 'custom.jpg'), 'Custom background reaches the production adapter');
+visual_assert(str_contains($customAdapter, '--hero-title-scale:1.1'), 'Custom title scale reaches the production adapter');
+visual_assert(str_contains($customAdapter, '--font-heading:Georgia, serif'), 'Custom heading font reaches the production adapter');
+visual_assert(str_contains($customRender, 'id="hero"') || str_contains($customRender, 'theme-section hero'), 'Custom renderer preserves the native hero markup');
 
 echo "PASS: visual contract smoke test\n";
 ob_end_flush();

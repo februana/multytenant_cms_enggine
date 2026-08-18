@@ -38,7 +38,7 @@ if (!is_array($stories) || !$stories) {
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'elix') : [];
 $elixAccent = (string)($visuals['accent_color'] ?? '#f14e95');
-$elixHeadingFont = (string)($visuals['heading_font'] ?? 'Sacramento, cursive');
+$elixHeadingFont = (string)($visuals['heading_font'] ?? 'Pacifico, cursive');
 $elixBodyFont = (string)($visuals['body_font'] ?? 'Work Sans, sans-serif');
 $elixHeroPath = (string)($visuals['hero_background'] ?? '');
 $elixHeroImage = $elixHeroPath !== '' ? theme_visual_css_url($elixHeroPath) : 'url("/themes/elix/img/prewed1.jpg")';

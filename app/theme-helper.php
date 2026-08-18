@@ -126,6 +126,25 @@ function reset_theme_visual_overrides(array &$config, string $presetKey): void {
     $config['theme_visuals'][$presetKey] = [];
 }
 
+/** Build the CMS-native Custom adapter without changing its section markup. */
+function theme_custom_visual_style(array $config): string {
+    $visuals = theme_visual_values_for_config($config, 'custom');
+    $accent = (string)($visuals['accent_color'] ?? '#c84c47');
+    $background = (string)($visuals['background_color'] ?? '#fff8f2');
+    $paper = (string)($visuals['paper_color'] ?? '#ffffff');
+    $text = (string)($visuals['text_color'] ?? '#2f2424');
+    $heading = (string)($visuals['heading_font'] ?? 'Playfair Display, serif');
+    $body = (string)($visuals['body_font'] ?? 'Lato, sans-serif');
+    $overlay = (float)($visuals['hero_overlay'] ?? '0.45');
+    $titleScale = (float)($visuals['hero_title_scale'] ?? '1');
+    $heroPath = (string)($visuals['hero_background'] ?? '');
+    $heroRule = $heroPath !== '' ? '#hero{--hero-bg:' . theme_visual_css_url($heroPath) . '!important;}' : '';
+    $overlayStart = 'rgba(22,12,10,' . $overlay . ')';
+    $overlayMid = 'rgba(40,20,18,' . min(0.95, $overlay + 0.10) . ')';
+    $overlayEnd = 'rgba(55,28,24,' . min(1.0, $overlay + 0.25) . ')';
+    return '<style id="cms-custom-visual">:root{--primary:' . $accent . ';--accent:' . $accent . ';--link:' . $accent . ';--bg:' . $background . ';--paper:' . $paper . ';--paper-solid:' . $paper . ';--text:' . $text . ';--font-heading:' . $heading . ';--font-body:' . $body . ';--hero-title-scale:' . $titleScale . ';--hero-overlay-start:' . $overlayStart . ';--hero-overlay-mid:' . $overlayMid . ';--hero-overlay-end:' . $overlayEnd . ';}' . $heroRule . '</style>';
+}
+
 /** Validate one visual value against its preset-declared schema. */
 function theme_visual_public_path(string $path): string {
     $path = trim($path);
@@ -177,9 +196,12 @@ function validate_theme_visual_value($value, array $definition) {
  */
 function switch_active_theme_preset_config(array $config, string $selectedPreset): ?array {
     $selectedPreset = trim($selectedPreset);
+    if ($selectedPreset === '') return null;
+    if (!array_key_exists('theme_custom', $config) || !is_array($config['theme_custom']) || get_theme_mode($config) === 'custom') {
+        $config['theme_custom'] = theme_custom_config($config);
+    }
     if ($selectedPreset === 'custom') {
-        $config['theme']['mode'] = 'custom';
-        $config['theme']['theme_preset'] = 'custom';
+        $config['theme'] = theme_custom_config($config);
         return $config;
     }
     if (!array_key_exists($selectedPreset, theme_presets())) return null;
@@ -279,7 +301,7 @@ function finalize_theme_output(string $html, array $config): string {
     rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity'},
     archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg'},
     dewankl: {accent_color: '--cms-dewana-accent', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay'},
-    custom: {accent_color: '--accent', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay'}
+    custom: {accent_color: '--primary', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay', hero_title_scale: '--hero-title-scale'}
   };
   const applyVisualPreview = function (theme) {
     const preset = theme.theme_preset || 'custom';
@@ -295,6 +317,12 @@ function finalize_theme_output(string $html, array $config): string {
     if (preset === 'rainier' && values.glass_opacity !== undefined) {
       const opacity = Math.min(0.9, Math.max(0.2, Number(values.glass_opacity) || 0.4));
       document.documentElement.style.setProperty('--glass-bg', 'rgba(0, 0, 0, ' + opacity + ')');
+    }
+    if (preset === 'custom' && values.hero_overlay !== undefined) {
+      const overlay = Math.min(0.85, Math.max(0, Number(values.hero_overlay) || 0.45));
+      document.documentElement.style.setProperty('--hero-overlay-start', 'rgba(22, 12, 10, ' + overlay + ')');
+      document.documentElement.style.setProperty('--hero-overlay-mid', 'rgba(40, 20, 18, ' + Math.min(0.95, overlay + 0.10) + ')');
+      document.documentElement.style.setProperty('--hero-overlay-end', 'rgba(55, 28, 24, ' + Math.min(1, overlay + 0.25) + ')');
     }
     if (values.hero_background) {
       const raw = values.hero_background;
