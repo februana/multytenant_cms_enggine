@@ -51,3 +51,9 @@ After the default cover/music/Open Graph references were emptied, the current cl
 The existing desktop/mobile matrix for all five modes and the real admin matrix remain covered by the preceding verification sections. The post-finalization automated renderer/contract/disabled/regression tests passed with empty optional media. A root-run health-check fixture representing a clean deployment returned 35 PASS, 3 WARNING (optional cover, music, and Open Graph media not provisioned), and 0 FAIL.
 
 Docker build and container browser verification could not be performed in this sandbox because Docker CLI/daemon is unavailable. Native installer execution was intentionally stopped at its prerequisite gate because Composer and rsync are not installed in the sandbox; the gate emitted the documented actionable error before changing the host. These are environment limitations, not application failures.
+
+## Preset selector regression correction
+
+The real Admin HTML/UI was rechecked after separating the selector from the theme-specific panel. Custom, DewanaKL, Elix, Rainier, and Archak each rendered a non-blank Admin page with a visible `Preset / Tema` sidebar link and `#preset-selector` panel. The corresponding current preset was selected in the global `<select id="globalThemePreset">`; Custom exposed the full CMS-native sidebar and builder, while built-in modes exposed only their contract-relevant controls. `Link Tamu`, personalized-link controls, and the global invitation preview remained visible in every mode.
+
+The selector panel appears before the theme-specific `#theme` panel gate, and built-in pages do not expose the manual `Tema & Tampilan` panel. The real Admin page loaded without page-level console errors. Frontend theme renderer, disabled-section, and template-fidelity checks were not changed by this Admin-only correction.

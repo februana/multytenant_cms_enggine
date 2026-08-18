@@ -153,7 +153,8 @@ if (!function_exists('theme_contract_registry')) {
      * These are global services, not template presentation features.
      */
     function theme_contract_global_admin_capabilities(): array {
-        return ['guest_links'];
+        // Global CMS controls are never inferred from a built-in template contract.
+        return ['preset_selector', 'guest_links'];
     }
 
     function theme_contract_assets(string $presetKey): array {

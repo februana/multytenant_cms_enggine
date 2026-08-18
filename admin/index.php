@@ -417,6 +417,17 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $success = 'Custom CSS berhasil disimpan.';
                 }
                 break;
+            case 'save_preset':
+                $selectedPreset = trim((string)($_POST['theme_preset'] ?? ''));
+                $switchedConfig = switch_active_theme_preset_config($config, $selectedPreset);
+                if ($switchedConfig === null) {
+                    $error = 'Preset tema tidak valid.';
+                    $saveConfig = false;
+                } else {
+                    $config = $switchedConfig;
+                    $success = 'Preset tema berhasil diubah tanpa mengubah data CMS lainnya.';
+                }
+                break;
             case 'save_theme':
                 $selectedPreset = trim((string)($_POST['theme_preset'] ?? ($config['theme']['theme_preset'] ?? 'elegant')));
                 $config['theme']['mode'] = ($selectedPreset === 'custom') ? 'custom' : 'preset';
@@ -842,6 +853,8 @@ $themeMeta = get_active_theme_meta($config);
 $themePresentationCaps = theme_presentation_capabilities($config);
 $activePresetKey = resolve_theme_preset_key($config);
 $themeAdminCapabilities = theme_admin_capabilities_for_config($config);
+$globalAdminCapabilities = theme_contract_global_admin_capabilities();
+$globalAdminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $globalAdminCapabilities, true);
 $adminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $themeAdminCapabilities, true);
 $themeSectionEditorSections = $themeMode === 'custom'
     ? (array)($config['sections'] ?? [])
@@ -922,6 +935,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                 <aside class="sidebar">
                     <nav>
                         <a href="#dashboard">Dasbor</a>
+                        <?php if ($globalAdminCapabilityEnabled('preset_selector')): ?><a href="#preset-selector">Preset / Tema</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('wedding')): ?><a href="#wedding">Informasi Pernikahan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('parents')): ?><a href="#parents">Orang Tua</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('schedule')): ?><a href="#schedule">Jadwal</a><?php endif; ?>
@@ -957,6 +971,27 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="button" class="button small-button" id="copyInvitationLink">Salin Tautan</button>
                         </div>
                     </section>
+
+                    <?php if ($globalAdminCapabilityEnabled('preset_selector')): ?>
+                    <section id="preset-selector" class="card panel-section">
+                        <h2>Preset / Tema Aktif</h2>
+                        <p>Pilih preset presentasi tanpa menghapus konfigurasi CMS, media, guest links, atau data RSVP yang sudah tersimpan.</p>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                            <input type="hidden" name="action" value="save_preset">
+                            <div class="form-row">
+                                <label for="globalThemePreset">Preset Tema</label>
+                                <select id="globalThemePreset" name="theme_preset">
+                                    <?php foreach (theme_presets() as $presetKey => $preset): ?>
+                                        <option value="<?php echo escape_html($presetKey); ?>" <?php echo ($config['theme']['theme_preset'] ?? '') === $presetKey ? 'selected' : ''; ?>><?php echo escape_html($preset['label'] ?? $presetKey); ?> • v<?php echo escape_html($preset['version'] ?? '1.0.0'); ?></option>
+                                    <?php endforeach; ?>
+                                    <option value="custom" <?php echo ($themeMode === 'custom' || ($config['theme']['theme_preset'] ?? '') === 'custom') ? 'selected' : ''; ?>>Custom — CMS-Native Builder</option>
+                                </select>
+                            </div>
+                            <button type="submit">Simpan Preset Aktif</button>
+                        </form>
+                    </section>
+                    <?php endif; ?>
 
                     <?php if ($adminCapabilityEnabled('wedding')): ?>
 
@@ -1090,27 +1125,9 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme">
                             
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Theme Preset</h3>
-                            <div class="form-row">
-                                <label>Mode Tema</label>
-                                <select name="theme_mode" id="themeModeSelect">
-                                    <option value="preset" <?php echo $themeMode === 'preset' ? 'selected' : ''; ?>>Preset</option>
-                                    <option value="custom" <?php echo $themeMode === 'custom' ? 'selected' : ''; ?>>Custom</option>
-                                </select>
-                                <small>Pilihan mode menentukan apakah presentasi dikendalikan oleh preset yang dipilih atau manual editor di bawah ini.</small>
-                            </div>
-                            <div class="form-row">
-                                <label>Preset Tema</label>
-                                <select name="theme_preset">
-                                    <?php foreach (theme_presets() as $presetKey => $preset): ?>
-                                        <option value="<?php echo escape_html($presetKey); ?>" <?php echo ($config['theme']['theme_preset'] ?? 'elegant') === $presetKey ? 'selected' : ''; ?>><?php echo escape_html($preset['label'] ?? $presetKey); ?> • <?php echo escape_html($preset['category'] ?? 'theme'); ?> • v<?php echo escape_html($preset['version'] ?? '1.0.0'); ?> • <?php echo escape_html($preset['description']); ?></option>
-                                    <?php endforeach; ?>
-                                    <option value="custom" <?php echo ($config['theme']['theme_preset'] ?? '') === 'custom' ? 'selected' : ''; ?>>Custom - Gunakan nilai manual di bawah</option>
-                                </select>
-                                <small>Preset mengubah variabel CSS tema. Setiap preset mencatat metadata seperti kategori, versi, sumber, dan kompatibilitas untuk ekspansi tema di masa depan.</small>
-                            </div>
+                            <input type="hidden" name="theme_preset" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'custom'); ?>">
                             <?php if ($themeMode === 'preset'): ?>
-                                <div class="notice" style="margin:0.5rem 0 1rem;">Presentasi dikendalikan oleh preset yang dipilih. Kontrol manual tema disembunyikan agar tidak bertentangan dengan preset aktif.</div>
+                                <div class="notice" style="margin:0.5rem 0 1rem;">Presentasi dikendalikan oleh preset yang dipilih. Gunakan panel global Preset / Tema untuk berpindah preset.</div>
                             <?php endif; ?>
 
                             <?php if ($themeMode === 'custom'): ?>
