@@ -31,6 +31,7 @@ if (!defined('UPLOADS_MUSIC_DIR')) define('UPLOADS_MUSIC_DIR', UPLOADS_DIR . '/m
 if (!defined('UPLOADS_GALLERY_DIR')) define('UPLOADS_GALLERY_DIR', UPLOADS_DIR . '/gallery');
 if (!defined('UPLOADS_BACKGROUND_DIR')) define('UPLOADS_BACKGROUND_DIR', UPLOADS_DIR . '/background');
 if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS_DIR . '/love-story');
+if (!defined('UPLOADS_THEME_ASSETS_DIR')) define('UPLOADS_THEME_ASSETS_DIR', UPLOADS_DIR . '/theme-assets');
 $runtimeDataDir = trim((string)(getenv('UNDANGAN_DATA_DIR') ?: ''));
 if ($runtimeDataDir === '') $runtimeDataDir = ROOT_DIR;
 if (!defined('RUNTIME_DATA_DIR')) define('RUNTIME_DATA_DIR', rtrim($runtimeDataDir, '/'));
@@ -41,6 +42,7 @@ if (!defined('EVENT_ICS_FILE')) define('EVENT_ICS_FILE', RUNTIME_DATA_DIR . '/ev
 // Security defaults
 if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
 if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 15 * 1024 * 1024));
+if (!defined('WEBP_QUALITY')) define('WEBP_QUALITY', max(60, min(95, (int) (getenv('WEBP_QUALITY') ?: 82))));
 if (!defined('SESSION_TIMEOUT')) define('SESSION_TIMEOUT', (int) (getenv('SESSION_TIMEOUT') ?: 3600));
 if (!defined('ALLOWED_IMAGE_TYPES')) define('ALLOWED_IMAGE_TYPES', array_map('strtolower', (array) (getenv('ALLOWED_IMAGE_TYPES') ? explode(',', getenv('ALLOWED_IMAGE_TYPES')) : ['jpg','jpeg','png','webp'])));
 if (!defined('ALLOWED_AUDIO_TYPES')) define('ALLOWED_AUDIO_TYPES', ['mp3','ogg','wav']);
@@ -922,7 +924,7 @@ function theme_custom_config(array $config): array {
 }
 
 function ensure_upload_dirs(): void {
-    foreach ([UPLOADS_DIR, UPLOADS_COVER_DIR, UPLOADS_MUSIC_DIR, UPLOADS_GALLERY_DIR, UPLOADS_BACKGROUND_DIR, UPLOADS_LOVE_STORY_DIR] as $dir) {
+    foreach ([UPLOADS_DIR, UPLOADS_COVER_DIR, UPLOADS_MUSIC_DIR, UPLOADS_GALLERY_DIR, UPLOADS_BACKGROUND_DIR, UPLOADS_LOVE_STORY_DIR, UPLOADS_THEME_ASSETS_DIR] as $dir) {
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
@@ -1387,49 +1389,147 @@ function find_imagemagick_binary(): ?string {
     return null;
 }
 
-function process_uploaded_image(string $sourcePath): bool {
-    if (!is_file($sourcePath)) {
-        return false;
+function media_role_alias(string $role): string {
+    $role = strtolower(trim($role));
+    $aliases = [
+        'hero' => 'background',
+        'hero_background' => 'background',
+        'background_hero' => 'background',
+        'background_section' => 'background',
+        'background_sections' => 'background',
+        'bride' => 'bride_photo',
+        'groom' => 'groom_photo',
+        'couple' => 'couple_photo',
+        'love_story' => 'story',
+        'love-story' => 'story',
+        'gift' => 'qris_image',
+        'qris' => 'qris_image',
+        'og' => 'og_image',
+        'theme' => 'theme_asset',
+        'theme_assets' => 'theme_asset',
+    ];
+    return $aliases[$role] ?? ($role !== '' ? $role : 'generic');
+}
+
+/**
+ * Declarative output policy for every upload role. These are maximum dimensions
+ * unless an exact width/height pair is declared with fit=cover. Values are
+ * derived from the built-in CSS display contracts: hero/background surfaces
+ * are 16:9, profile/circular photos are kept natural and bounded, galleries
+ * retain their aspect ratio, and story/tender assets are not unnecessarily
+ * enlarged. The renderer remains independent from this processor.
+ */
+function media_requirements(): array {
+    return [
+        'generic' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve'],
+        'cover' => ['max_width' => 1600, 'max_height' => 1200, 'fit' => 'preserve'],
+        'background' => ['width' => 1920, 'height' => 1080, 'fit' => 'cover'],
+        'bride_photo' => ['max_width' => 1600, 'max_height' => 1600, 'fit' => 'preserve'],
+        'groom_photo' => ['max_width' => 1600, 'max_height' => 1600, 'fit' => 'preserve'],
+        'couple_photo' => ['max_width' => 1800, 'max_height' => 1200, 'fit' => 'preserve'],
+        'gallery' => ['max_width' => 1600, 'max_height' => 1200, 'fit' => 'preserve'],
+        'story' => ['max_width' => 1200, 'max_height' => 900, 'fit' => 'preserve'],
+        'qris_image' => ['max_width' => 1200, 'max_height' => 1200, 'fit' => 'preserve'],
+        'og_image' => ['width' => 1200, 'height' => 630, 'fit' => 'cover'],
+        'theme_asset' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve'],
+    ];
+}
+
+function media_requirement(string $role, ?string $preset = null): array {
+    $role = media_role_alias($role);
+    $requirements = media_requirements();
+    $requirement = $requirements[$role] ?? $requirements['generic'];
+    $preset = strtolower(trim((string)$preset));
+
+    // Preset overrides remain sparse by design: only a preset that proves a
+    // distinct visual contract should override a global media role.
+    $presetOverrides = [
+        'parang' => [],
+    ];
+    if ($preset !== '' && isset($presetOverrides[$preset][$role])) {
+        $requirement = array_replace($requirement, $presetOverrides[$preset][$role]);
     }
+    return $requirement;
+}
 
-    $extension = strtolower(pathinfo($sourcePath, PATHINFO_EXTENSION));
-    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
-        return false;
+function media_storage_roots(): array {
+    return [
+        UPLOADS_COVER_DIR,
+        UPLOADS_BACKGROUND_DIR,
+        UPLOADS_GALLERY_DIR,
+        UPLOADS_LOVE_STORY_DIR,
+        UPLOADS_MUSIC_DIR,
+        UPLOADS_THEME_ASSETS_DIR,
+    ];
+}
+
+function media_path_is_safe_storage(string $relativePath): bool {
+    $normalized = normalize_media_relative_path($relativePath);
+    if ($normalized === null) return false;
+    $fullPath = ROOT_DIR . '/' . $normalized;
+    $realPath = realpath($fullPath);
+    if ($realPath === false) return false;
+    foreach (media_storage_roots() as $root) {
+        $realRoot = realpath($root);
+        if ($realRoot !== false && str_starts_with($realPath, $realRoot . DIRECTORY_SEPARATOR)) return true;
     }
+    return false;
+}
 
-    if ($extension === 'webp' && function_exists('imagewebp')) {
-        return true;
+function verify_webp_output(string $path, array $requirement = []): bool {
+    if (!is_file($path) || filesize($path) <= 0) return false;
+    $mime = safe_image_mime($path);
+    if ($mime !== 'image/webp') return false;
+    $info = @getimagesize($path);
+    if (!is_array($info) || (int)($info[0] ?? 0) <= 0 || (int)($info[1] ?? 0) <= 0) return false;
+    if (isset($requirement['width']) && (int)$info[0] !== (int)$requirement['width']) return false;
+    if (isset($requirement['height']) && (int)$info[1] !== (int)$requirement['height']) return false;
+    if (isset($requirement['max_width']) && (int)$info[0] > (int)$requirement['max_width']) return false;
+    if (isset($requirement['max_height']) && (int)$info[1] > (int)$requirement['max_height']) return false;
+    return true;
+}
+
+function image_processing_temp_path(string $directory, string $suffix = '.webp.tmp'): string {
+    return rtrim($directory, '/\\') . '/.' . bin2hex(random_bytes(12)) . $suffix;
+}
+
+function process_image_to_webp(string $sourcePath, string $destinationDir, string $role = 'generic', ?string $preset = null, string $originalName = ''): array {
+    if (!is_file($sourcePath) || !is_readable($sourcePath)) {
+        return ['success' => false, 'error' => 'Sumber gambar tidak dapat dibaca.'];
     }
-
-    $webpPath = preg_replace('/\.[^.]+$/', '.webp', $sourcePath) ?: ($sourcePath . '.webp');
-
-    if (class_exists('Imagick')) {
-        try {
-            $imagick = new Imagick($sourcePath);
-            $imagick->stripImage();
-            $imagick->setImageCompressionQuality(82);
-            $imagick->setImageFormat('webp');
-            $imagick->writeImage($webpPath);
-            $imagick->clear();
-            $imagick->destroy();
-            return file_exists($webpPath);
-        } catch (Throwable $e) {
-            error_log('MediaProcessor Imagick failed: ' . $e->getMessage());
-            @unlink($webpPath);
-        }
+    $requirement = media_requirement($role, $preset);
+    if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) {
+        return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan.'];
     }
-
+    $safeBase = preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($originalName !== '' ? $originalName : basename($sourcePath), PATHINFO_FILENAME));
+    $safeBase = trim((string)$safeBase, '-_');
+    if ($safeBase === '') $safeBase = 'media';
+    $finalName = $safeBase . '-' . bin2hex(random_bytes(8)) . '.webp';
+    $finalPath = rtrim($destinationDir, '/\\') . '/' . $finalName;
+    $temporaryPath = image_processing_temp_path($destinationDir);
     $binary = find_imagemagick_binary();
+    $processed = false;
+
     if ($binary !== null) {
-        $escapedBinary = escapeshellarg($binary);
-        $escapedSource = escapeshellarg($sourcePath);
-        $escapedWebp = escapeshellarg($webpPath);
-        $command = $escapedBinary . ' ' . $escapedSource . ' -strip -quality 82 ' . $escapedWebp;
-        $process = proc_open($command, [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ], $pipes);
+        $parts = [escapeshellarg($binary), escapeshellarg($sourcePath), '-auto-orient'];
+        $fit = (string)($requirement['fit'] ?? 'preserve');
+        if ($fit === 'cover' && isset($requirement['width'], $requirement['height'])) {
+            $parts[] = '-resize';
+            $parts[] = escapeshellarg((int)$requirement['width'] . 'x' . (int)$requirement['height'] . '^');
+            $parts[] = '-gravity';
+            $parts[] = 'center';
+            $parts[] = '-extent';
+            $parts[] = escapeshellarg((int)$requirement['width'] . 'x' . (int)$requirement['height']);
+        } elseif (isset($requirement['max_width'], $requirement['max_height'])) {
+            $parts[] = '-resize';
+            $parts[] = escapeshellarg((int)$requirement['max_width'] . 'x' . (int)$requirement['max_height'] . '>');
+        }
+        $parts[] = '-strip';
+        $parts[] = '-quality';
+        $parts[] = (string)WEBP_QUALITY;
+        $parts[] = 'webp:' . escapeshellarg($temporaryPath);
+        $command = implode(' ', $parts);
+        $process = @proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (is_resource($process)) {
             fclose($pipes[0]);
             stream_get_contents($pipes[1]);
@@ -1437,50 +1537,51 @@ function process_uploaded_image(string $sourcePath): bool {
             $stderr = stream_get_contents($pipes[2]);
             fclose($pipes[2]);
             $exitCode = proc_close($process);
-            if ($exitCode === 0 && file_exists($webpPath) && filesize($webpPath) > 0) {
-                return true;
-            }
-            @unlink($webpPath);
-            if ($stderr !== '') {
-                error_log('MediaProcessor ImageMagick CLI failed: ' . trim($stderr));
-            }
-            return false;
+            $processed = $exitCode === 0 && verify_webp_output($temporaryPath, $requirement);
+            if (!$processed && $stderr !== '') error_log('MediaProcessor ImageMagick failed: ' . trim($stderr));
         }
-        @unlink($webpPath);
-        return false;
     }
 
-    if (!extension_loaded('gd')) {
-        return false;
+    if (!$processed && extension_loaded('gd') && function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
+        $data = @file_get_contents($sourcePath);
+        $image = $data === false ? false : @imagecreatefromstring($data);
+        if ($image !== false) {
+            $sourceWidth = imagesx($image);
+            $sourceHeight = imagesy($image);
+            $targetWidth = $sourceWidth;
+            $targetHeight = $sourceHeight;
+            if (isset($requirement['max_width'], $requirement['max_height'])) {
+                $scale = min(1, (int)$requirement['max_width'] / max(1, $sourceWidth), (int)$requirement['max_height'] / max(1, $sourceHeight));
+                $targetWidth = max(1, (int)round($sourceWidth * $scale));
+                $targetHeight = max(1, (int)round($sourceHeight * $scale));
+            }
+            $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+            imagefill($canvas, 0, 0, $transparent);
+            imagecopyresampled($canvas, $image, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
+            $processed = @imagewebp($canvas, $temporaryPath, WEBP_QUALITY);
+            imagedestroy($canvas);
+            imagedestroy($image);
+            $processed = $processed && verify_webp_output($temporaryPath, $requirement);
+        }
     }
 
-    $data = @file_get_contents($sourcePath);
-    if ($data === false) {
-        return false;
+    if (!$processed || !@rename($temporaryPath, $finalPath) || !verify_webp_output($finalPath, $requirement)) {
+        @unlink($temporaryPath);
+        @unlink($finalPath);
+        return ['success' => false, 'error' => 'Gagal memproses gambar menjadi WebP terverifikasi.'];
     }
+    return ['success' => true, 'path' => $finalPath, 'name' => $finalName, 'mime' => 'image/webp', 'width' => @getimagesize($finalPath)[0] ?? null, 'height' => @getimagesize($finalPath)[1] ?? null, 'requirement' => $requirement];
+}
 
-    $image = @imagecreatefromstring($data);
-    if (!$image) {
-        return false;
-    }
-
-    $width = imagesx($image);
-    $height = imagesy($image);
-    if ($width <= 0 || $height <= 0) {
-        imagedestroy($image);
-        return false;
-    }
-
-    $tmp = $webpPath . '.tmp';
-    $ok = @imagewebp($image, $tmp, 82);
-    imagedestroy($image);
-    if (!$ok) {
-        @unlink($tmp);
-        return false;
-    }
-
-    @rename($tmp, $webpPath);
-    return file_exists($webpPath);
+/** Backward-compatible wrapper; new upload flows use process_image_to_webp(). */
+function process_uploaded_image(string $sourcePath): bool {
+    $result = process_image_to_webp($sourcePath, dirname($sourcePath), 'generic', null, basename($sourcePath));
+    if (empty($result['success'])) return false;
+    if (($result['path'] ?? '') !== $sourcePath && is_file($sourcePath)) @unlink($sourcePath);
+    return true;
 }
 
 function verify_admin_password(string $password, array $config): bool {
@@ -1570,49 +1671,60 @@ function safe_image_mime(string $path): ?string {
     return $mime ?? null;
 }
 
-function upload_file(array $file, string $destinationDir, array $allowedExtensions, int $maxSize): array {
-    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
-        return ['error' => 'Gagal mengunggah file.'];
+function upload_file(array $file, string $destinationDir, array $allowedExtensions, int $maxSize, string $role = 'generic', ?string $preset = null): array {
+    if (!isset($file['error']) || (int)$file['error'] !== UPLOAD_ERR_OK) {
+        return ['success' => false, 'error' => 'Gagal mengunggah file.'];
     }
-    if (!is_uploaded_file($file['tmp_name'])) {
-        return ['error' => 'Sumber file tidak valid.'];
+    $temporarySource = (string)($file['tmp_name'] ?? '');
+    $isCliFixture = PHP_SAPI === 'cli' && is_file($temporarySource);
+    if (!is_uploaded_file($temporarySource) && !$isCliFixture) {
+        return ['success' => false, 'error' => 'Sumber file tidak valid.'];
     }
-    if ($file['size'] > $maxSize) {
-        return ['error' => 'Ukuran file terlalu besar.'];
+    if ((int)($file['size'] ?? 0) > $maxSize) {
+        return ['success' => false, 'error' => 'Ukuran file terlalu besar.'];
     }
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $extension = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+    $allowedExtensions = array_map('strtolower', $allowedExtensions);
     if (!in_array($extension, $allowedExtensions, true)) {
-        return ['error' => 'Format file tidak diizinkan.'];
+        return ['success' => false, 'error' => 'Format file tidak diizinkan.'];
     }
-    $mime = safe_image_mime($file['tmp_name']);
+    $mime = safe_image_mime($temporarySource);
     if ($mime === null) {
-        return ['error' => 'Tipe file tidak dapat diverifikasi.'];
+        return ['success' => false, 'error' => 'Tipe file tidak dapat diverifikasi.'];
     }
-    if (in_array($extension, ALLOWED_IMAGE_TYPES, true)) {
-        if (stripos($mime, 'image/') !== 0) {
-            return ['error' => 'Tipe file bukan gambar.'];
-        }
+    $isImage = in_array($extension, ALLOWED_IMAGE_TYPES, true);
+    $isAudio = in_array($extension, ALLOWED_AUDIO_TYPES, true);
+    if ($isImage && stripos($mime, 'image/') !== 0) {
+        return ['success' => false, 'error' => 'Tipe file bukan gambar.'];
     }
-    if (in_array($extension, ALLOWED_AUDIO_TYPES, true)) {
-        if (stripos($mime, 'audio/') !== 0) {
-            return ['error' => 'Tipe file bukan audio.'];
-        }
+    if ($isAudio && stripos($mime, 'audio/') !== 0 && $mime !== 'application/ogg') {
+        return ['success' => false, 'error' => 'Tipe file bukan audio.'];
     }
     if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) {
-        return ['error' => 'Gagal membuat direktori penyimpanan.'];
-    }
-    $safeName = generate_safe_filename($file['name']);
-    $dest = $destinationDir . '/' . $safeName;
-    if (!move_uploaded_file($file['tmp_name'], $dest)) {
-        return ['error' => 'Gagal menyimpan file.'];
+        return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan.'];
     }
 
-    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-        normalize_image_orientation($dest);
-        process_uploaded_image($dest);
+    if ($isImage) {
+        $result = process_image_to_webp($temporarySource, $destinationDir, $role, $preset, (string)$file['name']);
+        if (empty($result['success'])) return $result;
+        // The source is a PHP upload temporary file (or a CLI fixture). Remove
+        // it only after the verified final WebP has been atomically installed.
+        if (is_file($temporarySource) && $temporarySource !== $result['path']) @unlink($temporarySource);
+        $result['extension'] = 'webp';
+        $result['original_extension'] = $extension;
+        return $result;
     }
 
-    return ['path' => $dest, 'name' => $safeName, 'extension' => $extension, 'mime' => $mime];
+    $safeName = generate_safe_filename((string)$file['name']);
+    $dest = rtrim($destinationDir, '/\\') . '/' . $safeName;
+    if (!@move_uploaded_file($temporarySource, $dest) && !($isCliFixture && @rename($temporarySource, $dest))) {
+        return ['success' => false, 'error' => 'Gagal menyimpan file.'];
+    }
+    if (!is_file($dest) || filesize($dest) <= 0) {
+        @unlink($dest);
+        return ['success' => false, 'error' => 'File tersimpan tidak valid.'];
+    }
+    return ['success' => true, 'path' => $dest, 'name' => $safeName, 'extension' => $extension, 'mime' => $mime];
 }
 
 function public_path(string $path): string {
@@ -1651,7 +1763,7 @@ function get_gallery_items(array $config): array {
         }
         $filename = relative_path($filePath);
         if (!isset($configured[$filename])) {
-            $configured[$filename] = ['filename' => $filename, 'order' => time() + rand(1, 1000)];
+            continue;
         }
         $files[$filename] = $configured[$filename];
     }
@@ -1678,13 +1790,7 @@ function delete_uploaded_asset(string $relativePath): bool {
     if (!is_file($fullPath)) {
         return false;
     }
-    $allowedRoots = [
-        UPLOADS_COVER_DIR,
-        UPLOADS_BACKGROUND_DIR,
-        UPLOADS_GALLERY_DIR,
-        UPLOADS_LOVE_STORY_DIR,
-        UPLOADS_MUSIC_DIR
-    ];
+    $allowedRoots = media_storage_roots();
     $realPath = realpath($fullPath);
     foreach ($allowedRoots as $root) {
         $realRoot = realpath($root);
@@ -1739,7 +1845,7 @@ function detect_media_usage(array $config, string $relativePath): array {
     }
     foreach (($config['love_story']['items'] ?? []) as $item) {
         $image = (string)($item['image'] ?? '');
-        if ($image !== '' && basename($image) === basename($normalized) && dirname($image) === dirname($normalized)) {
+        if ($image !== '' && (media_reference_matches($image, $normalized) || basename($image) === basename($normalized))) {
             $usage[] = 'Love Story';
         }
     }
@@ -1747,6 +1853,13 @@ function detect_media_usage(array $config, string $relativePath): array {
         foreach ((array)$visualOverrides as $visualKey => $visualValue) {
             if ((string)$visualValue !== '' && normalize_media_relative_path((string)$visualValue) === $normalized) {
                 $usage[] = 'Visual ' . ucfirst((string)$presetKey) . ' / ' . str_replace('_', ' ', (string)$visualKey);
+            }
+        }
+    }
+    foreach (($config['theme_options'] ?? []) as $presetKey => $options) {
+        foreach ((array)$options as $optionKey => $optionValue) {
+            if ((string)$optionValue !== '' && normalize_media_relative_path((string)$optionValue) === $normalized) {
+                $usage[] = 'Theme Asset ' . ucfirst((string)$presetKey) . ' / ' . str_replace('_', ' ', (string)$optionKey);
             }
         }
     }
@@ -1764,6 +1877,7 @@ function list_media_library(array $options = []): array {
         'background' => ['dir' => UPLOADS_BACKGROUND_DIR, 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
         'gallery' => ['dir' => UPLOADS_GALLERY_DIR, 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
         'love_story' => ['dir' => UPLOADS_LOVE_STORY_DIR, 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'theme_assets' => ['dir' => UPLOADS_THEME_ASSETS_DIR, 'label' => 'Theme Assets', 'allowed' => ALLOWED_IMAGE_TYPES],
         'music' => ['dir' => UPLOADS_MUSIC_DIR, 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
     ];
 
@@ -1779,7 +1893,8 @@ function list_media_library(array $options = []): array {
                 continue;
             }
             $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-            if (!in_array($ext, $group['allowed'], true)) {
+            $isAudio = in_array($ext, ALLOWED_AUDIO_TYPES, true);
+            if (!in_array($ext, $group['allowed'], true) || (!$isAudio && $ext !== 'webp')) {
                 continue;
             }
             $path = relative_path($filePath);
@@ -1817,7 +1932,7 @@ function list_media_library(array $options = []): array {
     }
 
     usort($items, function (array $a, array $b): int {
-        $groupOrder = ['cover' => 1, 'background' => 2, 'gallery' => 3, 'love_story' => 4, 'music' => 5];
+        $groupOrder = ['cover' => 1, 'background' => 2, 'gallery' => 3, 'love_story' => 4, 'theme_assets' => 5, 'music' => 6];
         $groupDiff = ($groupOrder[$a['group']] ?? 99) <=> ($groupOrder[$b['group']] ?? 99);
         return $groupDiff !== 0 ? $groupDiff : strcmp($a['name'], $b['name']);
     });
@@ -1831,7 +1946,7 @@ function rename_uploaded_asset(string $relativePath, string $newName): array {
         return ['success' => false, 'error' => 'Path media tidak valid.'];
     }
     $fullPath = ROOT_DIR . '/' . $normalized;
-    if (!is_file($fullPath)) {
+    if (!is_file($fullPath) || !media_path_is_safe_storage($normalized)) {
         return ['success' => false, 'error' => 'File media tidak ditemukan.'];
     }
     $safeName = trim((string)$newName);
@@ -1861,68 +1976,84 @@ function rename_uploaded_asset(string $relativePath, string $newName): array {
     return ['success' => true, 'path' => relative_path($targetPath)];
 }
 
-function replace_uploaded_asset(string $relativePath, array $file): array {
+function replace_uploaded_asset(string $relativePath, array $file, ?string $role = null, ?string $preset = null): array {
     $normalized = normalize_media_relative_path($relativePath);
-    if ($normalized === null) {
+    if ($normalized === null || !media_path_is_safe_storage($normalized)) {
         return ['success' => false, 'error' => 'Path media tidak valid.'];
     }
     $fullPath = ROOT_DIR . '/' . $normalized;
-    if (!is_file($fullPath)) {
-        return ['success' => false, 'error' => 'File media tidak ditemukan.'];
+    if (!is_file($fullPath)) return ['success' => false, 'error' => 'File media tidak ditemukan.'];
+
+    $directory = dirname($fullPath);
+    $basename = str_replace('\\', '/', $normalized);
+    if ($role === null) {
+        if (str_contains($basename, 'uploads/gallery/')) $role = 'gallery';
+        elseif (str_contains($basename, 'uploads/background/')) $role = 'background';
+        elseif (str_contains($basename, 'uploads/love-story/')) $role = 'story';
+        elseif (str_contains($basename, 'uploads/theme-assets/')) $role = 'theme_asset';
+        elseif (str_contains($basename, 'uploads/music/')) $role = 'music';
+        elseif (str_contains($basename, 'uploads/cover/')) $role = 'cover';
+        else $role = 'generic';
     }
-    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
-        return ['success' => false, 'error' => 'File pengganti tidak valid.'];
+    if ($preset === null && str_contains($basename, 'uploads/theme-assets/')) {
+        $parts = explode('/', $basename);
+        $preset = $parts[2] ?? null;
     }
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $allowedMap = [
-        'cover' => ALLOWED_IMAGE_TYPES,
-        'background' => ALLOWED_IMAGE_TYPES,
-        'gallery' => ALLOWED_IMAGE_TYPES,
-        'love_story' => ALLOWED_IMAGE_TYPES,
-        'music' => ALLOWED_AUDIO_TYPES,
-    ];
-    $group = 'cover';
-    foreach ($allowedMap as $key => $allowed) {
-        if (str_contains($normalized, $key . '/')) {
-            $group = $key;
-            break;
-        }
+    $isMusic = media_role_alias($role) === 'music';
+    $allowed = $isMusic ? ALLOWED_AUDIO_TYPES : ALLOWED_IMAGE_TYPES;
+    $maxSize = $isMusic ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE;
+    $result = upload_file($file, $directory, $allowed, $maxSize, $role, $preset);
+    if (empty($result['success'])) return ['success' => false, 'error' => $result['error'] ?? 'Gagal memproses file pengganti.'];
+    $newPath = relative_path($result['path']);
+    return ['success' => true, 'path' => $newPath, 'old_path' => $normalized, 'mime' => $result['mime'] ?? '', 'width' => $result['width'] ?? null, 'height' => $result['height'] ?? null];
+}
+
+function media_reference_matches(string $value, string $target): bool {
+    $value = trim($value);
+    $target = trim($target);
+    if ($value === '' || $target === '') return false;
+    $normalizedValue = normalize_media_relative_path($value);
+    $normalizedTarget = normalize_media_relative_path($target);
+    if ($normalizedValue !== null && $normalizedTarget !== null && $normalizedValue === $normalizedTarget) return true;
+    return basename($value) === basename($target) && str_contains(str_replace('\\', '/', $value), dirname(str_replace('\\', '/', $target)));
+}
+
+function replace_media_references(array &$config, string $oldPath, string $newPath): void {
+    $replace = static function (&$value) use ($oldPath, $newPath): void {
+        if (is_string($value) && media_reference_matches($value, $oldPath)) $value = $newPath;
+    };
+    foreach (['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'music', 'background_hero'] as $key) {
+        if (isset($config['media'][$key])) $replace($config['media'][$key]);
     }
-    if ($group === 'music' && !in_array($extension, ALLOWED_AUDIO_TYPES, true)) {
-        return ['success' => false, 'error' => 'Format media musik tidak diizinkan.'];
+    foreach (($config['media']['background_sections'] ?? []) as $index => &$value) $replace($value);
+    unset($value);
+    if (isset($config['gift']['qris_image'])) $replace($config['gift']['qris_image']);
+    if (isset($config['site']['open_graph_image'])) $replace($config['site']['open_graph_image']);
+    foreach (($config['gallery']['items'] ?? []) as &$item) {
+        if (isset($item['filename'])) $replace($item['filename']);
     }
-    if ($group !== 'music' && !in_array($extension, ALLOWED_IMAGE_TYPES, true)) {
-        return ['success' => false, 'error' => 'Format media gambar tidak diizinkan.'];
+    unset($item);
+    foreach (($config['love_story']['items'] ?? []) as &$item) {
+        if (isset($item['image'])) $replace($item['image']);
     }
-    $mime = safe_image_mime($file['tmp_name']);
-    if ($mime === null) {
-        return ['success' => false, 'error' => 'Tipe file tidak dapat diverifikasi.'];
+    unset($item);
+    foreach (($config['theme_visuals'] ?? []) as &$visuals) {
+        foreach ((array)$visuals as &$value) $replace($value);
+        unset($value);
     }
-    $maxSize = $group === 'music' ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE;
-    if ($file['size'] > $maxSize) {
-        return ['success' => false, 'error' => 'Ukuran file terlalu besar.'];
+    unset($visuals);
+    foreach (($config['theme_options'] ?? []) as &$options) {
+        foreach ((array)$options as &$value) $replace($value);
+        unset($value);
     }
-    $backupPath = $fullPath . '.bak';
-    @copy($fullPath, $backupPath);
-    $tempTarget = $fullPath . '.tmp';
-    if (!@move_uploaded_file($file['tmp_name'], $tempTarget)) {
-        @unlink($backupPath);
-        return ['success' => false, 'error' => 'Gagal mempersiapkan file pengganti.'];
-    }
-    if (@rename($tempTarget, $fullPath)) {
-        if ($group !== 'music' && in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-            normalize_image_orientation($fullPath);
-            process_uploaded_image($fullPath);
-        }
-        @unlink($backupPath);
-        return ['success' => true, 'path' => $normalized];
-    }
-    @unlink($tempTarget);
-    if (file_exists($backupPath)) {
-        @copy($backupPath, $fullPath);
-    }
-    @unlink($backupPath);
-    return ['success' => false, 'error' => 'Gagal mengganti file lama.'];
+    unset($options);
+}
+
+function cleanup_replaced_media(string $oldPath, array $config): bool {
+    $normalized = normalize_media_relative_path($oldPath);
+    if ($normalized === null || !media_path_is_safe_storage($normalized)) return false;
+    if (!empty(detect_media_usage($config, $normalized))) return false;
+    return delete_uploaded_asset($normalized);
 }
 
 function write_event_ics(array $config): void {

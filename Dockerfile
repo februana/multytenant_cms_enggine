@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libjpeg62-turbo-dev \
         libpng-dev \
         libwebp-dev \
+        imagemagick \
         libonig-dev \
         libsqlite3-dev \
         sqlite3 \

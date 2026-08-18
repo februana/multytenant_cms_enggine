@@ -150,11 +150,11 @@ visual_assert(is_string($adminSource) && str_contains($adminSource, 'title="Prev
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'aria-label="Ukuran preview"'), 'Preview viewport controls have an accessible group label');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');
 visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak', 'parang'], 'Preset selector exposes only renderer-backed built-ins');
-$mediaProbeName = 'uploads/background/visual-contract-probe-' . getmypid() . '.png';
+$mediaProbeName = 'uploads/background/visual-contract-probe-' . getmypid() . '.webp';
 $mediaProbePath = ROOT_DIR . '/' . $mediaProbeName;
-file_put_contents($mediaProbePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
-visual_assert(theme_visual_image_reference_is_canonical($mediaProbeName), 'Canonical existing PNG is accepted for visual image reference');
-visual_assert(!theme_visual_image_reference_is_canonical('uploads/background/not-present.png'), 'Missing canonical image is rejected');
+copy(dirname(__DIR__) . '/themes/parang/assets/parang-pattern.webp', $mediaProbePath);
+visual_assert(theme_visual_image_reference_is_canonical($mediaProbeName), 'Canonical existing WebP is accepted for visual image reference');
+visual_assert(!theme_visual_image_reference_is_canonical('uploads/background/not-present.webp'), 'Missing canonical image is rejected');
 visual_assert(theme_visual_image_reference_is_canonical('https://cdn.example.test/hero.jpg'), 'HTTPS image URL remains accepted');
 unlink($mediaProbePath);
 

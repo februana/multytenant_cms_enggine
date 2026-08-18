@@ -175,7 +175,7 @@ function theme_visual_image_reference_is_canonical(string $value): bool {
     $absolute = ROOT_DIR . '/' . $normalized;
     if (!is_file($absolute)) return false;
     $extension = strtolower((string)pathinfo($absolute, PATHINFO_EXTENSION));
-    return in_array($extension, ALLOWED_IMAGE_TYPES, true) && safe_image_mime($absolute) !== null;
+    return $extension === 'webp' && safe_image_mime($absolute) === 'image/webp';
 }
 
 function validate_theme_visual_value($value, array $definition) {

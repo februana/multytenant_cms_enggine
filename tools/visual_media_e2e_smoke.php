@@ -9,9 +9,9 @@ function media_e2e_assert(bool $condition, string $message): void {
     echo 'PASS: ' . $message . PHP_EOL;
 }
 
-$probePath = 'uploads/background/visual-media-e2e-probe.png';
+$probePath = 'uploads/background/visual-media-e2e-probe.webp';
 $probeAbsolute = ROOT_DIR . '/' . $probePath;
-file_put_contents($probeAbsolute, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+copy(ROOT_DIR . '/themes/parang/assets/parang-pattern.webp', $probeAbsolute);
 media_e2e_assert(theme_visual_image_reference_is_canonical($probePath), 'E2E probe is accepted by canonical media validation');
 
 $shared = [
@@ -41,7 +41,7 @@ $reloaded = load_config();
 foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'] as $preset) {
     media_e2e_assert(($reloaded['theme_visuals'][$preset]['hero_background'] ?? '') === $probePath, "{$preset} media reference survives reload");
     if ($preset === 'custom') {
-        media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.png'), 'Custom production adapter includes persisted media URL');
+        media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.webp'), 'Custom production adapter includes persisted media URL');
         continue;
     }
     $probeConfig = $reloaded;
@@ -50,7 +50,7 @@ foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'] as $preset
     $probeShared = $shared;
     $probeShared['presetKey'] = $preset;
     $html = render_theme_layout($probeConfig, $probeShared);
-    media_e2e_assert(str_contains($html, 'visual-media-e2e-probe.png'), ucfirst($preset) . ' production renderer includes persisted media URL');
+    media_e2e_assert(str_contains($html, 'visual-media-e2e-probe.webp'), ucfirst($preset) . ' production renderer includes persisted media URL');
 }
 
 $resetConfig = $reloaded;
