@@ -430,6 +430,30 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'save_theme':
                 $selectedPreset = trim((string)($_POST['theme_preset'] ?? ($config['theme']['theme_preset'] ?? 'elegant')));
+                $persistVisualOverrides = static function (array &$targetConfig, string $visualPreset) use ($config): void {
+                    $schema = theme_visual_capabilities_for_config($config, $visualPreset);
+                    if (!isset($targetConfig['theme_visuals'][$visualPreset]) || !is_array($targetConfig['theme_visuals'][$visualPreset])) {
+                        $targetConfig['theme_visuals'][$visualPreset] = [];
+                    }
+                    if (!empty($_POST['reset_visuals'])) {
+                        reset_theme_visual_overrides($targetConfig, $visualPreset);
+                        return;
+                    }
+                    $postedVisuals = isset($_POST['visuals']) && is_array($_POST['visuals']) ? $_POST['visuals'] : [];
+                    foreach ($schema as $visualKey => $definition) {
+                        $value = array_key_exists($visualKey, $postedVisuals) ? $postedVisuals[$visualKey] : null;
+                        if (($definition['type'] ?? '') === 'image') {
+                            $fileKey = 'visual_file_' . $visualKey;
+                            if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
+                                $uploadRes = upload_file($_FILES[$fileKey], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                                if (empty($uploadRes['error'])) $value = relative_path($uploadRes['path']);
+                            }
+                        }
+                        if ($value === null) continue;
+                        $validated = validate_theme_visual_value($value, $definition);
+                        if ($validated !== null) $targetConfig['theme_visuals'][$visualPreset][$visualKey] = $validated;
+                    }
+                };
                 $config['theme']['mode'] = ($selectedPreset === 'custom') ? 'custom' : 'preset';
                 if ($selectedPreset !== 'custom' && array_key_exists($selectedPreset, theme_presets())) {
                     $config['theme'] = apply_theme_preset($config['theme'], $selectedPreset);
@@ -469,6 +493,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     if (isset($_POST['buttons_mobile_layout'])) {
                         $config['buttons']['mobile_layout'] = trim((string)$_POST['buttons_mobile_layout']) ?: ($config['buttons']['mobile_layout'] ?? '2-columns');
                     }
+                    $persistVisualOverrides($config, $selectedPreset);
                     break;
                 }
                 $config['theme']['mode'] = 'custom';
@@ -507,6 +532,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['theme']['mobile_hero_image_position'] = trim((string)($_POST['mobile_hero_image_position'] ?? '')) ?: ($config['theme']['mobile_hero_image_position'] ?? 'center top');
                 // Mobile button layout
                 $config['buttons']['mobile_layout'] = trim((string)($_POST['buttons_mobile_layout'] ?? '')) ?: ($config['buttons']['mobile_layout'] ?? '2-columns');
+                $persistVisualOverrides($config, 'custom');
                 break;
             case 'save_love_story':
                 // Handle love story CRUD operations
@@ -844,8 +870,12 @@ $backgroundSectionPreviews = [
 $qrisPreview = $config['gift']['qris_image'];
 $customCss = load_custom_css();
 $themePresetPreviewData = [];
+$themeVisualSchemas = ['custom' => theme_visual_capabilities_for_config($config, 'custom')];
+$themeVisualValues = ['custom' => theme_visual_values_for_config($config, 'custom')];
 foreach (theme_presets() as $presetKey => $preset) {
     $themePresetPreviewData[$presetKey] = $preset['values'] ?? [];
+    $themeVisualSchemas[$presetKey] = theme_visual_capabilities_for_config($config, $presetKey);
+    $themeVisualValues[$presetKey] = theme_visual_values_for_config($config, $presetKey);
 }
 $themeRegistry = theme_registry();
 $themeMode = get_theme_mode($config);
@@ -860,6 +890,9 @@ $themeSectionEditorSections = $themeMode === 'custom'
     ? (array)($config['sections'] ?? [])
     : theme_sections_for_admin($config, $activePresetKey);
 $themePreviewConfig = $config['theme'] ?? [];
+$activeVisualPresetKey = $themeMode === 'custom' ? 'custom' : $activePresetKey;
+$activeThemeVisualSchema = $themeVisualSchemas[$activeVisualPresetKey] ?? [];
+$activeThemeVisualValues = $themeVisualValues[$activeVisualPresetKey] ?? [];
 // Ensure hero settings are included in preview config for backward compatibility
 if (!isset($themePreviewConfig['hero_height'])) {
     $themePreviewConfig['hero_height'] = '100vh';
@@ -1121,13 +1154,43 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <h2>Tema & Tampilan</h2>
                         <p class="section-description">Ubah gaya undangan dan lihat hasilnya langsung di preview sebelum menyimpan.</p>
                         <div class="theme-editor-layout">
-                        <form method="post" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
+                        <form method="post" enctype="multipart/form-data" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-schemas='<?php echo escape_html(json_encode($themeVisualSchemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-values='<?php echo escape_html(json_encode($themeVisualValues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme">
                             
                             <input type="hidden" name="theme_preset" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'custom'); ?>">
                             <?php if ($themeMode === 'preset'): ?>
-                                <div class="notice" style="margin:0.5rem 0 1rem;">Presentasi dikendalikan oleh preset yang dipilih. Gunakan panel global Preset / Tema untuk berpindah preset.</div>
+                                <div class="notice" style="margin:0.5rem 0 1rem;">Preset tetap mempertahankan identitas template asli. Pengaturan di bawah hanya menampilkan visual capability yang benar-benar didukung preset aktif.</div>
+                                <div class="visual-capability-panel" data-visual-panel="<?php echo escape_html($activeVisualPresetKey); ?>" style="margin:1rem 0 1.5rem;padding:1rem;border:1px solid #eadccf;border-radius:14px;background:#fffaf4;">
+                                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
+                                        <div><h3 style="margin:0;color:#c84c47;">Tampilan <?php echo escape_html($themeMeta['label'] ?? $activeVisualPresetKey); ?></h3><p style="margin:0.35rem 0 0;color:#6d5148;">Kontrol ini tersimpan khusus untuk preset aktif dan tidak menghapus konfigurasi preset lain.</p></div>
+                                        <button type="submit" name="reset_visuals" value="1" class="button small-button" form="themeSettingsForm">Atur Ulang Visual</button>
+                                    </div>
+                                    <div class="form-grid" style="margin-top:1rem;">
+                                        <?php foreach ($activeThemeVisualSchema as $visualKey => $visualDefinition): ?>
+                                            <?php $visualValue = $activeThemeVisualValues[$visualKey] ?? ($visualDefinition['default'] ?? ''); $visualType = $visualDefinition['type'] ?? 'text'; ?>
+                                            <div class="form-row visual-field" data-visual-key="<?php echo escape_html($visualKey); ?>">
+                                                <label for="visual-<?php echo escape_html($visualKey); ?>"><?php echo escape_html($visualDefinition['label'] ?? ucwords(str_replace('_', ' ', $visualKey))); ?></label>
+                                                <?php if ($visualType === 'color'): ?>
+                                                    <input id="visual-<?php echo escape_html($visualKey); ?>" type="color" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" style="width:100%;height:42px;">
+                                                <?php elseif ($visualType === 'font'): ?>
+                                                    <select id="visual-<?php echo escape_html($visualKey); ?>" name="visuals[<?php echo escape_html($visualKey); ?>]" data-font-preview="1" style="font-family:<?php echo escape_html((string)$visualValue); ?>;">
+                                                        <?php foreach (($visualDefinition['options'] ?? []) as $fontValue => $fontLabel): ?><option value="<?php echo escape_html((string)$fontValue); ?>" style="font-family:<?php echo escape_html((string)$fontValue); ?>;" <?php echo (string)$visualValue === (string)$fontValue ? 'selected' : ''; ?>><?php echo escape_html((string)$fontLabel); ?></option><?php endforeach; ?>
+                                                    </select>
+                                                    <span class="font-preview-sample" data-for="visual-<?php echo escape_html($visualKey); ?>" style="display:block;margin-top:6px;font-family:<?php echo escape_html((string)$visualValue); ?>;font-size:1.35rem;">Aa Bb Cc — Februana &amp; Andi</span>
+                                                <?php elseif ($visualType === 'range'): ?>
+                                                    <div style="display:flex;align-items:center;gap:0.65rem;"><input id="visual-<?php echo escape_html($visualKey); ?>" type="range" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" min="<?php echo escape_html((string)($visualDefinition['min'] ?? '0')); ?>" max="<?php echo escape_html((string)($visualDefinition['max'] ?? '1')); ?>" step="<?php echo escape_html((string)($visualDefinition['step'] ?? '0.05')); ?>" style="flex:1;"><output data-range-output="visual-<?php echo escape_html($visualKey); ?>"><?php echo escape_html((string)$visualValue); ?></output></div>
+                                                <?php elseif ($visualType === 'image'): ?>
+                                                    <input id="visual-<?php echo escape_html($visualKey); ?>" type="text" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" placeholder="Path media atau URL">
+                                                    <input type="file" name="visual_file_<?php echo escape_html($visualKey); ?>" accept="image/*" style="margin-top:0.45rem;">
+                                                <?php else: ?>
+                                                    <input id="visual-<?php echo escape_html($visualKey); ?>" type="text" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>">
+                                                <?php endif; ?>
+                                                <?php if (!empty($visualDefinition['description'])): ?><small><?php echo escape_html($visualDefinition['description']); ?></small><?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             <?php endif; ?>
 
                             <?php if ($themeMode === 'custom'): ?>
@@ -1403,6 +1466,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <div class="theme-preview-panel__header">
                                 <strong>Live Preview</strong>
                                 <span>Perubahan sementara, belum tersimpan.</span>
+                            </div>
+                            <div class="preview-viewport-controls" role="group" aria-label="Ukuran preview" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin:0.75rem 0;">
+                                <button type="button" class="button small-button is-active" data-preview-viewport="desktop">Desktop</button>
+                                <button type="button" class="button small-button" data-preview-viewport="tablet">Tablet</button>
+                                <button type="button" class="button small-button" data-preview-viewport="mobile">Mobile</button>
                             </div>
                             <iframe id="themePreviewFrame" src="/?theme_preview=1" title="Preview tema undangan" loading="lazy"></iframe>
                         </aside>

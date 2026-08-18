@@ -34,7 +34,15 @@ while (count($galleryUrls) < 3) $galleryUrls[] = public_path($couplePhoto);
 $stories = $config['love_story']['items'] ?? [];
 if (!is_array($stories) || !$stories) $stories = [['title' => 'Kisah Kami', 'date' => $akadDate, 'description' => (string)($config['wedding']['opening_text'] ?? '')]];
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
-$heroStyle = escape_html("background-image: url('" . public_path($couplePhoto) . "');");
+$visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'archak') : [];
+$archakAccent = (string)($visuals['accent_color'] ?? '#8c5a4d');
+$archakHeadingFont = (string)($visuals['heading_font'] ?? 'Cinzel, serif');
+$archakBodyFont = (string)($visuals['body_font'] ?? 'Quicksand, sans-serif');
+$archakHeroPath = (string)($visuals['hero_background'] ?? '') ?: $couplePhoto;
+$archakTitleScale = (float)($visuals['hero_title_scale'] ?? '1');
+$archakHeroImage = theme_visual_css_url($archakHeroPath);
+$heroStyle = 'background-image: var(--cms-archak-hero-bg);';
+$archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' . $archakAccent . ';--cms-archak-heading:' . $archakHeadingFont . ';--cms-archak-body:' . $archakBodyFont . ';--cms-archak-title-scale:' . $archakTitleScale . ';--cms-archak-hero-bg:' . $archakHeroImage . '}body *{font-family:var(--cms-archak-body)}h1,h2,h3,.logo,.checkbtn{font-family:var(--cms-archak-heading)}.huge-btn,.links{color:var(--cms-archak-accent);border-color:var(--cms-archak-accent)}nav .logo{color:var(--cms-archak-accent)}.home h1{font-size:calc(var(--h1-size) * var(--cms-archak-title-scale))}@media(max-width:576px){.home h1{font-size:clamp(2.15rem,11vw,4rem);line-height:1.05;overflow-wrap:anywhere}}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -45,6 +53,7 @@ $heroStyle = escape_html("background-image: url('" . public_path($couplePhoto) .
     <title><?php echo escape_html($config['site']['title'] ?? 'Undangan Pernikahan'); ?></title>
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original/style.css'); ?>">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'fidelity-adapter.css'); ?>">
+    <?php echo $archakVisualStyle; ?>
     <script src="https://kit.fontawesome.com/7b12bcc245.js" crossorigin="anonymous"></script>
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
 </head>

@@ -66,6 +66,110 @@ function theme_admin_capabilities_for_config(array $config): array {
     return array_values(array_unique(array_merge($global, $specific)));
 }
 
+/** Resolve visual capability metadata for the active preset. */
+function theme_visual_capabilities_for_config(array $config, ?string $presetKey = null): array {
+    $mode = function_exists('get_theme_mode') ? get_theme_mode($config) : 'custom';
+    $presetKey = $presetKey ?: ($mode === 'custom' ? 'custom' : resolve_theme_preset_key($config));
+    if ($presetKey === 'custom') {
+        return [
+            'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna utama untuk tombol, tautan, dan detail aksen.', 'default' => '#c84c47'],
+            'background_color' => ['type' => 'color', 'label' => 'Warna Latar', 'description' => 'Warna dasar halaman ketika tidak ada gambar latar.', 'default' => '#fff8f2'],
+            'paper_color' => ['type' => 'color', 'label' => 'Warna Permukaan', 'description' => 'Warna kartu dan permukaan konten.', 'default' => '#ffffff'],
+            'text_color' => ['type' => 'color', 'label' => 'Warna Teks', 'description' => 'Warna teks utama.', 'default' => '#2f2424'],
+            'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font untuk judul dan heading.', 'default' => 'Playfair Display, serif', 'options' => ['Playfair Display, serif' => 'Playfair Display', 'Cormorant Garamond, serif' => 'Cormorant Garamond', 'Georgia, serif' => 'Georgia', 'Great Vibes, cursive' => 'Great Vibes']],
+            'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font yang mudah dibaca untuk isi, jadwal, dan form.', 'default' => 'Lato, sans-serif', 'options' => ['Lato, sans-serif' => 'Lato', 'Inter, sans-serif' => 'Inter', 'Work Sans, sans-serif' => 'Work Sans', 'Poppins, sans-serif' => 'Poppins']],
+            'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL gambar hero. Kosongkan untuk memakai fallback cover.', 'default' => ''],
+            'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay gelap di atas gambar hero.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
+            'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala relatif judul utama hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.2', 'step' => '0.05'],
+        ];
+    }
+    $registry = function_exists('theme_registry') ? theme_registry() : [];
+    return (array)($registry[$presetKey]['visual_capabilities'] ?? []);
+}
+
+/** Resolve per-preset visual defaults and stored overrides without deleting hidden values. */
+function theme_visual_values_for_config(array $config, ?string $presetKey = null): array {
+    $mode = function_exists('get_theme_mode') ? get_theme_mode($config) : 'custom';
+    $presetKey = $presetKey ?: ($mode === 'custom' ? 'custom' : resolve_theme_preset_key($config));
+    $schema = theme_visual_capabilities_for_config($config, $presetKey);
+    $defaults = [];
+    foreach ($schema as $key => $definition) {
+        if (array_key_exists('default', $definition)) $defaults[$key] = $definition['default'];
+    }
+    $stored = $config['theme_visuals'][$presetKey] ?? [];
+    if ($presetKey === 'rainier' && is_array($stored)) {
+        if (!array_key_exists('accent_color', $stored) && !empty($config['theme_options']['rainier']['hero_accent_color'])) {
+            $defaults['accent_color'] = (string)$config['theme_options']['rainier']['hero_accent_color'];
+        }
+        if (!array_key_exists('glass_opacity', $stored) && isset($config['theme_options']['rainier']['glass_opacity'])) {
+            $defaults['glass_opacity'] = (string)$config['theme_options']['rainier']['glass_opacity'];
+        }
+    }
+    $resolved = $defaults;
+    if (is_array($stored)) {
+        foreach ($stored as $key => $value) {
+            if (!isset($schema[$key])) continue;
+            $validated = validate_theme_visual_value($value, $schema[$key]);
+            if ($validated !== null) $resolved[$key] = $validated;
+        }
+    }
+    return $resolved;
+}
+
+/** Clear only the selected preset's visual overrides; hidden preset values remain untouched. */
+function reset_theme_visual_overrides(array &$config, string $presetKey): void {
+    $presetKey = trim($presetKey);
+    if ($presetKey === '') return;
+    if (!isset($config['theme_visuals']) || !is_array($config['theme_visuals'])) {
+        $config['theme_visuals'] = [];
+    }
+    $config['theme_visuals'][$presetKey] = [];
+}
+
+/** Validate one visual value against its preset-declared schema. */
+function theme_visual_public_path(string $path): string {
+    $path = trim($path);
+    if ($path === '') return 'data:,';
+    if (filter_var($path, FILTER_VALIDATE_URL)) {
+        $scheme = strtolower((string)(parse_url($path, PHP_URL_SCHEME) ?? ''));
+        if (in_array($scheme, ['http', 'https'], true)) return $path;
+    }
+    return public_path($path);
+}
+
+function theme_visual_css_url(string $path): string {
+    $url = theme_visual_public_path($path);
+    $url = str_replace(['\\', '"', '(', ')'], ['\\\\', '\\"', '\\(', '\\)'], $url);
+    return 'url("' . $url . '")';
+}
+
+function validate_theme_visual_value($value, array $definition) {
+    $type = (string)($definition['type'] ?? 'text');
+    if (is_array($value)) return null;
+    $value = str_replace(["\r\n", "\r"], "\n", (string)$value);
+    if ($type === 'color') {
+        return preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/', $value) ? strtolower($value) : null;
+    }
+    if ($type === 'range' || $type === 'number') {
+        if (!is_numeric($value)) return null;
+        $number = (float)$value;
+        $min = isset($definition['min']) ? (float)$definition['min'] : -INF;
+        $max = isset($definition['max']) ? (float)$definition['max'] : INF;
+        if ($number < $min || $number > $max) return null;
+        return rtrim(rtrim(number_format($number, 4, '.', ''), '0'), '.') ?: '0';
+    }
+    if (!empty($definition['options']) && !array_key_exists($value, (array)$definition['options'])) return null;
+    if ($type === 'image' && $value !== '') {
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            $scheme = strtolower((string)(parse_url($value, PHP_URL_SCHEME) ?? ''));
+            if (!in_array($scheme, ['http', 'https'], true)) return null;
+        } elseif (normalize_media_relative_path($value) === null) {
+            return null;
+        }
+    }
+    return $value;
+}
+
 /**
  * Switch the active presentation mode without resetting unrelated CMS data.
  * The built-in renderer owns its own template values; this helper only changes
@@ -170,9 +274,44 @@ function finalize_theme_output(string $html, array $config): string {
       'theme-animation-': theme.animation_enabled ? 'on' : 'off'
     };
   };
+  const visualMap = {
+    elix: {accent_color: '--cms-elix-accent', heading_font: '--cms-elix-heading', body_font: '--cms-elix-body', hero_overlay: '--cms-elix-overlay', countdown_scale: '--cms-elix-countdown-scale', hero_background: '--cms-elix-hero-bg'},
+    rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity'},
+    archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg'},
+    dewankl: {accent_color: '--cms-dewana-accent', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay'},
+    custom: {accent_color: '--accent', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay'}
+  };
+  const applyVisualPreview = function (theme) {
+    const preset = theme.theme_preset || 'custom';
+    const values = theme.visuals || {};
+    const mapping = visualMap[preset] || visualMap.custom;
+    Object.keys(mapping).forEach(function (key) {
+      if (values[key] === undefined || values[key] === '') return;
+      let value = values[key];
+      if (key === 'hero_background' && !/^https?:\\/\\//i.test(value) && value.charAt(0) !== '/') value = '/' + value;
+      if (key === 'hero_background') value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
+      document.documentElement.style.setProperty(mapping[key], value);
+    });
+    if (preset === 'rainier' && values.glass_opacity !== undefined) {
+      const opacity = Math.min(0.9, Math.max(0.2, Number(values.glass_opacity) || 0.4));
+      document.documentElement.style.setProperty('--glass-bg', 'rgba(0, 0, 0, ' + opacity + ')');
+    }
+    if (values.hero_background) {
+      const raw = values.hero_background;
+      const url = /^https?:\\/\\//i.test(raw) || raw.charAt(0) === '/' ? raw : '/' + raw;
+      const hero = document.querySelector('.hero, .hero-archak, .hero-section, #hero');
+      if (hero) {
+        hero.style.setProperty('--cms-preview-hero-background', 'url("' + url.replace(/"/g, '\\\\"') + '")');
+        if (preset === 'rainier' || preset === 'custom') hero.style.backgroundImage = 'url("' + url.replace(/"/g, '\\\\"') + '")';
+      }
+      if (preset === 'dewankl') document.querySelectorAll('img.bg-cover-home').forEach(function (image) { image.src = url; });
+      if (preset === 'rainier') document.querySelectorAll('.hero-background, .hero-slide').forEach(function (layer) { layer.style.backgroundImage = 'url("' + url.replace(/"/g, '\\\\"') + '")'; });
+    }
+  };
   window.addEventListener('message', function (event) {
     if (event.origin !== window.location.origin || !event.data || event.data.type !== 'theme-preview:update') return;
     const theme = event.data.theme || {};
+    applyVisualPreview(theme);
     Object.keys(variableMap).forEach(function (key) {
       if (theme[key] !== undefined && theme[key] !== '') {
         document.documentElement.style.setProperty(variableMap[key], theme[key]);

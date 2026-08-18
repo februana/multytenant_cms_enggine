@@ -148,13 +148,26 @@ if (!function_exists('theme_contract_registry')) {
         return array_values((array)(theme_contract_for($presetKey)['admin_capabilities'] ?? []));
     }
 
+    /** Return semantic visual capabilities declared by the preset registry. */
+    function theme_contract_visual_capabilities(string $presetKey): array {
+        if ($presetKey === 'custom') return [];
+        if (function_exists('theme_registry')) {
+            return (array)(theme_registry()[$presetKey]['visual_capabilities'] ?? []);
+        }
+        return [];
+    }
+
+    function theme_contract_has_visual_capability(string $presetKey, string $capability): bool {
+        return array_key_exists($capability, theme_contract_visual_capabilities($presetKey));
+    }
+
     /**
      * CMS controls that remain visible regardless of the active built-in preset.
      * These are global services, not template presentation features.
      */
     function theme_contract_global_admin_capabilities(): array {
         // Global CMS controls are never inferred from a built-in template contract.
-        return ['preset_selector', 'guest_links', 'settings', 'backup'];
+        return ['preset_selector', 'guest_links', 'settings', 'backup', 'theme'];
     }
 
     function theme_contract_assets(string $presetKey): array {
