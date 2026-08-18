@@ -341,10 +341,10 @@ apt update -qq
 # Install packages based on selected web server
 if [ "$WEB_SERVER" = "nginx" ]; then
     echo "Installing Nginx and PHP-FPM..."
-    apt install -y -qq nginx php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip rsync openssl ca-certificates curl unzip
+    apt install -y -qq nginx php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip imagemagick rsync openssl ca-certificates curl unzip
 elif [ "$WEB_SERVER" = "apache" ]; then
     echo "Installing Apache and PHP-FPM..."
-    apt install -y -qq apache2 php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip rsync openssl ca-certificates curl unzip
+    apt install -y -qq apache2 php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip imagemagick rsync openssl ca-certificates curl unzip
     
     # Enable required Apache modules
     echo "Enabling Apache modules..." >&2

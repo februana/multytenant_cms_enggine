@@ -3,7 +3,7 @@ require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 
 $config = load_config();
-$expected = ['dewankl', 'elix', 'rainier', 'archak'];
+$expected = ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'];
 foreach ($expected as $preset) {
     $sections = theme_contract_sections_for_config($config, $preset);
     if (!$sections) throw new RuntimeException("No sections for {$preset}");

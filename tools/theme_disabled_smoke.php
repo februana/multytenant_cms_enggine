@@ -36,6 +36,9 @@ $cases = [
     ['preset' => 'archak', 'section' => 'gallery', 'marker' => 'class="gallery hz-margin'],
     ['preset' => 'archak', 'section' => 'stay', 'marker' => 'id="stay"'],
     ['preset' => 'archak', 'section' => 'registry', 'marker' => 'id="registry"'],
+    ['preset' => 'pawiwahan', 'section' => 'gallery', 'marker' => 'id="galeri"'],
+    ['preset' => 'pawiwahan', 'section' => 'messages', 'marker' => 'id="pesan"'],
+    ['preset' => 'pawiwahan', 'section' => 'event', 'marker' => 'id="calender"'],
 ];
 
 foreach ($cases as $case) {

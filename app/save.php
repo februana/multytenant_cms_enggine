@@ -24,26 +24,42 @@ if ($action !== '') {
         respond(false, 'Akses ditolak.');
     }
     $config = load_config();
+    $pendingMediaCleanup = [];
+    $queueMediaCleanup = static function (string $oldPath, string $newPath) use (&$pendingMediaCleanup): void {
+        if (trim($oldPath) !== '' && trim($oldPath) !== trim($newPath)) $pendingMediaCleanup[] = [$oldPath, $newPath];
+    };
     if ($action === 'upload_groom_photo') {
         if (empty($_FILES['groom_photo']['name'])) respond(false, 'File foto Mempelai Pria (groom) tidak ditemukan.');
-        $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+        $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'groom_photo', $config['theme']['theme_preset'] ?? null);
         if (!empty($result['error'])) respond(false, $result['error']);
-        $config['media']['groom_photo'] = relative_path($result['path']);
-        save_config($config);
+        $newPath = relative_path($result['path']);
+        $queueMediaCleanup((string)($config['media']['groom_photo'] ?? ''), $newPath);
+        $config['media']['groom_photo'] = $newPath;
+        if (!save_config($config)) respond(false, 'Gagal menyimpan konfigurasi media.');
+        $config = load_config();
+        foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
         respond(true, 'Foto Mempelai Pria (Groom) berhasil diunggah.', ['path' => $config['media']['groom_photo']]);
     } elseif ($action === 'upload_bride_photo') {
         if (empty($_FILES['bride_photo']['name'])) respond(false, 'File foto Mempelai Wanita (bride) tidak ditemukan.');
-        $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+        $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'bride_photo', $config['theme']['theme_preset'] ?? null);
         if (!empty($result['error'])) respond(false, $result['error']);
-        $config['media']['bride_photo'] = relative_path($result['path']);
-        save_config($config);
+        $newPath = relative_path($result['path']);
+        $queueMediaCleanup((string)($config['media']['bride_photo'] ?? ''), $newPath);
+        $config['media']['bride_photo'] = $newPath;
+        if (!save_config($config)) respond(false, 'Gagal menyimpan konfigurasi media.');
+        $config = load_config();
+        foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
         respond(true, 'Foto Mempelai Wanita (Bride) berhasil diunggah.', ['path' => $config['media']['bride_photo']]);
     } elseif ($action === 'upload_couple_photo') {
         if (empty($_FILES['couple_photo']['name'])) respond(false, 'File foto Pasangan (couple) tidak ditemukan.');
-        $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+        $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'couple_photo', $config['theme']['theme_preset'] ?? null);
         if (!empty($result['error'])) respond(false, $result['error']);
-        $config['media']['couple_photo'] = relative_path($result['path']);
-        save_config($config);
+        $newPath = relative_path($result['path']);
+        $queueMediaCleanup((string)($config['media']['couple_photo'] ?? ''), $newPath);
+        $config['media']['couple_photo'] = $newPath;
+        if (!save_config($config)) respond(false, 'Gagal menyimpan konfigurasi media.');
+        $config = load_config();
+        foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
         respond(true, 'Foto Pasangan berhasil diunggah.', ['path' => $config['media']['couple_photo']]);
     } elseif ($action === 'save_theme_options') {
         $presetKey = trim((string)($_POST['preset_key'] ?? ($config['theme']['theme_preset'] ?? 'dewankl')));
@@ -54,13 +70,20 @@ if ($action !== '') {
             $presetRegistry = theme_registry()[$presetKey] ?? [];
             $presetSchema = $presetRegistry['schema'] ?? [];
 
+            $uploadedThemeOptionKeys = [];
             foreach ($presetSchema as $schemaKey => $schemaDef) {
                 if (($schemaDef['type'] ?? '') === 'image') {
                     $fileKey = 'theme_opts_file_' . $schemaKey;
                     if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
-                        $uploadRes = upload_file($_FILES[$fileKey], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                        $themeAssetPreset = preg_replace('/[^a-z0-9_-]/i', '', $presetKey) ?: 'custom';
+                        $themeAssetDir = UPLOADS_THEME_ASSETS_DIR . '/' . $themeAssetPreset;
+                        $previousThemeAsset = (string)($config['theme_options'][$presetKey][$schemaKey] ?? '');
+                        $uploadRes = upload_file($_FILES[$fileKey], $themeAssetDir, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'theme_asset', $presetKey);
                         if (empty($uploadRes['error'])) {
-                            $config['theme_options'][$presetKey][$schemaKey] = relative_path($uploadRes['path']);
+                            $newThemeAsset = relative_path($uploadRes['path']);
+                            $config['theme_options'][$presetKey][$schemaKey] = $newThemeAsset;
+                            $uploadedThemeOptionKeys[$schemaKey] = true;
+                            $queueMediaCleanup($previousThemeAsset, $newThemeAsset);
                         }
                     }
                 }
@@ -75,8 +98,10 @@ if ($action !== '') {
                     $fieldType = $presetSchema[$optKey]['type'] ?? '';
                     $strVal = str_replace("\r\n", "\n", (string)$optVal);
 
-                    if ($fieldType === 'image' && trim($strVal) === '' && !empty($config['theme_options'][$presetKey][$optKey])) {
-                        continue;
+                    if ($fieldType === 'image') {
+                        if (isset($uploadedThemeOptionKeys[$optKey])) continue;
+                        if (trim($strVal) === '' && !empty($config['theme_options'][$presetKey][$optKey])) continue;
+                        if (trim($strVal) !== '' && !theme_visual_image_reference_is_canonical($strVal)) continue;
                     }
 
                     if ($optVal === '1' || $optVal === 'true') {
@@ -88,7 +113,9 @@ if ($action !== '') {
                     }
                 }
             }
-            save_config($config);
+            if (!save_config($config)) respond(false, 'Gagal menyimpan opsi preset.');
+            $config = load_config();
+            foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
             respond(true, 'Opsi preset berhasil disimpan.', ['theme_options' => $config['theme_options'][$presetKey]]);
         }
         respond(false, 'Preset key tidak valid.');

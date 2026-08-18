@@ -15,6 +15,8 @@ $expected = [
     'elix' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
     'rainier' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'story', 'music', 'maps', 'rsvp'],
     'archak' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp'],
+    'parang' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp'],
+    'pawiwahan' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages'],
 ];
 $forbidden = [
     'rainier' => ['parents', 'gallery', 'gift', 'dresscode', 'sections'],
@@ -59,7 +61,7 @@ $before = $preserved;
 foreach (['mode', 'theme_preset'] as $key) unset($before['theme'][$key]);
 $before = json_encode($before, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-$sequence = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'custom'];
+$sequence = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'];
 foreach ($sequence as $preset) {
     $switched = switch_active_theme_preset_config($preserved, $preset);
     assert_true(is_array($switched), "switch failed for $preset");
@@ -79,14 +81,22 @@ assert_true(is_string($appSource), 'admin guest-link script is unreadable');
 assert_true(!str_contains($appSource, 'return window.location.origin;'), 'guest link script silently falls back to browser origin');
 assert_true(str_contains($appSource, "Konfigurasikan Site URL di Pengaturan terlebih dahulu."), 'guest link missing-origin message is missing');
 assert_true(str_contains($adminSource, "name=\"action\" value=\"save_settings\""), 'settings save action missing');
-$panelMap = ['wedding' => 'wedding', 'parents' => 'parents', 'schedule' => 'schedule', 'sections' => 'sections', 'theme' => 'theme', 'guest-links' => 'guest_links', 'rsvp' => 'rsvp'];
-foreach ($panelMap as $panel => $capability) {
-    assert_true(str_contains($adminSource, "if (\$adminCapabilityEnabled('$capability'))"), "admin panel gate missing for $panel");
+$presetPanelMap = ['wedding' => 'wedding', 'parents' => 'parents', 'schedule' => 'schedule', 'sections' => 'sections', 'rsvp' => 'rsvp'];
+foreach ($presetPanelMap as $panel => $capability) {
+    assert_true(str_contains($adminSource, "if (\$adminCapabilityEnabled('$capability'))"), "admin preset panel gate missing for $panel");
+}
+$globalPanelMap = ['theme' => 'theme', 'guest-links' => 'guest_links'];
+foreach ($globalPanelMap as $panel => $capability) {
+    assert_true(str_contains($adminSource, "if (\$globalAdminCapabilityEnabled('$capability'))"), "admin global panel gate missing for $panel");
+    assert_true(!str_contains($adminSource, "if (\$adminCapabilityEnabled('$capability'))"), "admin global panel remains preset-filtered for $panel");
 }
 $selectorPosition = strpos($adminSource, 'id="preset-selector"');
-$themeGatePosition = strpos($adminSource, "if (\$adminCapabilityEnabled('theme'))", $selectorPosition);
+$themeGatePosition = strpos($adminSource, "if (\$globalAdminCapabilityEnabled('theme'))", $selectorPosition);
+$guestLinksPosition = strpos($adminSource, 'id="guest-links"');
+$guestLinksGatePosition = strpos($adminSource, "if (\$globalAdminCapabilityEnabled('guest_links'))", 0);
 assert_true($selectorPosition !== false, 'global preset selector panel missing');
 assert_true($themeGatePosition !== false && $selectorPosition < $themeGatePosition, 'preset selector is nested inside theme-specific gate');
+assert_true($guestLinksPosition !== false && $guestLinksGatePosition !== false && $guestLinksGatePosition < $guestLinksPosition, 'global guest link panel gate missing before panel');
 assert_true(str_contains($adminSource, "\$globalAdminCapabilityEnabled('preset_selector')"), 'preset selector does not use global capability gate');
 assert_true(str_contains($adminSource, "\$globalAdminCapabilityEnabled('settings')"), 'settings does not use global capability gate');
 assert_true(str_contains($adminSource, "\$globalAdminCapabilityEnabled('backup')"), 'backup does not use global capability gate');

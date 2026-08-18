@@ -61,3 +61,21 @@ sudo chmod 600 /var/www/wedding/guest-links.json
 ## Optional WebDAV
 
 WebDAV is optional. If it is enabled in Apache, the backup script includes the WebDAV credentials file; otherwise, the deployment is still considered healthy if the critical root files and runtime data are intact.
+
+## Canonical media policy
+
+New image uploads are processed through the shared role-aware media pipeline before their configuration or Gallery reference is persisted. The final stored asset is a verified WebP; source JPG/PNG/GIF files are removed only after the WebP exists, can be decoded, and passes the declared dimension policy. Gallery ownership remains explicit in `config.json`; placing an image in storage does not add it to Gallery.
+
+Before cleaning legacy source files, create an inventory with:
+
+```bash
+php tools/media_inventory.php
+```
+
+The inventory reports MIME type, dimensions, byte size, references, and verified WebP status. The optional cleanup mode removes only an unreferenced JPG/JPEG/PNG/GIF when a verified sibling WebP exists:
+
+```bash
+php tools/media_inventory.php --cleanup
+```
+
+Review the dry-run output first. Unique, referenced, or unverified media is preserved. Backups include the canonical `uploads/` tree, including preset-scoped `uploads/theme-assets/` files, so restore remains WebP-only for newly processed media and does not depend on original uploads.

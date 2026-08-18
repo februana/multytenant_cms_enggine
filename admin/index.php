@@ -7,6 +7,12 @@ $config = load_config();
 $error = '';
 $success = '';
 $activeTab = 'dashboard';
+$pendingMediaCleanup = [];
+$queueMediaCleanup = static function (string $oldPath, string $newPath) use (&$pendingMediaCleanup): void {
+    $oldPath = trim($oldPath);
+    $newPath = trim($newPath);
+    if ($oldPath !== '' && $oldPath !== $newPath) $pendingMediaCleanup[] = [$oldPath, $newPath];
+};
 
 if (isset($_GET['tab'])) {
     $activeTab = preg_replace('/[^a-z0-9_-]/i', '', $_GET['tab']);
@@ -69,6 +75,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     'background' => ALLOWED_IMAGE_TYPES,
                     'gallery' => ALLOWED_IMAGE_TYPES,
                     'love_story' => ALLOWED_IMAGE_TYPES,
+                    'theme_assets' => ALLOWED_IMAGE_TYPES,
                     'music' => ALLOWED_AUDIO_TYPES,
                 ];
                 $folderMap = [
@@ -76,6 +83,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     'background' => UPLOADS_BACKGROUND_DIR,
                     'gallery' => UPLOADS_GALLERY_DIR,
                     'love_story' => UPLOADS_LOVE_STORY_DIR,
+                    'theme_assets' => UPLOADS_THEME_ASSETS_DIR . '/' . (preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['theme_preset'] ?? 'custom')) ?: 'custom'),
                     'music' => UPLOADS_MUSIC_DIR,
                 ];
                 $destination = $folderMap[$targetFolder] ?? '';
@@ -84,7 +92,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $error = 'Folder atau file media tidak valid.';
                     break;
                 }
-                $result = upload_file($_FILES['media_file'], $destination, $allowed, $targetFolder === 'music' ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE);
+                $result = upload_file($_FILES['media_file'], $destination, $allowed, $targetFolder === 'music' ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE, $targetFolder === 'love_story' ? 'story' : $targetFolder, $config['theme']['theme_preset'] ?? null);
                 if (!empty($result['error'])) {
                     $error = $result['error'];
                 } else {
@@ -173,6 +181,8 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $error = $response['error'];
                     break;
                 }
+                replace_media_references($config, $mediaPath, $response['path']);
+                $queueMediaCleanup($mediaPath, $response['path']);
                 $success = 'File media berhasil diganti.';
                 break;
             case 'set_media_default':
@@ -323,13 +333,20 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $presetRegistry = theme_registry()[$presetKey] ?? [];
                     $presetSchema = $presetRegistry['schema'] ?? [];
 
+                    $uploadedThemeOptionKeys = [];
                     foreach ($presetSchema as $schemaKey => $schemaDef) {
                         if (($schemaDef['type'] ?? '') === 'image') {
                             $fileKey = 'theme_opts_file_' . $schemaKey;
                             if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
-                                $uploadRes = upload_file($_FILES[$fileKey], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                                $themeAssetPreset = preg_replace('/[^a-z0-9_-]/i', '', $presetKey) ?: 'custom';
+                                $themeAssetDir = UPLOADS_THEME_ASSETS_DIR . '/' . $themeAssetPreset;
+                                $previousThemeAsset = (string)($config['theme_options'][$presetKey][$schemaKey] ?? '');
+                                $uploadRes = upload_file($_FILES[$fileKey], $themeAssetDir, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'theme_asset', $presetKey);
                                 if (empty($uploadRes['error'])) {
-                                    $config['theme_options'][$presetKey][$schemaKey] = relative_path($uploadRes['path']);
+                                    $newThemeAsset = relative_path($uploadRes['path']);
+                                    $config['theme_options'][$presetKey][$schemaKey] = $newThemeAsset;
+                                    $uploadedThemeOptionKeys[$schemaKey] = true;
+                                    $queueMediaCleanup($previousThemeAsset, $newThemeAsset);
                                 }
                             }
                         }
@@ -344,8 +361,13 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                             $fieldType = $presetSchema[$optKey]['type'] ?? '';
                             $strVal = str_replace("\r\n", "\n", (string)$optVal);
 
-                            if ($fieldType === 'image' && trim($strVal) === '' && !empty($config['theme_options'][$presetKey][$optKey])) {
-                                continue;
+                            if ($fieldType === 'image') {
+                                if (isset($uploadedThemeOptionKeys[$optKey])) continue;
+                                if (trim($strVal) === '' && !empty($config['theme_options'][$presetKey][$optKey])) continue;
+                                if (trim($strVal) !== '' && !theme_visual_image_reference_is_canonical($strVal)) {
+                                    $error = 'Referensi gambar theme asset tidak valid atau belum diproses menjadi WebP.';
+                                    continue;
+                                }
                             }
 
                             if ($optVal === '1' || $optVal === 'true') {
@@ -602,52 +624,60 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 }
                 // Handle image upload
                 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                    $uploadResult = upload_file($_FILES['image'], 'image', UPLOADS_LOVE_STORY_DIR);
+                    $uploadResult = upload_file($_FILES['image'], UPLOADS_LOVE_STORY_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'story', $config['theme']['theme_preset'] ?? null);
                     if ($uploadResult['success']) {
                         $uploadedPath = $uploadResult['path'];
                         $storyId = $_POST['story_id'] ?? ($_POST['new_story_temp_id'] ?? '');
                         if (!empty($storyId) && $action === 'edit') {
                             foreach ($config['love_story']['items'] as &$item) {
                                 if (($item['id'] ?? '') === $storyId) {
-                                    $item['image'] = basename($uploadedPath);
+                                    $newStoryPath = relative_path($uploadedPath);
+                                    $queueMediaCleanup((string)($item['image'] ?? ''), $newStoryPath);
+                                    $item['image'] = $newStoryPath;
                                     break;
                                 }
                             }
                         } elseif ($action === 'add' && !empty($config['love_story']['items'])) {
                             // Set image for the last added item
                             $lastIndex = count($config['love_story']['items']) - 1;
-                            $config['love_story']['items'][$lastIndex]['image'] = basename($uploadedPath);
+                            $config['love_story']['items'][$lastIndex]['image'] = relative_path($uploadedPath);
                         }
                     }
                 }
                 break;
             case 'upload_bride_photo':
                 if (!empty($_FILES['bride_photo']['name'])) {
-                    $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'bride_photo', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['media']['bride_photo'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['bride_photo'] ?? ''), $newPath);
+                        $config['media']['bride_photo'] = $newPath;
                     }
                 }
                 break;
             case 'upload_groom_photo':
                 if (!empty($_FILES['groom_photo']['name'])) {
-                    $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'groom_photo', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['media']['groom_photo'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['groom_photo'] ?? ''), $newPath);
+                        $config['media']['groom_photo'] = $newPath;
                     }
                 }
                 break;
             case 'upload_couple_photo':
                 if (!empty($_FILES['couple_photo']['name'])) {
-                    $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'couple_photo', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['media']['couple_photo'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['couple_photo'] ?? ''), $newPath);
+                        $config['media']['couple_photo'] = $newPath;
                     }
                 }
                 break;
@@ -718,62 +748,74 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'upload_cover':
                 if (!empty($_FILES['cover_image']['name'])) {
-                    $result = upload_file($_FILES['cover_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['cover_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'cover', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['media']['cover'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['cover'] ?? ''), $newPath);
+                        $config['media']['cover'] = $newPath;
                     }
                 }
                 break;
             case 'upload_music':
                 if (!empty($_FILES['music_file']['name'])) {
-                    $result = upload_file($_FILES['music_file'], UPLOADS_MUSIC_DIR, ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['music_file'], UPLOADS_MUSIC_DIR, ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE, 'music', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['media']['music'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['music'] ?? ''), $newPath);
+                        $config['media']['music'] = $newPath;
                     }
                 }
                 break;
             case 'upload_background':
                 if (!empty($_FILES['background_hero']['name'])) {
-                    $result = upload_file($_FILES['background_hero'], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['background_hero'], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'background', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['media']['background_hero'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['background_hero'] ?? ''), $newPath);
+                        $config['media']['background_hero'] = $newPath;
                     }
                 }
                 for ($i = 1; $i <= 3; $i++) {
                     $field = 'background_section_' . $i;
                     if (!empty($_FILES[$field]['name'])) {
-                        $result = upload_file($_FILES[$field], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                        $result = upload_file($_FILES[$field], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'background', $config['theme']['theme_preset'] ?? null);
                         if (!empty($result['error'])) {
                             $error = $result['error'];
                             break;
                         }
-                        $config['media']['background_sections'][$i - 1] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['background_sections'][$i - 1] ?? ''), $newPath);
+                        $config['media']['background_sections'][$i - 1] = $newPath;
                     }
                 }
                 break;
             case 'upload_qris':
                 if (!empty($_FILES['qris_image']['name'])) {
-                    $result = upload_file($_FILES['qris_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['qris_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'qris_image', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['gift']['qris_image'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['gift']['qris_image'] ?? ''), $newPath);
+                        $config['gift']['qris_image'] = $newPath;
                     }
                 }
                 break;
             case 'upload_og_image':
                 if (!empty($_FILES['og_image']['name'])) {
-                    $result = upload_file($_FILES['og_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                    $result = upload_file($_FILES['og_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'og_image', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
-                        $config['site']['open_graph_image'] = relative_path($result['path']);
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['site']['open_graph_image'] ?? ''), $newPath);
+                        $config['site']['open_graph_image'] = $newPath;
                     }
                 }
                 break;
@@ -790,7 +832,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                             'error' => $files['error'][$index],
                             'size' => $files['size'][$index]
                         ];
-                        $result = upload_file($file, UPLOADS_GALLERY_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
+                        $result = upload_file($file, UPLOADS_GALLERY_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'gallery', $config['theme']['theme_preset'] ?? null);
                         if (!empty($result['error'])) {
                             $error = $result['error'];
                             break;
@@ -803,8 +845,8 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $filename = trim((string)($_POST['gallery_filename'] ?? ''));
                 if ($filename !== '') {
                     $path = ROOT_DIR . '/' . ltrim($filename, '/');
-                    if (is_file($path) && strpos(realpath($path), realpath(UPLOADS_GALLERY_DIR)) === 0) {
-                        @unlink($path);
+                    if (is_file($path) && media_path_is_safe_storage($filename)) {
+                        $queueMediaCleanup($filename, '');
                     }
                     foreach ($config['gallery']['items'] as $index => $item) {
                         if (($item['filename'] ?? '') === $filename) {
@@ -846,8 +888,11 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 if (!save_config($config)) {
                     $error = 'Gagal menyimpan konfigurasi.';
                 } else {
-                    $success = 'Pengaturan berhasil disimpan.';
                     $config = load_config();
+                    foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) {
+                        cleanup_replaced_media($oldMediaPath, $config);
+                    }
+                    $success = 'Pengaturan berhasil disimpan.';
                 }
             }
         }
@@ -983,7 +1028,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('schedule')): ?><a href="#schedule">Jadwal</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('countdown')): ?><a href="#countdown">Hitung Mundur</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('sections')): ?><a href="#sections">Bagian Website</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('theme')): ?><a href="#theme">Tema & Tampilan</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('theme')): ?><a href="#theme">Tema & Tampilan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('custom_css')): ?><a href="#custom-css">CSS Khusus</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Kelola Media</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
@@ -996,7 +1041,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('maps')): ?><a href="#maps">Lokasi</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('seo')): ?><a href="#seo">SEO</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">WhatsApp</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">RSVP</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
@@ -1157,7 +1202,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('theme')): ?>
+                    <?php if ($globalAdminCapabilityEnabled('theme')): ?>
 
                     <section id="theme" class="card panel-section">
                         <h2>Tema & Tampilan</h2>
@@ -1533,6 +1578,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <option value="background">Latar Belakang</option>
                                         <option value="gallery">Galeri</option>
                                         <option value="love_story">Cerita Cinta</option>
+                                        <option value="theme_assets">Theme Assets (Preset Aktif)</option>
                                         <option value="music">Musik</option>
                                     </select>
                                 </div>
@@ -2220,7 +2266,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('guest_links')): ?>
+                    <?php if ($globalAdminCapabilityEnabled('guest_links')): ?>
 
                     <section id="guest-links" class="card panel-section">
                         <h2>Link Tamu</h2>

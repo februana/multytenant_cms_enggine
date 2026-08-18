@@ -9,9 +9,9 @@ function media_e2e_assert(bool $condition, string $message): void {
     echo 'PASS: ' . $message . PHP_EOL;
 }
 
-$probePath = 'uploads/background/visual-media-e2e-probe.png';
+$probePath = 'uploads/background/visual-media-e2e-probe.webp';
 $probeAbsolute = ROOT_DIR . '/' . $probePath;
-file_put_contents($probeAbsolute, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+copy(ROOT_DIR . '/themes/parang/assets/parang-pattern.webp', $probeAbsolute);
 media_e2e_assert(theme_visual_image_reference_is_canonical($probePath), 'E2E probe is accepted by canonical media validation');
 
 $shared = [
@@ -33,15 +33,15 @@ $shared = [
 ];
 
 $config = load_config();
-foreach (['dewankl', 'elix', 'rainier', 'archak', 'custom'] as $preset) {
+foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
     $config['theme_visuals'][$preset]['hero_background'] = $probePath;
 }
 media_e2e_assert(save_config($config), 'Visual media references save through production config persistence');
 $reloaded = load_config();
-foreach (['dewankl', 'elix', 'rainier', 'archak', 'custom'] as $preset) {
+foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
     media_e2e_assert(($reloaded['theme_visuals'][$preset]['hero_background'] ?? '') === $probePath, "{$preset} media reference survives reload");
     if ($preset === 'custom') {
-        media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.png'), 'Custom production adapter includes persisted media URL');
+        media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.webp'), 'Custom production adapter includes persisted media URL');
         continue;
     }
     $probeConfig = $reloaded;
@@ -50,7 +50,7 @@ foreach (['dewankl', 'elix', 'rainier', 'archak', 'custom'] as $preset) {
     $probeShared = $shared;
     $probeShared['presetKey'] = $preset;
     $html = render_theme_layout($probeConfig, $probeShared);
-    media_e2e_assert(str_contains($html, 'visual-media-e2e-probe.png'), ucfirst($preset) . ' production renderer includes persisted media URL');
+    media_e2e_assert(str_contains($html, 'visual-media-e2e-probe.webp'), ucfirst($preset) . ' production renderer includes persisted media URL');
 }
 
 $resetConfig = $reloaded;
@@ -58,17 +58,26 @@ reset_theme_visual_overrides($resetConfig, 'rainier');
 media_e2e_assert(save_config($resetConfig), 'Reset Rainier persists through production config path');
 $afterReset = load_config();
 media_e2e_assert(($afterReset['theme_visuals']['rainier'] ?? []) === [], 'Reset clears Rainier visual overrides');
-foreach (['dewankl', 'elix', 'archak', 'custom'] as $preset) {
+foreach (['dewankl', 'elix', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
     media_e2e_assert(($afterReset['theme_visuals'][$preset]['hero_background'] ?? '') === $probePath, "Reset Rainier preserves {$preset} media reference");
 }
 $resetConfig['theme_visuals']['elix'] = [];
 $resetConfig['theme_visuals']['dewankl'] = [];
 $resetConfig['theme_visuals']['archak'] = [];
+$resetConfig['theme_visuals']['parang'] = [];
+$resetConfig['theme_visuals']['pawiwahan'] = [];
 $resetConfig['theme_visuals']['custom'] = [];
 save_config($resetConfig);
 $final = load_config();
 media_e2e_assert(($final['theme_visuals']['elix'] ?? []) === [], 'Clearing Elix restores source-default state');
 media_e2e_assert(str_contains(render_theme_layout(array_replace_recursive($final, ['theme' => ['mode' => 'preset', 'theme_preset' => 'elix']]), $shared), 'prewed1.jpg'), 'Elix reset returns to source background');
+$parangFinalShared = array_replace($shared, ['presetKey' => 'parang']);
+$parangFinalHtml = render_theme_layout(array_replace_recursive($final, ['theme' => ['mode' => 'preset', 'theme_preset' => 'parang']]), $parangFinalShared);
+media_e2e_assert(str_contains($parangFinalHtml, '/themes/parang/assets/parang-pattern.webp'), 'Parang reset returns to local source background');
+media_e2e_assert(!str_contains($parangFinalHtml, 'googleusercontent.com'), 'Parang normal render has no external image dependency');
+$pawiwahanFinalShared = array_replace($shared, ['presetKey' => 'pawiwahan']);
+$pawiwahanFinalHtml = render_theme_layout(array_replace_recursive($final, ['theme' => ['mode' => 'preset', 'theme_preset' => 'pawiwahan']]), $pawiwahanFinalShared);
+media_e2e_assert(str_contains($pawiwahanFinalHtml, '/themes/pawiwahan/assets/hero-source.jpg'), 'Pawiwahan reset returns to local source background');
 
 @unlink($probeAbsolute);
 @unlink(CONFIG_FILE);

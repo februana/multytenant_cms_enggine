@@ -60,7 +60,10 @@ $giftEwalletLabel = escape_html($config['gift']['e_wallet_label'] ?? '');
 $giftEwalletNumber = escape_html($config['gift']['e_wallet_number'] ?? '');
 
 // Media
-$coverPath = $config['media']['cover'] ?? '';
+$dewanklSourcePlaceholder = get_theme_asset_url('dewankl', 'assets/placeholder.webp');
+$dewanklSourceIcon = get_theme_asset_url('dewankl', 'assets/icon-192x192.png');
+$dewanklSourceDonate = get_theme_asset_url('dewankl', 'assets/donate.png');
+$coverPath = trim((string)($config['media']['cover'] ?? '')) ?: $dewanklSourcePlaceholder;
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
 $groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
 $couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
@@ -130,7 +133,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="<?php echo escape_html($config['site']['title'] ?? ''); ?>">
     <meta name="theme-color" content="#ffffff">
-    <link rel="icon" type="image/png" sizes="192x192" href="<?php echo escape_html(public_path($coverPath)); ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?php echo escape_html(public_path($dewanklSourceIcon)); ?>">
     
     <!-- Preconnect -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -593,7 +596,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
     <div class="loading-page bg-white-black" id="loading" style="opacity: 1;">
         <div class="d-flex justify-content-center align-items-center vh-100 overflow-y-auto">
             <div class="d-flex flex-column width-loading text-center">
-                <img src="<?php echo escape_html(public_path($coverPath)); ?>" fetchpriority="high" class="img-fluid mb-3 mx-auto object-fit-cover opacity-0" alt="ikon" style="width: 3.5rem; height: 3.5rem;">
+                <img src="<?php echo escape_html(public_path($dewanklSourceIcon)); ?>" fetchpriority="high" class="img-fluid mb-3 mx-auto object-fit-cover opacity-0" alt="ikon" style="width: 3.5rem; height: 3.5rem;">
                 <div class="progress" role="progressbar" style="height: 0.5rem;" aria-label="bilah kemajuan">
                     <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
                 </div>

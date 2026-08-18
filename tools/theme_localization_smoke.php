@@ -35,6 +35,10 @@ $expected = [
         'KISAH KAMI', 'PERJALANAN &amp; TEMPAT MENGINAP', 'JANJI', 'Kita Akan Menikah',
         'Merayakan Cinta Kami', 'Perjalanan &amp; Tempat Menginap', 'Sampai Jumpa!', 'Hubungi Kami',
     ],
+    'themes/parang/layout.php' => [
+        'Kepada Yth.', 'Pernikahan Kami', 'Mempelai', 'Acara Pernikahan', 'Cerita Kami',
+        'Galeri', 'Lokasi Acara', 'Hadiah Pernikahan', 'Kirim Konfirmasi Kehadiran', 'Manten Jawi',
+    ],
     'app/theme-renderer.php' => [
         'Konfirmasi Kehadiran', 'Kirim Konfirmasi Kehadiran', 'Hemat data: matikan musik otomatis',
     ],
@@ -65,6 +69,7 @@ $activeGuestSources = [
     $read('themes/rainier/layout.php'),
     $read('themes/rainier/original/invite-1-adapter.js'),
     $read('themes/archak/layout.php'),
+    $read('themes/parang/layout.php'),
     $read('app/theme-renderer.php'),
 ];
 foreach ($forbiddenVisibleEnglish as $needle) {
@@ -78,7 +83,12 @@ $contract = $read('app/theme-contract.php');
 $assert(strpos($contract, "'preset_selector'") !== false, 'preset selector remains a global capability');
 $assert(strpos($contract, "'guest_links'") !== false, 'guest links remains a global capability');
 $assert(strpos($admin, "globalAdminCapabilityEnabled('preset_selector')") !== false, 'admin selector uses the global capability gate');
+$assert(strpos($admin, "globalAdminCapabilityEnabled('theme')") !== false, 'admin theme panel uses the global capability gate');
+$assert(strpos($admin, "globalAdminCapabilityEnabled('guest_links')") !== false, 'admin guest link panel uses the global capability gate');
+$assert(strpos($admin, "adminCapabilityEnabled('theme')") === false, 'admin theme panel is not preset-filtered');
+$assert(strpos($admin, "adminCapabilityEnabled('guest_links')") === false, 'admin guest link panel is not preset-filtered');
 $assert(strpos($admin, 'id="preset-selector"') !== false, 'admin contains the global preset selector panel');
+$assert(strpos($admin, 'id="guest-links"') !== false, 'admin contains the global guest link panel');
 $assert(strpos($admin, 'name="action" value="save_preset"') !== false, 'admin selector keeps save_preset action');
 
 if ($failures) {

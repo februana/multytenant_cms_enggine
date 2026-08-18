@@ -175,7 +175,7 @@ function theme_visual_image_reference_is_canonical(string $value): bool {
     $absolute = ROOT_DIR . '/' . $normalized;
     if (!is_file($absolute)) return false;
     $extension = strtolower((string)pathinfo($absolute, PATHINFO_EXTENSION));
-    return in_array($extension, ALLOWED_IMAGE_TYPES, true) && safe_image_mime($absolute) !== null;
+    return $extension === 'webp' && safe_image_mime($absolute) === 'image/webp';
 }
 
 function validate_theme_visual_value($value, array $definition) {
@@ -316,6 +316,8 @@ function finalize_theme_output(string $html, array $config): string {
     elix: {accent_color: '--cms-elix-accent', heading_font: '--cms-elix-heading', body_font: '--cms-elix-body', hero_overlay: '--cms-elix-overlay', countdown_scale: '--cms-elix-countdown-scale', hero_background: '--cms-elix-hero-bg'},
     rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity'},
     archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg'},
+    parang: {accent_color: '--parang-gold', heading_font: '--parang-heading', body_font: '--parang-body', hero_background: '--cms-parang-bg'},
+    pawiwahan: {accent_color: '--pawiwahan-accent', heading_font: '--pawiwahan-heading', body_font: '--pawiwahan-body', hero_background: '--pawiwahan-hero-bg'},
     dewankl: {accent_color: '--cms-dewana-accent', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay'},
     custom: {accent_color: '--primary', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay', hero_title_scale: '--hero-title-scale'}
   };
@@ -343,10 +345,11 @@ function finalize_theme_output(string $html, array $config): string {
     if (values.hero_background) {
       const raw = values.hero_background;
       const url = /^https?:\\/\\//i.test(raw) || raw.charAt(0) === '/' ? raw : '/' + raw;
-      const hero = document.querySelector('.hero, .hero-archak, .hero-section, #hero');
+      const hero = document.querySelector('.hero, .hero-archak, .hero-section, #hero, .parang-main');
       if (hero) {
         hero.style.setProperty('--cms-preview-hero-background', 'url("' + url.replace(/"/g, '\\\\"') + '")');
         if (preset === 'rainier' || preset === 'custom') hero.style.backgroundImage = 'url("' + url.replace(/"/g, '\\\\"') + '")';
+        if (preset === 'parang') document.querySelectorAll('.parang-bg').forEach(function (layer) { layer.style.setProperty('--cms-parang-bg', 'url("' + url.replace(/"/g, '\\\\"') + '")'); });
       }
       if (preset === 'dewankl') document.querySelectorAll('img.bg-cover-home').forEach(function (image) { image.src = url; });
       if (preset === 'rainier') document.querySelectorAll('.hero-background, .hero-slide').forEach(function (layer) { layer.style.backgroundImage = 'url("' + url.replace(/"/g, '\\\\"') + '")'; });
