@@ -52,7 +52,8 @@ try {
     $fixtures[] = $backgroundSource;
     $background = media_pipeline_upload($backgroundSource, 'background.jpg', $backgroundDir, 'background', 'parang');
     media_pipeline_assert(!empty($background['success']), 'background upload processes successfully');
-    media_pipeline_assert(($background['width'] ?? 0) === 1920 && ($background['height'] ?? 0) === 1080, 'background uses the declared 1920x1080 crop requirement');
+    media_pipeline_assert(($background['width'] ?? 0) <= 2400 && ($background['height'] ?? 0) <= 1600, 'Parang background respects the global bounded-preserve requirement');
+    media_pipeline_assert(abs((($background['width'] ?? 0) / max(1, ($background['height'] ?? 0))) - (5000 / 3000)) < 0.02, 'Parang background preserves source aspect ratio');
     media_pipeline_assert(!is_file($backgroundSource), 'background original is removed after verified output');
     $created[] = $background['path'];
 

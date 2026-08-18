@@ -1456,45 +1456,86 @@ function media_role_alias(string $role): string {
 }
 
 /**
- * Declarative output policy for every upload role. These are maximum dimensions
- * unless an exact width/height pair is declared with fit=cover. Values are
- * derived from the built-in CSS display contracts: hero/background surfaces
- * are 16:9, profile/circular photos are kept natural and bounded, galleries
- * retain their aspect ratio, and story/tender assets are not unnecessarily
- * enlarged. The renderer remains independent from this processor.
+ * Declarative output policy for every upload role. The global catalog is
+ * intentionally conservative: maximum/preserve roles never upscale, while
+ * exact canvas roles are used only where the presentation contract requires it.
+ * Preset overrides are sparse and evidence-backed; the renderer consumes only
+ * the final URL and never contains media-processing logic.
  */
 function media_requirements(): array {
     return [
-        'generic' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve'],
-        'cover' => ['max_width' => 1600, 'max_height' => 1200, 'fit' => 'preserve'],
-        'background' => ['width' => 1920, 'height' => 1080, 'fit' => 'cover'],
-        'bride_photo' => ['max_width' => 1600, 'max_height' => 1600, 'fit' => 'preserve'],
-        'groom_photo' => ['max_width' => 1600, 'max_height' => 1600, 'fit' => 'preserve'],
-        'couple_photo' => ['max_width' => 1800, 'max_height' => 1200, 'fit' => 'preserve'],
-        'gallery' => ['max_width' => 1600, 'max_height' => 1200, 'fit' => 'preserve'],
-        'story' => ['max_width' => 1200, 'max_height' => 900, 'fit' => 'preserve'],
-        'qris_image' => ['max_width' => 1200, 'max_height' => 1200, 'fit' => 'preserve'],
-        'og_image' => ['width' => 1200, 'height' => 630, 'fit' => 'cover'],
-        'theme_asset' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve'],
+        'global' => [
+            'generic' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false],
+            'cover' => ['max_width' => 1600, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
+            'background' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve', 'crop' => false, 'upscale' => false],
+            'bride_photo' => ['max_width' => 1600, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false],
+            'groom_photo' => ['max_width' => 1600, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false],
+            'couple_photo' => ['max_width' => 1800, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
+            'gallery' => ['max_width' => 1600, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
+            'story' => ['max_width' => 1200, 'max_height' => 900, 'fit' => 'preserve', 'upscale' => false],
+            'qris_image' => ['max_width' => 1200, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
+            'og_image' => ['width' => 1200, 'height' => 630, 'fit' => 'cover', 'crop' => true, 'upscale' => true],
+            'theme_asset' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false, 'preserve_alpha' => true],
+        ],
+        'presets' => [
+            'parang' => [
+                'gallery' => [
+                    'max_width' => 1200,
+                    'max_height' => 1200,
+                    'fit' => 'cover',
+                    'aspect_width' => 1,
+                    'aspect_height' => 1,
+                    'crop' => true,
+                    'upscale' => false,
+                    'source_evidence' => 'themes/parang/style.css: .parang-gallery-item aspect-ratio:1 and img object-fit:cover',
+                ],
+                'theme_asset' => [
+                    'fit' => 'preserve',
+                    'upscale' => false,
+                    'preserve_alpha' => true,
+                    'source_evidence' => 'themes/parang/assets: gunungan/wayang/pattern are decorative assets, not wedding photos',
+                ],
+            ],
+            'pawiwahan' => [
+                'background' => [
+                    'width' => null,
+                    'height' => null,
+                    'max_width' => 1600,
+                    'max_height' => 2400,
+                    'fit' => 'preserve',
+                    'crop' => false,
+                    'upscale' => false,
+                    'source_evidence' => 'themes/pawiwahan/assets/css/pawiwahan.css: .hero background-size:cover, source hero 640x960',
+                ],
+                'cover' => [
+                    'max_width' => 1600,
+                    'max_height' => 2400,
+                    'fit' => 'preserve',
+                    'upscale' => false,
+                    'source_evidence' => 'themes/pawiwahan/style.css: carousel media max-height with object-fit:cover and portrait source fallback',
+                ],
+            ],
+            'dewankl' => [
+                'cover' => [
+                    'max_width' => 1600,
+                    'max_height' => 1600,
+                    'fit' => 'preserve',
+                    'upscale' => false,
+                    'source_evidence' => 'themes/dewankl/style.css: .img-center-crop width/height 13rem and object-fit:cover',
+                ],
+            ],
+        ],
     ];
 }
-
 function media_requirement(string $role, ?string $preset = null): array {
     $role = media_role_alias($role);
-    $requirements = media_requirements();
-    $requirement = $requirements[$role] ?? $requirements['generic'];
+    $catalog = media_requirements();
+    $requirement = $catalog['global'][$role] ?? $catalog['global']['generic'];
     $preset = strtolower(trim((string)$preset));
-
-    // Preset overrides remain sparse by design: only a preset that proves a
-    // distinct visual contract should override a global media role.
-    $presetOverrides = [
-        'parang' => [],
-    ];
-    if ($preset !== '' && isset($presetOverrides[$preset][$role])) {
-        $requirement = array_replace($requirement, $presetOverrides[$preset][$role]);
-    }
-    return $requirement;
+    $override = $preset !== '' ? ($catalog['presets'][$preset][$role] ?? []) : [];
+    return array_replace($requirement, $override);
 }
+
 
 function media_storage_roots(): array {
     return [
@@ -1530,6 +1571,11 @@ function verify_webp_output(string $path, array $requirement = []): bool {
     if (isset($requirement['height']) && (int)$info[1] !== (int)$requirement['height']) return false;
     if (isset($requirement['max_width']) && (int)$info[0] > (int)$requirement['max_width']) return false;
     if (isset($requirement['max_height']) && (int)$info[1] > (int)$requirement['max_height']) return false;
+    if (isset($requirement['aspect_width'], $requirement['aspect_height'])) {
+        $expectedRatio = (float)$requirement['aspect_width'] / max(1, (float)$requirement['aspect_height']);
+        $actualRatio = (float)$info[0] / max(1, (float)$info[1]);
+        if (abs($actualRatio - $expectedRatio) > 0.01) return false;
+    }
     return true;
 }
 
@@ -1564,6 +1610,14 @@ function process_image_to_webp(string $sourcePath, string $destinationDir, strin
             $parts[] = 'center';
             $parts[] = '-extent';
             $parts[] = escapeshellarg((int)$requirement['width'] . 'x' . (int)$requirement['height']);
+        } elseif ($fit === 'cover' && isset($requirement['aspect_width'], $requirement['aspect_height'], $requirement['max_width'], $requirement['max_height'])) {
+            $parts[] = '-resize';
+            $parts[] = escapeshellarg((int)$requirement['max_width'] . 'x' . (int)$requirement['max_height'] . '^>');
+            $parts[] = '-gravity';
+            $parts[] = 'center';
+            $parts[] = '-crop';
+            $parts[] = escapeshellarg((int)$requirement['aspect_width'] . ':' . (int)$requirement['aspect_height']);
+            $parts[] = '+repage';
         } elseif (isset($requirement['max_width'], $requirement['max_height'])) {
             $parts[] = '-resize';
             $parts[] = escapeshellarg((int)$requirement['max_width'] . 'x' . (int)$requirement['max_height'] . '>');
@@ -1594,7 +1648,24 @@ function process_image_to_webp(string $sourcePath, string $destinationDir, strin
             $sourceHeight = imagesy($image);
             $targetWidth = $sourceWidth;
             $targetHeight = $sourceHeight;
-            if (isset($requirement['max_width'], $requirement['max_height'])) {
+            $sourceX = 0;
+            $sourceY = 0;
+            $sourceCropWidth = $sourceWidth;
+            $sourceCropHeight = $sourceHeight;
+            if (isset($requirement['aspect_width'], $requirement['aspect_height'], $requirement['max_width'], $requirement['max_height'])) {
+                $expectedRatio = (float)$requirement['aspect_width'] / max(1, (float)$requirement['aspect_height']);
+                $sourceRatio = $sourceWidth / max(1, $sourceHeight);
+                if ($sourceRatio > $expectedRatio) {
+                    $sourceCropWidth = max(1, (int)round($sourceHeight * $expectedRatio));
+                    $sourceX = (int)floor(($sourceWidth - $sourceCropWidth) / 2);
+                } elseif ($sourceRatio < $expectedRatio) {
+                    $sourceCropHeight = max(1, (int)round($sourceWidth / $expectedRatio));
+                    $sourceY = (int)floor(($sourceHeight - $sourceCropHeight) / 2);
+                }
+                $scale = min(1, (int)$requirement['max_width'] / max(1, $sourceCropWidth), (int)$requirement['max_height'] / max(1, $sourceCropHeight));
+                $targetWidth = max(1, (int)round($sourceCropWidth * $scale));
+                $targetHeight = max(1, (int)round($sourceCropHeight * $scale));
+            } elseif (isset($requirement['max_width'], $requirement['max_height'])) {
                 $scale = min(1, (int)$requirement['max_width'] / max(1, $sourceWidth), (int)$requirement['max_height'] / max(1, $sourceHeight));
                 $targetWidth = max(1, (int)round($sourceWidth * $scale));
                 $targetHeight = max(1, (int)round($sourceHeight * $scale));
@@ -1604,7 +1675,7 @@ function process_image_to_webp(string $sourcePath, string $destinationDir, strin
             imagesavealpha($canvas, true);
             $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
             imagefill($canvas, 0, 0, $transparent);
-            imagecopyresampled($canvas, $image, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
+            imagecopyresampled($canvas, $image, 0, 0, $sourceX, $sourceY, $targetWidth, $targetHeight, $sourceCropWidth, $sourceCropHeight);
             $processed = @imagewebp($canvas, $temporaryPath, WEBP_QUALITY);
             imagedestroy($canvas);
             imagedestroy($image);
