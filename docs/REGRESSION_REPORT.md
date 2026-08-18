@@ -111,3 +111,14 @@ The Admin editor now resolves the active preset from the current UI state only. 
 The new `tools/visual_media_e2e_smoke.php` test saves canonical background references through the production config path, reloads them, verifies all five preset adapters/public renderers, resets Rainier in isolation, and confirms Elix reset returns to the source background. The final run completed with 155 passing assertions and no reported failures.
 
 The Elix adapter also restores readable contrast for greeting, names, and invitation message on the dark hero background while preserving Pacifico brush typography, compact countdown behavior, and the original DOM order.
+
+
+## Latest deployment and runtime alignment
+
+The deployment contract was updated after the Pawiwahan and canonical media additions. `deploy/runtime-directories.sh` is now the shared source of truth for runtime paths. It creates the upload roots, `uploads/theme-assets/`, and preset-scoped Theme Assets directories for DewanaKL, Elix, Rainier, Archak, Parang, Pawiwahan, and Custom.
+
+`deploy/install.sh`, `deploy/update.sh`, and `docker/entrypoint.sh` all use this contract. Fresh native installs create the directory tree and `custom.css`; updates preserve the complete `uploads/` tree and recreate missing empty directories without replacing user media; Docker creates the same tree on every container start and persists it through the `wedding_uploads` volume. The Docker entrypoint also initializes `/var/data/custom.css` and links it into the application root.
+
+`deploy/health-check.sh` now checks all six built-in theme adapters, the active preset, runtime config/database/guest-link/ICS files, required upload and preset-scoped Theme Assets directories, writable runtime storage, and ImageMagick or PHP GD WebP availability. Optional user media remains a warning; missing runtime directories, unsupported active presets, missing processing capability, missing state, or security failures are blockers.
+
+The deployment smoke test now executes the shared directory contract in an isolated fixture and verifies every upload root plus all seven preset Theme Assets directories. Shell syntax, PHP lint, deployment smoke, and the complete repository regression suite passed after this update.

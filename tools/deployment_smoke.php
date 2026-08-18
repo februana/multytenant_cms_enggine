@@ -5,10 +5,9 @@ $root = dirname(__DIR__);
 $runtime = sys_get_temp_dir() . '/wedding-cms-runtime-' . bin2hex(random_bytes(5));
 mkdir($runtime, 0775, true);
 register_shutdown_function(static function () use ($runtime): void {
-    foreach (glob($runtime . '/*') ?: [] as $file) {
-        if (is_file($file) || is_link($file)) @unlink($file);
+    if (is_dir($runtime)) {
+        exec('rm -rf -- ' . escapeshellarg($runtime));
     }
-    @rmdir($runtime);
 });
 
 putenv('UNDANGAN_DATA_DIR=' . $runtime);
@@ -33,4 +32,42 @@ $loaded = load_config();
 assert_true(($loaded['media']['cover'] ?? null) === '', 'loaded cover default must remain empty');
 assert_true(($loaded['media']['music'] ?? null) === '', 'loaded music default must remain empty');
 
-echo "PASS: deployment defaults, runtime data paths, and optional media guards\n";
+$contract = $root . '/deploy/runtime-directories.sh';
+assert_true(is_file($contract), 'shared runtime directory contract exists');
+$bootstrapRoot = $runtime . '/app';
+$command = 'sh -c ' . escapeshellarg('. ' . escapeshellarg($contract) . '; ensure_runtime_directories ' . escapeshellarg($bootstrapRoot));
+exec($command, $output, $exitCode);
+assert_true($exitCode === 0, 'shared runtime directory contract executes successfully');
+foreach (['cover', 'music', 'gallery', 'background', 'love-story', 'theme-assets'] as $directory) {
+    assert_true(is_dir($bootstrapRoot . '/uploads/' . $directory), 'runtime directory created: uploads/' . $directory);
+}
+foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
+    assert_true(is_dir($bootstrapRoot . '/uploads/theme-assets/' . $preset), 'preset Theme Assets directory created: ' . $preset);
+}
+$requiredBootstrapReferences = [
+    $root . '/deploy/install.sh',
+    $root . '/deploy/update.sh',
+    $root . '/deploy/health-check.sh',
+    $root . '/docker/entrypoint.sh',
+];
+foreach ($requiredBootstrapReferences as $script) {
+    $source = file_get_contents($script);
+    assert_true(is_string($source) && str_contains($source, 'runtime-directories.sh'), 'deployment path references shared runtime contract: ' . basename($script));
+}
+
+foreach (glob($bootstrapRoot . '/uploads/theme-assets/*') ?: [] as $path) {
+    if (is_dir($path)) @rmdir($path);
+}
+foreach (glob($bootstrapRoot . '/uploads/*') ?: [] as $path) {
+    if (is_dir($path)) @rmdir($path);
+}
+@rmdir($bootstrapRoot . '/uploads');
+@rmdir($bootstrapRoot . '/backups');
+@rmdir($bootstrapRoot . '/webdav');
+@rmdir($bootstrapRoot);
+
+if (is_dir($bootstrapRoot)) {
+    throw new RuntimeException('deployment smoke fixture cleanup failed: ' . $bootstrapRoot);
+}
+
+echo "PASS: deployment defaults, runtime data paths, asset bootstrap, and optional media guards\n";

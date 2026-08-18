@@ -13,7 +13,8 @@ Mutable runtime state consists of:
 - `custom.css` — optional Custom CSS.
 - `event.ics` — generated calendar file.
 - SQLite database — RSVP and message storage.
-- `uploads/cover`, `uploads/music`, `uploads/gallery`, `uploads/background`, and `uploads/love-story` — administrator-provided media.
+- `uploads/cover`, `uploads/music`, `uploads/gallery`, `uploads/background`, and `uploads/love-story` — administrator-provided Wedding Media.
+- `uploads/theme-assets/<preset>/` — preset-scoped administrator-provided Theme Assets, kept separate from Gallery and Wedding Media.
 - `backups/` — generated backup artifacts.
 
 The installer creates directories and empty state files. It does not invent or download arbitrary wedding media.
@@ -48,7 +49,7 @@ docker compose up -d
 
 The container uses PHP 8.3 Apache and installs only the application runtime requirements: GD with JPEG/WebP support, mbstring, PDO SQLite, SQLite3, ZipArchive, and the Composer QR-code dependency. Apache rewrite, headers, and expires modules are enabled. Uploaded files are limited by the application configuration and Apache upload settings.
 
-The entrypoint creates `/var/data/database.sqlite`, `/var/data/config.json`, `/var/data/guest-links.json`, and `/var/data/event.ics` when they do not exist. It preserves them on later starts and applies owner/group permissions for `www-data`. It also creates the upload and backup directories.
+The entrypoint sources `deploy/runtime-directories.sh` and creates the complete upload contract, including `uploads/theme-assets/` and preset directories for DewanaKL, Elix, Rainier, Archak, Parang, Pawiwahan, and Custom. It also creates `/var/data/database.sqlite`, `/var/data/config.json`, `/var/data/guest-links.json`, `/var/data/event.ics`, and `/var/data/custom.css` when they do not exist. It preserves existing runtime data on later starts and applies owner/group permissions for `www-data`.
 
 ### Access and health check
 
@@ -65,7 +66,7 @@ PASS: application and storage checks
 WARNING: optional cover/music/Open Graph media is not provisioned
 ```
 
-Warnings for optional media do not make an otherwise functional installation fail. Missing required application files, missing SQLite/config state, unreadable storage, bad permissions, failed web-server checks, or publicly readable sensitive files remain failures.
+Warnings for optional media do not make an otherwise functional installation fail. Missing required application files, missing runtime state, missing or unwritable upload/Theme Assets directories, unsupported active presets, missing ImageMagick/GD WebP processing, unreadable storage, bad permissions, failed web-server checks, or publicly readable sensitive files remain failures.
 
 ### Docker runtime persistence
 
@@ -117,7 +118,7 @@ The installer prompts for:
 3. Apache SSL/Let's Encrypt choices when Apache is selected.
 4. Optional WebDAV configuration when Apache is selected.
 
-It deploys the repository to `/var/www/wedding`, creates upload/storage directories, initializes SQLite/config/guest-link/ICS files when absent, creates `.env` with a generated administrator password when needed, generates the selected web-server configuration, and runs final server/connectivity checks. The source checkout is not deleted.
+It deploys the repository to `/var/www/wedding`, sources the shared `deploy/runtime-directories.sh` contract, creates all upload/storage directories and preset-scoped Theme Assets directories, initializes SQLite/config/guest-link/ICS/Custom CSS files when absent, creates `.env` with a generated administrator password when needed, generates the selected web-server configuration, and runs final server/connectivity checks. The source checkout is not deleted.
 
 If a fresh deployment requires an empty config because `config.json` is absent, the installer generates it through the repository's `config_defaults()` function rather than writing an unrelated minimal stub.
 
@@ -129,7 +130,7 @@ After installation, run:
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The health check validates required root files, theme files, runtime state, upload directories, permissions, ownership, web-server configuration, HTTP/admin reachability, and blocking of `config.json`/SQLite from public access. It emits `PASS`, `WARNING`, and `FAIL` statuses and exits non-zero only when a required check fails.
+The health check validates required root files, all six built-in theme adapters, runtime state, upload and preset-scoped Theme Assets directories, the active preset, ImageMagick or PHP GD WebP capability, permissions, ownership, web-server configuration, HTTP/admin reachability, and blocking of `config.json`/SQLite from public access. It emits `PASS`, `WARNING`, and `FAIL` statuses and exits non-zero only when a required check fails.
 
 For a non-standard runtime data location, use the same environment variables used by the application:
 
@@ -140,7 +141,7 @@ sudo env UNDANGAN_DATA_DIR=/var/data UNDANGAN_DB_PATH=/var/data/database.sqlite 
 
 ### Updating an existing installation
 
-`deploy/update.sh` preserves `config.json`, `custom.css`, `guest-links.json`, `database.sqlite`, `.env`, `event.ics`, uploads, WebDAV data, backups, and storage before replacing application code:
+`deploy/update.sh` preserves `config.json`, `custom.css`, `guest-links.json`, `database.sqlite`, `.env`, `event.ics`, the complete `uploads/` tree including preset-scoped Theme Assets, WebDAV data, backups, and storage before replacing application code. It then creates any missing runtime directories through the same shared contract without replacing user media:
 
 ```bash
 sudo /var/www/wedding/deploy/update.sh
@@ -155,7 +156,7 @@ sudo /var/www/wedding/deploy/restore.sh /path/to/backup.zip
 
 ## Media lifecycle
 
-A clean checkout contains only `.gitkeep` files in the upload directories. It does **not** contain `uploads/cover/cover.jpg`, `music/lagu.mp3`, or a default Open Graph image. These references were removed from the shipped defaults because they were sample/deployment data, not required application code.
+A clean checkout contains only `.gitkeep` files in the upload roots. Preset-scoped Theme Assets directories are created by `deploy/install.sh`, `deploy/update.sh`, and `docker/entrypoint.sh`; they do not require demo media. The checkout does **not** contain `uploads/cover/cover.jpg`, `music/lagu.mp3`, or a default Open Graph image. These references were removed from the shipped defaults because they were sample/deployment data, not required application code.
 
 | Media | Default state | Required? | Provisioning path |
 |---|---|---:|---|

@@ -6,13 +6,13 @@ set -e
 APP_DIR="/var/www/wedding"
 DATA_DIR="/var/data"
 
-mkdir -p "${APP_DIR}/uploads/cover" \
-         "${APP_DIR}/uploads/music" \
-         "${APP_DIR}/uploads/gallery" \
-         "${APP_DIR}/uploads/background" \
-         "${APP_DIR}/uploads/love-story" \
-         "${APP_DIR}/backups" \
-         "${DATA_DIR}"
+if [ ! -r "${APP_DIR}/deploy/runtime-directories.sh" ]; then
+    echo "Missing runtime directory contract: ${APP_DIR}/deploy/runtime-directories.sh" >&2
+    exit 1
+fi
+. "${APP_DIR}/deploy/runtime-directories.sh"
+ensure_runtime_directories "${APP_DIR}"
+mkdir -p "${DATA_DIR}"
 
 if [ ! -f "${DATA_DIR}/database.sqlite" ]; then
     touch "${DATA_DIR}/database.sqlite"
@@ -26,12 +26,18 @@ fi
 if [ ! -f "${DATA_DIR}/event.ics" ]; then
     touch "${DATA_DIR}/event.ics"
 fi
+if [ ! -f "${DATA_DIR}/custom.css" ]; then
+    : > "${DATA_DIR}/custom.css"
+fi
 
 if [ ! -f "${APP_DIR}/database.sqlite" ]; then
     ln -sf "${DATA_DIR}/database.sqlite" "${APP_DIR}/database.sqlite"
 fi
 if [ ! -e "${APP_DIR}/event.ics" ]; then
     ln -sf "${DATA_DIR}/event.ics" "${APP_DIR}/event.ics"
+fi
+if [ ! -e "${APP_DIR}/custom.css" ]; then
+    ln -sf "${DATA_DIR}/custom.css" "${APP_DIR}/custom.css"
 fi
 
 if [ ! -f "${APP_DIR}/.env" ] && [ -f "${APP_DIR}/.env.example" ]; then

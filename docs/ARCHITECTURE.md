@@ -61,4 +61,4 @@ The public entrypoint is `index.php`; `admin.php` redirects to the admin UI; `sa
 
 ## Provenance
 
-The four built-in templates are third-party source adaptations. See [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for exact revisions, authors, license status, original source files, current integration paths, and attribution requirements. The project intentionally keeps source attribution separate from CMS ownership: CMS integration code is project-specific, while the original template presentation remains attributed to its original creators.
+The six built-in templates are source adaptations or user-provided design references: DewanaKL, Elix, Rainier, Archak, Parang, and Pawiwahan. See [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for exact revisions, authors, license status, original source files, current integration paths, and attribution requirements. The project intentionally keeps source attribution separate from CMS ownership: CMS integration code is project-specific, while the original template presentation remains attributed to its original creators.
