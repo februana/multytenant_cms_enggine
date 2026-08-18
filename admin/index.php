@@ -52,11 +52,8 @@ if (!empty($_SESSION['admin'])) {
 }
 
 function build_invitation_preview_url(array $config): string {
-    $siteUrl = trim($config['site']['url']);
-    if ($siteUrl === '') {
-        return '/?to=Bapak%20Ahmad';
-    }
-    return rtrim($siteUrl, '/') . '/?to=Bapak%20Ahmad';
+    $siteUrl = trim((string)($config['site']['url'] ?? ''));
+    return build_guest_invitation_url($siteUrl !== '' ? $siteUrl : '/', 'Bapak Ahmad') ?: '/?to=Bapak%20Ahmad';
 }
 
 if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -614,7 +611,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'save_guest_link':
                 $saveConfig = false;
-                $guestName = trim((string)($_POST['guest_name'] ?? ''));
+                $guestName = normalize_guest_name((string)($_POST['guest_name'] ?? ''));
                 $baseUrl = trim((string)($_POST['base_url'] ?? $config['site']['url'] ?? ''));
                 if ($guestName === '') {
                     $error = 'Nama tamu wajib diisi.';
@@ -624,8 +621,11 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $error = 'Site URL belum dikonfigurasi.';
                     break;
                 }
-                $baseUrl = rtrim($baseUrl, '/') . '/';
-                $invitationUrl = $baseUrl . '?to=' . rawurlencode($guestName);
+                $invitationUrl = build_guest_invitation_url($baseUrl, $guestName);
+                if ($invitationUrl === '') {
+                    $error = 'Site URL atau nama tamu tidak valid.';
+                    break;
+                }
                 $guestLinks = load_guest_links();
                 array_unshift($guestLinks, [
                     'guest_name' => $guestName,
@@ -841,9 +841,7 @@ $themeMode = get_theme_mode($config);
 $themeMeta = get_active_theme_meta($config);
 $themePresentationCaps = theme_presentation_capabilities($config);
 $activePresetKey = resolve_theme_preset_key($config);
-$themeAdminCapabilities = $themeMode === 'custom'
-    ? ['wedding', 'parents', 'schedule', 'countdown', 'sections', 'theme', 'custom_css', 'media', 'story', 'gallery', 'cover', 'background', 'music', 'gift', 'dresscode', 'maps', 'seo', 'whatsapp', 'guest_links', 'rsvp', 'backup', 'settings']
-    : theme_contract_admin_capabilities($activePresetKey);
+$themeAdminCapabilities = theme_admin_capabilities_for_config($config);
 $adminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $themeAdminCapabilities, true);
 $themeSectionEditorSections = $themeMode === 'custom'
     ? (array)($config['sections'] ?? [])
@@ -960,6 +958,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </div>
                     </section>
 
+                    <?php if ($adminCapabilityEnabled('wedding')): ?>
+
                     <section id="wedding" class="card panel-section">
                         <h2>Informasi Pernikahan</h2>
                         <form method="post">
@@ -979,6 +979,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('parents')): ?>
+
                     <section id="parents" class="card panel-section">
                         <h2>Orang Tua</h2>
                         <form method="post">
@@ -993,6 +997,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="submit">Simpan Orang Tua</button>
                         </form>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('schedule')): ?>
 
                     <section id="schedule" class="card panel-section">
                         <h2>Jadwal</h2>
@@ -1011,6 +1019,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('countdown')): ?>
+
                     <section id="countdown" class="card panel-section">
                         <h2>Hitung Mundur</h2>
                         <form method="post">
@@ -1023,6 +1035,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="submit">Simpan Hitung Mundur</button>
                         </form>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('sections')): ?>
 
                     <section id="sections" class="card panel-section">
                         <h2><?php echo $themeMode === 'custom' ? 'CMS-Native Sections' : 'Sections ' . escape_html($themeMeta['label'] ?? $activePresetKey); ?></h2>
@@ -1061,6 +1077,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="submit">Simpan Sections</button>
                         </form>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('theme')): ?>
 
                     <section id="theme" class="card panel-section">
                         <h2>Tema & Tampilan</h2>
@@ -1372,6 +1392,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </div>
                     </section>
 
+                    <?php endif; ?>
+
+
+                    <?php if ($adminCapabilityEnabled('custom_css')): ?>
+
 
                     <section id="custom-css" class="card panel-section">
                         <h2>CSS Khusus</h2>
@@ -1387,6 +1412,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="submit">Simpan Custom CSS</button>
                         </form>
                     </section>
+
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('media')): ?>
 
                     <section id="file-manager" class="card panel-section">
                         <h2>Kelola Media</h2>
@@ -1529,6 +1559,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php endif; ?>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('story')): ?>
+
                     <section id="love-story" class="card panel-section">
                         <h2>Love Story</h2>
                         <p class="section-description">Kelola cerita perjalanan cinta Anda dengan timeline yang indah.</p>
@@ -1656,6 +1690,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </div>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('gallery')): ?>
+
                     <section id="gallery" class="card panel-section">
                         <h2>Gallery</h2>
                         <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
@@ -1701,6 +1739,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php if (!empty($galleryItems)): ?><button type="submit">Simpan Urutan Galeri</button><?php endif; ?>
                         </form>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('cover')): ?>
 
                     <section id="cover" class="card panel-section">
                         <h2>Cover & Photos</h2>
@@ -1829,6 +1871,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </div>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('background')): ?>
+
                     <section id="background" class="card panel-section">
                         <h2>Background</h2>
                         <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
@@ -1914,6 +1960,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php endforeach; ?>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('music')): ?>
+
                     <section id="music" class="card panel-section">
                         <h2>Music</h2>
                         <form method="post" enctype="multipart/form-data">
@@ -1924,6 +1974,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
                         <div class="form-row"><label>Current Music File</label><input type="text" readonly value="<?php echo escape_html($config['media']['music']); ?>"></div>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('gift')): ?>
 
                     <section id="gift" class="card panel-section">
                         <h2>Gift</h2>
@@ -1951,6 +2005,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <div class="image-preview"><img id="qrisPreviewImg" alt="QRIS preview" style="display:none;"></div>
                         <?php endif; ?>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('dresscode')): ?>
 
                     <section id="dresscode" class="card panel-section">
                         <h2>Dresscode</h2>
@@ -1990,6 +2048,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('maps')): ?>
+
                     <section id="maps" class="card panel-section">
                         <h2>Maps</h2>
                         <form method="post">
@@ -2004,6 +2066,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="submit">Simpan Maps</button>
                         </form>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('seo')): ?>
 
                     <section id="seo" class="card panel-section">
                         <h2>SEO</h2>
@@ -2034,6 +2100,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php endif; ?>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('whatsapp')): ?>
+
                     <section id="whatsapp" class="card panel-section">
                         <h2>WhatsApp</h2>
                         <form method="post">
@@ -2047,6 +2117,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
                         <div class="form-row" style="margin-top:16px;"><label>Personalized Link</label><input type="text" readonly value="<?php echo escape_html($invitationPreview); ?>"></div>
                     </section>
+
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('guest_links')): ?>
 
                     <section id="guest-links" class="card panel-section">
                         <h2>Link Tamu</h2>
@@ -2103,6 +2177,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <input type="hidden" id="guestLinkWhatsappMessage" value="<?php echo escape_html($config['whatsapp']['message']); ?>">
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('rsvp')): ?>
+
                     <section id="rsvp" class="card panel-section">
                         <h2>RSVP</h2>
                         <p>Kelola data RSVP langsung dari database. Gunakan <strong>Export CSV</strong> untuk laporan cepat.</p>
@@ -2140,6 +2218,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </div>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('backup')): ?>
+
                     <section id="backup" class="card panel-section">
                         <h2>Backup</h2>
                         <p>Backup konfigurasi, database RSVP, dan semua media upload.</p>
@@ -2154,6 +2236,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </div>
                     </section>
 
+                    <?php endif; ?>
+
+                    <?php if ($adminCapabilityEnabled('settings')): ?>
+
                     <section id="settings" class="card panel-section">
                         <h2>Settings</h2>
                         <form method="post">
@@ -2167,7 +2253,9 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <button type="submit">Simpan Settings</button>
                         </form>
                     </section>
-                </main>
+
+                    <?php endif; ?>
+</main>
             </div>
         <?php endif; ?>
     </div>

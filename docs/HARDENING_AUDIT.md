@@ -47,3 +47,11 @@ New issues confirmed against the pasted acceptance criteria:
 4. Rainier adapter parsed non-UTC times in the visitor's local timezone and formatted display dates without the configured IANA timezone. It must resolve wall-clock values using the CMS-configured timezone and keep calendar/countdown/display consistent.
 5. Rainier CMS RSVP and Elix inline RSVP assumed a successful JSON response. Both need non-2xx, malformed-response, validation-error, server-error, and network-error handling.
 6. Rainier audio polling could loop indefinitely when music was disabled, and Elix autoplay failure had no visible graceful fallback. The correction must respect explicit music enablement and keep the page functional when autoplay is blocked.
+
+## Addendum: preset-aware admin and global guest services
+
+The admin UI previously derived active preset capabilities for the sidebar but rendered all panel bodies unconditionally. The result was a misleading admin surface: unsupported controls remained in the page DOM even when their navigation links were absent. The fix adds an explicit global admin capability source for `guest_links`, centralizes the union of global and active-preset capabilities, and wraps every theme-specific panel body with the same server-side gate used by the sidebar. Custom remains the complete CMS-native mode.
+
+The guest-link generator and persistence path remain global CMS services. The existing `guest-links.json` store is reused, generated invitation URLs preserve the `?to=` contract, and the new URL helper validates the base URL and encodes normalized guest names. The data model intentionally remains unchanged; duplicate names are allowed because records do not yet have a stable guest ID.
+
+Personalized greeting is global as a service but presentation remains owned by each theme. A shared resolver accepts existing query aliases, limits control characters and length, and each template escapes the result. DewanaKL's previous raw `innerHTML` guest insertion was replaced with DOM text rendering. Elix no longer double-decodes URLSearchParams values. Rainier and Archak now expose the greeting in theme-specific hero/home locations, while Custom uses the CMS-native hero path.

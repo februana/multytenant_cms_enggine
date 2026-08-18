@@ -37,3 +37,13 @@ The validator reports that the clean checkout does not contain the configured sa
 ## Acceptance status
 
 The architecture, source fidelity, dependency posture, template-specific contracts, disabled behavior, music semantics, media gating, timezone conversion, RSVP handling, audio fallback, browser structure, and switching sequence are covered by passing automated and browser checks. Final production sign-off still depends on provisioning real deployment media and reviewing real-content lengths beyond the sentinel fixture.
+
+## Admin preset filtering and global guest system
+
+The admin execution path now resolves visible controls as the union of a small global capability set and the active preset's `admin_capabilities`. `guest_links` is explicitly global because its persistence and generator are CMS services, while theme-specific panels remain filtered. Panel bodies are server-side gated in addition to sidebar links, so unsupported controls are not merely hidden from navigation or reachable as empty sections. Custom continues to expose the full CMS-native control surface.
+
+The new `tools/admin_guest_smoke.php` passed. It verifies the capability matrix for Custom, DewanaKL, Elix, Rainier, and Archak; asserts that unsupported controls remain absent; checks guest URL encoding and unsafe-base rejection; checks query normalization and length limits; verifies stored preset data is not mutated by filtering; and checks representative panel gates in `admin/index.php`.
+
+The guest-link store remains the existing `guest-links.json` persistence path. Generated URLs continue to use `?to=` and are safely normalized and encoded. No second guest database or theme-specific guest-link store was introduced. Duplicate names remain possible by design because the existing store has no guest identifier; this is a documented data-model limitation rather than a filtering regression.
+
+The personalized greeting path is now global at the capability/service level but theme-specific in presentation. Custom renders the resolved name in its CMS-native hero; DewanaKL retains its original `#guest-name` container and uses text-safe DOM rendering; Elix retains its original hero greeting and avoids double decoding; Rainier and Archak receive escaped greeting placements in their original hero/home flows. The resolver accepts the existing `to` parameter plus legacy aliases, removes control characters, collapses whitespace, and applies a length bound before HTML escaping.

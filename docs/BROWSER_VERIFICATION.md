@@ -35,3 +35,11 @@ DewanaKL suppresses the love-story video when the dedicated media field is empty
 ## Limitations
 
 The clean checkout does not provision the sample cover, music, or Open Graph media files, so the browser run intentionally verifies safe absence behavior rather than playback or image delivery from deployment media. A human review with production media and real-content lengths remains advisable before release.
+
+## Real admin UI verification
+
+A temporary local session harness rendered the real `admin/index.php` without changing credentials or committing the harness. Fresh desktop browser inspections covered DewanaKL, Elix, Rainier, Archak, and Custom. DewanaKL and Elix displayed their relevant wedding, parents, schedule, media, story, gallery, music, gift, maps, SEO, WhatsApp, RSVP, and global Link Tamu panels, while unsupported theme/custom CSS/dresscode/cover/background/backup/settings panels were absent. Rainier displayed wedding, schedule, media, story, music, maps, SEO, WhatsApp, RSVP, and Link Tamu, with unrelated parents/gallery/gift/dresscode/theme/backup/settings absent. Archak displayed wedding, parents, schedule, media, story, gallery, gift, maps, SEO, WhatsApp, RSVP, and Link Tamu, with music and unrelated controls absent. Custom displayed the full CMS-native panel set, including sections, theme, custom CSS, backup, settings, and Link Tamu. These observations confirm that panel bodies, not only sidebar links, follow the active preset.
+
+## Personalized guest frontend verification
+
+Custom and DewanaKL were checked through the interactive browser preview with encoded guest input. Elix, Rainier, and Archak were checked with Chromium headless at **390×844**, producing non-empty screenshots and DOM dumps. All five modes rendered the guest marker. For the encoded test value `Sari & <script>`, DOM inspection showed escaped text such as `Sari &amp; &lt;script&gt;`; no raw guest `<script>alert(1)</script>` payload was present. Console inspection for Elix, Rainier, and Archak found no page errors; only the environment-level DBus/UPower warning appeared.

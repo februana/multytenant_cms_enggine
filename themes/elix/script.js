@@ -69,18 +69,18 @@
     // ============================================
     function setupGuestName() {
         const urlParams = new URLSearchParams(window.location.search);
-        const guestName = urlParams.get('to') || urlParams.get('guest') || urlParams.get('name');
+        const guestName = (urlParams.get('to') || urlParams.get('guest') || urlParams.get('name') || '').trim();
         
         if (guestName) {
             const guestNameDisplay = document.getElementById('guestNameDisplay');
             if (guestNameDisplay) {
-                guestNameDisplay.textContent = decodeURIComponent(guestName);
+                guestNameDisplay.textContent = guestName;
             }
             
             // Also set form field if exists
             const guestNameInput = document.getElementById('guestName');
             if (guestNameInput) {
-                guestNameInput.value = decodeURIComponent(guestName);
+                guestNameInput.value = guestName;
             }
         }
     }

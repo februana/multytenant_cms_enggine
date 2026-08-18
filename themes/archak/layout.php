@@ -6,6 +6,8 @@ $config = $config ?? [];
 $presetKey = 'archak';
 $brideName = escape_html($config['wedding']['bride_name'] ?? '');
 $groomName = escape_html($config['wedding']['groom_name'] ?? '');
+$guestName = function_exists('resolve_guest_name') ? resolve_guest_name($config) : '';
+$guestLabel = escape_html($guestName !== '' ? $guestName : 'Bapak/Ibu/Saudara/i');
 $brideNickname = escape_html($config['wedding']['bride_nickname'] ?? $brideName);
 $groomNickname = escape_html($config['wedding']['groom_nickname'] ?? $groomName);
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : ($config['media']['cover'] ?? '');
@@ -61,6 +63,7 @@ $heroStyle = escape_html("background-image: url('" . public_path($couplePhoto) .
     <?php if (theme_section_enabled($config, $presetKey, 'home')): ?>
     <div class="home hz-margin">
         <h3>We're getting married</h3>
+        <p id="guest-greeting" class="guest-greeting">To <?php echo $guestLabel; ?></p>
         <h1><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1>
         <div class="container-out"><div class="container-in text"><?php echo $akadDate ? escape_html(date('l, M. j, Y', strtotime($akadDate))) : ''; ?><br><?php echo $venue; ?><button class="huge-btn" type="button" onclick="window.open('<?php echo $whatsappLink; ?>','_blank')">RSVP</button></div><div class="home-img" id="home-img-lg" style="<?php echo $heroStyle; ?>"></div></div>
     </div>

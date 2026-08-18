@@ -148,6 +148,14 @@ if (!function_exists('theme_contract_registry')) {
         return array_values((array)(theme_contract_for($presetKey)['admin_capabilities'] ?? []));
     }
 
+    /**
+     * CMS controls that remain visible regardless of the active built-in preset.
+     * These are global services, not template presentation features.
+     */
+    function theme_contract_global_admin_capabilities(): array {
+        return ['guest_links'];
+    }
+
     function theme_contract_assets(string $presetKey): array {
         return array_values((array)(theme_contract_for($presetKey)['assets'] ?? []));
     }

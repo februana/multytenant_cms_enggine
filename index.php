@@ -9,6 +9,7 @@ $siteTitle = $config['site']['title'] ?? 'Undangan Pernikahan';
 $weddingTitle = $config['wedding']['title'] ?? $siteTitle;
 $heroText = $config['wedding']['opening_text'] ?? '';
 $guestFallback = 'Bapak/Ibu/Saudara/i';
+$guestName = resolve_guest_name($config);
 
 $akadDate = $config['schedule']['akad_date'] ?? '';
 $akadTime = $config['schedule']['akad_time'] ?? '';
@@ -66,6 +67,7 @@ $themePageShared = [
     'presetKey' => $activeThemePreset,
     'heroText' => $heroText,
     'guestFallback' => $guestFallback,
+    'guestName' => $guestName,
     'countdownTarget' => $countdownTarget,
     'calendarLink' => $calendarLink,
     'calendarDownloadName' => $calendarDownloadName,
