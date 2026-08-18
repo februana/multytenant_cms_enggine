@@ -123,6 +123,39 @@ if (!function_exists('theme_contract_registry')) {
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'media', 'seo', 'whatsapp'],
                 'assets' => ['libre-caslon-text-manrope', 'material-symbols-outlined', 'style.css', 'script.js', 'theme-media'],
             ],
+            'pawiwahan' => [
+                'id' => 'pawiwahan',
+                'label' => 'Pawiwahan',
+                'source' => 'https://github.com/parta99/pawiwahan',
+                'source_revision' => '957b3f3',
+                'data_capabilities' => [
+                    'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
+                    'gift', 'maps', 'rsvp', 'messages', 'guest_name', 'media', 'seo',
+                    'whatsapp', 'calendar'
+                ],
+                'presentation_capabilities' => [
+                    'bootstrap_navbar', 'hero_carousel', 'welcome_modal', 'jquery_countdown',
+                    'gallery_carousel', 'gift_modal', 'audio_control', 'copy_to_clipboard'
+                ],
+                'sections' => [
+                    ['id' => 'home', 'dom_id' => 'home', 'label' => 'Home', 'title' => 'Home', 'embedded_capabilities' => ['wedding', 'guest_name']],
+                    ['id' => 'about', 'dom_id' => 'about', 'label' => 'About', 'title' => 'About', 'embedded_capabilities' => ['wedding']],
+                    ['id' => 'couple', 'dom_id' => 'mpl', 'label' => 'Mempelai', 'title' => 'Mempelai', 'embedded_capabilities' => ['parents', 'media']],
+                    ['id' => 'event', 'dom_id' => 'calender', 'label' => 'Acara & Countdown', 'title' => 'Acara & Countdown', 'embedded_capabilities' => ['schedule', 'countdown', 'calendar', 'maps']],
+                    ['id' => 'protocol', 'dom_id' => 'protokol', 'label' => 'Catatan Acara', 'title' => 'Catatan Acara', 'embedded_capabilities' => []],
+                    ['id' => 'gallery', 'dom_id' => 'galeri', 'label' => 'Galeri', 'title' => 'Galeri', 'embedded_capabilities' => ['gallery']],
+                    ['id' => 'location', 'dom_id' => 'lokasi', 'label' => 'Lokasi Upacara', 'title' => 'Lokasi Upacara', 'embedded_capabilities' => ['maps']],
+                    ['id' => 'gift', 'dom_id' => 'gift', 'label' => 'Hadiah', 'title' => 'Hadiah', 'embedded_capabilities' => ['gift']],
+                    ['id' => 'messages', 'dom_id' => 'pesan', 'label' => 'Pesan & RSVP', 'title' => 'Pesan & RSVP', 'embedded_capabilities' => ['messages', 'rsvp']],
+                    ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
+                    ['id' => 'welcome', 'dom_id' => 'welcomeModal', 'label' => 'Welcome Modal', 'title' => 'Welcome Modal', 'embedded_capabilities' => ['guest_name', 'music']]
+                ],
+                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+                'assets' => [
+                    'bootstrap@5.0.1', 'bootstrap-icons@1.9.1', 'jquery@3.6.0',
+                    'jquery-countdown@2.2.0', 'pawiwahan.css', 'pawiwahan.js', 'theme-media'
+                ],
+            ],
             'archak' => [
                 'id' => 'archak',
                 'label' => 'Archak',

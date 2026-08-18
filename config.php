@@ -749,6 +749,50 @@ function theme_registry(): array {
                 'hero_background' => ['type' => 'image', 'label' => 'Pola Parang', 'description' => 'Asset background parang yang digunakan desain terlampir.', 'default' => 'themes/parang/assets/parang-pattern.webp']
             ]
         ],
+        'pawiwahan' => [
+            'id' => 'pawiwahan',
+            'name' => 'Pawiwahan',
+            'label' => 'Pawiwahan',
+            'description' => 'Template Pawiwahan Bali berbasis thema-1 dengan navbar Bootstrap, carousel, modal pembuka, countdown jQuery, galeri, lokasi, hadiah, dan pesan.',
+            'version' => '1.0.0',
+            'author' => 'DE Juna adaptation',
+            'source' => 'parta99/pawiwahan',
+            'license' => 'MIT (Copyright (c) 2021 DE Juna; adapted in-project)',
+            'category' => 'balinese-classic',
+            'values' => [
+                'primary_color' => '#d77fa1',
+                'secondary_color' => '#c996cc',
+                'accent_color' => '#ec7272',
+                'background_color' => '#f7edf2',
+                'paper_color' => '#ffffff',
+                'muted_color' => '#6d5a62',
+                'text_color' => '#372d36',
+                'link_color' => '#8b4f70',
+                'button_style' => 'rounded',
+                'border_radius' => '6px',
+                'shadow' => '5px 5px 10px #caced1,-5px -5px 10px white',
+                'container_width' => '1140px',
+                'section_spacing' => '56px',
+                'heading_font' => 'Tangerine, cursive',
+                'body_font' => 'Raleway, sans-serif',
+                'font_size_base' => '16px'
+            ],
+            'schema' => [
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero Pawiwahan', 'description' => 'Path media atau URL. Kosongkan untuk memakai source default Pawiwahan.', 'default' => ''],
+                'show_protocol' => ['type' => 'boolean', 'label' => 'Tampilkan Catatan Acara', 'description' => 'Tampilkan catatan sumber yang kompatibel dengan bagian protokol Pawiwahan.', 'default' => true]
+            ],
+            'capabilities' => [
+                'content' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'carousel', 'navigation', 'countdown', 'modal', 'footer', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'carousel', 'navigation', 'countdown', 'modal', 'footer', 'animation'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Aksen Pawiwahan', 'description' => 'Aksen tombol dan elemen interaktif Pawiwahan.', 'default' => '#ec7272'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font display sumber Pawiwahan.', 'default' => 'Tangerine, cursive', 'options' => ['Tangerine, cursive' => 'Tangerine', 'Beau Rivage, cursive' => 'Beau Rivage', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi sumber Pawiwahan.', 'default' => 'Raleway, sans-serif', 'options' => ['Raleway, sans-serif' => 'Raleway', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai foto source yang dipertahankan lokal.', 'default' => 'themes/pawiwahan/assets/hero-source.jpg']
+            ]
+        ],
         'archak' => [
             'id' => 'archak',
             'name' => 'Archak',
@@ -831,7 +875,7 @@ function theme_registry(): array {
 }
 
 function theme_builtin_preset_keys(): array {
-    return ['dewankl', 'elix', 'rainier', 'archak', 'parang'];
+    return ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'];
 }
 
 function theme_presets(): array {

@@ -28,6 +28,7 @@ $markers = [
     'rainier' => ['id="app"', 'id="event-title"', 'id="schedule-section"'],
     'archak' => ['id="story"', 'id="registry"', 'id="home-img-lg"'],
     'parang' => ['id="cms-parang-root"', 'id="beranda"', 'parang-bg'],
+    'pawiwahan' => ['id="home"', 'id="carouselExampleCaptions"', 'id="welcomeModal"', 'id="hitungmundur"', 'id="galeri"'],
 ];
 
 foreach ($markers as $preset => $required) {

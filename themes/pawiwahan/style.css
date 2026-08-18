@@ -1,0 +1,21 @@
+@import url('assets/css/pawiwahan.css');
+
+/* Project adapter additions. The retained source stylesheet remains the visual authority. */
+.pawiwahan-cms-hero-image { object-fit: cover; object-position: center; }
+.pawiwahan-cover-fallback { min-height: 42vh; background: #c996cc url('hero-source.jpg') center / cover no-repeat; }
+.pawiwahan-source-frame { max-width: 760px; margin-inline: auto; }
+.pawiwahan-gallery-empty { padding: 2rem; color: #6d5a62; }
+.pawiwahan-rsvp-form { max-width: 550px; margin: 0 auto; text-align: left; }
+.pawiwahan-rsvp-form label { display: block; margin: .75rem 0; font-weight: 600; }
+.pawiwahan-rsvp-form input, .pawiwahan-rsvp-form select, .pawiwahan-rsvp-form textarea { width: 100%; padding: .65rem .75rem; border: 1px solid #d8b9c4; border-radius: 6px; font: inherit; }
+.pawiwahan-rsvp-form button { margin-top: .75rem; }
+.pawiwahan-form-message { min-height: 1.5rem; margin-top: .75rem; }
+.pawiwahan-gift-number { font-size: 1.15rem; letter-spacing: .04em; }
+.pawiwahan-source-credit { font-size: .8rem; }
+.pawiwahan-media-cover { width: 100%; max-height: 520px; object-fit: cover; }
+.pawiwahan-guest-name { min-height: 1.5rem; }
+@media (max-width: 670px) {
+  .pawiwahan-source-frame { width: 100%; }
+  .pawiwahan-media-cover { max-height: 360px; }
+  .pawiwahan-rsvp-form { padding-inline: .25rem; }
+}

@@ -16,6 +16,7 @@ $expected = [
     'rainier' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'story', 'music', 'maps', 'rsvp'],
     'archak' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp'],
     'parang' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp'],
+    'pawiwahan' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages'],
 ];
 $forbidden = [
     'rainier' => ['parents', 'gallery', 'gift', 'dresscode', 'sections'],
@@ -60,7 +61,7 @@ $before = $preserved;
 foreach (['mode', 'theme_preset'] as $key) unset($before['theme'][$key]);
 $before = json_encode($before, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-$sequence = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'];
+$sequence = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'];
 foreach ($sequence as $preset) {
     $switched = switch_active_theme_preset_config($preserved, $preset);
     assert_true(is_array($switched), "switch failed for $preset");

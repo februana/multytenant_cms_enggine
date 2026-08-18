@@ -15,6 +15,7 @@ $expected = [
     'rainier' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'glass_opacity'],
     'archak' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_title_scale'],
     'parang' => ['accent_color', 'heading_font', 'body_font', 'hero_background'],
+    'pawiwahan' => ['accent_color', 'heading_font', 'body_font', 'hero_background'],
 ];
 
 foreach ($expected as $preset => $keys) {
@@ -49,7 +50,7 @@ visual_assert($rainierValues['accent_color'] !== $elixValues['accent_color'], 'V
 
 $switchBase = $stored;
 $switchBase['theme_visuals']['archak'] = ['accent_color' => '#abcdef', 'hero_title_scale' => '1.05'];
-foreach (['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'] as $switchPreset) {
+foreach (['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $switchPreset) {
     $switched = switch_active_theme_preset_config($switchBase, $switchPreset);
     visual_assert(is_array($switched), "switching to {$switchPreset} succeeds");
     visual_assert(($switched['theme_visuals']['elix']['accent_color'] ?? '') === '#123456', "switching to {$switchPreset} preserves Elix visuals");
@@ -149,7 +150,7 @@ visual_assert(is_string($appSource) && !str_contains($appSource, 'innerHTML'), '
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'title="Preview tema undangan"'), 'Theme preview iframe has an accessible title');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'aria-label="Ukuran preview"'), 'Preview viewport controls have an accessible group label');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');
-visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak', 'parang'], 'Preset selector exposes only renderer-backed built-ins');
+visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'], 'Preset selector exposes only renderer-backed built-ins');
 $mediaProbeName = 'uploads/background/visual-contract-probe-' . getmypid() . '.webp';
 $mediaProbePath = ROOT_DIR . '/' . $mediaProbeName;
 copy(dirname(__DIR__) . '/themes/parang/assets/parang-pattern.webp', $mediaProbePath);
@@ -176,7 +177,7 @@ $rainierOverrideConfig['theme_visuals']['rainier']['hero_background'] = 'uploads
 $rainierOverrideHtml = render_theme_layout($rainierOverrideConfig, array_replace($shared, ['presetKey' => 'rainier']));
 visual_assert(str_contains($rainierOverrideHtml, 'uploads/background/rainier-hero.png'), 'Rainier CMS hero override reaches the dynamic design payload');
 
-foreach (['dewankl', 'rainier', 'archak', 'parang'] as $preset) {
+foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan'] as $preset) {
     $probe = $stored;
     $probe['theme']['mode'] = 'preset';
     $probe['theme']['theme_preset'] = $preset;
@@ -220,6 +221,17 @@ visual_assert(($parangValues['hero_background'] ?? '') !== '', 'Parang resolves 
 $parangHtml = render_theme_layout($parangConfig, array_replace($shared, ['presetKey' => 'parang']));
 visual_assert(str_contains($parangHtml, 'id="cms-parang-root"'), 'Parang render preserves its native root');
 visual_assert(str_contains($parangHtml, '/themes/parang/assets/parang-pattern.webp'), 'Parang render retains the supplied local parang background asset');
+$pawiwahanConfig = $base;
+$pawiwahanConfig['theme']['mode'] = 'preset';
+$pawiwahanConfig['theme']['theme_preset'] = 'pawiwahan';
+$pawiwahanValues = theme_visual_values_for_config($pawiwahanConfig, 'pawiwahan');
+visual_assert(($pawiwahanValues['hero_background'] ?? '') !== '', 'Pawiwahan resolves a source hero background fallback');
+$pawiwahanHtml = render_theme_layout($pawiwahanConfig, array_replace($shared, ['presetKey' => 'pawiwahan']));
+visual_assert(str_contains($pawiwahanHtml, 'id="carouselExampleCaptions"'), 'Pawiwahan render preserves the source carousel root');
+visual_assert(str_contains($pawiwahanHtml, 'id="welcomeModal"'), 'Pawiwahan render preserves the source welcome modal');
+visual_assert(str_contains($pawiwahanHtml, 'id="hitungmundur"'), 'Pawiwahan render preserves the source countdown root');
+visual_assert(str_contains($pawiwahanHtml, '/themes/pawiwahan/assets/hero-source.jpg'), 'Pawiwahan render uses a local non-user source fallback');
+visual_assert(is_file(dirname(__DIR__) . '/themes/pawiwahan/assets/images/ornam/Asset5.png'), 'Pawiwahan source ornament is retained locally');
 
 echo "PASS: visual contract smoke test\n";
 ob_end_flush();
