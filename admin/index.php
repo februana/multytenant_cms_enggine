@@ -983,7 +983,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('schedule')): ?><a href="#schedule">Jadwal</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('countdown')): ?><a href="#countdown">Hitung Mundur</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('sections')): ?><a href="#sections">Bagian Website</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('theme')): ?><a href="#theme">Tema & Tampilan</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('theme')): ?><a href="#theme">Tema & Tampilan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('custom_css')): ?><a href="#custom-css">CSS Khusus</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Kelola Media</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
@@ -996,7 +996,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('maps')): ?><a href="#maps">Lokasi</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('seo')): ?><a href="#seo">SEO</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">WhatsApp</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">RSVP</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
@@ -1157,7 +1157,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('theme')): ?>
+                    <?php if ($globalAdminCapabilityEnabled('theme')): ?>
 
                     <section id="theme" class="card panel-section">
                         <h2>Tema & Tampilan</h2>
@@ -2220,7 +2220,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('guest_links')): ?>
+                    <?php if ($globalAdminCapabilityEnabled('guest_links')): ?>
 
                     <section id="guest-links" class="card panel-section">
                         <h2>Link Tamu</h2>
