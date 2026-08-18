@@ -168,7 +168,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 <div class="d-flex position-absolute w-100 h-100">
                     <div class="position-relative overflow-hidden vw-100">
                         <div class="position-absolute h-100 w-100 slide-desktop" style="opacity: 0;">
-                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="bg" class="bg-cover-home" style="opacity: 30%;">
+                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="latar belakang" class="bg-cover-home" style="opacity: 30%;">
                         </div>
                     </div>
                 </div>
@@ -186,18 +186,18 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 
                 <!-- Home Section -->
                 <section id="home" class="bg-light-dark position-relative overflow-hidden p-0 m-0">
-                    <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="bg" class="position-absolute opacity-25 top-50 start-50 translate-middle bg-cover-home">
+                    <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="latar belakang" class="position-absolute opacity-25 top-50 start-50 translate-middle bg-cover-home">
                     
                     <div class="position-relative text-center bg-overlay-auto" style="background-color: unset;">
                         <h1 class="font-esthetic pt-5 pb-4 fw-medium" style="font-size: 2.25rem;">Undangan Pernikahan</h1>
                         
-                        <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="cover" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
+                        <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="sampul" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
                         
                         <h2 class="font-esthetic my-4" style="font-size: 2.25rem;"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h2>
                         <p class="my-2" style="font-size: 1.25rem;"><?php echo $akadDateFormatted; ?></p>
                         
                         <button class="btn btn-outline-auto btn-sm shadow rounded-pill px-3 py-1" style="font-size: 0.825rem;" onclick="window.open('<?php echo $calendarLink; ?>', '_blank')">
-                            <i class="fa-solid fa-calendar-check me-2"></i>Save Google Calendar
+                            <i class="fa-solid fa-calendar-check me-2"></i>Simpan ke Google Kalender
                         </button>
                         
                         <?php if ($enableMouseAnimation): ?>
@@ -208,7 +208,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                         </div>
                         <?php endif; ?>
                         
-                        <p class="pb-4 m-0 text-secondary" style="font-size: 0.825rem;">Scroll Down</p>
+                        <p class="pb-4 m-0 text-secondary" style="font-size: 0.825rem;">Gulir ke Bawah</p>
                     </div>
                 </section>
                 
@@ -237,7 +237,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                             </div>
                             
                             <div data-aos="fade-right" data-aos-duration="2000" class="pb-1">
-                                <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="groom" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
+                                <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="mempelai pria" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
                                 <h2 class="font-esthetic m-0" style="font-size: 2.125rem;"><?php echo $groomName; ?></h2>
                                 <p class="mt-3 mb-1" style="font-size: 1.25rem;">Putra dari</p>
                                 <p class="mb-0" style="font-size: 0.95rem;"><?php echo $groomFather; ?></p>
@@ -263,7 +263,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                             </div>
                             
                             <div data-aos="fade-left" data-aos-duration="2000" class="pb-1">
-                                <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="bride" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
+                                <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="mempelai wanita" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
                                 <h2 class="font-esthetic m-0" style="font-size: 2.125rem;"><?php echo $brideName; ?></h2>
                                 <p class="mt-3 mb-1" style="font-size: 1.25rem;">Putri dari</p>
                                 <p class="mb-0" style="font-size: 0.95rem;"><?php echo $brideFather; ?></p>
@@ -375,23 +375,23 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                         <?php $galleryImages = []; foreach ((array)$config['gallery']['items'] as $item) { $galleryImages[] = is_array($item) ? ($item['path'] ?? $item['src'] ?? '') : (string)$item; } while (count($galleryImages) < 6) $galleryImages[] = $coverPath; ?>
                         <?php foreach ([['carousel-image-one', 0], ['carousel-image-two', 3]] as [$carouselId, $offset]): ?>
                         <div id="<?php echo $carouselId; ?>" data-aos="fade-up" data-aos-duration="1500" class="carousel slide mt-4" data-bs-ride="carousel">
-                            <div class="carousel-indicators"><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="1" aria-label="Slide 2"></button><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="2" aria-label="Slide 3"></button></div>
+                            <div class="carousel-indicators"><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Geser 1"></button><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="1" aria-label="Geser 2"></button><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="2" aria-label="Geser 3"></button></div>
                             <div class="carousel-inner rounded-4">
-                                <?php for ($slide = 0; $slide < 3; $slide++): $image = $galleryImages[$offset + $slide] ?: $coverPath; ?><div class="carousel-item<?php echo $slide === 0 ? ' active' : ''; ?>"><img src="<?php echo escape_html(public_path($image)); ?>" data-src="<?php echo escape_html(public_path($image)); ?>" alt="image <?php echo $offset + $slide + 1; ?>" class="d-block img-fluid cursor-pointer" onclick="undangan.guest.modal(this)"></div><?php endfor; ?>
+                                <?php for ($slide = 0; $slide < 3; $slide++): $image = $galleryImages[$offset + $slide] ?: $coverPath; ?><div class="carousel-item<?php echo $slide === 0 ? ' active' : ''; ?>"><img src="<?php echo escape_html(public_path($image)); ?>" data-src="<?php echo escape_html(public_path($image)); ?>" alt="gambar <?php echo $offset + $slide + 1; ?>" class="d-block img-fluid cursor-pointer" onclick="undangan.guest.modal(this)"></div><?php endfor; ?>
                             </div>
-                            <button class="carousel-control-prev" type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span></button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span></button>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Sebelumnya</span></button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Berikutnya</span></button>
                         </div>
                         <?php endforeach; ?>
                     </div></div>
                 </section>
                 <?php endif; ?>
                 
-                <!-- Love Gift Section -->
+                <!-- Hadiah Pernikahan Section -->
                 <?php if ($isGiftEnabled): ?>
                 <section class="bg-light-dark pb-3">
                     <div class="container text-center">
-                        <h2 class="font-esthetic pt-3 mb-4" style="font-size: 2.25rem;">Love Gift</h2>
+                        <h2 class="font-esthetic pt-3 mb-4" style="font-size: 2.25rem;">Hadiah Pernikahan</h2>
                         <p class="mb-1" style="font-size: 0.95rem;">Dengan hormat, bagi Anda yang ingin memberikan tanda kasih kepada kami, dapat melalui:</p>
                         
                         <!-- Bank Transfer -->
@@ -517,7 +517,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                     <li class="nav-item">
                         <a class="nav-link" href="#home">
                             <i class="fa-solid fa-house"></i>
-                            <span class="d-block" style="font-size: 0.7rem;">Home</span>
+                            <span class="d-block" style="font-size: 0.7rem;">Beranda</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -567,9 +567,9 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
     <div class="loading-page bg-white-black" id="welcome" style="opacity: 0;">
         <div class="d-flex justify-content-center align-items-center vh-100 overflow-y-auto">
             <div class="d-flex flex-column text-center">
-                <h2 class="font-esthetic mb-4" style="font-size: 2.25rem;">The Wedding Of</h2>
+                <h2 class="font-esthetic mb-4" style="font-size: 2.25rem;">Pernikahan Kami</h2>
                 
-                <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="background" class="img-center-crop rounded-circle border border-3 border-light shadow mb-4 mx-auto">
+                <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="latar belakang" class="img-center-crop rounded-circle border border-3 border-light shadow mb-4 mx-auto">
                 
                 <h2 class="font-esthetic mb-4" style="font-size: 2.25rem;"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h2>
                 <div id="guest-name" data-message="Kepada Yth Bapak/Ibu/Saudara/i"></div>
@@ -585,11 +585,11 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
     <div class="loading-page bg-white-black" id="loading" style="opacity: 1;">
         <div class="d-flex justify-content-center align-items-center vh-100 overflow-y-auto">
             <div class="d-flex flex-column width-loading text-center">
-                <img src="<?php echo escape_html(public_path($coverPath)); ?>" fetchpriority="high" class="img-fluid mb-3 mx-auto object-fit-cover opacity-0" alt="icon" style="width: 3.5rem; height: 3.5rem;">
-                <div class="progress" role="progressbar" style="height: 0.5rem;" aria-label="progress bar">
+                <img src="<?php echo escape_html(public_path($coverPath)); ?>" fetchpriority="high" class="img-fluid mb-3 mx-auto object-fit-cover opacity-0" alt="ikon" style="width: 3.5rem; height: 3.5rem;">
+                <div class="progress" role="progressbar" style="height: 0.5rem;" aria-label="bilah kemajuan">
                     <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
                 </div>
-                <small class="d-none mt-1 text-theme-auto" id="progress-info" style="font-size: 0.8rem;">Booting application...</small>
+                <small class="d-none mt-1 text-theme-auto" id="progress-info" style="font-size: 0.8rem;">Memulai aplikasi...</small>
                 <noscript>
                     <small class="mt-1 text-danger">Maaf, undangan ini memerlukan JavaScript</small>
                 </noscript>
@@ -620,7 +620,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                         </button>
                     </div>
                     
-                    <img src="" class="img-fluid w-100 rounded-4 cursor-pointer" alt="image" id="show-modal-image">
+                    <img src="" class="img-fluid w-100 rounded-4 cursor-pointer" alt="gambar" id="show-modal-image">
                 </div>
             </div>
         </div>

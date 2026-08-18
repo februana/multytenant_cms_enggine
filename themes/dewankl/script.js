@@ -255,7 +255,7 @@
             .then(data => {
                 if (data.success) {
                     if (messageEl) {
-                        messageEl.textContent = data.message || 'Terima kasih! RSVP Anda telah terkirim.';
+                        messageEl.textContent = data.message || 'Terima kasih! Konfirmasi kehadiran Anda telah terkirim.';
                         messageEl.className = 'form-message text-center mt-3 text-success';
                     }
                     form.reset();

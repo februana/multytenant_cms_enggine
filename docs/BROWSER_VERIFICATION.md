@@ -65,3 +65,21 @@ A fresh browser navigation of the real Admin page at `http://127.0.0.1:8001/admi
 The Admin textarea rendered the sentinel opening value on separate lines in the 390px browser screenshot. The frontend active Archak page retained original source-template identity wording (`OUR STORY`, `TRAVEL & STAY`, `PROMISES`, `We're getting married`, `Travel and Stay`, `Promises`, `Hope to See You!`, and `BLESS US`) while displaying user-entered invitation text and address content without automatic translation. This separation is intentional and required for source-template fidelity.
 
 The save/config/render path is covered by `tools/content_preservation_smoke.php`, which passed for all five modes. The test verifies multilingual Unicode, newlines, meaningful spaces, English user text, CRLF-only normalization, JSON round-trip equality, safe HTML rendering, and no automatic translation call. Browser verification was passive and did not submit or mutate forms.
+
+
+## PR #72 follow-up browser verification (working notes)
+
+A fresh Admin navigation on the PR #72 branch showed `Admin CMS Undangan`, the visible global `Preset / Tema` panel, all five preset options, the selected Archak option, and Indonesian application labels. The opening textarea continued to display the two-line sentinel value.
+
+The active Archak guest page showed Indonesian static labels including `KISAH KAMI`, `PERJALANAN & TEMPAT MENGINAP`, `JANJI`, `Kita Akan Menikah`, `Konfirmasi Kehadiran`, `PETA & DETAIL`, `REKOMENDASI KAMI`, `PILIHAN PENGINAPAN`, `DOAKAN KAMI`, `Sampai Jumpa!`, and `Hubungi Kami`. Sentinel bride/groom names, Indonesian invitation text, address, and gift data remained unchanged. A temporary fixture was also opened for Custom; its user/config section titles were left untouched as required, while its application navigation and action labels are now localized.
+
+
+The DewanaKL fixture rendered `Simpan ke Google Kalender`, `Gulir ke Bawah`, Indonesian countdown units, Indonesian gallery controls (`Sebelumnya`, `Berikutnya`), `Beranda`, and `Hadiah Pernikahan`. The Elix fixture rendered Indonesian navigation (`BERANDA`, `INFORMASI`, `KISAH`, `GALERI`, `KONFIRMASI KEHADIRAN`, `HADIAH`), Indonesian countdown units, and preserved the multiline `Baris 1` / `Baris 3` user content. Both fixtures remained non-blank and retained their expected template layout.
+
+
+The Rainier fixture rendered Indonesian countdown labels, `Tambahkan ke Google Kalender`, `Konfirmasi Kehadiran`, `Detail Acara`, `Jadwal`, `Kata-Kata Inspirasi`, `Mohon konfirmasi kehadiran Anda`, the Indonesian CMS RSVP form (`Nama Anda`, `Kehadiran`, `Pilih`, `Akan Hadir`, `Tidak Dapat Hadir`, `Pesan`, `Kirim Konfirmasi Kehadiran`), and Indonesian footer labels. The Rainier source repository link and `Rainier` attribution remained intact.
+
+The Archak fixture rendered Indonesian navigation, hero, timeline, story, travel/stay, registry, parting, and footer labels. The `@NathArchak` attribution and source link remained intact. User-entered names, invitation text, address, and gift information remained unchanged.
+
+
+The refreshed Custom fixture showed Indonesian application navigation/actions (`Konfirmasi Kehadiran`, `Mode Hemat Data`, `Buka Undangan`, `Tambah ke Kalender`, `Hubungi WA`, `Putar Musik`, `Buka di Google Maps`, and `Kirim Konfirmasi Kehadiran`). Custom section titles such as `Love Story`, `Gallery`, `Events`, `Location`, and `Gift` remained exactly as supplied by the current config; they are user/config content and were intentionally not translated. The Custom multiline opening content remained visible as separate lines. The browser console produced no output for this verification page.
