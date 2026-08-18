@@ -2,6 +2,7 @@
 require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 
+ob_start();
 $base = load_config();
 $shared = [
     'presetKey' => 'dewankl',
@@ -24,8 +25,8 @@ $markers = [
     'custom' => ['hero', 'rsvp'],
     'dewankl' => ['id="home"', 'data-bs-spy="scroll"'],
     'elix' => ['id="hero"', 'offcanvas'],
-    'rainier' => ['class="rainier-theme"', 'id="welcome-overlay"'],
-    'archak' => ['class="archak-theme"', 'id="couple"'],
+    'rainier' => ['id="app"', 'id="event-title"', 'id="schedule-section"'],
+    'archak' => ['id="story"', 'id="registry"', 'id="home-img-lg"'],
 ];
 
 foreach ($markers as $preset => $required) {
@@ -40,3 +41,4 @@ foreach ($markers as $preset => $required) {
     }
     echo "PASS: {$preset} rendered (" . strlen($html) . " bytes)\n";
 }
+ob_end_flush();

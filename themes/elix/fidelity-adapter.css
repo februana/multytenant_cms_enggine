@@ -1,0 +1,15 @@
+/* CMS data may be longer than the original demo copy. Preserve the original hero structure while allowing safe wrapping. */
+#hero h1,
+#home h2,
+#home h3 {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+@media (max-width: 576px) {
+    #hero h1 {
+        font-size: clamp(2rem, 12vw, 4rem);
+        line-height: 1.05;
+    }
+}

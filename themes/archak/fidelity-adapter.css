@@ -1,0 +1,15 @@
+/* Protect the original Archak layout from unusually long CMS names. */
+.home h1,
+.home h3,
+.container-in {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+@media (max-width: 576px) {
+    .home h1 {
+        font-size: clamp(2rem, 11vw, 4rem);
+        line-height: 1.05;
+    }
+}

@@ -72,13 +72,13 @@ $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $config['site']['title'] ?? 'Undangan');
 
 // Section visibility helpers
-$isMusicEnabled = theme_section_enabled($config, 'dewankl', 'music');
+$isMusicEnabled = trim((string)$musicSrc) !== '';
 $isGalleryEnabled = theme_section_enabled($config, 'dewankl', 'gallery');
-$isStoryEnabled = theme_section_enabled($config, 'dewankl', 'story');
-$isRsvpEnabled = theme_section_enabled($config, 'dewankl', 'rsvp');
-$isMessagesEnabled = theme_section_enabled($config, 'dewankl', 'wishes');
-$isGiftEnabled = theme_section_enabled($config, 'dewankl', 'gift');
-$isMapsEnabled = theme_section_enabled($config, 'dewankl', 'location');
+$isStoryEnabled = theme_section_enabled($config, 'dewankl', 'love_story');
+$isRsvpEnabled = theme_section_enabled($config, 'dewankl', 'comment');
+$isMessagesEnabled = theme_section_enabled($config, 'dewankl', 'comment');
+$isGiftEnabled = theme_section_enabled($config, 'dewankl', 'love_gift');
+$isMapsEnabled = theme_section_enabled($config, 'dewankl', 'wedding_date');
 
 // Format dates
 $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
@@ -122,14 +122,12 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sacramento&family=Noto+Naskh+Arabic&display=swap">
     
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
-    
-    <!-- AOS Animation -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
-    
-    <!-- Theme CSS -->
-    <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'style.css')); ?>">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.1.0/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'original/common.css')); ?>">
+    <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'original/guest.css')); ?>">
+    <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'original/animation.css')); ?>">
+    <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'fidelity-adapter.css')); ?>">
     
     <!-- Custom CSS Override -->
     <?php if (trim(load_custom_css()) !== ''): ?>
@@ -266,6 +264,21 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                     </svg>
                 </div>
                 
+                <?php if ($isStoryEnabled): ?>
+                <!-- Love Story: original DewanaKL boundary -->
+                <section class="bg-light-dark pt-2 pb-4">
+                    <div class="container"><div class="bg-theme-auto rounded-5 shadow p-3">
+                        <h2 class="font-esthetic text-center py-2 mb-2" style="font-size: 2.125rem;">Kisah Cinta</h2>
+                        <div id="video-love-stroy" class="position-relative rounded-4 mb-2 pb-0" data-src="<?php echo escape_html(public_path($config['media']['background_hero'] ?? '')); ?>" data-vid-class="w-100 rounded-4 shadow-sm m-0 p-0"></div>
+                        <div class="overflow-y-scroll overflow-x-hidden p-2 with-scrollbar" style="height: 15rem;">
+                            <?php foreach (array_values((array)$config['love_story']['items'] ?? []) as $index => $story): ?>
+                            <div class="row"><div class="col-auto position-relative"><p class="position-relative d-flex justify-content-center align-items-center bg-theme-auto border border-secondary border-2 opacity-100 rounded-circle m-0 p-0 z-1" style="width: 2rem; height: 2rem;"><?php echo $index + 1; ?></p><hr class="position-absolute top-0 start-50 translate-middle-x border border-secondary h-100 z-0 opacity-100 m-0 rounded-4 shadow-none"></div><div class="col mt-1 mb-3 ps-0"><p class="fw-bold mb-2"><?php echo escape_html($story['title'] ?? 'Cerita Kami'); ?></p><p class="small mb-0"><?php echo nl2br(escape_html($story['description'] ?? '')); ?></p></div></div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div></div>
+                </section>
+                <?php endif; ?>
+
                 <!-- Wedding Date / Countdown Section -->
                 <section class="bg-light-dark py-5" id="wedding-date">
                     <div class="container">
@@ -334,19 +347,20 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 <!-- Gallery Section -->
                 <?php if ($isGalleryEnabled): ?>
                 <section class="bg-white-black pb-5 pt-3" id="gallery">
-                    <div class="container">
-                        <div class="border rounded-5 shadow p-3">
-                            <h2 class="font-esthetic text-center py-2 m-0" style="font-size: 2.25rem;">Galeri</h2>
-                            
-                            <div id="galleryGrid" class="row g-3 mt-3">
-                                <p class="loading text-center">Memuat galeri...</p>
+                    <div class="container"><div class="border rounded-5 shadow p-3">
+                        <h2 class="font-esthetic text-center py-2 m-0" style="font-size: 2.25rem;">Galeri</h2>
+                        <?php $galleryImages = []; foreach ((array)$config['gallery']['items'] as $item) { $galleryImages[] = is_array($item) ? ($item['path'] ?? $item['src'] ?? '') : (string)$item; } while (count($galleryImages) < 6) $galleryImages[] = $coverPath; ?>
+                        <?php foreach ([['carousel-image-one', 0], ['carousel-image-two', 3]] as [$carouselId, $offset]): ?>
+                        <div id="<?php echo $carouselId; ?>" data-aos="fade-up" data-aos-duration="1500" class="carousel slide mt-4" data-bs-ride="carousel">
+                            <div class="carousel-indicators"><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="1" aria-label="Slide 2"></button><button type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide-to="2" aria-label="Slide 3"></button></div>
+                            <div class="carousel-inner rounded-4">
+                                <?php for ($slide = 0; $slide < 3; $slide++): $image = $galleryImages[$offset + $slide] ?: $coverPath; ?><div class="carousel-item<?php echo $slide === 0 ? ' active' : ''; ?>"><img src="<?php echo escape_html(public_path($image)); ?>" data-src="<?php echo escape_html(public_path($image)); ?>" alt="image <?php echo $offset + $slide + 1; ?>" class="d-block img-fluid cursor-pointer" onclick="undangan.guest.modal(this)"></div><?php endfor; ?>
                             </div>
-                            
-                            <button type="button" id="loadGalleryBtn" class="btn btn-primary btn-sm rounded-pill shadow my-3" style="display:none;">
-                                Muat Galeri
-                            </button>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span></button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#<?php echo $carouselId; ?>" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span></button>
                         </div>
-                    </div>
+                        <?php endforeach; ?>
+                    </div></div>
                 </section>
                 <?php endif; ?>
                 
@@ -590,8 +604,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
     </div>
     
     <!-- Dependencies JS -->
-    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Theme JS -->
     <script src="<?php echo escape_html(get_theme_asset_url('dewankl', 'script.js')); ?>"></script>

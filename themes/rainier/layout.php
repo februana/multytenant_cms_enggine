@@ -1,529 +1,81 @@
 <?php
-/**
- * Rainier Theme - Complete Frontend Template
- * Glassmorphism modern design with elegant typography
- */
-if (!defined('THEME_HELPER_LOADED')) { 
-    require_once __DIR__ . '/../../app/theme-helper.php'; 
+if (!defined('THEME_HELPER_LOADED')) {
+    require_once __DIR__ . '/../../app/theme-helper.php';
 }
-
 $config = $config ?? [];
-
-// Data extraction
+$presetKey = 'rainier';
 $brideName = escape_html($config['wedding']['bride_name'] ?? '');
 $groomName = escape_html($config['wedding']['groom_name'] ?? '');
-$brideNickname = escape_html($config['wedding']['bride_nickname'] ?? '');
-$groomNickname = escape_html($config['wedding']['groom_nickname'] ?? '');
-$openingText = nl2br(escape_html($config['wedding']['opening_text'] ?? ''));
-$quote = nl2br(escape_html($config['wedding']['quote'] ?? ''));
-$closingText = nl2br(escape_html($config['wedding']['closing_text'] ?? ''));
-$brideFather = escape_html($config['parents']['bride_father'] ?? '');
-$brideMother = escape_html($config['parents']['bride_mother'] ?? '');
-$groomFather = escape_html($config['parents']['groom_father'] ?? '');
-$groomMother = escape_html($config['parents']['groom_mother'] ?? '');
-$akadDate = $config['schedule']['akad_date'] ?? '';
-$akadTime = $config['schedule']['akad_time'] ?? '';
-$receptionDate = $config['schedule']['reception_date'] ?? '';
-$receptionTime = $config['schedule']['reception_time'] ?? '';
-$venue = escape_html($config['location']['venue'] ?? '');
-$address = nl2br(escape_html($config['location']['address'] ?? ''));
-$mapsUrl = escape_html($config['location']['maps_url'] ?? '');
-$mapsEmbed = escape_html($config['location']['maps_embed'] ?? '');
-$giftBank = escape_html($config['gift']['bank'] ?? '');
-$giftAccount = escape_html($config['gift']['account_number'] ?? '');
-$giftHolder = escape_html($config['gift']['account_holder'] ?? '');
-$giftEwalletLabel = escape_html($config['gift']['e_wallet_label'] ?? '');
-$giftEwalletNumber = escape_html($config['gift']['e_wallet_number'] ?? '');
-$coverPath = $config['media']['cover'] ?? 'uploads/cover/cover.jpg';
-$bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
-$groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
-$couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
-$musicSrc = $config['media']['music'] ?? 'music/lagu.mp3';
-$heroBg = !empty($config['media']['background_hero']) ? $config['media']['background_hero'] : $couplePhoto;
-
-$whatsappLink = build_whatsapp_link($config);
+$siteTitle = escape_html($config['site']['title'] ?? ($brideName . ' & ' . $groomName));
+$description = escape_html($config['site']['description'] ?? $config['wedding']['opening_text'] ?? '');
+$openingText = escape_html(strip_tags((string)($config['wedding']['opening_text'] ?? '')));
+$quoteText = escape_html(strip_tags((string)($config['wedding']['quote'] ?? '')));
+$closingText = escape_html(strip_tags((string)($config['wedding']['closing_text'] ?? '')));
+$akadDate = (string)($config['schedule']['akad_date'] ?? '');
+$akadTime = (string)($config['schedule']['akad_time'] ?? '');
+$receptionTime = (string)($config['schedule']['reception_time'] ?? '');
+$venue = (string)($config['location']['venue'] ?? '');
+$address = (string)($config['location']['address'] ?? '');
+$mapsUrl = (string)($config['location']['maps_url'] ?? '');
+$coverPath = (string)($config['media']['cover'] ?? '');
+$musicPath = (string)($config['media']['music'] ?? '');
+$csrf = function_exists('get_csrf_token') ? get_csrf_token() : '';
 $calendarLink = build_google_calendar_link($config);
-$calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $config['site']['title'] ?? 'Undangan');
-
-// Section visibility
-$isMusicEnabled = theme_section_enabled($config, 'rainier', 'music');
-$isGalleryEnabled = theme_section_enabled($config, 'rainier', 'gallery');
-$isRsvpEnabled = theme_section_enabled($config, 'rainier', 'rsvp');
-$isGiftEnabled = theme_section_enabled($config, 'rainier', 'gift');
-$isMapsEnabled = theme_section_enabled($config, 'rainier', 'location');
-$isCoupleEnabled = theme_section_enabled($config, 'rainier', 'couple');
-$isEventEnabled = theme_section_enabled($config, 'rainier', 'event');
-$isStoryEnabled = theme_section_enabled($config, 'rainier', 'story');
-$isParentsEnabled = theme_section_enabled($config, 'rainier', 'couple');
-
-// Formatted dates
-$akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
-$receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($receptionDate)) : '';
-$countdownTarget = $config['schedule']['countdown_target'] ?? ($akadDate . 'T' . ($akadTime ?: '08:00') . '+07:00');
-
-// Guest name from URL
-$guestName = isset($_GET['to']) ? escape_html($_GET['to']) : '';
-
-// Dresscode
-$dresscodeTitle = trim((string)($config['dresscode']['title'] ?? 'Dresscode')) ?: 'Dresscode';
-$dresscodeColor = trim((string)($config['dresscode']['color'] ?? 'Putih / Pastel')) ?: 'Putih / Pastel';
-$dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')) ?: 'Rapi dan sopan';
-$dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
-
-// Preset options (theme_options)
-$glassOpacity = function_exists('get_theme_option') ? (string)get_theme_option($config, 'rainier', 'glass_opacity', '0.85') : ($config['theme_options']['rainier']['glass_opacity'] ?? '0.85');
-$showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'rainier', 'show_bismillah', true) : ($config['theme_options']['rainier']['show_bismillah'] ?? true);
+$stories = $config['love_story']['items'] ?? [];
+if (!is_array($stories)) $stories = [];
+$quotes = [];
+foreach ($stories as $story) {
+    if (!is_array($story)) continue;
+    $text = trim((string)($story['description'] ?? $story['text'] ?? ''));
+    if ($text !== '') $quotes[] = ['text' => $text, 'author' => trim((string)($story['title'] ?? ''))];
+}
+if (!$quotes && $quoteText !== '') $quotes[] = ['text' => $quoteText, 'author' => $brideName . ' & ' . $groomName];
+$schedule = [];
+if ($akadDate !== '' || $akadTime !== '') $schedule[] = ['time' => trim($akadTime), 'label' => 'Akad Nikah — ' . trim($venue)];
+if ($receptionTime !== '') $schedule[] = ['time' => trim($receptionTime), 'label' => 'Resepsi — ' . trim($venue)];
+$eventData = [
+    'event' => ['title' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'subtitle' => html_entity_decode($openingText, ENT_QUOTES, 'UTF-8'), 'description' => html_entity_decode($description, ENT_QUOTES, 'UTF-8')],
+    'datetime' => ['date' => $akadDate, 'startTime' => $akadTime, 'endTime' => $receptionTime, 'timezone' => $config['schedule']['timezone'] ?? 'Asia/Jakarta', 'allDay' => false],
+    'location' => ['name' => $venue, 'address' => $address, 'mapsLink' => $mapsUrl],
+    'calendar' => ['enabled' => true, 'providers' => ['google' => true]],
+    'schedule' => $schedule,
+    'quotes' => $quotes,
+    'rsvp' => ['enabled' => theme_section_enabled($config, $presetKey, 'rsvp'), 'provider' => 'cms', 'url' => public_path('save.php')],
+    'music' => ['enabled' => $musicPath !== '' && theme_section_enabled($config, $presetKey, 'music'), 'audioUrl' => public_path($musicPath), 'loop' => true, 'volume' => 0.3],
+    'meta' => ['countdown' => true, 'simpleMode' => false, 'showSimpleModeToggle' => false],
+    'design' => ['accentColor' => $config['theme_options']['rainier']['hero_accent_color'] ?? '#b8655d', 'backgrounds' => $coverPath !== '' ? [public_path($coverPath)] : []],
+    'footer' => ['text' => html_entity_decode($closingText, ENT_QUOTES, 'UTF-8'), 'credits' => ['designByLabel' => 'Hosted by', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Template', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Source template']],
+];
+$customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo escape_html($config['site']['title'] ?? 'Undangan Pernikahan'); ?></title>
-    <meta name="description" content="<?php echo escape_html($config['site']['description'] ?? ''); ?>">
-    
-    <!-- Fonts -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="<?php echo $description; ?>" />
+    <meta name="csrf-token" content="<?php echo escape_html($csrf); ?>" />
+    <meta property="og:title" content="<?php echo $siteTitle; ?>" />
+    <meta property="og:description" content="<?php echo $description; ?>" />
+    <title><?php echo $siteTitle; ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Theme CSS -->
-    <link rel="stylesheet" href="<?php echo get_theme_asset_url('rainier', 'style.css'); ?>">
-    
-    <style>
-        :root { --glass-panel-bg: rgba(255, 255, 255, <?php echo escape_html($glassOpacity); ?>); }
-        <?php echo load_custom_css(); ?>
-    </style>
-
-    <!-- Global Config Injection -->
-    <script>
-        window.WeddingConfig = <?php echo json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original/invite.css'); ?>">
+    <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
+    <script defer src="<?php echo get_theme_asset_url($presetKey, 'original/invite-1-adapter.js'); ?>"></script>
 </head>
-<body class="rainier-theme" data-countdown-target="<?php echo escape_html($countdownTarget); ?>">
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-screen">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Loading Invitation...</p>
-        </div>
-    </div>
-    
-    <!-- Welcome Overlay -->
-    <div id="welcome-overlay" class="welcome-overlay">
-        <div class="overlay-background"></div>
-        <div class="overlay-content glass-panel">
-            <?php if ($showBismillah): ?>
-            <div class="bismillah">
-                <span class="arabic-text">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>
-            </div>
-            <?php endif; ?>
-            <h2 class="overlay-title">The Wedding of</h2>
-            <h1 class="overlay-couple-names">
-                <span class="name-first"><?php echo $brideNickname; ?></span>
-                <span class="name-ampersand">&</span>
-                <span class="name-second"><?php echo $groomNickname; ?></span>
-            </h1>
-            <p class="overlay-date"><?php echo $akadDateFormatted; ?></p>
-            <?php if (!empty($guestName)): ?>
-            <p class="guest-greeting">
-                Kepada Yth.<br>
-                <strong><?php echo $guestName; ?></strong>
-            </p>
-            <?php endif; ?>
-            <button id="open-invitation" class="btn-open-invitation">
-                <span class="btn-text">Buka Undangan</span>
-                <svg class="btn-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-    
-    <!-- Main Content -->
-    <main id="main-content" class="main-content hidden">
-        <!-- Navbar -->
-        <nav id="navbar" class="navbar-glass">
-            <div class="navbar-container">
-                <div class="navbar-brand">
-                    <span class="brand-initials"><?php echo substr($brideNickname, 0, 1) . '&' . substr($groomNickname, 0, 1); ?></span>
-                </div>
-                <ul class="navbar-menu">
-                    <li><a href="#home" class="nav-link">Home</a></li>
-                    <li><a href="#couple" class="nav-link">Couple</a></li>
-                    <li><a href="#event" class="nav-link">Event</a></li>
-                    <?php if ($isGalleryEnabled): ?>
-                    <li><a href="#gallery" class="nav-link">Gallery</a></li>
-                    <?php endif; ?>
-                    <?php if ($isMapsEnabled): ?>
-                    <li><a href="#location" class="nav-link">Location</a></li>
-                    <?php endif; ?>
-                    <?php if ($isRsvpEnabled): ?>
-                    <li><a href="#rsvp" class="nav-link">RSVP</a></li>
-                    <?php endif; ?>
-                </ul>
-                <button class="navbar-toggle" aria-label="Toggle navigation">
-                    <span class="hamburger-line"></span>
-                    <span class="hamburger-line"></span>
-                    <span class="hamburger-line"></span>
-                </button>
-            </div>
-        </nav>
-        
-        <!-- Hero Section -->
-        <section id="home" class="hero-section">
-            <div class="hero-background" style="background-image: url('<?php echo escape_html(public_path($heroBg)); ?>');"></div>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <div class="hero-glass-panel glass-panel">
-                    <p class="hero-eyebrow">We're Getting Married</p>
-                    <h1 class="hero-title">
-                        <span class="hero-bride"><?php echo $brideName; ?></span>
-                        <span class="hero-ampersand">&</span>
-                        <span class="hero-groom"><?php echo $groomName; ?></span>
-                    </h1>
-                    <p class="hero-quote"><?php echo $openingText; ?></p>
-                    <div class="hero-date-display">
-                        <span class="date-day" id="heroDay"><?php echo $akadDate ? date('d', strtotime($akadDate)) : '00'; ?></span>
-                        <span class="date-month"><?php echo $akadDate ? date('M', strtotime($akadDate)) : date('M'); ?></span>
-                        <span class="date-year"><?php echo $akadDate ? date('Y', strtotime($akadDate)) : date('Y'); ?></span>
-                    </div>
-                    <div class="hero-actions">
-                        <a href="#event" class="btn btn-primary">View Event</a>
-                        <a href="<?php echo escape_html($calendarLink); ?>" target="_blank" rel="noopener" class="btn btn-secondary">Save the Date</a>
-                    </div>
-                </div>
-            </div>
-            <div class="scroll-indicator">
-                <span>Scroll Down</span>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12l7 7 7-7"/>
-                </svg>
-            </div>
-        </section>
-        
-        <!-- Couple Section -->
-        <?php if ($isCoupleEnabled): ?>
-        <section id="couple" class="section couple-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Love Story</p>
-                    <h2 class="section-title">Happy Couple</h2>
-                </div>
-                
-                <div class="couple-grid">
-                    <div class="couple-card glass-panel">
-                        <div class="couple-image-wrapper">
-                            <img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="<?php echo $brideName; ?>" class="couple-image" loading="lazy">
-                        </div>
-                        <h3 class="couple-name"><?php echo $brideName; ?></h3>
-                        <p class="couple-nickname"><?php echo $brideNickname; ?></p>
-                        <?php if ($isParentsEnabled): ?>
-                        <p class="couple-parents">
-                            Putri dari<br>
-                            <span><?php echo $brideFather; ?></span> & <span><?php echo $brideMother; ?></span>
-                        </p>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="couple-separator">
-                        <div class="separator-ornament">&</div>
-                    </div>
-                    
-                    <div class="couple-card glass-panel">
-                        <div class="couple-image-wrapper">
-                            <img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="<?php echo $groomName; ?>" class="couple-image" loading="lazy">
-                        </div>
-                        <h3 class="couple-name"><?php echo $groomName; ?></h3>
-                        <p class="couple-nickname"><?php echo $groomNickname; ?></p>
-                        <?php if ($isParentsEnabled): ?>
-                        <p class="couple-parents">
-                            Putra dari<br>
-                            <span><?php echo $groomFather; ?></span> & <span><?php echo $groomMother; ?></span>
-                        </p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                
-                <?php if (!empty($quote)): ?>
-                <div class="couple-quote glass-panel">
-                    <blockquote><?php echo $quote; ?></blockquote>
-                </div>
-                <?php endif; ?>
-            </div>
-        </section>
-        <?php endif; ?>
-        
-        <!-- Event Section -->
-        <?php if ($isEventEnabled): ?>
-        <section id="event" class="section event-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Celebration</p>
-                    <h2 class="section-title">Wedding Event</h2>
-                </div>
-                
-                <div class="event-grid">
-                    <!-- Akad Card -->
-                    <div class="event-card glass-panel">
-                        <div class="event-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                            </svg>
-                        </div>
-                        <h3 class="event-title">Akad Nikah</h3>
-                        <p class="event-date"><?php echo $akadDateFormatted; ?></p>
-                        <p class="event-time"><?php echo escape_html($akadTime); ?> WIB</p>
-                        <p class="event-location"><?php echo $venue; ?></p>
-                        <p class="event-address"><?php echo $address; ?></p>
-                        <div class="event-actions">
-                            <a href="<?php echo escape_html($calendarLink); ?>" target="_blank" class="btn btn-small">Calendar</a>
-                            <a href="<?php echo escape_html($whatsappLink); ?>" target="_blank" class="btn btn-small btn-outline">Contact</a>
-                        </div>
-                    </div>
-                    
-                    <!-- Reception Card -->
-                    <div class="event-card glass-panel">
-                        <div class="event-icon">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                            </svg>
-                        </div>
-                        <h3 class="event-title">Resepsi</h3>
-                        <p class="event-date"><?php echo $receptionDateFormatted; ?></p>
-                        <p class="event-time"><?php echo escape_html($receptionTime); ?> WIB - Selesai</p>
-                        <p class="event-location"><?php echo $venue; ?></p>
-                        <p class="event-address"><?php echo $address; ?></p>
-                        <div class="event-actions">
-                            <a href="<?php echo escape_html($calendarLink); ?>" target="_blank" class="btn btn-small">Calendar</a>
-                            <a href="<?php echo escape_html($whatsappLink); ?>" target="_blank" class="btn btn-small btn-outline">Contact</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Dresscode -->
-                <?php if (!empty($config['dresscode']['enabled'])): ?>
-                <div class="dresscode-card glass-panel">
-                    <h3><?php echo escape_html($dresscodeTitle); ?></h3>
-                    <p class="dresscode-color"><?php echo escape_html($dresscodeColor); ?></p>
-                    <p class="dresscode-rule"><?php echo escape_html($dresscodeRule); ?></p>
-                    <p class="dresscode-desc"><?php echo escape_html($dresscodeDescription); ?></p>
-                </div>
-                <?php endif; ?>
-            </div>
-        </section>
-        <?php endif; ?>
-        
-        <!-- Countdown Section -->
-        <section class="section countdown-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Counting Down</p>
-                    <h2 class="section-title">To The Big Day</h2>
-                </div>
-                
-                <div class="countdown-container glass-panel">
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="cd-days">00</span>
-                        <span class="countdown-label">Days</span>
-                    </div>
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="cd-hours">00</span>
-                        <span class="countdown-label">Hours</span>
-                    </div>
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="cd-minutes">00</span>
-                        <span class="countdown-label">Minutes</span>
-                    </div>
-                    <div class="countdown-item">
-                        <span class="countdown-number" id="cd-seconds">00</span>
-                        <span class="countdown-label">Seconds</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Gallery Section -->
-        <?php if ($isGalleryEnabled): ?>
-        <section id="gallery" class="section gallery-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Memories</p>
-                    <h2 class="section-title">Our Gallery</h2>
-                </div>
-                
-                <div id="gallery-grid" class="gallery-grid">
-                    <p class="loading">Loading gallery...</p>
-                </div>
-            </div>
-        </section>
-        <?php endif; ?>
-        
-        <!-- Location Section -->
-        <?php if ($isMapsEnabled): ?>
-        <section id="location" class="section location-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Venue</p>
-                    <h2 class="section-title">Event Location</h2>
-                </div>
-                
-                <div class="location-grid">
-                    <div class="location-info glass-panel">
-                        <h3>Venue Details</h3>
-                        <p class="venue-name"><?php echo $venue; ?></p>
-                        <p class="venue-address"><?php echo $address; ?></p>
-                        <a href="<?php echo escape_html($mapsUrl); ?>" target="_blank" class="btn btn-primary">Get Directions</a>
-                    </div>
-                    
-                    <div class="location-map glass-panel">
-                        <iframe src="<?php echo escape_html($mapsEmbed); ?>" title="Location Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <?php endif; ?>
-        
-        <!-- Gift Section -->
-        <?php if ($isGiftEnabled): ?>
-        <section id="gift" class="section gift-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Wedding Gift</p>
-                    <h2 class="section-title">With Love</h2>
-                </div>
-                
-                <div class="gift-grid">
-                    <!-- Bank Transfer -->
-                    <div class="gift-card glass-panel">
-                        <h3>For <?php echo $brideName; ?></h3>
-                        <div class="gift-details">
-                            <div class="gift-row">
-                                <span class="gift-label">Bank:</span>
-                                <span class="gift-value"><?php echo $giftBank; ?></span>
-                            </div>
-                            <div class="gift-row">
-                                <span class="gift-label">Account:</span>
-                                <span id="gift-bank-account" class="gift-value account-number" data-account="<?php echo $giftAccount; ?>"><?php echo $giftAccount; ?></span>
-                            </div>
-                            <div class="gift-row">
-                                <span class="gift-label">Holder:</span>
-                                <span class="gift-value"><?php echo $giftHolder; ?></span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-copy" data-copy-target="gift-bank-account" data-account="<?php echo $giftAccount; ?>">Copy Account</button>
-                    </div>
-                    
-                    <!-- E-Wallet -->
-                    <div class="gift-card glass-panel">
-                        <h3>For <?php echo $groomName; ?></h3>
-                        <div class="gift-details">
-                            <div class="gift-row">
-                                <span class="gift-label">E-Wallet:</span>
-                                <span class="gift-value"><?php echo $giftEwalletLabel; ?></span>
-                            </div>
-                            <div class="gift-row">
-                                <span class="gift-label">Number:</span>
-                                <span id="gift-ewallet-number" class="gift-value account-number" data-account="<?php echo $giftEwalletNumber; ?>"><?php echo $giftEwalletNumber; ?></span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-copy" data-copy-target="gift-ewallet-number" data-account="<?php echo $giftEwalletNumber; ?>">Copy Number</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <?php endif; ?>
-        
-        <!-- RSVP Section -->
-        <?php if ($isRsvpEnabled): ?>
-        <section id="rsvp" class="section rsvp-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <p class="section-label">Confirmation</p>
-                    <h2 class="section-title">RSVP</h2>
-                </div>
-                
-                <form id="rsvp-form" class="rsvp-form glass-panel">
-                    <input type="hidden" name="csrf_token" id="csrfToken">
-                    
-                    <div class="form-group">
-                        <label for="nama">Your Name</label>
-                        <input type="text" id="nama" name="nama" placeholder="Enter your name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="status">Attendance</label>
-                        <select id="status" name="status" required>
-                            <option value="Hadir">Will Attend</option>
-                            <option value="Tidak Hadir">Cannot Attend</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="ucapan">Message & Wishes</label>
-                        <textarea id="ucapan" name="ucapan" rows="4" placeholder="Write your wishes..."></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-full">Send RSVP</button>
-                    <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
-                    <div id="rsvp-success" class="rsvp-success hidden"></div>
-                </form>
-                
-                <?php if (theme_section_enabled($config, 'rainier', 'wishes')): ?>
-                <div id="messages" class="messages-container"></div>
-                <?php endif; ?>
-            </div>
-        </section>
-        <?php endif; ?>
-        
-        <!-- Closing Section -->
-        <section class="section closing-section">
-            <div class="section-container">
-                <div class="closing-content glass-panel">
-                    <div class="bismillah">
-                        <span class="arabic-text">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</span>
-                    </div>
-                    <p class="closing-text"><?php echo $closingText; ?></p>
-                    <p class="closing-signature">
-                        <?php echo $brideNickname; ?> & <?php echo $groomNickname; ?>
-                    </p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-content">
-                <p>Made with ❤️ for <?php echo $brideNickname; ?> & <?php echo $groomNickname; ?></p>
-            </div>
-        </footer>
-        
-        <!-- Music Control -->
-        <?php if ($isMusicEnabled): ?>
-        <button id="music-toggle" class="music-control" type="button" aria-label="Toggle music">
-            <span class="music-icon">🎵</span>
-        </button>
-        <audio id="background-music" loop>
-            <source src="<?php echo escape_html(public_path($musicSrc)); ?>" type="audio/mp3">
-        </audio>
-        <?php endif; ?>
+<body>
+    <button id="simple-mode-toggle" class="accessibility-fab" aria-label="Toggle Simple Mode" data-tooltip="Switch between standard and easy-reading view" hidden><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" id="standard-view-icon" /><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" id="simple-view-icon" class="hidden-icon" /></svg></button>
+    <button id="audio-control" class="audio-fab" aria-label="Play Music" data-tooltip="Turn background music on or off" hidden><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z" id="play-icon" /><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" id="pause-icon" class="hidden-icon" /></svg></button>
+    <main id="app" aria-live="polite">
+        <?php if (theme_section_enabled($config, $presetKey, 'hero')): ?><section class="hero"><h1 id="event-title"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1><p class="subtitle" id="event-subtitle"><?php echo $openingText; ?></p><div class="hero-meta"><?php if (!empty($config['schedule']['countdown_target'])): ?><div id="countdown" class="countdown" aria-live="polite"><span class="countdown-label">Event starts in</span><div class="countdown-grid"><div class="countdown-unit"><strong id="cd-days">0</strong><span>Days</span></div><div class="countdown-unit"><strong id="cd-hours">00</strong><span>Hours</span></div><div class="countdown-unit"><strong id="cd-minutes">00</strong><span>Minutes</span></div><div class="countdown-unit"><strong id="cd-seconds">00</strong><span>Seconds</span></div></div></div><?php endif; ?><div id="calendar-actions"><a id="google-calendar-link" target="_blank" rel="noopener" href="<?php echo escape_html($calendarLink); ?>">Add to Google Calendar</a></div></div><?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><a href="#rsvp" class="primary-btn">RSVP</a><?php endif; ?></section><?php endif; ?>
+        <?php if (theme_section_enabled($config, $presetKey, 'event_details')): ?><section class="section event-details"><h2>Event Details</h2><div class="event-datetime"><div><strong>Date:</strong><time id="event-date"><?php echo $akadDate ? escape_html(date('F j, Y', strtotime($akadDate))) : ''; ?></time></div><div><strong>Time:</strong><span id="event-time"><?php echo escape_html($akadTime); ?></span></div></div><p id="event-description"><?php echo $description; ?></p><address class="location"><p id="venue-name"><?php echo escape_html($venue); ?></p><p id="venue-address"><?php echo escape_html($address); ?></p><a id="maps-link" target="_blank" rel="noopener" href="<?php echo escape_html($mapsUrl); ?>">Open in Google Maps</a></address></section><?php endif; ?>
+        <?php if (theme_section_enabled($config, $presetKey, 'schedule')): ?><section class="section" id="schedule-section"><h2>Schedule</h2><ul id="schedule-list"></ul></section><?php endif; ?>
+        <?php if (theme_section_enabled($config, $presetKey, 'quotes')): ?><section class="section" id="quotes-section"><h2>Words of Inspiration</h2><div class="quotes-container" id="quotes-container"></div></section><?php endif; ?>
+        <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><section class="section" id="rsvp"><h2>RSVP</h2><p>Please confirm your attendance</p><div class="form-embed"></div></section><?php endif; ?>
+        <footer><div class="footer-branding"><a id="footer-branding-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener"><img id="footer-logo" src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $siteTitle; ?>" class="footer-logo"></a><div class="footer-info"><p class="hosted-by" id="footer-credits-label">Hosted by</p><p class="copyright"><span id="footer-copyright">© <?php echo date('Y'); ?> <?php echo $brideName; ?> &amp; <?php echo $groomName; ?></span><span id="footer-template-container"> | <span id="footer-template-label">Template</span> <a id="footer-template-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener">Rainier</a></span></p><p id="footer-repo-container" class="repo-info"><a id="footer-repo-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener">Source template</a></p><div class="social-links" id="social-links" hidden><a id="instagram-link" class="social-link" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg><span id="instagram-label">Follow on Instagram</span></a></div></div></div><p id="footer-text"><?php echo $closingText; ?></p></footer>
     </main>
-    
-    <!-- Gallery Modal -->
-    <div id="gallery-modal" class="gallery-modal hidden">
-        <button type="button" class="modal-close" aria-label="Close modal">&times;</button>
-        <button type="button" class="modal-prev" aria-label="Previous image">&lt;</button>
-        <button type="button" class="modal-next" aria-label="Next image">&gt;</button>
-        <img class="modal-image" id="modalImg" alt="">
-        <div class="modal-caption" id="modalCaption"></div>
-    </div>
-    
-    <!-- Toast Notification -->
-    <div id="toast" class="toast hidden">
-        <span class="toast-message"></span>
-    </div>
-    
-    <!-- Scripts -->
-    <script src="<?php echo get_theme_asset_url('rainier', 'script.js'); ?>"></script>
+    <script id="event-data" type="application/json"><?php echo json_encode($eventData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 </body>
 </html>
