@@ -54,6 +54,9 @@ foreach (['custom', 'dewankl', 'elix', 'rainier', 'archak', 'custom'] as $switch
     visual_assert(($switched['theme_visuals']['archak']['hero_title_scale'] ?? '') === '1.05', "switching to {$switchPreset} preserves Archak visuals");
     $switchBase = $switched;
 }
+$usageProbe = $switchBase;
+$usageProbe['theme_visuals']['elix']['hero_background'] = 'uploads/background/in-use.png';
+visual_assert(in_array('Visual Elix / hero background', detect_media_usage($usageProbe, 'uploads/background/in-use.png'), true), 'Media usage detects visual preset references');
 $resetProbe = $switchBase;
 reset_theme_visual_overrides($resetProbe, 'elix');
 visual_assert(($resetProbe['theme_visuals']['elix'] ?? null) === [], 'reset_visuals clears only the active Elix overrides');
@@ -101,6 +104,7 @@ $html = render_theme_layout($stored, $shared);
 visual_assert(strpos($html, '--cms-elix-accent:#123456') !== false, 'Elix render includes the stored accent bridge');
 visual_assert(strpos($html, 'uploads/background/hero.jpg') !== false, 'Elix render includes the stored hero media bridge');
 visual_assert(strpos($html, '--cms-elix-countdown-scale:0.66') !== false, 'Elix render includes the stored countdown scale bridge');
+visual_assert(strpos($html, '.hero,.hero h1,.hero h4,.hero p{color:#fff}') !== false, 'Elix hero maintains readable contrast over dark backgrounds');
 
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
 $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');
@@ -111,8 +115,23 @@ visual_assert(is_string($appSource) && str_contains($appSource, 'globalThemePres
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'class="visual-capability-panel"'), 'Admin renders the preset visual capability panel');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual-schemas='), 'Admin exposes dynamic visual schemas to the editor');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset_visuals"'), 'Admin exposes per-preset visual reset');
+visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-media-assets='), 'Admin exposes canonical image assets to visual editor');
+visual_assert(is_string($adminSource) && !str_contains($adminSource, 'name="visual_file_'), 'Admin visual editor does not create a duplicate uploader');
+visual_assert(is_string($appSource) && str_contains($appSource, 'mediaAssets'), 'Admin visual editor consumes canonical media assets');
+visual_assert(is_string($appSource) && str_contains($appSource, 'input.dataset.visualMediaSelect'), 'Admin image capability uses a media selector');
+visual_assert(is_string($appSource) && str_contains($appSource, 'label.htmlFor = id'), 'Dynamic visual fields associate labels with controls');
+visual_assert(is_string($appSource) && !str_contains($appSource, 'innerHTML'), 'Dynamic visual editor avoids raw HTML injection');
+visual_assert(is_string($adminSource) && str_contains($adminSource, 'title="Preview tema undangan"'), 'Theme preview iframe has an accessible title');
+visual_assert(is_string($adminSource) && str_contains($adminSource, 'aria-label="Ukuran preview"'), 'Preview viewport controls have an accessible group label');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');
 visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak'], 'Preset selector exposes only renderer-backed built-ins');
+$mediaProbeName = 'uploads/background/visual-contract-probe-' . getmypid() . '.png';
+$mediaProbePath = ROOT_DIR . '/' . $mediaProbeName;
+file_put_contents($mediaProbePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
+visual_assert(theme_visual_image_reference_is_canonical($mediaProbeName), 'Canonical existing PNG is accepted for visual image reference');
+visual_assert(!theme_visual_image_reference_is_canonical('uploads/background/not-present.png'), 'Missing canonical image is rejected');
+visual_assert(theme_visual_image_reference_is_canonical('https://cdn.example.test/hero.jpg'), 'HTTPS image URL remains accepted');
+unlink($mediaProbePath);
 
 foreach (['dewankl', 'rainier', 'archak'] as $preset) {
     $probe = $stored;

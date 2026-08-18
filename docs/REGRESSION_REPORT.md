@@ -101,3 +101,13 @@ The root cause was confirmed in the capability layer: `theme_admin_capabilities_
 The Guest Link Generator no longer falls back silently to `window.location.origin`, `/`, or `example.com`. Clean-install configuration now starts with an empty site URL. When the origin is missing, the Admin displays an actionable Indonesian configuration warning, the preview remains empty, the browser generator refuses to create a URL and reports that Site URL must be configured, and the server-side URL helper returns an empty result. A configured origin such as `https://test.example.id` produces `https://test.example.id/?to=Budi`.
 
 `tools/admin_guest_smoke.php` now verifies global Settings and Backup availability in Custom, DewanaKL, Elix, Rainier, and Archak; the Settings save action; configured-origin URL generation; missing-origin behavior; browser fallback removal; and origin persistence across `custom → dewankl → elix → rainier → archak → custom` switching. The complete existing suite and the localization/content-preservation tests remain passing.
+
+## Follow-up Audit — Canonical Media and State Integrity
+
+The follow-up audit fixed the visual image capability by replacing the duplicate visual file picker with a selector backed by the existing Media Library. Visual image values now persist as canonical `uploads/...` references or validated HTTPS URLs, and media usage detection/rename propagation includes `theme_visuals` so referenced assets cannot be deleted or silently disconnected.
+
+The Admin editor now resolves the active preset from the current UI state only. Unsaved theme and visual values are snapshotted per preset during switching, while reset and cancel clear only the currently selected preset. Custom preview state now starts from the backend-provided `theme_custom_config()` payload rather than merging a second frontend representation.
+
+The new `tools/visual_media_e2e_smoke.php` test saves canonical background references through the production config path, reloads them, verifies all five preset adapters/public renderers, resets Rainier in isolation, and confirms Elix reset returns to the source background. The final run completed with 155 passing assertions and no reported failures.
+
+The Elix adapter also restores readable contrast for greeting, names, and invitation message on the dark hero background while preserving Pacifico brush typography, compact countdown behavior, and the original DOM order.

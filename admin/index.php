@@ -152,6 +152,13 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         $config['gallery']['items'][$index]['filename'] = $response['path'];
                     }
                 }
+                foreach (($config['theme_visuals'] ?? []) as $presetKey => $visualOverrides) {
+                    foreach ((array)$visualOverrides as $visualKey => $visualValue) {
+                        if ((string)$visualValue === $mediaPath) {
+                            $config['theme_visuals'][$presetKey][$visualKey] = $response['path'];
+                        }
+                    }
+                }
                 $success = 'Nama file media berhasil diubah.';
                 break;
             case 'replace_media_file':
@@ -442,15 +449,11 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $postedVisuals = isset($_POST['visuals']) && is_array($_POST['visuals']) ? $_POST['visuals'] : [];
                     foreach ($schema as $visualKey => $definition) {
                         $value = array_key_exists($visualKey, $postedVisuals) ? $postedVisuals[$visualKey] : null;
-                        if (($definition['type'] ?? '') === 'image') {
-                            $fileKey = 'visual_file_' . $visualKey;
-                            if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
-                                $uploadRes = upload_file($_FILES[$fileKey], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE);
-                                if (empty($uploadRes['error'])) $value = relative_path($uploadRes['path']);
-                            }
-                        }
                         if ($value === null) continue;
                         $validated = validate_theme_visual_value($value, $definition);
+                        if (($definition['type'] ?? '') === 'image' && $validated !== null && !theme_visual_image_reference_is_canonical($validated)) {
+                            continue;
+                        }
                         if ($validated !== null) $targetConfig['theme_visuals'][$visualPreset][$visualKey] = $validated;
                     }
                 };
@@ -856,6 +859,7 @@ $galleryItems = get_gallery_items($config);
 $mediaSearch = strtolower(trim((string)($_GET['media_search'] ?? '')));
 $mediaType = strtolower(trim((string)($_GET['media_type'] ?? 'all')));
 $mediaLibrary = list_media_library(['search' => $mediaSearch, 'type' => $mediaType]);
+$themeVisualMediaOptions = array_values(array_filter(list_media_library(['type' => 'image']), static fn(array $item): bool => ($item['type'] ?? '') === 'image'));
 $invitationPreview = build_invitation_preview_url($config);
 $siteUrl = trim($config['site']['url']);
 $coverPreview = $config['media']['cover'] ?? '';
@@ -1159,7 +1163,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <h2>Tema & Tampilan</h2>
                         <p class="section-description">Ubah gaya undangan dan lihat hasilnya langsung di preview sebelum menyimpan.</p>
                         <div class="theme-editor-layout">
-                        <form method="post" enctype="multipart/form-data" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-custom-theme='<?php echo escape_html(json_encode($customThemePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-labels='<?php echo escape_html(json_encode($themePresetLabels, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-schemas='<?php echo escape_html(json_encode($themeVisualSchemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-values='<?php echo escape_html(json_encode($themeVisualValues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
+                        <form method="post" enctype="multipart/form-data" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-custom-theme='<?php echo escape_html(json_encode($customThemePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-labels='<?php echo escape_html(json_encode($themePresetLabels, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-schemas='<?php echo escape_html(json_encode($themeVisualSchemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-values='<?php echo escape_html(json_encode($themeVisualValues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-media-assets='<?php echo escape_html(json_encode($themeVisualMediaOptions, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme">
                             
@@ -1185,8 +1189,15 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <?php elseif ($visualType === 'range'): ?>
                                                     <div style="display:flex;align-items:center;gap:0.65rem;"><input id="visual-<?php echo escape_html($visualKey); ?>" type="range" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" min="<?php echo escape_html((string)($visualDefinition['min'] ?? '0')); ?>" max="<?php echo escape_html((string)($visualDefinition['max'] ?? '1')); ?>" step="<?php echo escape_html((string)($visualDefinition['step'] ?? '0.05')); ?>" style="flex:1;"><output data-range-output="visual-<?php echo escape_html($visualKey); ?>"><?php echo escape_html((string)$visualValue); ?></output></div>
                                                 <?php elseif ($visualType === 'image'): ?>
-                                                    <input id="visual-<?php echo escape_html($visualKey); ?>" type="text" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" placeholder="Path media atau URL">
-                                                    <input type="file" name="visual_file_<?php echo escape_html($visualKey); ?>" accept="image/*" style="margin-top:0.45rem;">
+                                                    <select id="visual-<?php echo escape_html($visualKey); ?>" name="visuals[<?php echo escape_html($visualKey); ?>]" data-visual-media-select>
+                                                        <option value="">Gunakan latar bawaan preset</option>
+                                                        <?php $visualMediaFound = false; foreach ($themeVisualMediaOptions as $mediaOption): ?>
+                                                            <?php if ((string)$mediaOption['path'] === (string)$visualValue) $visualMediaFound = true; ?>
+                                                            <option value="<?php echo escape_html((string)$mediaOption['path']); ?>" <?php echo (string)$mediaOption['path'] === (string)$visualValue ? 'selected' : ''; ?>><?php echo escape_html((string)$mediaOption['label'] . ' — ' . (string)$mediaOption['name']); ?></option>
+                                                        <?php endforeach; ?>
+                                                        <?php if (!$visualMediaFound && (string)$visualValue !== ''): ?><option value="<?php echo escape_html((string)$visualValue); ?>" selected>Referensi tersimpan: <?php echo escape_html((string)$visualValue); ?></option><?php endif; ?>
+                                                    </select>
+                                                    <small>Pilih asset dari Pengelola Media. Untuk upload baru, gunakan bagian <a href="#file-manager">Kelola Media</a>, lalu pilih asset setelah halaman dimuat ulang.</small>
                                                 <?php else: ?>
                                                     <input id="visual-<?php echo escape_html($visualKey); ?>" type="text" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>">
                                                 <?php endif; ?>

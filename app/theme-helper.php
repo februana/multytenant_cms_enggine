@@ -162,6 +162,22 @@ function theme_visual_css_url(string $path): string {
     return 'url("' . $url . '")';
 }
 
+/** Accept only external HTTP(S) images or existing images from the canonical uploads library. */
+function theme_visual_image_reference_is_canonical(string $value): bool {
+    $value = trim($value);
+    if ($value === '') return true;
+    if (filter_var($value, FILTER_VALIDATE_URL)) {
+        $scheme = strtolower((string)(parse_url($value, PHP_URL_SCHEME) ?? ''));
+        return in_array($scheme, ['http', 'https'], true);
+    }
+    $normalized = normalize_media_relative_path($value);
+    if ($normalized === null || !str_starts_with($normalized, 'uploads/')) return false;
+    $absolute = ROOT_DIR . '/' . $normalized;
+    if (!is_file($absolute)) return false;
+    $extension = strtolower((string)pathinfo($absolute, PATHINFO_EXTENSION));
+    return in_array($extension, ALLOWED_IMAGE_TYPES, true) && safe_image_mime($absolute) !== null;
+}
+
 function validate_theme_visual_value($value, array $definition) {
     $type = (string)($definition['type'] ?? 'text');
     if (is_array($value)) return null;
