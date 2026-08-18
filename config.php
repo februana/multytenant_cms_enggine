@@ -349,27 +349,36 @@ function config_defaults(): array {
                 'enable_confetti' => true,
                 'enable_mouse_animation' => true,
                 'enable_music' => true,
-                'welcome_note' => ''
+                'welcome_note' => '',
+                'opening_greeting' => 'Assalamualaikum Warahmatullahi Wabarakatuh'
             ],
             'elix' => [
                 'timeline_style' => 'vertical',
                 'show_countdown_circle' => true,
-                'header_greeting' => ''
+                'header_greeting' => '',
+                'opening_greeting' => 'Bismillahirrahmanirrahim'
             ],
             'rainier' => [
                 'glass_opacity' => '0.85',
                 'show_bismillah' => true,
                 'hero_accent_color' => '#b8655d',
-                'quote_note' => ''
+                'quote_note' => '',
+                'opening_greeting' => 'Bismillahirrahmanirrahim'
             ],
             'archak' => [
                 'enable_parallax' => true,
                 'enable_preloader' => true,
                 'divider_style' => 'ornament',
                 'header_badge_image' => '',
-                'archak_welcome_msg' => ''
+                'archak_welcome_msg' => '',
+                'opening_greeting' => 'Bismillahirrahmanirrahim'
             ],
-            'parang' => []
+            'parang' => [
+                'opening_greeting' => 'Bismillahirrahmanirrahim'
+            ],
+            'pawiwahan' => [
+                'opening_greeting' => 'OM Swastiastu'
+            ]
         ],
         'theme_visuals' => [
             'dewankl' => [],
@@ -377,6 +386,7 @@ function config_defaults(): array {
             'rainier' => [],
             'archak' => [],
             'parang' => [],
+            'pawiwahan' => [],
             'custom' => []
         ],
         'custom_css' => ''
@@ -560,6 +570,12 @@ function theme_registry(): array {
                     'label' => 'Pesan Sambutan Khusus',
                     'description' => 'Teks ucapan atau pesan sambutan tambahan (dukungan multi-baris).',
                     'default' => ''
+                ],
+                'opening_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Salam Pembuka',
+                    'description' => 'Teks salam pembuka yang tampil di awal preset. Bisa diganti dengan Bismillah, Assalamualaikum, OM Swastiastu, atau teks lain.',
+                    'default' => 'Assalamualaikum Warahmatullahi Wabarakatuh'
                 ]
             ],
             'capabilities' => [
@@ -625,6 +641,12 @@ function theme_registry(): array {
                     'label' => 'Teks Catatan Header',
                     'description' => 'Pesan ucapan atau catatan tajuk multi-baris di bagian atas.',
                     'default' => ''
+                ],
+                'opening_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Salam Pembuka',
+                    'description' => 'Teks salam pembuka yang tampil di awal preset.',
+                    'default' => 'Bismillahirrahmanirrahim'
                 ]
             ],
             'capabilities' => [
@@ -693,6 +715,12 @@ function theme_registry(): array {
                     'label' => 'Catatan Editorial Quote',
                     'description' => 'Teks kutipan/catatan tambahan berformat multi-baris.',
                     'default' => ''
+                ],
+                'opening_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Salam Pembuka',
+                    'description' => 'Teks salam pembuka yang tampil di awal preset.',
+                    'default' => 'Bismillahirrahmanirrahim'
                 ]
             ],
             'capabilities' => [
@@ -736,7 +764,14 @@ function theme_registry(): array {
                 'body_font' => 'Manrope, sans-serif',
                 'font_size_base' => '16px'
             ],
-            'schema' => [],
+            'schema' => [
+                'opening_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Salam Pembuka',
+                    'description' => 'Teks salam pembuka yang tampil di awal preset.',
+                    'default' => 'Bismillahirrahmanirrahim'
+                ]
+            ],
             'capabilities' => [
                 'content' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
@@ -779,7 +814,13 @@ function theme_registry(): array {
             ],
             'schema' => [
                 'hero_background' => ['type' => 'image', 'label' => 'Latar Hero Pawiwahan', 'description' => 'Path media atau URL. Kosongkan untuk memakai source default Pawiwahan.', 'default' => ''],
-                'show_protocol' => ['type' => 'boolean', 'label' => 'Tampilkan Catatan Acara', 'description' => 'Tampilkan catatan sumber yang kompatibel dengan bagian protokol Pawiwahan.', 'default' => true]
+                'show_protocol' => ['type' => 'boolean', 'label' => 'Tampilkan Catatan Acara', 'description' => 'Tampilkan catatan sumber yang kompatibel dengan bagian protokol Pawiwahan.', 'default' => true],
+                'opening_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Salam Pembuka',
+                    'description' => 'Teks salam pembuka yang tampil di bagian awal Pawiwahan.',
+                    'default' => 'OM Swastiastu'
+                ]
             ],
             'capabilities' => [
                 'content' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar'],
@@ -856,6 +897,12 @@ function theme_registry(): array {
                     'label' => 'Pesan Sambutan Archak',
                     'description' => 'Pesan ucapan multi-baris bergaya editorial Archak.',
                     'default' => ''
+                ],
+                'opening_greeting' => [
+                    'type' => 'textarea',
+                    'label' => 'Salam Pembuka',
+                    'description' => 'Teks salam pembuka yang tampil di awal preset.',
+                    'default' => 'Bismillahirrahmanirrahim'
                 ]
             ],
             'capabilities' => [

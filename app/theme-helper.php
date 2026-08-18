@@ -35,6 +35,29 @@ function preserve_text_input($value, string $fallback = ''): string {
 }
 
 /**
+ * Resolve the short religious/opening greeting shown by each built-in preset.
+ * Existing config files receive the preset default through config normalization;
+ * non-empty admin values always win and preserve user-entered Unicode/newlines.
+ */
+function theme_opening_greeting(array $config, string $presetKey): string {
+    $defaults = [
+        'dewankl' => 'Assalamualaikum Warahmatullahi Wabarakatuh',
+        'elix' => 'Bismillahirrahmanirrahim',
+        'rainier' => 'Bismillahirrahmanirrahim',
+        'archak' => 'Bismillahirrahmanirrahim',
+        'parang' => 'Bismillahirrahmanirrahim',
+        'pawiwahan' => 'OM Swastiastu',
+        'custom' => 'Bismillahirrahmanirrahim',
+    ];
+    $fallback = $defaults[$presetKey] ?? $defaults['custom'];
+    $configured = function_exists('get_theme_option')
+        ? get_theme_option($config, $presetKey, 'opening_greeting', $fallback)
+        : ($config['theme_options'][$presetKey]['opening_greeting'] ?? $fallback);
+    $configured = (string)$configured;
+    return trim($configured) === '' ? $fallback : $configured;
+}
+
+/**
  * Normalize the public guest query value without trusting it as HTML.
  * The guest link format remains compatible with the existing `?to=` flow.
  */

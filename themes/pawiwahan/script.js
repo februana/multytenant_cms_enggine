@@ -60,7 +60,7 @@
     if (!element) return;
     var value = element.getAttribute('data-copy') || element.textContent || '';
     var done = function () {
-      var notice = document.getElementById('popupCopy2');
+      var notice = document.getElementById('pawiwahanGiftCopyStatus') || document.getElementById('popupCopy2');
       if (notice) { notice.textContent = 'Berhasil disalin'; notice.classList.add('show'); }
     };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value).then(done).catch(function () {});
@@ -78,6 +78,70 @@
   function initCopyButtons() {
     root.querySelectorAll('[data-copy]').forEach(function (button) {
       button.addEventListener('click', function () { copyToClipboard(button); });
+    });
+  }
+
+  function setGiftModalFallback(modal, trigger, open) {
+    if (!modal) return;
+    var backdrop = document.querySelector('[data-pawiwahan-gift-backdrop]');
+    if (open) {
+      modal.style.display = 'block';
+      modal.classList.add('show');
+      modal.removeAttribute('aria-hidden');
+      modal.setAttribute('aria-modal', 'true');
+      document.body.classList.add('modal-open');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.setAttribute('data-pawiwahan-gift-backdrop', '1');
+        backdrop.className = 'modal-backdrop fade show';
+        document.body.appendChild(backdrop);
+        backdrop.addEventListener('click', function () { setGiftModalFallback(modal, trigger, false); });
+      }
+      if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    } else {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+      modal.removeAttribute('aria-modal');
+      document.body.classList.remove('modal-open');
+      if (backdrop) backdrop.remove();
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function initGiftModal() {
+    var trigger = document.getElementById('pawiwahan-gift-trigger');
+    var modal = document.getElementById('pawiwahanGiftModal');
+    if (!trigger || !modal) return;
+    trigger.addEventListener('click', function (event) {
+      if (window.bootstrap && window.bootstrap.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(modal).show();
+      } else {
+        event.preventDefault();
+        setGiftModalFallback(modal, trigger, true);
+      }
+    });
+    modal.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (window.bootstrap && window.bootstrap.Modal) {
+          window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+        } else {
+          setGiftModalFallback(modal, trigger, false);
+        }
+      });
+    });
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal && !(window.bootstrap && window.bootstrap.Modal)) {
+        setGiftModalFallback(modal, trigger, false);
+      }
+    });
+    modal.addEventListener('shown.bs.modal', function () { trigger.setAttribute('aria-expanded', 'true'); });
+    modal.addEventListener('hidden.bs.modal', function () { trigger.setAttribute('aria-expanded', 'false'); });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && modal.classList.contains('show')) {
+        if (window.bootstrap && window.bootstrap.Modal) window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+        else setGiftModalFallback(modal, trigger, false);
+      }
     });
   }
 
@@ -113,6 +177,7 @@
     if (welcomeModal) welcomeModal.style.display = 'block';
     initCountdown();
     initCopyButtons();
+    initGiftModal();
     initScrollTop();
     initRsvp();
   }, { once: true });

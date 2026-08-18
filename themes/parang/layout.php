@@ -31,6 +31,7 @@ $groomNameRaw = (string)($config['wedding']['groom_name'] ?? 'Andi');
 $brideName = escape_html($brideNameRaw);
 $groomName = escape_html($groomNameRaw);
 $openingText = render_preserved_text((string)($config['wedding']['opening_text'] ?? ''));
+$openingGreeting = render_preserved_text(theme_opening_greeting($config, 'parang'));
 $quoteText = render_preserved_text((string)($config['wedding']['quote'] ?? ''));
 $closingText = render_preserved_text((string)($config['wedding']['closing_text'] ?? ''));
 $guestName = function_exists('resolve_guest_name') ? resolve_guest_name($config) : '';
@@ -144,6 +145,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
                 <img class="parang-ornament parang-ornament-top" src="<?php echo escape_html($sourceGunungan); ?>" alt="Ornamen Gunungan">
                 <img class="parang-ornament parang-ornament-side parang-ornament-left" src="<?php echo escape_html($sourceWayang); ?>" alt="Ornamen wayang" aria-hidden="true">
                 <img class="parang-ornament parang-ornament-side parang-ornament-right" src="<?php echo escape_html($sourceWayang); ?>" alt="" aria-hidden="true">
+                <p class="parang-opening-greeting"><?php echo $openingGreeting; ?></p>
                 <p class="parang-label">Kepada Yth.</p>
                 <p class="parang-hero-guest">Bapak/Ibu/Saudara/i</p>
                 <p class="parang-hero-guest-name"><?php echo $guestLabel; ?></p>
