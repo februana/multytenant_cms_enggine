@@ -8,7 +8,7 @@ $sequence = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'custom'];
 $markers = [
     'custom' => ['hero', 'rsvp'],
     'dewankl' => ['id="root"', 'id="wedding-date"', 'id="comment"'],
-    'elix' => ['id="hero"', 'id="info"', 'id="gifts"', 'id="audio-container"'],
+    'elix' => ['id="hero"', 'id="info"', 'id="gifts"'],
     'rainier' => ['id="app"', 'id="event-title"', 'id="schedule-section"'],
     'archak' => ['id="story"', 'id="stay"', 'id="registry"', 'id="parallax1"'],
 ];
@@ -19,6 +19,11 @@ foreach ($sequence as $preset) {
     $shared['presetKey'] = $preset;
     $html = render_theme_layout($config, $shared);
     foreach ($markers[$preset] as $marker) if (strpos($html, $marker) === false) throw new RuntimeException("Missing {$marker} after switching to {$preset}");
+    if ($preset === 'elix') {
+        $hasConfiguredMusic = trim((string)($config['media']['music'] ?? '')) !== '';
+        $hasAudioContainer = strpos($html, 'id="audio-container"') !== false;
+        if ($hasConfiguredMusic !== $hasAudioContainer) throw new RuntimeException('Elix audio container does not follow optional music configuration');
+    }
     if ($preset === 'rainier' && preg_match('/\baos\b/i', $html)) throw new RuntimeException('Rainier leaked AOS dependency');
     if ($preset === 'custom' && strpos($html, 'id="app"') !== false) throw new RuntimeException('Custom leaked Rainier app marker');
     if ($preset !== 'archak' && strpos($html, 'id="registry"') !== false) throw new RuntimeException("{$preset} leaked Archak registry marker");

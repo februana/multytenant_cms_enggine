@@ -1,149 +1,119 @@
 # Wedding Invitation CMS
 
-This repository is a premium wedding invitation platform built with PHP, SQLite, and JSON configuration. The implementation follows a CMS-first, single-root architecture:
-
-CMS → `config.json` → `config.php` → theme resolver → `themes/<preset>/layout.php` → frontend
+This repository is a PHP/SQLite wedding-invitation CMS with a theme-adapter architecture. It incorporates and adapts four independently authored invitation templates; the built-in presets are not presented as original designs of this project.
 
 ## Current architecture
 
-### Canonical public entrypoints
+```text
+CMS ENGINE
+    ↓
+THEME ADAPTER
+    ↓
+BUILT-IN PRESET
+```
 
-- `index.php` — public invitation controller; it prepares shared data and delegates the complete HTML document to the active theme layout
-- `admin.php` — redirect wrapper to the admin UI
-- `save.php` — public wrapper for save actions
-- `messages.php` — public wrapper for message APIs
-- `gallery.php` — public wrapper for gallery APIs
+Custom mode follows a separate CMS-native path:
 
-### Theme presets
+```text
+CMS ENGINE
+    ↓
+CUSTOM CMS-NATIVE BUILDER
+```
 
-Official presets are:
+The CMS provides data, persistence, backend services, security helpers, and capability metadata. Theme adapters connect those values to individual source templates. Built-in presets preserve their source DOM, CSS, JavaScript lifecycle, dependencies, section order, and UX. Presets intentionally have different capabilities: a CMS capability does not automatically become a section, and it does not have to appear in every preset. Custom is the full CMS-native builder for users who need maximum flexibility.
 
-- `dewankl`
-- `elix`
-- `rainier`
-- `archak`
+The **Guest Link Generator** and **personalized Guest Name** are global CMS capabilities. A generated invitation uses the current URL contract, for example `?to=Andi`; each theme presents the resolved guest name in its own original-compatible location rather than receiving identical markup.
 
-The canonical setting is `theme.theme_preset`. Unknown preset values safely fall back to `dewankl`. Theme layouts are the single frontend document renderer; `index.php` must not emit a second HTML document.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for ownership boundaries and [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) for source provenance, licenses, authors, and attribution requirements.
 
-### Canonical frontend assets
+## Presets
 
-Each active theme loads its own `style.css` and `script.js`. `custom.css`, when present, is loaded after the theme CSS so CMS Custom CSS can override theme styles.
+The four built-in presets are:
 
-### Core implementation and config
+- **DewanaKL** — original welcome/loading, gallery, video, gift, comment, AOS, and confetti-oriented invitation flow.
+- **Elix** — original hero/story/gallery/RSVP/gifts/audio flow with SimplyCountdown and lightbox support.
+- **Rainier** — original event-oriented `#app` flow with timezone-aware event data, calendar, optional schedule/quotes, RSVP, and footer branding. Rainier does not use AOS.
+- **Archak** — compact original navigation, home, timeline, story, gallery, stay, registry, parting message, footer, parallax, and reveal flow.
 
-- `config.php` — configuration loader, defaults, and helpers
-- `config.json` — authoritative CMS configuration source
-- `database.sqlite` — RSVP/message storage
-- `uploads/` — canonical media storage
-- `admin/` — CMS UI, upload flow, backup/restore endpoints
-- `app/` — shared private implementation, including theme helpers and renderer
+Missing generic CMS functionality in a simple preset is intentional when the original template has no equivalent presentation boundary. Use Custom mode for the complete CMS-native section builder.
 
 ## Repository layout
 
 ```text
 /
-├── index.php
-├── admin.php
-├── save.php
-├── messages.php
-├── gallery.php
-├── config.php
-├── config.json
-├── database.sqlite
-├── uploads/
-├── admin/
-├── app/
-├── themes/
-│   ├── dewankl/
-│   ├── elix/
-│   ├── rainier/
-│   └── archak/
-├── style.css
-├── script.js
-├── custom.css
-├── guest-links.json
-├── backups/
-├── deploy/
-└── docs / legacy notes (kept only when still accurate)
+├── index.php                 # public invitation controller
+├── admin.php                 # admin redirect wrapper
+├── save.php                  # RSVP backend wrapper
+├── messages.php              # message API wrapper
+├── gallery.php               # gallery API wrapper
+├── config.php                # defaults, persistence, helpers, security
+├── config.json               # current CMS configuration
+├── database.sqlite           # native runtime database placeholder
+├── uploads/                  # user-provided media directories
+├── admin/                    # CMS admin UI and services
+├── app/                      # shared renderer/helpers/contracts
+├── themes/                   # built-in adapters and retained source files
+├── deploy/                   # native installer/update/backup/health scripts
+├── docker/                   # Docker entrypoint and Apache config
+├── Dockerfile
+├── docker-compose.yml
+└── docs/
 ```
-
-## CMS ownership rules
-
-The CMS owns the effective rendering contract for:
-
-- cover / hero media
-- section visibility
-- theme preset and resolved theme values
-- gallery images
-- love story content
-- background and media configuration
-- guest links
-- upload metadata and references
-- Custom CSS
-
-The frontend consumes the values the CMS exposes and must not create a competing renderer or media pipeline.
 
 ## Deployment
 
-Source and runtime are intentionally separate:
-
-```text
-~/webserver_undangan
-        │
-        │ deploy/install.sh
-        ▼
-/var/www/wedding
-```
-
-Use the existing deployment scripts as the repo's operational path:
-
-- `deploy/install.sh` — fresh install; creates `/var/www/wedding` when needed
-- `deploy/update.sh` — update an existing site while preserving runtime data
-- `deploy/backup.sh` — backup user data and config
-- `deploy/restore.sh` — restore from backup
-- `deploy/health-check.sh` — runtime health verification
-
-Do not manually maintain a second application copy under `/var/www/wedding`; it is deployment output, not the Git working tree.
-
-## Fresh-install verification
-
-From the repository working tree:
+### Docker
 
 ```bash
-sudo rm -rf /var/www/wedding
-cd ~/webserver_undangan
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
+cp .env.example .env
+chmod 600 .env
+# Set ADMIN_PASS in .env before starting.
+docker compose build
+docker compose up -d
+docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
+```
+
+Docker uses PHP 8.3 Apache. The `wedding_data` volume persists config, guest links, Custom CSS, event ICS, and SQLite state; `wedding_uploads` persists uploaded media. Compose refuses to use a shared hardcoded administrator password.
+
+### Native/server deployment
+
+Prerequisites are `rsync`, `openssl`, and Composer on a root-capable Ubuntu host. The installer installs the selected Nginx/Apache and required PHP packages:
+
+```bash
+cd /path/to/webserver_undangan
 sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-A fresh-install test must use the installer to create the runtime directory. Do not create `/var/www/wedding` manually.
+The installer creates `/var/www/wedding`, initializes runtime directories/files, configures the selected web server, optionally configures TLS/WebDAV, and leaves the Git checkout intact. Use the existing scripts for operations:
 
-## Backup and runtime data
+```bash
+sudo /var/www/wedding/deploy/update.sh
+sudo /var/www/wedding/deploy/backup.sh
+sudo /var/www/wedding/deploy/restore.sh /path/to/backup.zip
+```
 
-The runtime data that must be preserved across updates keeps the current repo contract:
+Full prerequisites, prompts, storage behavior, health statuses, troubleshooting, and media provisioning are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
-- `config.json`
-- `guest-links.json`
-- `database.sqlite`
-- `uploads/`
-- `event.ics`
-- `custom.css` when present
-- `backups/`
+## Optional media lifecycle
 
-## Important constraints
+A clean checkout contains no sample cover, music, or Open Graph image. The shipped defaults leave those fields empty because these are optional administrator-provided deployment data, not required application assets. The installer creates the upload directories but does not invent copyrighted or arbitrary media. The health check reports missing optional media as `WARNING` while failing only required application/storage/security checks.
 
-- `config.json` is the single source of truth for sections and theme.
-- Disabled sections must not be rendered in the frontend.
-- Live Preview uses the same theme renderer and existing `theme-preview:update` bridge as production.
-- `app/theme-helper.php` is the canonical source for shared frontend helpers.
-- Custom CSS loads after the active theme CSS.
-- Do not create a second frontend or media pipeline in `app/`.
-- Do not treat `/var/www/wedding` as the Git source tree.
+Upload or provision media through the Admin UI, then configure the corresponding `config.json` field. Music requires both a valid configured file and the relevant preset's explicit music option/section. DewanaKL video requires a valid supported file in `media.love_story_video`.
 
-See `ARCHITECTURE.md`, `DEPLOYMENT.md`, `BACKUP_RESTORE.md`, and `SECURITY.md` for repo-aligned operational details.
+## Runtime data and security
 
-## Theme-driven preset contract
+Native mode stores mutable files in the document root by default. Docker sets `UNDANGAN_DATA_DIR=/var/data` and `UNDANGAN_DB_PATH=/var/data/database.sqlite`. The application blocks direct public access to sensitive config, guest-link, environment, and SQLite files. Do not commit `.env` or production runtime data.
 
-The CMS exposes data and services, while each built-in preset owns its own frontend composition. `app/theme-contract.php` defines the section vocabulary and consumed capabilities for DewanaKL, Elix, Rainier, and the retained Archak compatibility preset.
+## License and attribution
 
-`CUSTOM` remains the full CMS-native builder and uses the global `sections` array for composition, ordering, and visibility. Built-in presets use `theme_sections[<preset>]` only for theme-relevant controls; their renderer owns section order and DOM structure. Built-in layouts must use `theme_section_enabled()` rather than global `is_section_enabled()` calls.
+The CMS integration code is project-specific. The built-in presentation templates are adaptations of the following source repositories:
+
+- [DewanaKL — dewanakl/undangan](https://github.com/dewanakl/undangan)
+- [Elix — elix-stack/wedding-invitation-1](https://github.com/elix-stack/wedding-invitation-1)
+- [Rainier — Rainier-PS/Invitation-Template](https://github.com/Rainier-PS/Invitation-Template)
+- [Archak — archakNath/wedding-invitation-website](https://github.com/archakNath/wedding-invitation-website)
+
+License status, exact revisions, original source files, current integration paths, and attribution requirements are maintained in [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).

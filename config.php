@@ -31,8 +31,12 @@ if (!defined('UPLOADS_MUSIC_DIR')) define('UPLOADS_MUSIC_DIR', UPLOADS_DIR . '/m
 if (!defined('UPLOADS_GALLERY_DIR')) define('UPLOADS_GALLERY_DIR', UPLOADS_DIR . '/gallery');
 if (!defined('UPLOADS_BACKGROUND_DIR')) define('UPLOADS_BACKGROUND_DIR', UPLOADS_DIR . '/background');
 if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS_DIR . '/love-story');
-if (!defined('CONFIG_FILE')) define('CONFIG_FILE', ROOT_DIR . '/config.json');
-if (!defined('CUSTOM_CSS_FILE')) define('CUSTOM_CSS_FILE', ROOT_DIR . '/custom.css');
+$runtimeDataDir = trim((string)(getenv('UNDANGAN_DATA_DIR') ?: ''));
+if ($runtimeDataDir === '') $runtimeDataDir = ROOT_DIR;
+if (!defined('RUNTIME_DATA_DIR')) define('RUNTIME_DATA_DIR', rtrim($runtimeDataDir, '/'));
+if (!defined('CONFIG_FILE')) define('CONFIG_FILE', RUNTIME_DATA_DIR . '/config.json');
+if (!defined('CUSTOM_CSS_FILE')) define('CUSTOM_CSS_FILE', RUNTIME_DATA_DIR . '/custom.css');
+if (!defined('EVENT_ICS_FILE')) define('EVENT_ICS_FILE', RUNTIME_DATA_DIR . '/event.ics');
 
 // Security defaults
 if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
@@ -48,10 +52,10 @@ if (getenv('UNDANGAN_DB_PATH')) {
 } elseif (is_readable('/var/www/private/database.sqlite')) {
     $dbPath = '/var/www/private/database.sqlite';
 } else {
-    $dbPath = ROOT_DIR . '/database.sqlite';
+    $dbPath = RUNTIME_DATA_DIR . '/database.sqlite';
 }
 if (!defined('DB_PATH')) define('DB_PATH', $dbPath);
-if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', ROOT_DIR . '/guest-links.json');
+if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', RUNTIME_DATA_DIR . '/guest-links.json');
 
 // Security headers
 function send_security_header(string $name, string $value): void {
@@ -77,7 +81,8 @@ function config_defaults(): array {
             'open_graph_title' => 'Undangan Pernikahan Andi & Februana',
             'open_graph_description' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
             'twitter_card' => 'summary_large_image',
-            'open_graph_image' => 'uploads/cover/cover.jpg',
+            // Optional user-provided media; clean installs start without sample files.
+            'open_graph_image' => '',
             'schema' => json_encode([
                 '@context' => 'https://schema.org',
                 '@type' => 'Event',
@@ -130,11 +135,11 @@ function config_defaults(): array {
             'maps_embed' => 'https://maps.google.com/maps?q=-7.2586798,110.4509814&z=17&output=embed'
         ],
         'media' => [
-            'cover' => 'uploads/cover/cover.jpg',
+            'cover' => '',
             'bride_photo' => '',
             'groom_photo' => '',
             'couple_photo' => '',
-            'music' => 'music/lagu.mp3',
+            'music' => '',
                 'background_hero' => '',
                 'love_story_video' => '',
                 'background_sections' => []
@@ -958,7 +963,7 @@ function load_config(): array {
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
     }
-    if (!is_file(ROOT_DIR . '/event.ics')) {
+    if (!is_file(EVENT_ICS_FILE)) {
         write_event_ics($config);
     }
     if (empty($config['story']) && !empty($config['love_story']['items'])) {
@@ -1505,6 +1510,9 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
 }
 
 function public_path(string $path): string {
+    $path = trim($path);
+    // Empty optional media must not become `/`, which would request the page itself.
+    if ($path === '') return 'data:,';
     return '/' . ltrim(str_replace('\\', '/', $path), '/');
 }
 
@@ -1836,7 +1844,7 @@ function write_event_ics(array $config): void {
         'END:VEVENT',
         'END:VCALENDAR'
     ]);
-    @file_put_contents(ROOT_DIR . '/event.ics', $ics, LOCK_EX);
+    @file_put_contents(EVENT_ICS_FILE, $ics, LOCK_EX);
 }
 
 function escape_ics_value(string $value): string {

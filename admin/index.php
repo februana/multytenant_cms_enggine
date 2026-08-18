@@ -819,7 +819,7 @@ $mediaType = strtolower(trim((string)($_GET['media_type'] ?? 'all')));
 $mediaLibrary = list_media_library(['search' => $mediaSearch, 'type' => $mediaType]);
 $invitationPreview = build_invitation_preview_url($config);
 $siteUrl = trim($config['site']['url']);
-$coverPreview = $config['media']['cover'] ?: 'uploads/cover/cover.jpg';
+$coverPreview = $config['media']['cover'] ?? '';
 $bridePhotoPreview = $config['media']['bride_photo'] ?? '';
 $groomPhotoPreview = $config['media']['groom_photo'] ?? '';
 $couplePhotoPreview = $config['media']['couple_photo'] ?? '';

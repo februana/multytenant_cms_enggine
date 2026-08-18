@@ -17,9 +17,9 @@ $akadTime = $config['schedule']['akad_time'] ?? '';
 $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
 $whatsappLink = build_whatsapp_link($config);
-$musicSrc = $config['media']['music'] ?? 'music/lagu.mp3';
+$musicSrc = $config['media']['music'] ?? '';
 
-$coverPath = $config['media']['cover'] ?? 'uploads/cover/cover.jpg';
+$coverPath = $config['media']['cover'] ?? '';
 $heroBackground = $config['media']['background_hero'] ?? '';
 $heroBackground = $heroBackground !== '' ? $heroBackground : $coverPath;
 

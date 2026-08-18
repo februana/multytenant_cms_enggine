@@ -85,7 +85,17 @@ if (!in_array('config.json', $extracted, true) && !in_array(basename(DB_PATH), $
 
 foreach ($extracted as $entry) {
     $source = $tmpDir . '/' . ltrim($entry, '/');
-    $destination = ROOT_DIR . '/' . ltrim($entry, '/');
+    if ($entry === basename(DB_PATH)) {
+        $destination = DB_PATH;
+    } else {
+        $destination = match ($entry) {
+            'config.json' => CONFIG_FILE,
+            'custom.css' => CUSTOM_CSS_FILE,
+            'event.ics' => EVENT_ICS_FILE,
+            'guest-links.json' => GUEST_LINKS_FILE,
+            default => ROOT_DIR . '/' . ltrim($entry, '/'),
+        };
+    }
     if (is_dir($source)) {
         continue;
     }

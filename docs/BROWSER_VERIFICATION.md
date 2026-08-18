@@ -43,3 +43,11 @@ A temporary local session harness rendered the real `admin/index.php` without ch
 ## Personalized guest frontend verification
 
 Custom and DewanaKL were checked through the interactive browser preview with encoded guest input. Elix, Rainier, and Archak were checked with Chromium headless at **390×844**, producing non-empty screenshots and DOM dumps. All five modes rendered the guest marker. For the encoded test value `Sari & <script>`, DOM inspection showed escaped text such as `Sari &amp; &lt;script&gt;`; no raw guest `<script>alert(1)</script>` payload was present. Console inspection for Elix, Rainier, and Archak found no page errors; only the environment-level DBus/UPower warning appeared.
+
+## Final clean-checkout deployment pass
+
+After the default cover/music/Open Graph references were emptied, the current clean checkout was started with the PHP built-in server and opened in Chromium. The public invitation remained non-blank with the Archak preset, original navigation/home/timeline/stay/registry/RSVP/footer markers, and the encoded guest greeting `Andi & <script>` rendered as text. The browser console was empty for this pass. No sample cover or music file was requested by the application because those optional fields are now empty.
+
+The existing desktop/mobile matrix for all five modes and the real admin matrix remain covered by the preceding verification sections. The post-finalization automated renderer/contract/disabled/regression tests passed with empty optional media. A root-run health-check fixture representing a clean deployment returned 35 PASS, 3 WARNING (optional cover, music, and Open Graph media not provisioned), and 0 FAIL.
+
+Docker build and container browser verification could not be performed in this sandbox because Docker CLI/daemon is unavailable. Native installer execution was intentionally stopped at its prerequisite gate because Composer and rsync are not installed in the sandbox; the gate emitted the documented actionable error before changing the host. These are environment limitations, not application failures.

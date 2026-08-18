@@ -60,7 +60,7 @@ $giftEwalletLabel = escape_html($config['gift']['e_wallet_label'] ?? '');
 $giftEwalletNumber = escape_html($config['gift']['e_wallet_number'] ?? '');
 
 // Media
-$coverPath = $config['media']['cover'] ?? 'uploads/cover/cover.jpg';
+$coverPath = $config['media']['cover'] ?? '';
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
 $groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
 $couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
