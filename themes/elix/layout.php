@@ -36,6 +36,15 @@ if (!is_array($stories) || !$stories) {
     ];
 }
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
+$visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'elix') : [];
+$elixAccent = (string)($visuals['accent_color'] ?? '#f14e95');
+$elixHeadingFont = (string)($visuals['heading_font'] ?? 'Sacramento, cursive');
+$elixBodyFont = (string)($visuals['body_font'] ?? 'Work Sans, sans-serif');
+$elixHeroPath = (string)($visuals['hero_background'] ?? '');
+$elixHeroImage = $elixHeroPath !== '' ? theme_visual_css_url($elixHeroPath) : 'url("/themes/elix/img/prewed1.jpg")';
+$elixOverlay = (float)($visuals['hero_overlay'] ?? '0.45');
+$elixCountdownScale = (float)($visuals['countdown_scale'] ?? '0.65');
+$elixVisualStyle = '<style id="cms-elix-visual">:root{--cms-elix-accent:' . $elixAccent . ';--cms-elix-heading:' . $elixHeadingFont . ';--cms-elix-body:' . $elixBodyFont . ';--cms-elix-overlay:' . $elixOverlay . ';--cms-elix-countdown-scale:' . $elixCountdownScale . ';--cms-elix-hero-bg:' . $elixHeroImage . '}body{font-family:var(--cms-elix-body)}.hero h1,.home h2,.home .couple h3,.info h2,.story h2,.gallery h2,.rsvp h2,.gifts h2{font-family:var(--cms-elix-heading)}.hero::before{background-image:linear-gradient(rgba(0,0,0,var(--cms-elix-overlay)),rgba(0,0,0,var(--cms-elix-overlay))),var(--cms-elix-hero-bg)}.hero a,.home h2,.home .couple h3,.info h2,.story h2,.gallery h2,.rsvp h2,.gifts h2{color:var(--cms-elix-accent)}.simply-countdown-circle{transform:scale(var(--cms-elix-countdown-scale));transform-origin:center}@media(max-width:576px){.hero h1{font-size:clamp(2.15rem,12vw,4rem);line-height:1.05}.hero{padding-top:4rem;padding-bottom:3rem}.hero p{max-width:32rem;margin-left:auto;margin-right:auto}.simply-countdown-circle{gap:.75rem;margin-top:1rem!important;margin-bottom:.75rem!important}.simply-countdown-circle>.simply-section{width:88px;height:88px;padding:.75rem}.simply-countdown-circle .simply-amount{font-size:1.35rem}}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -50,6 +59,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Sacramento&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original-style.css'); ?>" />
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'fidelity-adapter.css'); ?>" />
+    <?php echo $elixVisualStyle; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'countdown/circle.css'); ?>" />
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>

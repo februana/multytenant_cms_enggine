@@ -368,6 +368,13 @@ function config_defaults(): array {
                 'archak_welcome_msg' => ''
             ]
         ],
+        'theme_visuals' => [
+            'dewankl' => [],
+            'elix' => [],
+            'rainier' => [],
+            'archak' => [],
+            'custom' => []
+        ],
         'custom_css' => ''
     ];
 }
@@ -555,7 +562,14 @@ function theme_registry(): array {
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
             ],
-            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen tombol dan elemen interaktif DewanaKL.', 'default' => '#7b4a3a'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font dekoratif untuk heading pendek dan nama pasangan.', 'default' => 'Sacramento, cursive', 'options' => ['Sacramento, cursive' => 'Sacramento', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font readable untuk detail acara dan form.', 'default' => 'system-ui, sans-serif', 'options' => ['system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial', 'Georgia, serif' => 'Georgia']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai cover.', 'default' => ''],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan lapisan gelap pada latar hero.', 'default' => '0.30', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
+            ]
         ],
         'elix' => [
             'id' => 'elix',
@@ -613,7 +627,15 @@ function theme_registry(): array {
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
             ],
-            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
+'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen tombol, link, dan detail Elix.', 'default' => '#f14e95'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Display', 'description' => 'Font display untuk nama dan heading pendek.', 'default' => 'Sacramento, cursive', 'options' => ['Sacramento, cursive' => 'Sacramento', 'Pacifico, cursive' => 'Pacifico', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi readable untuk informasi dan form.', 'default' => 'Work Sans, sans-serif', 'options' => ['Work Sans, sans-serif' => 'Work Sans', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai source default.', 'default' => ''],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay pada foto hero Elix.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
+                'countdown_scale' => ['type' => 'range', 'label' => 'Skala Hitung Mundur', 'description' => 'Skala visual countdown tanpa menghapus countdown.', 'default' => '0.65', 'min' => '0.60', 'max' => '1.00', 'step' => '0.05'],
+            ]
         ],
         'rainier' => [
             'id' => 'rainier',
@@ -673,7 +695,14 @@ function theme_registry(): array {
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
             ],
-            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen Rainier.', 'default' => '#b8655d'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Display', 'description' => 'Font heading editorial Rainier.', 'default' => 'Cormorant Garamond, serif', 'options' => ['Cormorant Garamond, serif' => 'Cormorant Garamond', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi Rainier.', 'default' => 'Outfit, sans-serif', 'options' => ['Outfit, sans-serif' => 'Outfit', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai cover/source default.', 'default' => ''],
+                'glass_opacity' => ['type' => 'range', 'label' => 'Opasitas Panel Kaca', 'description' => 'Transparansi panel kaca Rainier.', 'default' => '0.40', 'min' => '0.20', 'max' => '0.90', 'step' => '0.05'],
+            ]
         ],
         'archak' => [
             'id' => 'archak',
@@ -744,7 +773,14 @@ function theme_registry(): array {
                 'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
             ],
-            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen Archak.', 'default' => '#8c5a4d'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Heading', 'description' => 'Font heading identitas Archak.', 'default' => 'Cinzel, serif', 'options' => ['Cinzel, serif' => 'Cinzel', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi readable Archak.', 'default' => 'Quicksand, sans-serif', 'options' => ['Quicksand, sans-serif' => 'Quicksand', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai foto pasangan.', 'default' => ''],
+                'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala nama pasangan di hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.10', 'step' => '0.05'],
+            ]
         ]
     ];
 }

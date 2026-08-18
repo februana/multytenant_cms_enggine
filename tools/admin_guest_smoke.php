@@ -11,15 +11,15 @@ function assert_true(bool $condition, string $message): void {
 
 $expected = [
     'custom' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'sections'],
-    'dewankl' => ['preset_selector', 'guest_links', 'settings', 'backup', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
-    'elix' => ['preset_selector', 'guest_links', 'settings', 'backup', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
-    'rainier' => ['preset_selector', 'guest_links', 'settings', 'backup', 'wedding', 'schedule', 'story', 'music', 'maps', 'rsvp'],
-    'archak' => ['preset_selector', 'guest_links', 'settings', 'backup', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp'],
+    'dewankl' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
+    'elix' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
+    'rainier' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'story', 'music', 'maps', 'rsvp'],
+    'archak' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp'],
 ];
 $forbidden = [
-    'rainier' => ['parents', 'gallery', 'gift', 'dresscode', 'theme', 'sections'],
-    'archak' => ['music', 'dresscode', 'theme', 'sections'],
-    'dewankl' => ['theme', 'sections', 'custom_css', 'dresscode', 'cover', 'background'],
+    'rainier' => ['parents', 'gallery', 'gift', 'dresscode', 'sections'],
+    'archak' => ['music', 'dresscode', 'sections'],
+    'dewankl' => ['sections', 'custom_css', 'dresscode', 'cover', 'background'],
 ];
 $base = load_config();
 foreach ($expected as $preset => $required) {
@@ -31,7 +31,7 @@ foreach ($expected as $preset => $required) {
     foreach ($forbidden[$preset] ?? [] as $capability) assert_true(!in_array($capability, $caps, true), "$preset exposes forbidden $capability");
 }
 
-assert_true(theme_contract_global_admin_capabilities() === ['preset_selector', 'guest_links', 'settings', 'backup'], 'global admin capability contract changed unexpectedly');
+assert_true(theme_contract_global_admin_capabilities() === ['preset_selector', 'guest_links', 'settings', 'backup', 'theme'], 'global admin capability contract changed unexpectedly');
 assert_true(config_defaults()['site']['url'] === '', 'clean-install site URL must be explicitly unconfigured');
 assert_true(build_guest_invitation_url('https://test.example.id', 'Budi') === 'https://test.example.id/?to=Budi', 'configured site origin was not used');
 assert_true(build_guest_invitation_url('', 'Budi') === '', 'missing site origin must not generate a guest URL');
@@ -96,7 +96,8 @@ assert_true(str_contains($adminSource, 'Site URL belum dikonfigurasi.'), 'missin
 assert_true(str_contains($adminSource, 'name="action" value="save_preset"'), 'global preset selector save action missing');
 assert_true(!str_contains($adminSource, "\$adminCapabilityEnabled('preset_selector')"), 'preset selector incorrectly uses theme capability gate');
 
-// The selector is global, while the manual theme editor remains Custom-only for built-ins.
-assert_true(str_contains($adminSource, "if (\$themeMode === 'custom')"), 'Custom-only theme editor gate missing');
+// The selector and visual editor are global, while the full legacy manual editor remains Custom-only.
+assert_true(str_contains($adminSource, "data-visual-schemas="), 'visual schema payload missing');
+assert_true(str_contains($adminSource, 'data-visual-values='), 'visual values payload missing');
 
 echo "PASS: global preset selector, preset-aware admin capabilities, guest system, switching, and persistence\n";

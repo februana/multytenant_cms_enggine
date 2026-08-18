@@ -477,8 +477,19 @@ eventDataPromise
             }
         }
 
-        if (data.design?.accentColor) {
-            document.documentElement.style.setProperty('--primary', data.design.accentColor);
+        if (data.design) {
+            const cssValues = {
+                accentColor: '--primary',
+                headingFont: '--font-heading',
+                bodyFont: '--font-body'
+            };
+            Object.keys(cssValues).forEach((key) => {
+                if (data.design[key]) document.documentElement.style.setProperty(cssValues[key], data.design[key]);
+            });
+            if (data.design.glassOpacity) {
+                const opacity = Math.min(0.9, Math.max(0.2, Number(data.design.glassOpacity)) || 0.4);
+                document.documentElement.style.setProperty('--glass-bg', `rgba(0, 0, 0, ${opacity})`);
+            }
         }
 
         const sections = document.querySelectorAll('section, footer');

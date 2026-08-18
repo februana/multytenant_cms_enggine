@@ -43,6 +43,9 @@ $schedule = [];
 if ($akadDate !== '' || $akadTime !== '') $schedule[] = ['time' => trim($akadTime), 'label' => 'Akad Nikah — ' . trim($venue)];
 if ($receptionTime !== '') $schedule[] = ['time' => trim($receptionTime), 'label' => 'Resepsi — ' . trim($venue)];
 $eventEndTime = ($receptionDate !== '' && $receptionDate === $akadDate && $receptionTime !== '' && $receptionTime > $akadTime) ? $receptionTime : '';
+$visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'rainier') : [];
+$rainierHeroPath = (string)($visuals['hero_background'] ?? '');
+$rainierBackgrounds = $rainierHeroPath !== '' ? [theme_visual_public_path($rainierHeroPath)] : ($coverPath !== '' ? [public_path($coverPath)] : []);
 $eventData = [
     'event' => ['title' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'subtitle' => $openingRaw, 'description' => $descriptionRaw],
     'datetime' => ['date' => $akadDate, 'startTime' => $akadTime, 'endTime' => $eventEndTime, 'timezone' => $eventTimezone, 'allDay' => false],
@@ -53,7 +56,13 @@ $eventData = [
     'rsvp' => ['enabled' => theme_section_enabled($config, $presetKey, 'rsvp'), 'provider' => 'cms', 'url' => public_path('save.php')],
     'music' => ['enabled' => $musicPath !== '' && theme_section_enabled($config, $presetKey, 'music'), 'audioUrl' => public_path($musicPath), 'loop' => true, 'volume' => 0.3],
     'meta' => ['countdown' => true, 'simpleMode' => false, 'showSimpleModeToggle' => false],
-    'design' => ['accentColor' => $config['theme_options']['rainier']['hero_accent_color'] ?? '#b8655d', 'backgrounds' => $coverPath !== '' ? [public_path($coverPath)] : []],
+    'design' => [
+        'accentColor' => (string)($visuals['accent_color'] ?? ($config['theme_options']['rainier']['hero_accent_color'] ?? '#b8655d')),
+        'backgrounds' => $rainierBackgrounds,
+        'headingFont' => (string)($visuals['heading_font'] ?? 'Cormorant Garamond, serif'),
+        'bodyFont' => (string)($visuals['body_font'] ?? 'Outfit, sans-serif'),
+        'glassOpacity' => (string)($visuals['glass_opacity'] ?? '0.40'),
+    ],
     'footer' => ['text' => $closingRaw, 'credits' => ['designByLabel' => 'Diselenggarakan oleh', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Templat', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Templat sumber']],
 ];
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';

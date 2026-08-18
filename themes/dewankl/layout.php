@@ -100,6 +100,13 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
 $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'show_bismillah', true) : ($config['theme_options']['dewankl']['show_bismillah'] ?? true);
 $enableConfetti = (function_exists('get_theme_option') ? get_theme_option($config, 'dewankl', 'enable_confetti', true) : ($config['theme_options']['dewankl']['enable_confetti'] ?? true)) ? 'true' : 'false';
 $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'enable_mouse_animation', true) : ($config['theme_options']['dewankl']['enable_mouse_animation'] ?? true);
+$visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'dewankl') : [];
+$dewanklHeroPath = (string)($visuals['hero_background'] ?? '') ?: $coverPath;
+$dewanklAccent = (string)($visuals['accent_color'] ?? '#7b4a3a');
+$dewanklHeadingFont = (string)($visuals['heading_font'] ?? 'Sacramento, cursive');
+$dewanklBodyFont = (string)($visuals['body_font'] ?? 'Inter, sans-serif');
+$dewanklOverlay = (float)($visuals['hero_overlay'] ?? '0.30');
+$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="auto">
@@ -145,6 +152,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
     <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'original/guest.css')); ?>">
     <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'original/animation.css')); ?>">
     <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'fidelity-adapter.css')); ?>">
+    <?php echo $dewanklVisualStyle; ?>
     
     <!-- Custom CSS Override -->
     <?php if (trim(load_custom_css()) !== ''): ?>
@@ -168,7 +176,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 <div class="d-flex position-absolute w-100 h-100">
                     <div class="position-relative overflow-hidden vw-100">
                         <div class="position-absolute h-100 w-100 slide-desktop" style="opacity: 0;">
-                            <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="latar belakang" class="bg-cover-home" style="opacity: 30%;">
+                            <img src="<?php echo escape_html(theme_visual_public_path($dewanklHeroPath)); ?>" alt="latar belakang" class="bg-cover-home" style="opacity: 30%;">
                         </div>
                     </div>
                 </div>
@@ -186,7 +194,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 
                 <!-- Home Section -->
                 <section id="home" class="bg-light-dark position-relative overflow-hidden p-0 m-0">
-                    <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="latar belakang" class="position-absolute opacity-25 top-50 start-50 translate-middle bg-cover-home">
+                    <img src="<?php echo escape_html(theme_visual_public_path($dewanklHeroPath)); ?>" alt="latar belakang" class="position-absolute opacity-25 top-50 start-50 translate-middle bg-cover-home">
                     
                     <div class="position-relative text-center bg-overlay-auto" style="background-color: unset;">
                         <h1 class="font-esthetic pt-5 pb-4 fw-medium" style="font-size: 2.25rem;">Undangan Pernikahan</h1>

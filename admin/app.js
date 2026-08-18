@@ -297,6 +297,25 @@ const themeSettingsForm = document.getElementById('themeSettingsForm');
 const themePreviewFrame = document.getElementById('themePreviewFrame');
 const themePreviewReset = document.getElementById('themePreviewReset');
 const themePreviewCancel = document.getElementById('themePreviewCancel');
+const previewViewportButtons = Array.from(document.querySelectorAll('[data-preview-viewport]'));
+
+function setPreviewViewport(viewport) {
+  if (!themePreviewFrame) return;
+  const sizes = {
+    desktop: {width: '100%', height: '720px'},
+    tablet: {width: '768px', height: '1024px'},
+    mobile: {width: '390px', height: '844px'}
+  };
+  const size = sizes[viewport] || sizes.desktop;
+  themePreviewFrame.style.width = size.width;
+  themePreviewFrame.style.height = size.height;
+  themePreviewFrame.style.maxWidth = '100%';
+  themePreviewFrame.style.display = 'block';
+  themePreviewFrame.style.margin = '0 auto';
+  previewViewportButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.previewViewport === viewport));
+}
+previewViewportButtons.forEach((button) => button.addEventListener('click', () => setPreviewViewport(button.dataset.previewViewport)));
+setPreviewViewport('desktop');
 
 if (themeSettingsForm && themePreviewFrame) {
   const previewFieldNames = [
@@ -313,9 +332,13 @@ if (themeSettingsForm && themePreviewFrame) {
   ];
   const savedTheme = JSON.parse(themeSettingsForm.dataset.savedTheme || '{}');
   const themePresets = JSON.parse(themeSettingsForm.dataset.themePresets || '{}');
+  const visualSchemas = JSON.parse(themeSettingsForm.dataset.visualSchemas || '{}');
+  const savedVisualValues = JSON.parse(themeSettingsForm.dataset.visualValues || '{}');
   const previewInputs = previewFieldNames
     .map(name => themeSettingsForm.elements[name])
     .filter(Boolean);
+  const visualInputs = Array.from(themeSettingsForm.querySelectorAll('[name^="visuals["]'));
+  const activeVisualPreset = themeSettingsForm.querySelector('[data-visual-panel]')?.dataset.visualPanel || themeSettingsForm.elements.theme_preset?.value || 'custom';
   let debounceTimer = null;
 
   function fieldValue(name) {
@@ -333,6 +356,15 @@ if (themeSettingsForm && themePreviewFrame) {
       return;
     }
     field.value = value ?? '';
+  }
+
+  function collectVisuals() {
+    const values = {};
+    visualInputs.forEach((input) => {
+      const match = input.name.match(/^visuals\[([^\]]+)\]$/);
+      if (match) values[match[1]] = input.value;
+    });
+    return values;
   }
 
   function collectTheme() {
@@ -359,6 +391,7 @@ if (themeSettingsForm && themePreviewFrame) {
     if (theme.buttons && theme.buttons.mobile_layout) {
       theme.buttons.mobile_layout = theme.buttons.mobile_layout === 'horizontal' || theme.buttons.mobile_layout === '2-columns' ? 'row' : 'column';
     }
+    theme.visuals = collectVisuals();
     return theme;
   }
 
@@ -383,13 +416,26 @@ if (themeSettingsForm && themePreviewFrame) {
     });
   }
 
+  function restoreVisuals(values) {
+    visualInputs.forEach((input) => {
+      const match = input.name.match(/^visuals\[([^\]]+)\]$/);
+      if (!match || values[match[1]] === undefined) return;
+      input.value = values[match[1]];
+      if (input.dataset.fontPreview) input.style.fontFamily = input.value;
+      const output = document.querySelector(`[data-range-output="${input.id}"]`);
+      if (output) output.value = input.value;
+      const sample = document.querySelector(`[data-for="${input.id}"]`);
+      if (sample) sample.style.fontFamily = input.value;
+    });
+  }
+
   function applyPresetToForm() {
     const selectedPreset = fieldValue('theme_preset');
     if (!selectedPreset || selectedPreset === 'custom' || !themePresets[selectedPreset]) return;
     Object.entries(themePresets[selectedPreset]).forEach(([name, value]) => setFieldValue(name, value));
   }
 
-  previewInputs.forEach(input => {
+  [...previewInputs, ...visualInputs].forEach(input => {
     input.addEventListener('input', () => {
       if (input.name === 'theme_preset') applyPresetToForm();
       schedulePreview();
@@ -403,9 +449,25 @@ if (themeSettingsForm && themePreviewFrame) {
   themePreviewFrame.addEventListener('load', () => postPreview());
   themePreviewReset?.addEventListener('click', () => {
     restoreForm(savedTheme);
+    restoreVisuals(savedVisualValues[activeVisualPreset] || {});
     postPreview();
   });
   themePreviewCancel?.addEventListener('click', () => {
-    postThemePreview(savedTheme);
+    const cancelled = { ...savedTheme, visuals: savedVisualValues[activeVisualPreset] || {} };
+    postThemePreview(cancelled);
+  });
+
+  visualInputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      if (input.dataset.fontPreview) input.style.fontFamily = input.value;
+      const output = document.querySelector(`[data-range-output="${input.id}"]`);
+      if (output) output.value = input.value;
+      const sample = document.querySelector(`[data-for="${input.id}"]`);
+      if (sample) sample.style.fontFamily = input.value;
+    });
+    input.addEventListener('change', () => {
+      if (input.dataset.fontPreview) input.style.fontFamily = input.value;
+      schedulePreview(0);
+    });
   });
 }
