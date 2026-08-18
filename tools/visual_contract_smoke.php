@@ -111,6 +111,9 @@ visual_assert(strpos($html, '#hero{display:flex;justify-content:center;align-ite
 visual_assert(strpos($html, '#hero>main{display:flex;flex-direction:column;align-items:center;width:min(100%,56rem);margin:0 auto;text-align:center}') !== false, 'Elix hero restores a centered column content relationship');
 visual_assert(strpos($html, '#hero>main>#countdown{width:100%;display:flex;justify-content:center;align-items:center;text-align:center}') !== false, 'Elix countdown remains in the centered hero flow');
 visual_assert(strpos($html, '#hero>main>a{display:inline-block;align-self:center;margin-right:auto;margin-left:auto}') !== false, 'Elix CTA is structurally centered below the countdown');
+visual_assert(is_file(dirname(__DIR__) . '/themes/elix/img/prewed1.jpg'), 'Elix source hero asset is bundled locally');
+visual_assert(is_file(dirname(__DIR__) . '/themes/elix/img/floraPattern1.png'), 'Elix source home pattern is bundled locally');
+visual_assert(strpos($html, '/themes/elix/img/prewed1.jpg') !== false || strpos($html, 'uploads/background/hero.jpg') !== false, 'Elix render has a valid local source or CMS hero background');
 $dewanklSourceConfig = $base;
 $dewanklSourceConfig['theme']['mode'] = 'preset';
 $dewanklSourceConfig['theme']['theme_preset'] = 'dewankl';
@@ -119,6 +122,10 @@ visual_assert(($dewanklDefaults['body_font'] ?? '') === 'Josefin Sans, sans-seri
 $dewanklHtml = render_theme_layout($dewanklSourceConfig, array_replace($shared, ['presetKey' => 'dewankl']));
 visual_assert(strpos($dewanklHtml, '--cms-dewana-body:Josefin Sans, sans-serif') !== false, 'DewanaKL source body font reaches the adapter by default');
 visual_assert(strpos($dewanklHtml, 'body{font-family:var(--cms-dewana-body)!important}') !== false, 'DewanaKL CMS body font can override the source !important rule');
+visual_assert(is_file(dirname(__DIR__) . '/themes/dewankl/assets/placeholder.webp'), 'DewanaKL source placeholder is bundled locally');
+visual_assert(is_file(dirname(__DIR__) . '/themes/dewankl/assets/icon-192x192.png'), 'DewanaKL source loading icon is bundled locally');
+visual_assert(strpos($dewanklHtml, '/themes/dewankl/assets/placeholder.webp') !== false, 'DewanaKL blank media uses the local placeholder fallback');
+visual_assert(strpos($dewanklHtml, '/themes/dewankl/assets/icon-192x192.png') !== false, 'DewanaKL loading/icon paths use the local source asset');
 $dewanklOverride = $dewanklSourceConfig;
 $dewanklOverride['theme_visuals']['dewankl']['body_font'] = 'Arial, sans-serif';
 $dewanklOverrideHtml = render_theme_layout($dewanklOverride, array_replace($shared, ['presetKey' => 'dewankl']));
@@ -150,6 +157,24 @@ visual_assert(theme_visual_image_reference_is_canonical($mediaProbeName), 'Canon
 visual_assert(!theme_visual_image_reference_is_canonical('uploads/background/not-present.png'), 'Missing canonical image is rejected');
 visual_assert(theme_visual_image_reference_is_canonical('https://cdn.example.test/hero.jpg'), 'HTTPS image URL remains accepted');
 unlink($mediaProbePath);
+
+$archakSourceConfig = $base;
+$archakSourceConfig['theme']['mode'] = 'preset';
+$archakSourceConfig['theme']['theme_preset'] = 'archak';
+$archakSourceHtml = render_theme_layout($archakSourceConfig, array_replace($shared, ['presetKey' => 'archak']));
+visual_assert(!str_contains($archakSourceHtml, "background-image:url('/');"), 'Archak blank CMS media does not emit an empty root background override');
+visual_assert(!str_contains($archakSourceHtml, 'style="background-image:url(\'/\');"'), 'Archak blank CMS media preserves source CSS background fallbacks');
+
+$rainierSourceConfig = $base;
+$rainierSourceConfig['theme']['mode'] = 'preset';
+$rainierSourceConfig['theme']['theme_preset'] = 'rainier';
+$rainierSourceHtml = render_theme_layout($rainierSourceConfig, array_replace($shared, ['presetKey' => 'rainier']));
+visual_assert(str_contains($rainierSourceHtml, 'images.unsplash.com/photo-1514876246314-d9a231ea21db'), 'Rainier blank CMS media restores the source hero image set');
+visual_assert(str_contains($rainierSourceHtml, 'Rainier%20Logo-Primary.svg'), 'Rainier blank CMS media restores the source footer logo');
+$rainierOverrideConfig = $rainierSourceConfig;
+$rainierOverrideConfig['theme_visuals']['rainier']['hero_background'] = 'uploads/background/rainier-hero.png';
+$rainierOverrideHtml = render_theme_layout($rainierOverrideConfig, array_replace($shared, ['presetKey' => 'rainier']));
+visual_assert(str_contains($rainierOverrideHtml, 'uploads/background/rainier-hero.png'), 'Rainier CMS hero override reaches the dynamic design payload');
 
 foreach (['dewankl', 'rainier', 'archak', 'parang'] as $preset) {
     $probe = $stored;

@@ -45,7 +45,17 @@ if ($receptionTime !== '') $schedule[] = ['time' => trim($receptionTime), 'label
 $eventEndTime = ($receptionDate !== '' && $receptionDate === $akadDate && $receptionTime !== '' && $receptionTime > $akadTime) ? $receptionTime : '';
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'rainier') : [];
 $rainierHeroPath = (string)($visuals['hero_background'] ?? '');
-$rainierBackgrounds = $rainierHeroPath !== '' ? [theme_visual_public_path($rainierHeroPath)] : ($coverPath !== '' ? [public_path($coverPath)] : []);
+$rainierSourceHeroImages = [
+    'https://images.unsplash.com/photo-1514876246314-d9a231ea21db?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bmV3JTIweWVhcnxlbnwwfHwwfHx8MA%3D%3D',
+    'https://images.unsplash.com/photo-1482329833197-916d32bdae74?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fG5ldyUyMHllYXJ8ZW58MHx8MHx8fDA%3D',
+    'https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fG5ldyUyMHllYXJ8ZW58MHx8MHx8fDA%3D',
+    'https://images.unsplash.com/photo-1577046823799-58b2d217d508?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fG5ldyUyMHllYXJ8ZW58MHx8MHx8fDA%3D',
+    'https://media.istockphoto.com/id/1285697663/photo/new-years-eve-holiday-party-pocket-watch-clock-at-midnight.webp?a=1&b=1&s=612x612&w=0&k=20&c=okDbAYDssCvmGlE2ZNEhSGz2iLG8DqSTr8CdUI2qh_Q='
+];
+$rainierHeroImages = $rainierHeroPath !== '' ? [theme_visual_public_path($rainierHeroPath)] : ($coverPath !== '' ? [public_path($coverPath)] : $rainierSourceHeroImages);
+$rainierBackgrounds = $rainierHeroImages;
+$rainierSourceLogo = 'https://raw.githubusercontent.com/Rainier-PS/rainier-ps.github.io/main/images/site/Rainier%20Logo-Primary.svg';
+$rainierFooterLogo = $coverPath !== '' ? public_path($coverPath) : $rainierSourceLogo;
 $eventData = [
     'event' => ['title' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'subtitle' => $openingRaw, 'description' => $descriptionRaw],
     'datetime' => ['date' => $akadDate, 'startTime' => $akadTime, 'endTime' => $eventEndTime, 'timezone' => $eventTimezone, 'allDay' => false],
@@ -58,12 +68,14 @@ $eventData = [
     'meta' => ['countdown' => true, 'simpleMode' => false, 'showSimpleModeToggle' => false],
     'design' => [
         'accentColor' => (string)($visuals['accent_color'] ?? ($config['theme_options']['rainier']['hero_accent_color'] ?? '#b8655d')),
+        'heroImages' => $rainierHeroImages,
+        'sectionBackgrounds' => $rainierBackgrounds,
         'backgrounds' => $rainierBackgrounds,
         'headingFont' => (string)($visuals['heading_font'] ?? 'Cormorant Garamond, serif'),
         'bodyFont' => (string)($visuals['body_font'] ?? 'Outfit, sans-serif'),
         'glassOpacity' => (string)($visuals['glass_opacity'] ?? '0.40'),
     ],
-    'footer' => ['text' => $closingRaw, 'credits' => ['designByLabel' => 'Diselenggarakan oleh', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Templat', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Templat sumber']],
+    'footer' => ['text' => $closingRaw, 'branding' => ['link' => 'https://rainier-ps.github.io/', 'logoUrl' => $rainierFooterLogo, 'logoAlt' => 'Logo Rainier'], 'credits' => ['designByLabel' => 'Diselenggarakan oleh', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Templat', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Templat sumber']],
 ];
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 ?>
@@ -93,7 +105,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
         <?php if (theme_section_enabled($config, $presetKey, 'schedule')): ?><section class="section" id="schedule-section"><h2>Jadwal</h2><ul id="schedule-list"></ul></section><?php endif; ?>
         <?php if (theme_section_enabled($config, $presetKey, 'quotes')): ?><section class="section" id="quotes-section"><h2>Kata-Kata Inspirasi</h2><div class="quotes-container" id="quotes-container"></div></section><?php endif; ?>
         <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><section class="section" id="rsvp"><h2>Konfirmasi Kehadiran</h2><p>Mohon konfirmasi kehadiran Anda</p><div class="form-embed"></div></section><?php endif; ?>
-        <footer><div class="footer-branding"><a id="footer-branding-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener"><img id="footer-logo" src="<?php echo escape_html(public_path($coverPath)); ?>" alt="<?php echo $siteTitle; ?>" class="footer-logo"></a><div class="footer-info"><p class="hosted-by" id="footer-credits-label">Diselenggarakan oleh</p><p class="copyright"><span id="footer-copyright">© <?php echo date('Y'); ?> <?php echo $brideName; ?> &amp; <?php echo $groomName; ?></span><span id="footer-template-container"> | <span id="footer-template-label">Templat</span> <a id="footer-template-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener">Rainier</a></span></p><p id="footer-repo-container" class="repo-info"><a id="footer-repo-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener">Templat sumber</a></p><div class="social-links" id="social-links" hidden><a id="instagram-link" class="social-link" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg><span id="instagram-label">Ikuti di Instagram</span></a></div></div></div><p id="footer-text"><?php echo $closingText; ?></p></footer>
+        <footer><div class="footer-branding"><a id="footer-branding-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener"><img id="footer-logo" src="<?php echo escape_html($rainierFooterLogo); ?>" alt="<?php echo $siteTitle; ?>" class="footer-logo"></a><div class="footer-info"><p class="hosted-by" id="footer-credits-label">Diselenggarakan oleh</p><p class="copyright"><span id="footer-copyright">© <?php echo date('Y'); ?> <?php echo $brideName; ?> &amp; <?php echo $groomName; ?></span><span id="footer-template-container"> | <span id="footer-template-label">Templat</span> <a id="footer-template-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener">Rainier</a></span></p><p id="footer-repo-container" class="repo-info"><a id="footer-repo-link" href="https://github.com/Rainier-PS/Invitation-Template" class="low-profile-link" target="_blank" rel="noopener">Templat sumber</a></p><div class="social-links" id="social-links" hidden><a id="instagram-link" class="social-link" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg><span id="instagram-label">Ikuti di Instagram</span></a></div></div></div><p id="footer-text"><?php echo $closingText; ?></p></footer>
     </main>
     <script id="event-data" type="application/json"><?php echo json_encode($eventData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?></script>
 </body>
