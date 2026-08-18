@@ -75,3 +75,11 @@ The selector posts to a new `save_preset` action. `switch_active_theme_preset_co
 `tools/admin_guest_smoke.php` now asserts the explicit global capability contract, forbids built-in theme-specific controls as before, verifies the exact sequence `Custom → DewanaKL → Elix → Rainier → Archak → Custom`, compares configuration snapshots before/after each switch, asserts selector markup occurs outside the theme panel gate, asserts the global gate and `save_preset` action, and rejects accidental use of `$adminCapabilityEnabled('preset_selector')`.
 
 The previous theme contract, render, disabled, timezone, deployment, and guest-system checks remain unchanged and passing. No built-in frontend DOM/CSS/JS/dependency or template fidelity code was modified for this correction.
+
+## Indonesian UI and user-content preservation finalization
+
+The application-owned Admin interface is now localized in Indonesian, including the dashboard title, navigation, preset selector actions, media manager labels, story/gallery controls, gift/location/SEO/WhatsApp panels, guest-link generator, backup/settings labels, and CSV actions. Source-template identity wording in built-in frontend layouts remains intentionally unchanged.
+
+The save path now uses `preserve_text_input()` for invitation content fields. It normalizes only CRLF/CR line endings to LF and preserves meaningful leading/trailing spaces, internal spacing, Unicode, and user wording. Rendering uses `render_preserved_text()` where HTML line breaks are required; it HTML-escapes without translating, correcting, paraphrasing, stripping tags, or rewriting content. Rainier now sends raw opening/description/closing text through event JSON and no longer applies `strip_tags()` to those fields.
+
+`tools/content_preservation_smoke.php` covers Custom, DewanaKL, Elix, Rainier, and Archak. It verifies multilingual English/Indonesian/CJK/Korean/Arabic content, multiline opening and address values, doubled spaces, CRLF-only save normalization, JSON round-trip equality, HTML escaping/newline output, byte-for-byte Rainier event JSON fields, and the absence of automatic translation calls. The test passed together with the complete existing suite.

@@ -32,12 +32,12 @@ foreach (array_slice((array)$galleryItems, 0, 3) as $item) {
 }
 while (count($galleryUrls) < 3) $galleryUrls[] = public_path($couplePhoto);
 $stories = $config['love_story']['items'] ?? [];
-if (!is_array($stories) || !$stories) $stories = [['title' => 'Our Story', 'date' => $akadDate, 'description' => strip_tags($openingText)]];
+if (!is_array($stories) || !$stories) $stories = [['title' => 'Our Story', 'date' => $akadDate, 'description' => (string)($config['wedding']['opening_text'] ?? '')]];
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 $heroStyle = escape_html("background-image: url('" . public_path($couplePhoto) . "');");
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">

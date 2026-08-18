@@ -38,7 +38,7 @@ if (!is_array($stories) || !$stories) {
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

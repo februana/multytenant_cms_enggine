@@ -7,10 +7,14 @@ $presetKey = 'rainier';
 $brideName = escape_html($config['wedding']['bride_name'] ?? '');
 $groomName = escape_html($config['wedding']['groom_name'] ?? '');
 $siteTitle = escape_html($config['site']['title'] ?? ($brideName . ' & ' . $groomName));
-$description = escape_html($config['site']['description'] ?? $config['wedding']['opening_text'] ?? '');
-$openingText = escape_html(strip_tags((string)($config['wedding']['opening_text'] ?? '')));
-$quoteText = escape_html(strip_tags((string)($config['wedding']['quote'] ?? '')));
-$closingText = escape_html(strip_tags((string)($config['wedding']['closing_text'] ?? '')));
+$descriptionRaw = (string)($config['site']['description'] ?? $config['wedding']['opening_text'] ?? '');
+$description = escape_html($descriptionRaw);
+$openingRaw = (string)($config['wedding']['opening_text'] ?? '');
+$openingText = render_preserved_text($openingRaw);
+$quoteRaw = (string)($config['wedding']['quote'] ?? '');
+$quoteText = render_preserved_text($quoteRaw);
+$closingRaw = (string)($config['wedding']['closing_text'] ?? '');
+$closingText = render_preserved_text($closingRaw);
 $akadDate = (string)($config['schedule']['akad_date'] ?? '');
 $akadTime = (string)($config['schedule']['akad_time'] ?? '');
 $receptionDate = (string)($config['schedule']['reception_date'] ?? '');
@@ -30,16 +34,17 @@ if (!is_array($stories)) $stories = [];
 $quotes = [];
 foreach ($stories as $story) {
     if (!is_array($story)) continue;
-    $text = trim((string)($story['description'] ?? $story['text'] ?? ''));
-    if ($text !== '') $quotes[] = ['text' => $text, 'author' => trim((string)($story['title'] ?? ''))];
+    $text = (string)($story['description'] ?? $story['text'] ?? '');
+    $author = (string)($story['title'] ?? '');
+    if (trim($text) !== '') $quotes[] = ['text' => $text, 'author' => $author];
 }
-if (!$quotes && $quoteText !== '') $quotes[] = ['text' => $quoteText, 'author' => $brideName . ' & ' . $groomName];
+if (!$quotes && trim($quoteRaw) !== '') $quotes[] = ['text' => $quoteRaw, 'author' => $brideName . ' & ' . $groomName];
 $schedule = [];
 if ($akadDate !== '' || $akadTime !== '') $schedule[] = ['time' => trim($akadTime), 'label' => 'Akad Nikah — ' . trim($venue)];
 if ($receptionTime !== '') $schedule[] = ['time' => trim($receptionTime), 'label' => 'Resepsi — ' . trim($venue)];
 $eventEndTime = ($receptionDate !== '' && $receptionDate === $akadDate && $receptionTime !== '' && $receptionTime > $akadTime) ? $receptionTime : '';
 $eventData = [
-    'event' => ['title' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'subtitle' => html_entity_decode($openingText, ENT_QUOTES, 'UTF-8'), 'description' => html_entity_decode($description, ENT_QUOTES, 'UTF-8')],
+    'event' => ['title' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'subtitle' => $openingRaw, 'description' => $descriptionRaw],
     'datetime' => ['date' => $akadDate, 'startTime' => $akadTime, 'endTime' => $eventEndTime, 'timezone' => $eventTimezone, 'allDay' => false],
     'location' => ['name' => $venue, 'address' => $address, 'mapsLink' => $mapsUrl],
     'calendar' => ['enabled' => true, 'providers' => ['google' => true]],
@@ -49,12 +54,12 @@ $eventData = [
     'music' => ['enabled' => $musicPath !== '' && theme_section_enabled($config, $presetKey, 'music'), 'audioUrl' => public_path($musicPath), 'loop' => true, 'volume' => 0.3],
     'meta' => ['countdown' => true, 'simpleMode' => false, 'showSimpleModeToggle' => false],
     'design' => ['accentColor' => $config['theme_options']['rainier']['hero_accent_color'] ?? '#b8655d', 'backgrounds' => $coverPath !== '' ? [public_path($coverPath)] : []],
-    'footer' => ['text' => html_entity_decode($closingText, ENT_QUOTES, 'UTF-8'), 'credits' => ['designByLabel' => 'Hosted by', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Template', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Source template']],
+    'footer' => ['text' => $closingRaw, 'credits' => ['designByLabel' => 'Hosted by', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Template', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Source template']],
 ];
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -75,7 +80,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <button id="audio-control" class="audio-fab" aria-label="Play Music" data-tooltip="Turn background music on or off" hidden><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z" id="play-icon" /><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" id="pause-icon" class="hidden-icon" /></svg></button>
     <main id="app" aria-live="polite">
         <?php if (theme_section_enabled($config, $presetKey, 'hero')): ?><section class="hero"><p id="guest-greeting" class="guest-greeting">Kepada Yth. <?php echo $guestLabel; ?></p><h1 id="event-title"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1><p class="subtitle" id="event-subtitle"><?php echo $openingText; ?></p><div class="hero-meta"><?php if (!empty($config['schedule']['countdown_target'])): ?><div id="countdown" class="countdown" aria-live="polite"><span class="countdown-label">Event starts in</span><div class="countdown-grid"><div class="countdown-unit"><strong id="cd-days">0</strong><span>Days</span></div><div class="countdown-unit"><strong id="cd-hours">00</strong><span>Hours</span></div><div class="countdown-unit"><strong id="cd-minutes">00</strong><span>Minutes</span></div><div class="countdown-unit"><strong id="cd-seconds">00</strong><span>Seconds</span></div></div></div><?php endif; ?><div id="calendar-actions"><a id="google-calendar-link" target="_blank" rel="noopener" href="<?php echo escape_html($calendarLink); ?>">Add to Google Calendar</a></div></div><?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><a href="#rsvp" class="primary-btn">RSVP</a><?php endif; ?></section><?php endif; ?>
-        <?php if (theme_section_enabled($config, $presetKey, 'event_details')): ?><section class="section event-details"><h2>Event Details</h2><div class="event-datetime"><div><strong>Date:</strong><time id="event-date"><?php echo $akadDate ? escape_html(date('F j, Y', strtotime($akadDate))) : ''; ?></time></div><div><strong>Time:</strong><span id="event-time"><?php echo escape_html($akadTime); ?></span></div></div><p id="event-description"><?php echo $description; ?></p><address class="location"><p id="venue-name"><?php echo escape_html($venue); ?></p><p id="venue-address"><?php echo escape_html($address); ?></p><a id="maps-link" target="_blank" rel="noopener" href="<?php echo escape_html($mapsUrl); ?>">Open in Google Maps</a></address></section><?php endif; ?>
+        <?php if (theme_section_enabled($config, $presetKey, 'event_details')): ?><section class="section event-details"><h2>Event Details</h2><div class="event-datetime"><div><strong>Date:</strong><time id="event-date"><?php echo $akadDate ? escape_html(date('F j, Y', strtotime($akadDate))) : ''; ?></time></div><div><strong>Time:</strong><span id="event-time"><?php echo escape_html($akadTime); ?></span></div></div><p id="event-description"><?php echo $description; ?></p><address class="location"><p id="venue-name"><?php echo escape_html($venue); ?></p><p id="venue-address"><?php echo render_preserved_text($address); ?></p><a id="maps-link" target="_blank" rel="noopener" href="<?php echo escape_html($mapsUrl); ?>">Open in Google Maps</a></address></section><?php endif; ?>
         <?php if (theme_section_enabled($config, $presetKey, 'schedule')): ?><section class="section" id="schedule-section"><h2>Schedule</h2><ul id="schedule-list"></ul></section><?php endif; ?>
         <?php if (theme_section_enabled($config, $presetKey, 'quotes')): ?><section class="section" id="quotes-section"><h2>Words of Inspiration</h2><div class="quotes-container" id="quotes-container"></div></section><?php endif; ?>
         <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><section class="section" id="rsvp"><h2>RSVP</h2><p>Please confirm your attendance</p><div class="form-embed"></div></section><?php endif; ?>

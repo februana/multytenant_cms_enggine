@@ -111,10 +111,14 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
     $whatsappLink = $shared['whatsappLink'];
     $countdownTarget = $shared['countdownTarget'];
     $sectionStyles = $shared['sectionStyles'];
-    $dresscodeTitle = trim((string)($config['dresscode']['title'] ?? 'Dresscode')) ?: 'Dresscode';
-    $dresscodeColor = trim((string)($config['dresscode']['color'] ?? 'Putih / Pastel')) ?: 'Putih / Pastel';
-    $dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')) ?: 'Rapi dan sopan';
-    $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
+    $dresscodeTitle = (string)($config['dresscode']['title'] ?? 'Dresscode');
+    $dresscodeTitle = $dresscodeTitle === '' ? 'Dresscode' : $dresscodeTitle;
+    $dresscodeColor = (string)($config['dresscode']['color'] ?? 'Putih / Pastel');
+    $dresscodeColor = $dresscodeColor === '' ? 'Putih / Pastel' : $dresscodeColor;
+    $dresscodeRule = (string)($config['dresscode']['rule'] ?? 'Rapi dan sopan');
+    $dresscodeRule = $dresscodeRule === '' ? 'Rapi dan sopan' : $dresscodeRule;
+    $dresscodeDescription = (string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.');
+    $dresscodeDescription = $dresscodeDescription === '' ? 'Kenakan busana terbaikmu untuk momen spesial.' : $dresscodeDescription;
 
     switch ($sectionId) {
         case 'countdown':
@@ -129,9 +133,9 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             $receptionDate = $config['schedule']['reception_date'];
             $receptionTime = $config['schedule']['reception_time'];
             $locationAddress = $config['location']['address'];
-            $cards = '<article class="card"><h3>Akad Nikah</h3><p>' . date('j F Y', strtotime($akadDate)) . '</p><p>' . escape_html($akadTime) . ' WIB</p><p>' . escape_html($locationAddress) . '</p></article><article class="card"><h3>Resepsi</h3><p>' . date('j F Y', strtotime($receptionDate)) . '</p><p>' . escape_html($receptionTime) . ' WIB - Selesai</p><p>' . escape_html($locationAddress) . '</p></article>';
+            $cards = '<article class="card"><h3>Akad Nikah</h3><p>' . date('j F Y', strtotime($akadDate)) . '</p><p>' . escape_html($akadTime) . ' WIB</p><p>' . render_preserved_text($locationAddress) . '</p></article><article class="card"><h3>Resepsi</h3><p>' . date('j F Y', strtotime($receptionDate)) . '</p><p>' . escape_html($receptionTime) . ' WIB - Selesai</p><p>' . render_preserved_text($locationAddress) . '</p></article>';
             if (!empty($config['dresscode']['enabled'])) {
-                $cards .= '<article class="card"><h3>' . escape_html($dresscodeTitle) . '</h3><p>' . escape_html($dresscodeColor) . '</p><p>' . escape_html($dresscodeRule) . '</p><p>' . escape_html($dresscodeDescription) . '</p></article>';
+                $cards .= '<article class="card"><h3>' . escape_html($dresscodeTitle) . '</h3><p>' . render_preserved_text($dresscodeColor) . '</p><p>' . render_preserved_text($dresscodeRule) . '</p><p>' . render_preserved_text($dresscodeDescription) . '</p></article>';
             }
             return '<section id="acara" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'acara', 'Jadwal Acara')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')) . '</h2></div><div class="cards-grid">' . $cards . '</div></div></section>';
         case 'cerita':
@@ -145,7 +149,7 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             $venue = $config['location']['venue'];
             $qrData = rawurlencode($mapsUrl ?: 'https://www.google.com/maps');
             $qrUrl = escape_html(public_path('/admin/qr.php?data=' . $qrData));
-            return '<section id="lokasi" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'lokasi', 'Lokasi')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')) . '</h2></div><div class="location-grid"><div class="card"><h3>Alamat</h3><p>' . escape_html($venue) . '</p><p>' . escape_html($locationAddress) . '</p><p><a href="' . escape_html($mapsUrl) . '" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p></div><div class="card"><h3>QR Lokasi</h3><p class="location-qr"><strong>Scan untuk arah</strong><br /><img id="qrLokasiImg" src="' . $qrUrl . '" alt="QR kode lokasi pernikahan" loading="lazy" decoding="async" /></p></div><div class="map-wrap"><iframe src="' . escape_html($mapsEmbed) . '" title="Lokasi acara" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="map-footnote">Titik lokasi tepat: ' . escape_html($mapsUrl) . '</div></div></div></div></section>';
+            return '<section id="lokasi" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'lokasi', 'Lokasi')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')) . '</h2></div><div class="location-grid"><div class="card"><h3>Alamat</h3><p>' . escape_html($venue) . '</p><p>' . render_preserved_text($locationAddress) . '</p><p><a href="' . escape_html($mapsUrl) . '" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p></div><div class="card"><h3>QR Lokasi</h3><p class="location-qr"><strong>Scan untuk arah</strong><br /><img id="qrLokasiImg" src="' . $qrUrl . '" alt="QR kode lokasi pernikahan" loading="lazy" decoding="async" /></p></div><div class="map-wrap"><iframe src="' . escape_html($mapsEmbed) . '" title="Lokasi acara" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="map-footnote">Titik lokasi tepat: ' . escape_html($mapsUrl) . '</div></div></div></div></section>';
         case 'amplop':
             $giftBank = $config['gift']['bank'];
             $giftAccount = $config['gift']['account_number'];
@@ -241,7 +245,7 @@ function render_dewankl_hero(array $config, array $shared): string {
         <p class="eyebrow">Kami Akan Menikah</p>
         <p id="guest-greeting" class="hero-guest">Kepada Yth. ' . $guestLabel . '</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
         <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
         <div class="hero-actions">
@@ -261,7 +265,7 @@ function render_elix_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--soft">
         <p class="eyebrow">Kami Akan Menikah</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
         <div class="hero-actions hero-actions--compact">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
@@ -279,7 +283,7 @@ function render_rainier_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--editorial">
         <p class="eyebrow">Kami Akan Menikah</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <div class="hero-meta-row">
           <span>' . escape_html($config['wedding']['bride_nickname']) . '</span>
           <span class="hero-love-mark">&amp;</span>
@@ -302,7 +306,7 @@ function render_archak_hero(array $config, array $shared): string {
         <div class="hero-card__text">
           <p class="eyebrow">Kami Akan Menikah</p>
           <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-          <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+          <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         </div>
         <div class="hero-card__meta">
           <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>

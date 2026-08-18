@@ -18,6 +18,23 @@ function escape_html(string $value): string {
 }
 
 /**
+ * Render user-entered text safely while preserving Unicode, spaces, and line breaks.
+ * This helper intentionally performs no translation, correction, trimming, or rewriting.
+ */
+function render_preserved_text($value): string {
+    return nl2br(escape_html((string)$value), false);
+}
+
+/**
+ * Normalize only the platform line ending for a user text input.
+ * Leading/trailing spaces and all Unicode characters remain unchanged.
+ */
+function preserve_text_input($value, string $fallback = ''): string {
+    $text = str_replace(["\r\n", "\r"], "\n", (string)$value);
+    return trim($text) === '' ? $fallback : $text;
+}
+
+/**
  * Normalize the public guest query value without trusting it as HTML.
  * The guest link format remains compatible with the existing `?to=` flow.
  */

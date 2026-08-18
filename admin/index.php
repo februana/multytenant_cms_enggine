@@ -130,7 +130,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         $error = 'Target media tidak valid.';
                         break 2;
                 }
-                $success = 'Asset media berhasil dipakai dari File Manager.';
+                $success = 'Asset media berhasil dipakai dari Pengelola File.';
                 break;
             case 'rename_media_file':
                 $mediaPath = trim((string)($_POST['media_path'] ?? ''));
@@ -230,29 +230,29 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $success = 'File media berhasil dihapus.';
                 break;
             case 'save_wedding':
-                $config['wedding']['bride_name'] = trim((string)($_POST['bride_name'] ?? '')) ?: $config['wedding']['bride_name'];
-                $config['wedding']['groom_name'] = trim((string)($_POST['groom_name'] ?? '')) ?: $config['wedding']['groom_name'];
-                $config['wedding']['title'] = trim((string)($_POST['title'] ?? '')) ?: $config['wedding']['title'];
-                $config['wedding']['opening_text'] = str_replace("\r\n", "\n", (string)($_POST['opening_text'] ?? ''));
+                $config['wedding']['bride_name'] = preserve_text_input($_POST['bride_name'] ?? '', $config['wedding']['bride_name']);
+                $config['wedding']['groom_name'] = preserve_text_input($_POST['groom_name'] ?? '', $config['wedding']['groom_name']);
+                $config['wedding']['title'] = preserve_text_input($_POST['title'] ?? '', $config['wedding']['title']);
+                $config['wedding']['opening_text'] = preserve_text_input($_POST['opening_text'] ?? '', $config['wedding']['opening_text']);
                 if (trim($config['wedding']['opening_text']) === '') {
                     $config['wedding']['opening_text'] = config_defaults()['wedding']['opening_text'];
                 }
-                $config['wedding']['closing_text'] = str_replace("\r\n", "\n", (string)($_POST['closing_text'] ?? ''));
+                $config['wedding']['closing_text'] = preserve_text_input($_POST['closing_text'] ?? '', $config['wedding']['closing_text']);
                 if (trim($config['wedding']['closing_text']) === '') {
                     $config['wedding']['closing_text'] = config_defaults()['wedding']['closing_text'];
                 }
-                $config['wedding']['quote'] = str_replace("\r\n", "\n", (string)($_POST['quote'] ?? ''));
+                $config['wedding']['quote'] = preserve_text_input($_POST['quote'] ?? '', $config['wedding']['quote']);
                 if (trim($config['wedding']['quote']) === '') {
                     $config['wedding']['quote'] = config_defaults()['wedding']['quote'];
                 }
-                $config['wedding']['bride_nickname'] = trim((string)($_POST['bride_nickname'] ?? '')) ?: $config['wedding']['bride_nickname'];
-                $config['wedding']['groom_nickname'] = trim((string)($_POST['groom_nickname'] ?? '')) ?: $config['wedding']['groom_nickname'];
+                $config['wedding']['bride_nickname'] = preserve_text_input($_POST['bride_nickname'] ?? '', $config['wedding']['bride_nickname']);
+                $config['wedding']['groom_nickname'] = preserve_text_input($_POST['groom_nickname'] ?? '', $config['wedding']['groom_nickname']);
                 break;
             case 'save_parents':
-                $config['parents']['bride_father'] = trim((string)($_POST['bride_father'] ?? '')) ?: $config['parents']['bride_father'];
-                $config['parents']['bride_mother'] = trim((string)($_POST['bride_mother'] ?? '')) ?: $config['parents']['bride_mother'];
-                $config['parents']['groom_father'] = trim((string)($_POST['groom_father'] ?? '')) ?: $config['parents']['groom_father'];
-                $config['parents']['groom_mother'] = trim((string)($_POST['groom_mother'] ?? '')) ?: $config['parents']['groom_mother'];
+                $config['parents']['bride_father'] = preserve_text_input($_POST['bride_father'] ?? '', $config['parents']['bride_father']);
+                $config['parents']['bride_mother'] = preserve_text_input($_POST['bride_mother'] ?? '', $config['parents']['bride_mother']);
+                $config['parents']['groom_father'] = preserve_text_input($_POST['groom_father'] ?? '', $config['parents']['groom_father']);
+                $config['parents']['groom_mother'] = preserve_text_input($_POST['groom_mother'] ?? '', $config['parents']['groom_mother']);
                 break;
             case 'save_schedule':
                 $oldAkadDate = $config['schedule']['akad_date'] ?? '';
@@ -275,8 +275,8 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 }
                 break;
             case 'save_location':
-                $config['location']['venue'] = trim((string)($_POST['venue'] ?? '')) ?: $config['location']['venue'];
-                $config['location']['address'] = str_replace("\r\n", "\n", (string)($_POST['address'] ?? ''));
+                $config['location']['venue'] = preserve_text_input($_POST['venue'] ?? '', $config['location']['venue']);
+                $config['location']['address'] = preserve_text_input($_POST['address'] ?? '', $config['location']['address']);
                 if (trim($config['location']['address']) === '') {
                     $config['location']['address'] = config_defaults()['location']['address'];
                 }
@@ -284,25 +284,25 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['location']['maps_embed'] = trim((string)($_POST['maps_embed'] ?? '')) ?: $config['location']['maps_embed'];
                 break;
             case 'save_gift':
-                $config['gift']['bank'] = trim((string)($_POST['bank'] ?? '')) ?: $config['gift']['bank'];
-                $config['gift']['account_number'] = trim((string)($_POST['account_number'] ?? '')) ?: $config['gift']['account_number'];
-                $config['gift']['account_holder'] = trim((string)($_POST['account_holder'] ?? '')) ?: $config['gift']['account_holder'];
-                $config['gift']['e_wallet_label'] = trim((string)($_POST['e_wallet_label'] ?? '')) ?: $config['gift']['e_wallet_label'];
-                $config['gift']['e_wallet_number'] = trim((string)($_POST['e_wallet_number'] ?? '')) ?: $config['gift']['e_wallet_number'];
+                $config['gift']['bank'] = preserve_text_input($_POST['bank'] ?? '', $config['gift']['bank']);
+                $config['gift']['account_number'] = preserve_text_input($_POST['account_number'] ?? '', $config['gift']['account_number']);
+                $config['gift']['account_holder'] = preserve_text_input($_POST['account_holder'] ?? '', $config['gift']['account_holder']);
+                $config['gift']['e_wallet_label'] = preserve_text_input($_POST['e_wallet_label'] ?? '', $config['gift']['e_wallet_label']);
+                $config['gift']['e_wallet_number'] = preserve_text_input($_POST['e_wallet_number'] ?? '', $config['gift']['e_wallet_number']);
                 break;
             case 'save_dresscode':
                 $config['dresscode']['enabled'] = !empty($_POST['dresscode_enabled']);
-                $config['dresscode']['title'] = trim((string)($_POST['dresscode_title'] ?? '')) ?: $config['dresscode']['title'];
-                $config['dresscode']['color'] = trim((string)($_POST['dresscode_color'] ?? '')) ?: $config['dresscode']['color'];
-                $config['dresscode']['rule'] = trim((string)($_POST['dresscode_rule'] ?? '')) ?: $config['dresscode']['rule'];
-                $config['dresscode']['description'] = str_replace("\r\n", "\n", (string)($_POST['dresscode_description'] ?? ''));
+                $config['dresscode']['title'] = preserve_text_input($_POST['dresscode_title'] ?? '', $config['dresscode']['title']);
+                $config['dresscode']['color'] = preserve_text_input($_POST['dresscode_color'] ?? '', $config['dresscode']['color']);
+                $config['dresscode']['rule'] = preserve_text_input($_POST['dresscode_rule'] ?? '', $config['dresscode']['rule']);
+                $config['dresscode']['description'] = preserve_text_input($_POST['dresscode_description'] ?? '', $config['dresscode']['description']);
                 if (trim($config['dresscode']['description']) === '') {
                     $config['dresscode']['description'] = config_defaults()['dresscode']['description'];
                 }
                 break;
             case 'save_whatsapp':
                 $config['whatsapp']['phone'] = trim((string)($_POST['whatsapp_phone'] ?? '')) ?: $config['whatsapp']['phone'];
-                $config['whatsapp']['message'] = str_replace("\r\n", "\n", (string)($_POST['whatsapp_message'] ?? ''));
+                $config['whatsapp']['message'] = preserve_text_input($_POST['whatsapp_message'] ?? '', $config['whatsapp']['message']);
                 if (trim($config['whatsapp']['message']) === '') {
                     $config['whatsapp']['message'] = config_defaults()['whatsapp']['message'];
                 }
@@ -384,10 +384,10 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                             'subtitle' => $originalSection['subtitle'] ?? '',
                             'enabled' => !empty($sectionData['enabled']),
                             'custom_title' => array_key_exists('custom_title', $sectionData)
-                                ? trim((string)$sectionData['custom_title'])
+                                ? preserve_text_input($sectionData['custom_title'], '')
                                 : (string)($originalSection['custom_title'] ?? ''),
                             'custom_subtitle' => array_key_exists('custom_subtitle', $sectionData)
-                                ? trim((string)$sectionData['custom_subtitle'])
+                                ? preserve_text_input($sectionData['custom_subtitle'], '')
                                 : (string)($originalSection['custom_subtitle'] ?? ''),
                             'order' => $activeMode === 'custom'
                                 ? (int)($sectionData['order'] ?? 0)
@@ -514,13 +514,13 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 if ($action === 'add') {
                     $newItem = [
                         'id' => uniqid('story_', true),
-                        'title' => trim((string)($_POST['title'] ?? '')),
-                        'subtitle' => trim((string)($_POST['subtitle'] ?? '')),
-                        'description' => str_replace("\r\n", "\n", (string)($_POST['description'] ?? '')),
+                        'title' => preserve_text_input($_POST['title'] ?? ''),
+                        'subtitle' => preserve_text_input($_POST['subtitle'] ?? ''),
+                        'description' => preserve_text_input($_POST['description'] ?? ''),
                         'event_date' => trim((string)($_POST['event_date'] ?? '')),
                         'image' => '',
-                        'image_alt' => trim((string)($_POST['image_alt'] ?? '')),
-                        'image_caption' => trim((string)($_POST['image_caption'] ?? '')),
+                        'image_alt' => preserve_text_input($_POST['image_alt'] ?? ''),
+                        'image_caption' => preserve_text_input($_POST['image_caption'] ?? ''),
                         'icon' => trim((string)($_POST['icon'] ?? '')),
                         'enabled' => !empty($_POST['enabled']),
                         'order' => count($config['love_story']['items']) + 1
@@ -530,12 +530,12 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $storyId = $_POST['story_id'] ?? '';
                     foreach ($config['love_story']['items'] as &$item) {
                         if (($item['id'] ?? '') === $storyId) {
-                            $item['title'] = trim((string)($_POST['title'] ?? $item['title']));
-                            $item['subtitle'] = trim((string)($_POST['subtitle'] ?? $item['subtitle']));
-                            $item['description'] = str_replace("\r\n", "\n", (string)($_POST['description'] ?? $item['description']));
+                            $item['title'] = array_key_exists('title', $_POST) ? preserve_text_input($_POST['title'] ?? '', (string)($item['title'] ?? '')) : (string)($item['title'] ?? '');
+                            $item['subtitle'] = array_key_exists('subtitle', $_POST) ? preserve_text_input($_POST['subtitle'] ?? '', (string)($item['subtitle'] ?? '')) : (string)($item['subtitle'] ?? '');
+                            $item['description'] = array_key_exists('description', $_POST) ? preserve_text_input($_POST['description'] ?? '', (string)($item['description'] ?? '')) : (string)($item['description'] ?? '');
                             $item['event_date'] = trim((string)($_POST['event_date'] ?? $item['event_date']));
-                            $item['image_alt'] = trim((string)($_POST['image_alt'] ?? $item['image_alt']));
-                            $item['image_caption'] = trim((string)($_POST['image_caption'] ?? $item['image_caption']));
+                            $item['image_alt'] = array_key_exists('image_alt', $_POST) ? preserve_text_input($_POST['image_alt'] ?? '', (string)($item['image_alt'] ?? '')) : (string)($item['image_alt'] ?? '');
+                            $item['image_caption'] = array_key_exists('image_caption', $_POST) ? preserve_text_input($_POST['image_caption'] ?? '', (string)($item['image_caption'] ?? '')) : (string)($item['image_caption'] ?? '');
                             $item['icon'] = trim((string)($_POST['icon'] ?? $item['icon']));
                             $item['enabled'] = !empty($_POST['enabled']);
                             break;
@@ -905,7 +905,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Wedding CMS</title>
+    <title>Admin CMS Undangan</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -923,10 +923,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
         <?php else: ?>
             <div class="header">
                 <div>
-                    <h1>Dashboard Wedding CMS</h1>
+                    <h1>Dasbor CMS Undangan</h1>
                     <p style="margin:4px 0;color:#6b5b45;">Kelola undangan tanpa mengedit kode.</p>
                 </div>
-                <a href="?logout=1">Logout</a>
+                <a href="?logout=1">Keluar</a>
             </div>
             <?php if ($success): ?><div class="notice"><?php echo escape_html($success); ?></div><?php endif; ?>
             <?php if ($error): ?><div class="error"><?php echo escape_html($error); ?></div><?php endif; ?>
@@ -947,7 +947,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gallery')): ?><a href="#gallery">Galeri</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('cover')): ?><a href="#cover">Cover</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Background</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Latar Belakang</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('music')): ?><a href="#music">Musik</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gift')): ?><a href="#gift">Hadiah</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('dresscode')): ?><a href="#dresscode">Dresscode</a><?php endif; ?>
@@ -956,7 +956,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">WhatsApp</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">RSVP</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('backup')): ?><a href="#backup">Backup</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
                     </nav>
                 </aside>
@@ -975,7 +975,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($globalAdminCapabilityEnabled('preset_selector')): ?>
                     <section id="preset-selector" class="card panel-section">
                         <h2>Preset / Tema Aktif</h2>
-                        <p>Pilih preset presentasi tanpa menghapus konfigurasi CMS, media, guest links, atau data RSVP yang sudah tersimpan.</p>
+                        <p>Pilih preset presentasi tanpa menghapus konfigurasi CMS, media, link tamu, atau data RSVP yang sudah tersimpan.</p>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_preset">
@@ -1004,9 +1004,9 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="form-row"><label>Nama Mempelai Wanita</label><input type="text" name="bride_name" value="<?php echo escape_html($config['wedding']['bride_name']); ?>" required></div>
                                 <div class="form-row"><label>Nama Mempelai Pria</label><input type="text" name="groom_name" value="<?php echo escape_html($config['wedding']['groom_name']); ?>" required></div>
                                 <div class="form-row"><label>Judul Undangan</label><input type="text" name="title" value="<?php echo escape_html($config['wedding']['title']); ?>"></div>
-                                <div class="form-row"><label>Text Pembuka</label><textarea name="opening_text"><?php echo escape_html($config['wedding']['opening_text']); ?></textarea></div>
-                                <div class="form-row"><label>Text Penutup</label><textarea name="closing_text"><?php echo escape_html($config['wedding']['closing_text']); ?></textarea></div>
-                                <div class="form-row"><label>Quote</label><textarea name="quote"><?php echo escape_html($config['wedding']['quote']); ?></textarea></div>
+                                <div class="form-row"><label>Teks Pembuka</label><textarea name="opening_text"><?php echo escape_html($config['wedding']['opening_text']); ?></textarea></div>
+                                <div class="form-row"><label>Teks Penutup</label><textarea name="closing_text"><?php echo escape_html($config['wedding']['closing_text']); ?></textarea></div>
+                                <div class="form-row"><label>Kutipan</label><textarea name="quote"><?php echo escape_html($config['wedding']['quote']); ?></textarea></div>
                                 <div class="form-row"><label>Nama Panggilan Mempelai Wanita</label><input type="text" name="bride_nickname" value="<?php echo escape_html($config['wedding']['bride_nickname']); ?>"></div>
                                 <div class="form-row"><label>Nama Panggilan Mempelai Pria</label><input type="text" name="groom_nickname" value="<?php echo escape_html($config['wedding']['groom_nickname']); ?>"></div>
                             </div>
@@ -1076,7 +1076,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('sections')): ?>
 
                     <section id="sections" class="card panel-section">
-                        <h2><?php echo $themeMode === 'custom' ? 'CMS-Native Sections' : 'Sections ' . escape_html($themeMeta['label'] ?? $activePresetKey); ?></h2>
+                        <h2><?php echo $themeMode === 'custom' ? 'Seksi CMS-Native' : 'Seksi ' . escape_html($themeMeta['label'] ?? $activePresetKey); ?></h2>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_sections">
@@ -1093,23 +1093,23 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <span style="font-weight:bold;color:#c84c47;"><?php echo escape_html($section['title'] ?: ($section['label'] ?? $section['id'])); ?></span>
                                         <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;">
                                             <input type="checkbox" name="sections[<?php echo $index; ?>][enabled]" value="1" <?php echo !empty($section['enabled']) ? 'checked' : ''; ?>>
-                                            Enabled
+                                            Aktif
                                         </label>
                                     </div>
                                     <div style="display:grid;grid-template-columns:1fr 1fr <?php echo $themeMode === 'custom' ? 'auto' : '1fr'; ?>;gap:1rem;">
                                         <?php if ($themeMode === 'custom'): ?>
-                                        <div class="form-row"><label>Custom Title</label><input type="text" name="sections[<?php echo $index; ?>][custom_title]" value="<?php echo escape_html($section['custom_title'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['title'] ?? ($section['label'] ?? '')); ?>"></div>
-                                        <div class="form-row"><label>Custom Subtitle</label><input type="text" name="sections[<?php echo $index; ?>][custom_subtitle]" value="<?php echo escape_html($section['custom_subtitle'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['subtitle'] ?? ''); ?>"></div>
+                                        <div class="form-row"><label>Judul Kustom</label><input type="text" name="sections[<?php echo $index; ?>][custom_title]" value="<?php echo escape_html($section['custom_title'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['title'] ?? ($section['label'] ?? '')); ?>"></div>
+                                        <div class="form-row"><label>Subjudul Kustom</label><input type="text" name="sections[<?php echo $index; ?>][custom_subtitle]" value="<?php echo escape_html($section['custom_subtitle'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['subtitle'] ?? ''); ?>"></div>
                                         <div class="form-row"><label>Order</label><input type="number" name="sections[<?php echo $index; ?>][order]" value="<?php echo escape_html((string)($section['order'] ?? $index + 1)); ?>" style="width:80px;"></div>
                                         <?php else: ?>
-                                        <div class="form-row" style="grid-column:span 2;"><label>Theme-owned copy</label><input type="text" value="<?php echo escape_html($section['title'] ?? ($section['label'] ?? $section['id'])); ?>" readonly style="background:#eee;"></div>
-                                        <div class="form-row"><label>Theme order</label><input type="text" value="<?php echo escape_html((string)($section['order'] ?? $index + 1)); ?>" readonly style="width:80px;background:#eee;"></div>
+                                        <div class="form-row" style="grid-column:span 2;"><label>Teks milik tema</label><input type="text" value="<?php echo escape_html($section['title'] ?? ($section['label'] ?? $section['id'])); ?>" readonly style="background:#eee;"></div>
+                                        <div class="form-row"><label>Urutan tema</label><input type="text" value="<?php echo escape_html((string)($section['order'] ?? $index + 1)); ?>" readonly style="width:80px;background:#eee;"></div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
-                            <button type="submit">Simpan Sections</button>
+                            <button type="submit">Simpan Seksi</button>
                         </form>
                     </section>
 
@@ -1131,37 +1131,37 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
 
                             <?php if ($themeMode === 'custom'): ?>
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Colors</h3>
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Warna</h3>
                             <div class="form-grid">
-                                <div class="form-row"><label>Primary Color</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Secondary Color</label><input type="color" name="secondary_color" value="<?php echo escape_html($config['theme']['secondary_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Accent Color</label><input type="color" name="accent_color" value="<?php echo escape_html($config['theme']['accent_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Background Color</label><input type="color" name="background_color" value="<?php echo escape_html($config['theme']['background_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Paper Color</label><input type="color" name="paper_color" value="<?php echo escape_html($config['theme']['paper_color'] ?? '#ffffff'); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Muted Color</label><input type="color" name="muted_color" value="<?php echo escape_html($config['theme']['muted_color'] ?? '#806f66'); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Text Color</label><input type="color" name="text_color" value="<?php echo escape_html($config['theme']['text_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Link Color</label><input type="color" name="link_color" value="<?php echo escape_html($config['theme']['link_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Utama</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Sekunder</label><input type="color" name="secondary_color" value="<?php echo escape_html($config['theme']['secondary_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Aksen</label><input type="color" name="accent_color" value="<?php echo escape_html($config['theme']['accent_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Latar Belakang</label><input type="color" name="background_color" value="<?php echo escape_html($config['theme']['background_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Kertas</label><input type="color" name="paper_color" value="<?php echo escape_html($config['theme']['paper_color'] ?? '#ffffff'); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Redup</label><input type="color" name="muted_color" value="<?php echo escape_html($config['theme']['muted_color'] ?? '#806f66'); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Teks</label><input type="color" name="text_color" value="<?php echo escape_html($config['theme']['text_color']); ?>" style="width:100%;height:40px;"></div>
+                                <div class="form-row"><label>Warna Tautan</label><input type="color" name="link_color" value="<?php echo escape_html($config['theme']['link_color']); ?>" style="width:100%;height:40px;"></div>
                             </div>
 
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Typography</h3>
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Tipografi</h3>
                             <div class="form-grid">
-                                <div class="form-row"><label>Heading Font</label><input type="text" name="heading_font" value="<?php echo escape_html($config['theme']['heading_font']); ?>" placeholder="e.g., Playfair Display, serif"></div>
-                                <div class="form-row"><label>Body Font</label><input type="text" name="body_font" value="<?php echo escape_html($config['theme']['body_font']); ?>" placeholder="e.g., Lato, sans-serif"></div>
-                                <div class="form-row"><label>Base Font Size</label><input type="text" name="font_size_base" value="<?php echo escape_html($config['theme']['font_size_base']); ?>" placeholder="e.g., 16px"></div>
+                                <div class="form-row"><label>Font Judul</label><input type="text" name="heading_font" value="<?php echo escape_html($config['theme']['heading_font']); ?>" placeholder="e.g., Playfair Display, serif"></div>
+                                <div class="form-row"><label>Font Isi</label><input type="text" name="body_font" value="<?php echo escape_html($config['theme']['body_font']); ?>" placeholder="e.g., Lato, sans-serif"></div>
+                                <div class="form-row"><label>Ukuran Font Dasar</label><input type="text" name="font_size_base" value="<?php echo escape_html($config['theme']['font_size_base']); ?>" placeholder="e.g., 16px"></div>
                             </div>
 
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Spacing & Layout</h3>
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Jarak & Tata Letak</h3>
                             <div class="form-grid">
-                                <div class="form-row"><label>Container Width</label><input type="text" name="container_width" value="<?php echo escape_html($config['theme']['container_width']); ?>" placeholder="e.g., 1200px"></div>
-                                <div class="form-row"><label>Section Spacing</label><input type="text" name="section_spacing" value="<?php echo escape_html($config['theme']['section_spacing']); ?>" placeholder="e.g., 80px"></div>
-                                <div class="form-row"><label>Border Radius</label><input type="text" name="border_radius" value="<?php echo escape_html($config['theme']['border_radius']); ?>" placeholder="e.g., 28px"></div>
+                                <div class="form-row"><label>Lebar Kontainer</label><input type="text" name="container_width" value="<?php echo escape_html($config['theme']['container_width']); ?>" placeholder="e.g., 1200px"></div>
+                                <div class="form-row"><label>Jarak Seksi</label><input type="text" name="section_spacing" value="<?php echo escape_html($config['theme']['section_spacing']); ?>" placeholder="e.g., 80px"></div>
+                                <div class="form-row"><label>Radius Border</label><input type="text" name="border_radius" value="<?php echo escape_html($config['theme']['border_radius']); ?>" placeholder="e.g., 28px"></div>
                                 <div class="form-row"><label>Shadow</label><input type="text" name="shadow" value="<?php echo escape_html($config['theme']['shadow']); ?>" placeholder="e.g., 0 22px 60px rgba(73,45,34,.14)"></div>
                             </div>
 
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Styles</h3>
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Gaya</h3>
                             <div class="form-grid">
                                 <div class="form-row">
-                                    <label>Button Style</label>
+                                    <label>Gaya Tombol</label>
                                     <select name="button_style">
                                         <option value="rounded" <?php echo $config['theme']['button_style'] === 'rounded' ? 'selected' : ''; ?>>Rounded</option>
                                         <option value="square" <?php echo $config['theme']['button_style'] === 'square' ? 'selected' : ''; ?>>Square</option>
@@ -1169,7 +1169,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     </select>
                                 </div>
                                 <div class="form-row">
-                                    <label>Navbar Style</label>
+                                    <label>Gaya Navbar</label>
                                     <select name="navbar_style">
                                         <option value="transparent" <?php echo $config['theme']['navbar_style'] === 'transparent' ? 'selected' : ''; ?>>Transparent</option>
                                         <option value="sticky" <?php echo $config['theme']['navbar_style'] === 'sticky' ? 'selected' : ''; ?>>Sticky</option>
@@ -1177,7 +1177,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     </select>
                                 </div>
                                 <div class="form-row">
-                                    <label>Card Style</label>
+                                    <label>Gaya Kartu</label>
                                     <select name="card_style">
                                         <option value="elevated" <?php echo $config['theme']['card_style'] === 'elevated' ? 'selected' : ''; ?>>Elevated</option>
                                         <option value="flat" <?php echo $config['theme']['card_style'] === 'flat' ? 'selected' : ''; ?>>Flat</option>
@@ -1185,7 +1185,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     </select>
                                 </div>
                                 <div class="form-row">
-                                    <label>Footer Style</label>
+                                    <label>Gaya Footer</label>
                                     <select name="footer_style">
                                         <option value="centered" <?php echo $config['theme']['footer_style'] === 'centered' ? 'selected' : ''; ?>>Centered</option>
                                         <option value="left" <?php echo $config['theme']['footer_style'] === 'left' ? 'selected' : ''; ?>>Left</option>
@@ -1197,11 +1197,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <div class="form-row" style="margin-top:1rem;">
                                 <label style="display:flex;align-items:center;gap:0.5rem;">
                                     <input type="checkbox" name="animation_enabled" value="1" <?php echo !empty($config['theme']['animation_enabled']) ? 'checked' : ''; ?>>
-                                    Enable Animations
+                                    Aktifkan Animasi
                                 </label>
                             </div>
 
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Hero Image Settings</h3>
+                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Pengaturan Gambar Hero</h3>
                             
                             <h4 style="margin:1rem 0 0.5rem;font-size:0.95rem;color:#666;">Desktop</h4>
                             <div class="form-grid">
@@ -1217,7 +1217,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Tinggi section hero untuk desktop.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Vertical Alignment</label>
+                                    <label>Perataan Vertikal</label>
                                     <select name="hero_vertical_alignment">
                                         <option value="flex-start" <?php echo ($config['theme']['hero_vertical_alignment'] ?? 'center') === 'flex-start' ? 'selected' : ''; ?>>Top</option>
                                         <option value="center" <?php echo ($config['theme']['hero_vertical_alignment'] ?? 'center') === 'center' ? 'selected' : ''; ?>>Center (Default)</option>
@@ -1226,7 +1226,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Posisi vertikal konten hero.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Content Width</label>
+                                    <label>Lebar Konten</label>
                                     <select name="hero_content_width">
                                         <option value="700px" <?php echo ($config['theme']['hero_content_width'] ?? '900px') === '700px' ? 'selected' : ''; ?>>700px</option>
                                         <option value="800px" <?php echo ($config['theme']['hero_content_width'] ?? '900px') === '800px' ? 'selected' : ''; ?>>800px</option>
@@ -1237,7 +1237,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Lebar maksimal konten hero.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Hero Image Fit</label>
+                                    <label>Penyesuaian Gambar Hero</label>
                                     <select name="hero_image_fit">
                                         <option value="cover" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'cover' ? 'selected' : ''; ?>>Cover (Default - memenuhi area)</option>
                                         <option value="contain" <?php echo ($config['theme']['hero_image_fit'] ?? 'cover') === 'contain' ? 'selected' : ''; ?>>Contain (tampilkan seluruh gambar)</option>
@@ -1246,7 +1246,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Pilih bagaimana gambar background hero ditampilkan.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Hero Image Position</label>
+                                    <label>Posisi Gambar Hero</label>
                                     <select name="hero_image_position">
                                         <option value="center" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'center' ? 'selected' : ''; ?>>Center</option>
                                         <option value="top" <?php echo ($config['theme']['hero_image_position'] ?? 'center') === 'top' ? 'selected' : ''; ?>>Top</option>
@@ -1272,7 +1272,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Tinggi section hero untuk mobile.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Vertical Alignment</label>
+                                    <label>Perataan Vertikal</label>
                                     <select name="mobile_hero_vertical_alignment">
                                         <option value="flex-start" <?php echo ($config['theme']['mobile_hero_vertical_alignment'] ?? 'center') === 'flex-start' ? 'selected' : ''; ?>>Top</option>
                                         <option value="center" <?php echo ($config['theme']['mobile_hero_vertical_alignment'] ?? 'center') === 'center' ? 'selected' : ''; ?>>Center (Default)</option>
@@ -1281,7 +1281,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Posisi vertikal konten hero untuk mobile.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Content Width</label>
+                                    <label>Lebar Konten</label>
                                     <select name="mobile_hero_content_width">
                                         <option value="100%" <?php echo ($config['theme']['mobile_hero_content_width'] ?? '100%') === '100%' ? 'selected' : ''; ?>>100% (Default)</option>
                                         <option value="90%" <?php echo ($config['theme']['mobile_hero_content_width'] ?? '100%') === '90%' ? 'selected' : ''; ?>>90%</option>
@@ -1292,16 +1292,16 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Lebar maksimal konten hero untuk mobile.</small>
                                 </div>
                                 <div class="form-row">
-                                    <label>Hero Image Fit</label>
+                                    <label>Penyesuaian Gambar Hero</label>
                                     <select name="mobile_hero_image_fit">
                                         <option value="cover" <?php echo ($config['theme']['mobile_hero_image_fit'] ?? 'cover') === 'cover' ? 'selected' : ''; ?>>Cover</option>
                                         <option value="contain" <?php echo ($config['theme']['mobile_hero_image_fit'] ?? 'cover') === 'contain' ? 'selected' : ''; ?>>Contain</option>
                                         <option value="auto" <?php echo ($config['theme']['mobile_hero_image_fit'] ?? 'cover') === 'auto' ? 'selected' : ''; ?>>Auto</option>
                                     </select>
-                                    <small>Background size untuk mobile.</small>
+                                    <small>Ukuran latar belakang untuk mobile.</small>
                                 </div>
                                 <div class="form-row" style="grid-column: 1 / -1;">
-                                    <label>Hero Image Position</label>
+                                    <label>Posisi Gambar Hero</label>
                                     <select name="mobile_hero_image_position">
                                         <optgroup label="Top">
                                             <option value="left top" <?php echo ($config['theme']['mobile_hero_image_position'] ?? 'center top') === 'left top' ? 'selected' : ''; ?>>Top Left</option>
@@ -1322,7 +1322,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <small>Posisi fokus gambar untuk mobile.</small>
                                 </div>
                                 <div class="form-row" style="grid-column: 1 / -1;">
-                                    <label>Mobile Button Layout</label>
+                                    <label>Tata Letak Tombol Mobile</label>
                                     <select name="buttons_mobile_layout">
                                         <option value="horizontal" <?php echo ($config['buttons']['mobile_layout'] ?? '2-columns') === 'horizontal' ? 'selected' : ''; ?>>Horizontal (side by side)</option>
                                         <option value="2-columns" <?php echo ($config['buttons']['mobile_layout'] ?? '2-columns') === '2-columns' ? 'selected' : ''; ?>>2 Columns (Default)</option>
@@ -1335,9 +1335,9 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
 
                             <div class="theme-actions">
-                                <button type="submit">Save</button>
-                                <button type="button" class="button small-button" id="themePreviewReset">Reset</button>
-                                <button type="button" class="button small-button" id="themePreviewCancel">Cancel Preview</button>
+                                <button type="submit">Simpan</button>
+                                <button type="button" class="button small-button" id="themePreviewReset">Atur Ulang</button>
+                                <button type="button" class="button small-button" id="themePreviewCancel">Batalkan Pratinjau</button>
                             </div>
                         </form>
 
@@ -1437,20 +1437,20 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <section id="file-manager" class="card panel-section">
                         <h2>Kelola Media</h2>
-                        <p class="section-description">Upload, pilih, dan kelola semua media yang dipakai undangan: cover, background, galeri, cerita, dan musik.</p>
+                        <p class="section-description">Unggah, pilih, dan kelola semua media yang dipakai undangan: cover, latar belakang, galeri, cerita, dan musik.</p>
 
                         <form method="post" enctype="multipart/form-data" style="margin-bottom: 20px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_media_library">
                             <div class="form-grid">
                                 <div class="form-row">
-                                    <label>Upload ke folder</label>
+                                    <label>Unggah ke folder</label>
                                     <select name="media_dir">
                                         <option value="cover">Cover</option>
-                                        <option value="background">Background</option>
-                                        <option value="gallery">Gallery</option>
-                                        <option value="love_story">Love Story</option>
-                                        <option value="music">Music</option>
+                                        <option value="background">Latar Belakang</option>
+                                        <option value="gallery">Galeri</option>
+                                        <option value="love_story">Cerita Cinta</option>
+                                        <option value="music">Musik</option>
                                     </select>
                                 </div>
                                 <div class="form-row">
@@ -1495,73 +1495,73 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                             <span style="display:block; margin-top:2px;"><?php echo escape_html($item['dimensions'] ?: number_format($item['size'] / 1024, 1) . ' KB'); ?></span>
                                             <span style="display:block; margin-top:2px;">Status: <?php echo escape_html($item['status']); ?></span>
                                             <?php if ($item['is_used']): ?>
-                                                <span style="display:block; margin-top:2px;">Used by: <?php echo escape_html(implode(', ', $item['used_by'])); ?></span>
+                                                <span style="display:block; margin-top:2px;">Digunakan oleh: <?php echo escape_html(implode(', ', $item['used_by'])); ?></span>
                                             <?php endif; ?>
                                         </div>
                                         <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                                            <a href="/<?php echo escape_html($item['path']); ?>" target="_blank" rel="noopener" class="small-button" style="display:inline-flex;align-items:center;justify-content:center;">Preview</a>
+                                            <a href="/<?php echo escape_html($item['path']); ?>" target="_blank" rel="noopener" class="small-button" style="display:inline-flex;align-items:center;justify-content:center;">Pratinjau</a>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.cover">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set Cover</button>
+                                                <button type="submit" class="small-button">Jadikan Cover</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.groom_photo">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set Groom</button>
+                                                <button type="submit" class="small-button">Jadikan Mempelai Pria</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.bride_photo">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set Bride</button>
+                                                <button type="submit" class="small-button">Jadikan Mempelai Wanita</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.couple_photo">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set Couple</button>
+                                                <button type="submit" class="small-button">Jadikan Foto Pasangan</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.background_hero">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set Hero</button>
+                                                <button type="submit" class="small-button">Jadikan Hero</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="media.music">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set Music</button>
+                                                <button type="submit" class="small-button">Jadikan Musik</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
                                                 <input type="hidden" name="media_key" value="gift.qris_image">
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button">Set QR</button>
+                                                <button type="submit" class="small-button">Jadikan QR</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="rename_media_file">
                                                 <input type="hidden" name="media_path" value="<?php echo escape_html($item['path']); ?>">
                                                 <input type="text" name="new_name" value="<?php echo escape_html($item['name']); ?>" style="width:130px;">
-                                                <button type="submit" class="small-button">Rename</button>
+                                                <button type="submit" class="small-button">Ganti Nama</button>
                                             </form>
                                             <form method="post" enctype="multipart/form-data" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="replace_media_file">
                                                 <input type="hidden" name="media_path" value="<?php echo escape_html($item['path']); ?>">
                                                 <input type="file" name="replacement_file" style="max-width:140px;">
-                                                <button type="submit" class="small-button">Replace</button>
+                                                <button type="submit" class="small-button">Ganti File</button>
                                             </form>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
@@ -1581,7 +1581,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('story')): ?>
 
                     <section id="love-story" class="card panel-section">
-                        <h2>Love Story</h2>
+                        <h2>Cerita Cinta</h2>
                         <p class="section-description">Kelola cerita perjalanan cinta Anda dengan timeline yang indah.</p>
                         
                         <!-- Add/Edit Form -->
@@ -1597,7 +1597,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             </div>
                             
                             <div class="form-row">
-                                <label>Subtitle (Opsional)</label>
+                                <label>Subjudul (Opsional)</label>
                                 <input type="text" name="subtitle" id="storySubtitle" placeholder="Contoh: Awal dari segalanya">
                             </div>
                             
@@ -1612,7 +1612,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             </div>
                             
                             <div class="form-row">
-                                <label>Upload Gambar</label>
+                                <label>Unggah Gambar</label>
                                 <input type="file" name="image" id="storyImage" accept="image/*" data-preview-target="#storyImagePreview">
                                 <div id="storyImagePreviewContainer" class="image-preview" style="display:none;">
                                     <img id="storyImagePreview" src="" alt="Preview gambar">
@@ -1621,7 +1621,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             </div>
                             
                             <div class="form-row">
-                                <label>Alt Text Gambar</label>
+                                <label>Teks Alt Gambar</label>
                                 <input type="text" name="image_alt" id="storyImageAlt" placeholder="Deskripsi untuk aksesibilitas">
                             </div>
                             
@@ -1631,7 +1631,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             </div>
                             
                             <div class="form-row">
-                                <label>Icon (Opsional)</label>
+                                <label>Ikon (Opsional)</label>
                                 <input type="text" name="icon" id="storyIcon" placeholder="Contoh: heart, ring, date">
                             </div>
                             
@@ -1712,11 +1712,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('gallery')): ?>
 
                     <section id="gallery" class="card panel-section">
-                        <h2>Gallery</h2>
+                        <h2>Galeri</h2>
                         <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_gallery">
-                            <div class="form-row"><label>Upload Multiple Images</label><input type="file" name="gallery_files[]" accept="image/*" multiple></div>
+                            <div class="form-row"><label>Unggah Beberapa Gambar</label><input type="file" name="gallery_files[]" accept="image/*" multiple></div>
                             <button type="submit">Unggah Galeri</button>
                         </form>
                         <form method="post" style="margin-bottom:16px;">
@@ -1724,7 +1724,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <input type="hidden" name="action" value="use_media_library_asset">
                             <input type="hidden" name="media_target" value="gallery_item">
                             <div class="form-row">
-                                <label>Pilih dari File Manager</label>
+                                <label>Pilih dari Pengelola File</label>
                                 <select name="media_path">
                                     <option value="">-- pilih asset --</option>
                                     <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1733,7 +1733,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit">Gunakan Asset Gallery</button>
+                            <button type="submit">Gunakan Aset Galeri</button>
                         </form>
                         <form method="post" class="gallery-order-form">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
@@ -1762,13 +1762,13 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('cover')): ?>
 
                     <section id="cover" class="card panel-section">
-                        <h2>Cover & Photos</h2>
+                        <h2>Cover & Foto</h2>
                         <div style="margin-bottom: 24px;">
-                            <h3>Cover Image</h3>
+                            <h3>Gambar Cover</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_cover">
-                                <div class="form-row"><label>Upload Cover Image</label><input type="file" name="cover_image" accept="image/*" data-preview-target="#coverPreviewImg"></div>
+                                <div class="form-row"><label>Unggah Gambar Cover</label><input type="file" name="cover_image" accept="image/*" data-preview-target="#coverPreviewImg"></div>
                                 <button type="submit">Unggah Cover</button>
                             </form>
                             <form method="post" style="margin-bottom:16px;">
@@ -1776,7 +1776,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <input type="hidden" name="action" value="use_media_library_asset">
                                 <input type="hidden" name="media_target" value="cover">
                                 <div class="form-row">
-                                    <label>Pilih dari File Manager</label>
+                                    <label>Pilih dari Pengelola File</label>
                                     <select name="media_path">
                                         <option value="">-- pilih asset --</option>
                                         <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1785,21 +1785,21 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <button type="submit">Gunakan Asset Cover</button>
+                                <button type="submit">Gunakan Aset Cover</button>
                             </form>
                             <?php if ($coverPreview): ?>
-                                <div class="image-preview"><img id="coverPreviewImg" src="/<?php echo escape_html($coverPreview); ?>" alt="Cover preview"></div>
+                                <div class="image-preview"><img id="coverPreviewImg" src="/<?php echo escape_html($coverPreview); ?>" alt="Pratinjau cover"></div>
                             <?php else: ?>
-                                <div class="image-preview"><img id="coverPreviewImg" alt="Cover preview" style="display:none;"></div>
+                                <div class="image-preview"><img id="coverPreviewImg" alt="Pratinjau cover" style="display:none;"></div>
                             <?php endif; ?>
                         </div>
 
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Mempelai Pria (Groom Photo)</h3>
+                            <h3>Foto Mempelai Pria </h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_groom_photo">
-                                <div class="form-row"><label>Upload Groom Photo</label><input type="file" name="groom_photo" accept="image/*" data-preview-target="#groomPreviewImg"></div>
+                                <div class="form-row"><label>Unggah Foto Mempelai Pria</label><input type="file" name="groom_photo" accept="image/*" data-preview-target="#groomPreviewImg"></div>
                                 <button type="submit">Unggah Foto Groom</button>
                             </form>
                             <form method="post" style="margin-bottom:16px;">
@@ -1807,7 +1807,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <input type="hidden" name="action" value="use_media_library_asset">
                                 <input type="hidden" name="media_target" value="groom_photo">
                                 <div class="form-row">
-                                    <label>Pilih dari File Manager</label>
+                                    <label>Pilih dari Pengelola File</label>
                                     <select name="media_path">
                                         <option value="">-- pilih asset --</option>
                                         <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1816,21 +1816,21 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <button type="submit">Gunakan Asset Groom</button>
+                                <button type="submit">Gunakan Aset Mempelai Pria</button>
                             </form>
                             <?php if ($groomPhotoPreview): ?>
-                                <div class="image-preview"><img id="groomPreviewImg" src="/<?php echo escape_html($groomPhotoPreview); ?>" alt="Groom photo preview"></div>
+                                <div class="image-preview"><img id="groomPreviewImg" src="/<?php echo escape_html($groomPhotoPreview); ?>" alt="Pratinjau foto mempelai pria"></div>
                             <?php else: ?>
-                                <div class="image-preview"><img id="groomPreviewImg" alt="Groom photo preview" style="display:none;"></div>
+                                <div class="image-preview"><img id="groomPreviewImg" alt="Pratinjau foto mempelai pria" style="display:none;"></div>
                             <?php endif; ?>
                         </div>
 
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Mempelai Wanita (Bride Photo)</h3>
+                            <h3>Foto Mempelai Wanita </h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_bride_photo">
-                                <div class="form-row"><label>Upload Bride Photo</label><input type="file" name="bride_photo" accept="image/*" data-preview-target="#bridePreviewImg"></div>
+                                <div class="form-row"><label>Unggah Foto Mempelai Wanita</label><input type="file" name="bride_photo" accept="image/*" data-preview-target="#bridePreviewImg"></div>
                                 <button type="submit">Unggah Foto Bride</button>
                             </form>
                             <form method="post" style="margin-bottom:16px;">
@@ -1838,7 +1838,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <input type="hidden" name="action" value="use_media_library_asset">
                                 <input type="hidden" name="media_target" value="bride_photo">
                                 <div class="form-row">
-                                    <label>Pilih dari File Manager</label>
+                                    <label>Pilih dari Pengelola File</label>
                                     <select name="media_path">
                                         <option value="">-- pilih asset --</option>
                                         <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1847,21 +1847,21 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <button type="submit">Gunakan Asset Bride</button>
+                                <button type="submit">Gunakan Aset Mempelai Wanita</button>
                             </form>
                             <?php if ($bridePhotoPreview): ?>
-                                <div class="image-preview"><img id="bridePreviewImg" src="/<?php echo escape_html($bridePhotoPreview); ?>" alt="Bride photo preview"></div>
+                                <div class="image-preview"><img id="bridePreviewImg" src="/<?php echo escape_html($bridePhotoPreview); ?>" alt="Pratinjau foto mempelai wanita"></div>
                             <?php else: ?>
-                                <div class="image-preview"><img id="bridePreviewImg" alt="Bride photo preview" style="display:none;"></div>
+                                <div class="image-preview"><img id="bridePreviewImg" alt="Pratinjau foto mempelai wanita" style="display:none;"></div>
                             <?php endif; ?>
                         </div>
 
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Pasangan (Couple Photo)</h3>
+                            <h3>Foto Pasangan </h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_couple_photo">
-                                <div class="form-row"><label>Upload Couple Photo</label><input type="file" name="couple_photo" accept="image/*" data-preview-target="#couplePreviewImg"></div>
+                                <div class="form-row"><label>Unggah Foto Pasangan</label><input type="file" name="couple_photo" accept="image/*" data-preview-target="#couplePreviewImg"></div>
                                 <button type="submit">Unggah Foto Couple</button>
                             </form>
                             <form method="post" style="margin-bottom:16px;">
@@ -1869,7 +1869,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <input type="hidden" name="action" value="use_media_library_asset">
                                 <input type="hidden" name="media_target" value="couple_photo">
                                 <div class="form-row">
-                                    <label>Pilih dari File Manager</label>
+                                    <label>Pilih dari Pengelola File</label>
                                     <select name="media_path">
                                         <option value="">-- pilih asset --</option>
                                         <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1878,12 +1878,12 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <button type="submit">Gunakan Asset Couple</button>
+                                <button type="submit">Gunakan Aset Foto Pasangan</button>
                             </form>
                             <?php if ($couplePhotoPreview): ?>
-                                <div class="image-preview"><img id="couplePreviewImg" src="/<?php echo escape_html($couplePhotoPreview); ?>" alt="Couple photo preview"></div>
+                                <div class="image-preview"><img id="couplePreviewImg" src="/<?php echo escape_html($couplePhotoPreview); ?>" alt="Pratinjau foto pasangan"></div>
                             <?php else: ?>
-                                <div class="image-preview"><img id="couplePreviewImg" alt="Couple photo preview" style="display:none;"></div>
+                                <div class="image-preview"><img id="couplePreviewImg" alt="Pratinjau foto pasangan" style="display:none;"></div>
                             <?php endif; ?>
                         </div>
                     </section>
@@ -1893,14 +1893,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('background')): ?>
 
                     <section id="background" class="card panel-section">
-                        <h2>Background</h2>
+                        <h2>Latar Belakang</h2>
                         <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_background">
-                            <div class="form-row"><label>Hero Background</label><input type="file" name="background_hero" accept="image/*" data-preview-target="#backgroundHeroPreviewImg"></div>
-                            <div class="form-row"><label>Section Background 1</label><input type="file" name="background_section_1" accept="image/*" data-preview-target="#backgroundSection1PreviewImg"></div>
-                            <div class="form-row"><label>Section Background 2</label><input type="file" name="background_section_2" accept="image/*" data-preview-target="#backgroundSection2PreviewImg"></div>
-                            <div class="form-row"><label>Section Background 3</label><input type="file" name="background_section_3" accept="image/*" data-preview-target="#backgroundSection3PreviewImg"></div>
+                            <div class="form-row"><label>Latar Belakang Hero</label><input type="file" name="background_hero" accept="image/*" data-preview-target="#backgroundHeroPreviewImg"></div>
+                            <div class="form-row"><label>Latar Belakang Seksi 1</label><input type="file" name="background_section_1" accept="image/*" data-preview-target="#backgroundSection1PreviewImg"></div>
+                            <div class="form-row"><label>Latar Belakang Seksi 2</label><input type="file" name="background_section_2" accept="image/*" data-preview-target="#backgroundSection2PreviewImg"></div>
+                            <div class="form-row"><label>Latar Belakang Seksi 3</label><input type="file" name="background_section_3" accept="image/*" data-preview-target="#backgroundSection3PreviewImg"></div>
                             <button type="submit">Unggah Background</button>
                         </form>
                         <form method="post" style="margin-bottom:16px;">
@@ -1908,7 +1908,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <input type="hidden" name="action" value="use_media_library_asset">
                             <input type="hidden" name="media_target" value="background_hero">
                             <div class="form-row">
-                                <label>Hero Background dari File Manager</label>
+                                <label>Latar Belakang Hero dari Pengelola File</label>
                                 <select name="media_path">
                                     <option value="">-- pilih asset --</option>
                                     <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1917,14 +1917,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit">Gunakan Hero Background</button>
+                            <button type="submit">Gunakan Latar Belakang Hero</button>
                         </form>
                         <form method="post" style="margin-bottom:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="use_media_library_asset">
                             <input type="hidden" name="media_target" value="background_section_1">
                             <div class="form-row">
-                                <label>Section Background 1 dari File Manager</label>
+                                <label>Latar Belakang Seksi 1 dari Pengelola File</label>
                                 <select name="media_path">
                                     <option value="">-- pilih asset --</option>
                                     <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1933,14 +1933,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit">Gunakan Background 1</button>
+                            <button type="submit">Gunakan Latar Belakang 1</button>
                         </form>
                         <form method="post" style="margin-bottom:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="use_media_library_asset">
                             <input type="hidden" name="media_target" value="background_section_2">
                             <div class="form-row">
-                                <label>Section Background 2 dari File Manager</label>
+                                <label>Latar Belakang Seksi 2 dari Pengelola File</label>
                                 <select name="media_path">
                                     <option value="">-- pilih asset --</option>
                                     <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1949,14 +1949,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit">Gunakan Background 2</button>
+                            <button type="submit">Gunakan Latar Belakang 2</button>
                         </form>
                         <form method="post" style="margin-bottom:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="use_media_library_asset">
                             <input type="hidden" name="media_target" value="background_section_3">
                             <div class="form-row">
-                                <label>Section Background 3 dari File Manager</label>
+                                <label>Latar Belakang Seksi 3 dari Pengelola File</label>
                                 <select name="media_path">
                                     <option value="">-- pilih asset --</option>
                                     <?php foreach ($mediaLibrary as $libraryItem): ?>
@@ -1965,15 +1965,15 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit">Gunakan Background 3</button>
+                            <button type="submit">Gunakan Latar Belakang 3</button>
                         </form>
                         <?php if ($backgroundHeroPreview): ?>
-                            <div class="image-preview"><img id="backgroundHeroPreviewImg" src="/<?php echo escape_html($backgroundHeroPreview); ?>" alt="Hero background preview"></div>
+                            <div class="image-preview"><img id="backgroundHeroPreviewImg" src="/<?php echo escape_html($backgroundHeroPreview); ?>" alt="Pratinjau latar belakang hero"></div>
                         <?php else: ?>
-                            <div class="image-preview"><img id="backgroundHeroPreviewImg" alt="Hero background preview" style="display:none;"></div>
+                            <div class="image-preview"><img id="backgroundHeroPreviewImg" alt="Pratinjau latar belakang hero" style="display:none;"></div>
                         <?php endif; ?>
                         <?php foreach ($backgroundSectionPreviews as $index => $preview): ?>
-                            <div class="image-preview" style="margin-top:12px;"><img id="backgroundSection<?php echo $index + 1; ?>PreviewImg" <?php if ($preview): ?>src="/<?php echo escape_html($preview); ?>"<?php else: ?>alt="Section background <?php echo $index + 1; ?> preview" style="display:none;"<?php endif; ?>></div>
+                            <div class="image-preview" style="margin-top:12px;"><img id="backgroundSection<?php echo $index + 1; ?>PreviewImg" <?php if ($preview): ?>src="/<?php echo escape_html($preview); ?>"<?php else: ?>alt="Pratinjau latar belakang seksi <?php echo $index + 1; ?> preview" style="display:none;"<?php endif; ?>></div>
                         <?php endforeach; ?>
                     </section>
 
@@ -1982,14 +1982,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('music')): ?>
 
                     <section id="music" class="card panel-section">
-                        <h2>Music</h2>
+                        <h2>Musik</h2>
                         <form method="post" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_music">
-                            <div class="form-row"><label>Upload Audio (mp3, ogg, wav)</label><input type="file" name="music_file" accept="audio/*"></div>
+                            <div class="form-row"><label>Unggah Audio (mp3, ogg, wav)</label><input type="file" name="music_file" accept="audio/*"></div>
                             <button type="submit">Unggah Musik</button>
                         </form>
-                        <div class="form-row"><label>Current Music File</label><input type="text" readonly value="<?php echo escape_html($config['media']['music']); ?>"></div>
+                        <div class="form-row"><label>File Musik Saat Ini</label><input type="text" readonly value="<?php echo escape_html($config['media']['music']); ?>"></div>
                     </section>
 
                     <?php endif; ?>
@@ -1997,29 +1997,29 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('gift')): ?>
 
                     <section id="gift" class="card panel-section">
-                        <h2>Gift</h2>
+                        <h2>Hadiah</h2>
                         <form method="post" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_gift">
                             <div class="form-grid">
                                 <div class="form-row"><label>Bank</label><input type="text" name="bank" value="<?php echo escape_html($config['gift']['bank']); ?>"></div>
-                                <div class="form-row"><label>Account Number</label><input type="text" name="account_number" value="<?php echo escape_html($config['gift']['account_number']); ?>"></div>
-                                <div class="form-row"><label>Account Holder</label><input type="text" name="account_holder" value="<?php echo escape_html($config['gift']['account_holder']); ?>"></div>
-                                <div class="form-row"><label>E-Wallet Label</label><input type="text" name="e_wallet_label" value="<?php echo escape_html($config['gift']['e_wallet_label']); ?>"></div>
-                                <div class="form-row"><label>E-Wallet Number</label><input type="text" name="e_wallet_number" value="<?php echo escape_html($config['gift']['e_wallet_number']); ?>"></div>
+                                <div class="form-row"><label>Nomor Rekening</label><input type="text" name="account_number" value="<?php echo escape_html($config['gift']['account_number']); ?>"></div>
+                                <div class="form-row"><label>Nama Pemilik Rekening</label><input type="text" name="account_holder" value="<?php echo escape_html($config['gift']['account_holder']); ?>"></div>
+                                <div class="form-row"><label>Label E-Wallet</label><input type="text" name="e_wallet_label" value="<?php echo escape_html($config['gift']['e_wallet_label']); ?>"></div>
+                                <div class="form-row"><label>Nomor E-Wallet</label><input type="text" name="e_wallet_number" value="<?php echo escape_html($config['gift']['e_wallet_number']); ?>"></div>
                             </div>
-                            <button type="submit">Simpan Gift</button>
+                            <button type="submit">Simpan Hadiah</button>
                         </form>
                         <form method="post" enctype="multipart/form-data" style="margin-top:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_qris">
-                            <div class="form-row"><label>Upload QRIS Image</label><input type="file" name="qris_image" accept="image/*" data-preview-target="#qrisPreviewImg"></div>
+                            <div class="form-row"><label>Unggah Gambar QRIS</label><input type="file" name="qris_image" accept="image/*" data-preview-target="#qrisPreviewImg"></div>
                             <button type="submit">Unggah QRIS</button>
                         </form>
                         <?php if ($qrisPreview): ?>
-                            <div class="image-preview"><img id="qrisPreviewImg" src="/<?php echo escape_html($qrisPreview); ?>" alt="QRIS preview"></div>
+                            <div class="image-preview"><img id="qrisPreviewImg" src="/<?php echo escape_html($qrisPreview); ?>" alt="Pratinjau QRIS"></div>
                         <?php else: ?>
-                            <div class="image-preview"><img id="qrisPreviewImg" alt="QRIS preview" style="display:none;"></div>
+                            <div class="image-preview"><img id="qrisPreviewImg" alt="Pratinjau QRIS" style="display:none;"></div>
                         <?php endif; ?>
                     </section>
 
@@ -2070,17 +2070,17 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('maps')): ?>
 
                     <section id="maps" class="card panel-section">
-                        <h2>Maps</h2>
+                        <h2>Lokasi</h2>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_location">
                             <div class="form-grid">
-                                <div class="form-row"><label>Venue</label><input type="text" name="venue" value="<?php echo escape_html($config['location']['venue']); ?>"></div>
-                                <div class="form-row"><label>Address</label><textarea name="address"><?php echo escape_html($config['location']['address']); ?></textarea></div>
-                                <div class="form-row" style="grid-column:span 2;"><label>Google Maps URL</label><input type="url" name="maps_url" value="<?php echo escape_html($config['location']['maps_url']); ?>"></div>
-                                <div class="form-row" style="grid-column:span 2;"><label>Google Maps Embed URL</label><input type="url" name="maps_embed" value="<?php echo escape_html($config['location']['maps_embed']); ?>"></div>
+                                <div class="form-row"><label>Tempat Acara</label><input type="text" name="venue" value="<?php echo escape_html($config['location']['venue']); ?>"></div>
+                                <div class="form-row"><label>Alamat</label><textarea name="address"><?php echo escape_html($config['location']['address']); ?></textarea></div>
+                                <div class="form-row" style="grid-column:span 2;"><label>URL Google Maps</label><input type="url" name="maps_url" value="<?php echo escape_html($config['location']['maps_url']); ?>"></div>
+                                <div class="form-row" style="grid-column:span 2;"><label>URL Embed Google Maps</label><input type="url" name="maps_embed" value="<?php echo escape_html($config['location']['maps_embed']); ?>"></div>
                             </div>
-                            <button type="submit">Simpan Maps</button>
+                            <button type="submit">Simpan Lokasi</button>
                         </form>
                     </section>
 
@@ -2094,12 +2094,12 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_seo">
                             <div class="form-grid">
-                                <div class="form-row"><label>Title</label><input type="text" name="seo_title" value="<?php echo escape_html($config['site']['title']); ?>"></div>
-                                <div class="form-row"><label>Description</label><textarea name="seo_description"><?php echo escape_html($config['site']['description']); ?></textarea></div>
-                                <div class="form-row" style="grid-column:span 2;"><label>Keywords</label><input type="text" name="seo_keywords" value="<?php echo escape_html($config['site']['keywords']); ?>"></div>
-                                <div class="form-row"><label>Open Graph Title</label><input type="text" name="og_title" value="<?php echo escape_html($config['site']['open_graph_title']); ?>"></div>
-                                <div class="form-row"><label>Open Graph Description</label><textarea name="og_description"><?php echo escape_html($config['site']['open_graph_description']); ?></textarea></div>
-                                <div class="form-row" style="grid-column:span 2;"><label>Twitter Card</label><input type="text" name="twitter_card" value="<?php echo escape_html($config['site']['twitter_card']); ?>"></div>
+                                <div class="form-row"><label>Judul</label><input type="text" name="seo_title" value="<?php echo escape_html($config['site']['title']); ?>"></div>
+                                <div class="form-row"><label>Deskripsi</label><textarea name="seo_description"><?php echo escape_html($config['site']['description']); ?></textarea></div>
+                                <div class="form-row" style="grid-column:span 2;"><label>Kata Kunci</label><input type="text" name="seo_keywords" value="<?php echo escape_html($config['site']['keywords']); ?>"></div>
+                                <div class="form-row"><label>Judul Open Graph</label><input type="text" name="og_title" value="<?php echo escape_html($config['site']['open_graph_title']); ?>"></div>
+                                <div class="form-row"><label>Deskripsi Open Graph</label><textarea name="og_description"><?php echo escape_html($config['site']['open_graph_description']); ?></textarea></div>
+                                <div class="form-row" style="grid-column:span 2;"><label>Kartu Twitter</label><input type="text" name="twitter_card" value="<?php echo escape_html($config['site']['twitter_card']); ?>"></div>
                                 <div class="form-row" style="grid-column:span 2;"><label>Schema JSON-LD</label><textarea name="schema_json"><?php echo escape_html($config['site']['schema']); ?></textarea></div>
                             </div>
                             <button type="submit">Simpan SEO</button>
@@ -2107,13 +2107,13 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <form method="post" enctype="multipart/form-data" style="margin-top:16px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_og_image">
-                            <div class="form-row"><label>Upload Open Graph Image</label><input type="file" name="og_image" accept="image/*" data-preview-target="#ogPreviewImg"></div>
+                            <div class="form-row"><label>Unggah Gambar Open Graph</label><input type="file" name="og_image" accept="image/*" data-preview-target="#ogPreviewImg"></div>
                             <button type="submit">Unggah OG Image</button>
                         </form>
                         <?php if ($ogPreview): ?>
-                            <div class="image-preview"><img id="ogPreviewImg" src="/<?php echo escape_html($ogPreview); ?>" alt="Open Graph preview"></div>
+                            <div class="image-preview"><img id="ogPreviewImg" src="/<?php echo escape_html($ogPreview); ?>" alt="Pratinjau Open Graph"></div>
                         <?php else: ?>
-                            <div class="image-preview"><img id="ogPreviewImg" alt="Open Graph preview" style="display:none;"></div>
+                            <div class="image-preview"><img id="ogPreviewImg" alt="Pratinjau Open Graph" style="display:none;"></div>
                         <?php endif; ?>
                     </section>
 
@@ -2127,12 +2127,12 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_whatsapp">
                             <div class="form-grid">
-                                <div class="form-row"><label>Phone Number</label><input type="text" name="whatsapp_phone" value="<?php echo escape_html($config['whatsapp']['phone']); ?>"></div>
-                                <div class="form-row" style="grid-column:span 2;"><label>Default Invitation Message</label><textarea name="whatsapp_message"><?php echo escape_html($config['whatsapp']['message']); ?></textarea></div>
+                                <div class="form-row"><label>Nomor Telepon</label><input type="text" name="whatsapp_phone" value="<?php echo escape_html($config['whatsapp']['phone']); ?>"></div>
+                                <div class="form-row" style="grid-column:span 2;"><label>Pesan Undangan Bawaan</label><textarea name="whatsapp_message"><?php echo escape_html($config['whatsapp']['message']); ?></textarea></div>
                             </div>
                             <button type="submit">Simpan WhatsApp</button>
                         </form>
-                        <div class="form-row" style="margin-top:16px;"><label>Personalized Link</label><input type="text" readonly value="<?php echo escape_html($invitationPreview); ?>"></div>
+                        <div class="form-row" style="margin-top:16px;"><label>Link Personalisasi</label><input type="text" readonly value="<?php echo escape_html($invitationPreview); ?>"></div>
                     </section>
 
                     <?php endif; ?>
@@ -2142,27 +2142,27 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <section id="guest-links" class="card panel-section">
                         <h2>Link Tamu</h2>
                         <div class="form-grid">
-                            <div class="form-row"><label>Guest Name</label><input type="text" id="guestNameInput" placeholder="Nama tamu" autocomplete="off"></div>
-                            <div class="form-row"><label>Invitation URL</label><input type="text" id="guestLinkOutput" readonly placeholder="Generated invitation URL"></div>
+                            <div class="form-row"><label>Nama Tamu</label><input type="text" id="guestNameInput" placeholder="Nama tamu" autocomplete="off"></div>
+                            <div class="form-row"><label>URL Undangan</label><input type="text" id="guestLinkOutput" readonly placeholder="URL undangan yang dibuat"></div>
                         </div>
                         <div class="form-row" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
-                            <button type="button" class="button" id="generateGuestLinkBtn">Generate Link</button>
-                            <button type="button" class="button small-button" id="copyGuestLinkBtn">Copy Link</button>
+                            <button type="button" class="button" id="generateGuestLinkBtn">Buat Link</button>
+                            <button type="button" class="button small-button" id="copyGuestLinkBtn">Salin Link</button>
                             <button type="button" class="button small-button" id="sendGuestLinkWhatsappBtn">WhatsApp</button>
-                            <button type="button" class="button small-button" id="saveGuestLinkBtn">Save Link</button>
+                            <button type="button" class="button small-button" id="saveGuestLinkBtn">Simpan Link</button>
                         </div>
                         <div class="guest-link-actions" style="margin-top:18px;display:grid;gap:14px;">
-                            <div class="form-row"><label>QR Code Preview</label><img id="guestLinkQrPreview" src="" alt="QR Code Preview" style="max-width:240px;border-radius:16px;border:1px solid #ddd;background:#fff;display:none;" loading="lazy"></div>
+                            <div class="form-row"><label>Pratinjau Kode QR</label><img id="guestLinkQrPreview" src="" alt="Pratinjau Kode QR" style="max-width:240px;border-radius:16px;border:1px solid #ddd;background:#fff;display:none;" loading="lazy"></div>
                             <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
-                                <a id="downloadGuestLinkQrBtn" class="button small-button" href="#" download="guest-invitation-qr.png" style="display:none;">Download QR Code</a>
+                                <a id="downloadGuestLinkQrBtn" class="button small-button" href="#" download="guest-invitation-qr.png" style="display:none;">Unduh Kode QR</a>
                                 <span id="guestLinkStatus" style="color:#5c4c32;font-size:0.95rem;"></span>
                             </div>
                         </div>
-                        <div class="form-row" style="margin-top:24px;"><label>Search Saved Links</label><input type="text" id="guestLinkSearch" placeholder="Cari nama tamu atau URL"></div>
+                        <div class="form-row" style="margin-top:24px;"><label>Cari Link Tersimpan</label><input type="text" id="guestLinkSearch" placeholder="Cari nama tamu atau URL"></div>
                         <div class="table-wrapper" style="margin-top:14px;">
                             <table id="guestLinksTable">
                                 <thead>
-                                    <tr><th>Guest Name</th><th>Created At</th><th>Actions</th></tr>
+                                    <tr><th>Nama Tamu</th><th>Dibuat Pada</th><th>Aksi</th></tr>
                                 </thead>
                                 <tbody>
                                     <?php if (empty($guestLinks)): ?>
@@ -2173,14 +2173,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <td><?php echo escape_html($link['guest_name']); ?><br><small><?php echo escape_html($link['invitation_url']); ?></small></td>
                                                 <td><?php echo escape_html($link['created_at']); ?></td>
                                                 <td>
-                                                    <button type="button" class="small-button guest-link-copy" data-url="<?php echo escape_html($link['invitation_url']); ?>">Copy</button>
+                                                    <button type="button" class="small-button guest-link-copy" data-url="<?php echo escape_html($link['invitation_url']); ?>">Salin</button>
                                                     <button type="button" class="small-button guest-link-whatsapp" data-url="<?php echo escape_html($link['invitation_url']); ?>">WA</button>
                                                     <button type="button" class="small-button guest-link-qr" data-url="<?php echo escape_html($link['invitation_url']); ?>">QR</button>
                                                     <form method="post" style="display:inline-block;margin:0;">
                                                         <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                         <input type="hidden" name="action" value="delete_guest_link">
                                                         <input type="hidden" name="delete_index" value="<?php echo escape_html((string)$index); ?>">
-                                                        <button type="submit" class="small-button" style="background:#d9534f;color:#fff;">Delete</button>
+                                                        <button type="submit" class="small-button" style="background:#d9534f;color:#fff;">Hapus</button>
                                                     </form>
                                                 </td>
                                             </tr>
@@ -2200,8 +2200,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <section id="rsvp" class="card panel-section">
                         <h2>RSVP</h2>
-                        <p>Kelola data RSVP langsung dari database. Gunakan <strong>Export CSV</strong> untuk laporan cepat.</p>
-                        <a href="/export-rsvp.php" class="button" style="display:inline-block; margin-bottom:16px;">Download CSV</a>
+                        <p>Kelola data RSVP langsung dari database. Gunakan <strong>Ekspor CSV</strong> untuk laporan cepat.</p>
+                        <a href="/export-rsvp.php" class="button" style="display:inline-block; margin-bottom:16px;">Unduh CSV</a>
                         <div class="table-wrapper">
                             <table>
                                 <thead>
@@ -2240,15 +2240,15 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('backup')): ?>
 
                     <section id="backup" class="card panel-section">
-                        <h2>Backup</h2>
-                        <p>Backup konfigurasi, database RSVP, dan semua media upload.</p>
-                        <a class="button" href="/admin/backup.php">Download Backup ZIP</a>
+                        <h2>Cadangan</h2>
+                        <p>Cadangkan konfigurasi, database RSVP, dan seluruh media unggahan.</p>
+                        <a class="button" href="/admin/backup.php">Unduh ZIP Cadangan</a>
                         <div style="margin-top:18px;">
                             <form method="post" enctype="multipart/form-data" action="/admin/restore.php">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <label>Restore dari ZIP backup</label>
                                 <input type="file" name="restore_file" accept=".zip" required>
-                                <button type="submit">Restore Backup</button>
+                                <button type="submit">Pulihkan Cadangan</button>
                             </form>
                         </div>
                     </section>
@@ -2258,7 +2258,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('settings')): ?>
 
                     <section id="settings" class="card panel-section">
-                        <h2>Settings</h2>
+                        <h2>Pengaturan</h2>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_settings">
@@ -2267,7 +2267,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="form-row"><label>Admin Username</label><input type="text" name="admin_username" value="<?php echo escape_html($config['admin']['username']); ?>"></div>
                                 <div class="form-row"><label>Admin Password</label><input type="password" name="admin_password" placeholder="Kosongkan jika tidak ingin mengganti"></div>
                             </div>
-                            <button type="submit">Simpan Settings</button>
+                            <button type="submit">Simpan Pengaturan</button>
                         </form>
                     </section>
 
