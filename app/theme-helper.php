@@ -18,6 +18,23 @@ function escape_html(string $value): string {
 }
 
 /**
+ * Render user-entered text safely while preserving Unicode, spaces, and line breaks.
+ * This helper intentionally performs no translation, correction, trimming, or rewriting.
+ */
+function render_preserved_text($value): string {
+    return nl2br(escape_html((string)$value), false);
+}
+
+/**
+ * Normalize only the platform line ending for a user text input.
+ * Leading/trailing spaces and all Unicode characters remain unchanged.
+ */
+function preserve_text_input($value, string $fallback = ''): string {
+    $text = str_replace(["\r\n", "\r"], "\n", (string)$value);
+    return trim($text) === '' ? $fallback : $text;
+}
+
+/**
  * Normalize the public guest query value without trusting it as HTML.
  * The guest link format remains compatible with the existing `?to=` flow.
  */
@@ -42,11 +59,29 @@ function theme_admin_capabilities_for_config(array $config): array {
     $mode = function_exists('get_theme_mode') ? get_theme_mode($config) : 'custom';
     $global = function_exists('theme_contract_global_admin_capabilities')
         ? theme_contract_global_admin_capabilities()
-        : ['guest_links'];
+        : ['preset_selector', 'guest_links'];
     $specific = $mode === 'custom'
         ? ['wedding', 'parents', 'schedule', 'countdown', 'sections', 'theme', 'custom_css', 'media', 'story', 'gallery', 'cover', 'background', 'music', 'gift', 'dresscode', 'maps', 'seo', 'whatsapp', 'rsvp', 'backup', 'settings']
         : (function_exists('theme_contract_admin_capabilities') ? theme_contract_admin_capabilities(resolve_theme_preset_key($config)) : []);
     return array_values(array_unique(array_merge($global, $specific)));
+}
+
+/**
+ * Switch the active presentation mode without resetting unrelated CMS data.
+ * The built-in renderer owns its own template values; this helper only changes
+ * the global selector state and deliberately preserves every other config key.
+ */
+function switch_active_theme_preset_config(array $config, string $selectedPreset): ?array {
+    $selectedPreset = trim($selectedPreset);
+    if ($selectedPreset === 'custom') {
+        $config['theme']['mode'] = 'custom';
+        $config['theme']['theme_preset'] = 'custom';
+        return $config;
+    }
+    if (!array_key_exists($selectedPreset, theme_presets())) return null;
+    $config['theme']['mode'] = 'preset';
+    $config['theme']['theme_preset'] = $selectedPreset;
+    return $config;
 }
 
 /** Build a safe personalized invitation URL using the existing `?to=` convention. */

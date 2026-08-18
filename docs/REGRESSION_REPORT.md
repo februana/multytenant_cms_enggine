@@ -57,3 +57,38 @@ Clean-checkout media was classified as optional administrator-provided deploymen
 Docker persistence was finalized with `UNDANGAN_DATA_DIR=/var/data`, a persistent runtime volume for config/guest links/custom CSS/event ICS/SQLite, a separate uploads volume, a required Compose `ADMIN_PASS`, and least-privilege entrypoint permissions. Native installation now checks prerequisites, installs PHP CLI/SQLite/GD/mbstring/ZipArchive and required utilities, initializes real config defaults when needed, preserves the source checkout, and keeps `custom.css` during updates. Backup/restore now follows configured runtime paths.
 
 Targeted deployment checks passed: `tools/deployment_smoke.php`, PHP lint, Bash syntax checks, all existing theme/disabled/regression/timezone/admin-guest smoke tests, validator, and `git diff --check`. A root-run clean fixture passed `deploy/health-check.sh` with 35 PASS, 3 WARNING for absent optional media, and 0 FAIL. The native installer preflight correctly stopped with an explicit missing-prerequisite message in this sandbox because Composer and rsync are not installed. Docker build/container verification could not be executed because the sandbox has no Docker CLI/daemon; this is recorded as an environment limitation rather than reported as a false PASS.
+
+## Final preset selector regression correction
+
+### Root cause
+
+The preset selector was located inside the `#theme` Admin panel. That entire panel is rendered only when `$adminCapabilityEnabled('theme')` is true. Built-in contracts intentionally do not declare `theme` because the manual theme editor is Custom-only. As a result, built-in modes hid the selector itself, even though switching the active preset is a global CMS operation. The previous smoke test encoded `theme` as forbidden for built-ins and did not assert selector HTML placement, so it did not catch this regression.
+
+### Correction
+
+`preset_selector` is now an explicit global admin capability returned by `theme_contract_global_admin_capabilities()`, alongside `guest_links`. The selector is rendered in a separate `#preset-selector` panel and sidebar link gated only by `$globalAdminCapabilityEnabled('preset_selector')`, before the theme-specific panel. No built-in `admin_capabilities` list was broadened with `preset` or `theme`.
+
+The selector posts to a new `save_preset` action. `switch_active_theme_preset_config()` changes only `theme.mode` and `theme.theme_preset`; it does not apply a full theme-value reset and does not mutate wedding data, media, sections, guest links, RSVP data, or unrelated theme configuration. The manual theme editor remains inside the existing `theme` gate and remains Custom-only for built-in modes. A hidden current-preset field is retained in the Custom theme editor for live-preview compatibility.
+
+### New coverage
+
+`tools/admin_guest_smoke.php` now asserts the explicit global capability contract, forbids built-in theme-specific controls as before, verifies the exact sequence `Custom → DewanaKL → Elix → Rainier → Archak → Custom`, compares configuration snapshots before/after each switch, asserts selector markup occurs outside the theme panel gate, asserts the global gate and `save_preset` action, and rejects accidental use of `$adminCapabilityEnabled('preset_selector')`.
+
+The previous theme contract, render, disabled, timezone, deployment, and guest-system checks remain unchanged and passing. No built-in frontend DOM/CSS/JS/dependency or template fidelity code was modified for this correction.
+
+## Indonesian UI and user-content preservation finalization
+
+The application-owned Admin interface is now localized in Indonesian, including the dashboard title, navigation, preset selector actions, media manager labels, story/gallery controls, gift/location/SEO/WhatsApp panels, guest-link generator, backup/settings labels, and CSV actions. Source-template identity wording in built-in frontend layouts remains intentionally unchanged.
+
+The save path now uses `preserve_text_input()` for invitation content fields. It normalizes only CRLF/CR line endings to LF and preserves meaningful leading/trailing spaces, internal spacing, Unicode, and user wording. Rendering uses `render_preserved_text()` where HTML line breaks are required; it HTML-escapes without translating, correcting, paraphrasing, stripping tags, or rewriting content. Rainier now sends raw opening/description/closing text through event JSON and no longer applies `strip_tags()` to those fields.
+
+`tools/content_preservation_smoke.php` covers Custom, DewanaKL, Elix, Rainier, and Archak. It verifies multilingual English/Indonesian/CJK/Korean/Arabic content, multiline opening and address values, doubled spaces, CRLF-only save normalization, JSON round-trip equality, HTML escaping/newline output, byte-for-byte Rainier event JSON fields, and the absence of automatic translation calls. The test passed together with the complete existing suite.
+
+
+## PR #72 follow-up: guest-facing Indonesian UI
+
+The four built-in guest-facing themes now translate static application/template UI into Indonesian while preserving DOM hierarchy, IDs, classes, data attributes, JavaScript behavior, dependencies, asset loading, responsive structure, and source attribution. DewanaKL now uses Indonesian calendar, loading, gallery, navigation, and gift labels. Elix now uses Indonesian navigation, countdown units, footer, audio accessibility, and RSVP labels. Rainier now uses Indonesian countdown, calendar, event-details, schedule, quote, RSVP, footer, audio, accessibility, and dynamic CMS RSVP form labels. Archak now uses Indonesian navigation, hero, timeline, story, travel/stay, registry, parting, and footer labels.
+
+The CMS-native Custom renderer also uses Indonesian application navigation and actions. Its configured section titles such as `Love Story`, `Gallery`, `Events`, `Location`, and `Gift` remain unchanged because they are user/config content and the preservation rule prohibits automatic translation of custom titles and subtitles.
+
+`tools/theme_localization_smoke.php` verifies Indonesian static labels across Custom and all four built-in active guest paths, forbids the confirmed visible English phrases, and asserts that `preset_selector` and `guest_links` remain global capabilities with the selector panel gated by the global capability. The existing `tools/admin_guest_smoke.php` continues to verify all five preset states and the complete switching sequence without data/media reset. Browser fixtures for Custom, DewanaKL, Elix, Rainier, and Archak were inspected; all were non-blank, showed Indonesian static UI, preserved sentinel user content and multiline text, and retained source attribution.

@@ -187,10 +187,10 @@ function renderRSVPForm(container, rsvp) {
         container.innerHTML = `<form class="cms-rsvp-form" method="post" action="${rsvp.url}">
             <input type="hidden" name="csrf_token" value="${document.querySelector('meta[name=csrf-token]')?.content || ''}">
             <input type="text" name="website" tabindex="-1" autocomplete="off" style="display:none">
-            <label>Your Name<input name="nama" maxlength="80" required></label>
-            <label>Attendance<select name="status" required><option value="">Select</option><option value="Hadir">Will Attend</option><option value="Tidak Hadir">Cannot Attend</option></select></label>
-            <label>Message<textarea name="ucapan" maxlength="500"></textarea></label>
-            <button type="submit">Send RSVP</button>
+            <label>Nama Anda<input name="nama" maxlength="80" required></label>
+            <label>Kehadiran<select name="status" required><option value="">Pilih</option><option value="Hadir">Akan Hadir</option><option value="Tidak Hadir">Tidak Dapat Hadir</option></select></label>
+            <label>Pesan<textarea name="ucapan" maxlength="500"></textarea></label>
+            <button type="submit">Kirim Konfirmasi Kehadiran</button>
             <p class="cms-rsvp-message" role="status"></p>
         </form>`;
         const form = container.querySelector('form');
@@ -209,14 +209,14 @@ function renderRSVPForm(container, rsvp) {
                     throw new Error(`Unexpected server response (${response.status})`);
                 }
                 if (!response.ok || result.success !== true) {
-                    if (message) message.textContent = result.message || `RSVP gagal (${response.status}).`;
+                    if (message) message.textContent = result.message || `Konfirmasi kehadiran gagal (${response.status}).`;
                     return;
                 }
-                if (message) message.textContent = result.message || 'RSVP berhasil dikirim.';
+                if (message) message.textContent = result.message || 'Konfirmasi kehadiran berhasil dikirim.';
                 form.reset();
             } catch (error) {
                 console.error('[RSVP] submission failed', error);
-                if (message) message.textContent = 'Tidak dapat mengirim RSVP. Periksa koneksi lalu coba lagi.';
+                if (message) message.textContent = 'Tidak dapat mengirim konfirmasi kehadiran. Periksa koneksi lalu coba lagi.';
             } finally {
                 if (submit) submit.disabled = false;
             }
@@ -228,7 +228,7 @@ function renderRSVPForm(container, rsvp) {
     iframe.width = '100%';
     iframe.loading = 'lazy';
     iframe.frameBorder = '0';
-    iframe.title = 'RSVP';
+    iframe.title = 'Konfirmasi Kehadiran';
 
     const defaultHeights = {
         tally: 580,
@@ -308,7 +308,7 @@ eventDataPromise
         normalizeEventDatetime(data);
 
         window.__EVENT_DATA__ = data;
-        document.title = data.event.title || "You're Invited";
+        document.title = data.event.title || "Anda Diundang";
 
         const metaTitle = document.querySelector('meta[property="og:title"]');
         if (metaTitle) metaTitle.content = data.event.title;
@@ -328,7 +328,7 @@ eventDataPromise
         setText("event-date", formatDisplayDate(data.datetime.date, undefined, data.datetime.timezone));
 
         if (data.datetime.allDay) {
-            setText("event-time", "All Day");
+            setText("event-time", "Seharian");
         } else {
             setText("event-time", data.datetime.startTime);
         }
@@ -401,7 +401,7 @@ eventDataPromise
             const repoLink = document.getElementById("footer-repo-link");
             if (repoContainer && repoLink && credits.repoLink) {
                 repoLink.href = credits.repoLink;
-                repoLink.textContent = credits.repoLabel || "Repository";
+                repoLink.textContent = credits.repoLabel || "Repositori";
                 repoContainer.hidden = false;
             }
         }
@@ -412,7 +412,7 @@ eventDataPromise
             var igLabel = document.getElementById("instagram-label");
             if (socialLinks) socialLinks.hidden = false;
             if (igLink) igLink.href = data.social.instagram;
-            if (igLabel) { var handle = data.social.instagram.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, ''); igLabel.textContent = handle ? '@' + handle : 'Follow on Instagram'; }
+            if (igLabel) { var handle = data.social.instagram.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, ''); igLabel.textContent = handle ? '@' + handle : 'Ikuti di Instagram'; }
         }
 
         const rsvp = data.rsvp;
@@ -422,7 +422,7 @@ eventDataPromise
         if (!rsvp || !rsvpEnabled) {
             removeRSVPSection();
         } else if (!rsvp.url) {
-            console.warn('[RSVP] enabled=true but no url provided. Removing RSVP section.');
+            console.warn('[Konfirmasi Kehadiran] enabled=true but no url provided. Removing section.');
             removeRSVPSection();
         } else {
             const formContainer = document.querySelector('#rsvp .form-embed');
@@ -549,7 +549,7 @@ eventDataPromise
             const updateIcons = (isSimple) => {
                 if (standardIcon) standardIcon.style.display = isSimple ? 'none' : 'block';
                 if (simpleIcon) simpleIcon.style.display = isSimple ? 'block' : 'none';
-                simpleToggleBtn.setAttribute('aria-label', isSimple ? 'Switch to Standard View' : 'Switch to Simple View');
+                simpleToggleBtn.setAttribute('aria-label', isSimple ? 'Beralih ke Tampilan Standar' : 'Beralih ke Tampilan Sederhana');
             };
 
             updateIcons(document.body.classList.contains('simple'));
@@ -588,8 +588,8 @@ eventDataPromise
         const title = document.getElementById("event-title");
         const subtitle = document.getElementById("event-subtitle");
 
-        if (title) title.textContent = "Unable to load event details";
-        if (subtitle) subtitle.textContent = "Please check back later.";
+        if (title) title.textContent = "Tidak dapat memuat detail acara";
+        if (subtitle) subtitle.textContent = "Silakan periksa kembali nanti.";
     });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -618,14 +618,14 @@ document.addEventListener('DOMContentLoaded', () => {
             playIcon.style.display = 'block';
             pauseIcon.style.display = 'none';
             btn.classList.remove('playing');
-            btn.setAttribute('aria-label', 'Play Music');
+            btn.setAttribute('aria-label', 'Putar Musik');
         };
         const showPauseState = () => {
             isPlaying = true;
             playIcon.style.display = 'none';
             pauseIcon.style.display = 'block';
             btn.classList.add('playing');
-            btn.setAttribute('aria-label', 'Pause Music');
+            btn.setAttribute('aria-label', 'Jeda Musik');
         };
 
         btn.hidden = false;

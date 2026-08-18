@@ -38,11 +38,11 @@ if (!is_array($stories) || !$stories) {
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><?php echo escape_html($config['site']['title'] ?? 'Wedding Invitation 1'); ?></title>
+    <title><?php echo escape_html($config['site']['title'] ?? 'Undangan Pernikahan 1'); ?></title>
     <meta name="description" content="<?php echo escape_html($config['site']['description'] ?? ''); ?>" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69fIUzI2PVdRZhwQ+dy64/BUtbMJ1WmZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -71,16 +71,16 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <nav class="navbar navbar-expand-md bg-transparent sticky-top mynavbar">
       <div class="container">
         <a class="navbar-brand" href="#home"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Alihkan navigasi"><span class="navbar-toggler-icon"></span></button>
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-          <div class="offcanvas-header"><h5 class="offcanvas-title" id="offcanvasNavbarLabel"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
+          <div class="offcanvas-header"><h5 class="offcanvas-title" id="offcanvasNavbarLabel"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup"></button></div>
           <div class="offcanvas-body"><div class="navbar-nav ms-auto">
-            <?php if (theme_section_enabled($config, $presetKey, 'home')): ?><a class="nav-link" href="#home">Home</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'info')): ?><a class="nav-link" href="#info">Info</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'story')): ?><a class="nav-link" href="#story">Story</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'gallery')): ?><a class="nav-link" href="#gallery">Gallery</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><a class="nav-link" href="#rsvp">RSVP</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'gifts')): ?><a class="nav-link" href="#gifts">Gifts</a><?php endif; ?>
+            <?php if (theme_section_enabled($config, $presetKey, 'home')): ?><a class="nav-link" href="#home">Beranda</a><?php endif; ?>
+            <?php if (theme_section_enabled($config, $presetKey, 'info')): ?><a class="nav-link" href="#info">Informasi</a><?php endif; ?>
+            <?php if (theme_section_enabled($config, $presetKey, 'story')): ?><a class="nav-link" href="#story">Kisah</a><?php endif; ?>
+            <?php if (theme_section_enabled($config, $presetKey, 'gallery')): ?><a class="nav-link" href="#gallery">Galeri</a><?php endif; ?>
+            <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><a class="nav-link" href="#rsvp">Konfirmasi Kehadiran</a><?php endif; ?>
+            <?php if (theme_section_enabled($config, $presetKey, 'gifts')): ?><a class="nav-link" href="#gifts">Hadiah</a><?php endif; ?>
           </div></div>
         </div>
       </div>
@@ -108,13 +108,13 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 
     <?php if (theme_section_enabled($config, $presetKey, 'gifts')): ?><section id="gifts" class="gifts"><div class="container"><div class="row justify-content-center"><div class="col-md-8 col-10 text-center"><span>ungkapan tanda kasih</span><h2>Kirim Hadiah</h2><p>Doa restu Anda merupakan hadiah terindah bagi kami.</p></div></div><div class="row justify-content-center text-center"><div class="col-md-6"><ul class="list-group"><li class="list-group-item"><div class="fw-bold"><?php echo escape_html($config['gift']['bank'] ?? ''); ?></div><?php echo escape_html($config['gift']['account_number'] ?? ''); ?> - <?php echo $brideName; ?></li><?php if (!empty($config['gift']['qris_image'])): ?><li class="list-group-item"><div class="fw-bold">QRIS</div><img src="<?php echo escape_html(public_path($config['gift']['qris_image'])); ?>" alt="QRIS" class="img-fluid" width="180"></li><?php endif; ?></ul></div></div></div></section><?php endif; ?>
 
-    <footer><div class="container"><div class="row"><div class="col text-center"><small class="block">&copy;<?php echo date('Y'); ?> <?php echo $brideName; ?> &amp; <?php echo $groomName; ?>. All Rights Reserved.</small><small class="block">Design by: <a href="https://github.com/elix-stack/wedding-invitation-1">Elix</a></small><ul class="mt-3"><li><a href="#"><i class="bi bi-instagram"></i></a></li><li><a href="#"><i class="bi bi-youtube"></i></a></li><li><a href="#"><i class="bi bi-twitter"></i></a></li><li><a href="#"><i class="bi bi-facebook"></i></a></li><li><a href="#"><i class="bi bi-tiktok"></i></a></li></ul></div></div></div></footer>
-    <?php if (!empty($musicSrc)): ?><div id="audio-container"><audio id="backSong" autoplay loop preload="metadata" aria-label="Background music"><source src="<?php echo escape_html(public_path($musicSrc)); ?>" type="audio/mp3"></audio><div class="audio-icon-wrapper" style="display:none;" role="status" aria-live="polite"><i class="bi bi-disc"></i><span class="visually-hidden">Klik Lihat Undangan untuk memutar musik</span></div></div><?php endif; ?>
+    <footer><div class="container"><div class="row"><div class="col text-center"><small class="block">&copy;<?php echo date('Y'); ?> <?php echo $brideName; ?> &amp; <?php echo $groomName; ?>. Hak Cipta Dilindungi.</small><small class="block">Didesain oleh: <a href="https://github.com/elix-stack/wedding-invitation-1">Elix</a></small><ul class="mt-3"><li><a href="#"><i class="bi bi-instagram"></i></a></li><li><a href="#"><i class="bi bi-youtube"></i></a></li><li><a href="#"><i class="bi bi-twitter"></i></a></li><li><a href="#"><i class="bi bi-facebook"></i></a></li><li><a href="#"><i class="bi bi-tiktok"></i></a></li></ul></div></div></div></footer>
+    <?php if (!empty($musicSrc)): ?><div id="audio-container"><audio id="backSong" autoplay loop preload="metadata" aria-label="Musik latar"><source src="<?php echo escape_html(public_path($musicSrc)); ?>" type="audio/mp3"></audio><div class="audio-icon-wrapper" style="display:none;" role="status" aria-live="polite"><i class="bi bi-disc"></i><span class="visually-hidden">Klik Lihat Undangan untuk memutar musik</span></div></div><?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bs5-lightbox@1.8.5/dist/index.bundle.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        if (window.simplyCountdown && document.querySelector('#countdown')) simplyCountdown('#countdown', {year:<?php echo (int)date('Y', $calendarTarget); ?>,month:<?php echo (int)date('n', $calendarTarget); ?>,day:<?php echo (int)date('j', $calendarTarget); ?>,hours:<?php echo (int)date('G', $calendarTarget); ?>,minutes:<?php echo (int)date('i', $calendarTarget); ?>,seconds:<?php echo (int)date('s', $calendarTarget); ?>,words:{days:{root:'day',lambda:(r,n)=>n>1?r+'s':r},hours:{root:'hour',lambda:(r,n)=>n>1?r+'s':r},minutes:{root:'minute',lambda:(r,n)=>n>1?r+'s':r},seconds:{root:'second',lambda:(r,n)=>n>1?r+'s':r}},plural:true,inline:false,refresh:1000,sectionClass:'simply-section',amountClass:'simply-amount',wordClass:'simply-word',zeroPad:false});
+        if (window.simplyCountdown && document.querySelector('#countdown')) simplyCountdown('#countdown', {year:<?php echo (int)date('Y', $calendarTarget); ?>,month:<?php echo (int)date('n', $calendarTarget); ?>,day:<?php echo (int)date('j', $calendarTarget); ?>,hours:<?php echo (int)date('G', $calendarTarget); ?>,minutes:<?php echo (int)date('i', $calendarTarget); ?>,seconds:<?php echo (int)date('s', $calendarTarget); ?>,words:{days:{root:'Hari',lambda:(r,n)=>r},hours:{root:'Jam',lambda:(r,n)=>r},minutes:{root:'Menit',lambda:(r,n)=>r},seconds:{root:'Detik',lambda:(r,n)=>r}},plural:true,inline:false,refresh:1000,sectionClass:'simply-section',amountClass:'simply-amount',wordClass:'simply-word',zeroPad:false});
         const form = document.getElementById('my-form');
         const feedback = document.getElementById('rsvp-message');
         if (form) form.addEventListener('submit', async function (event) {
@@ -128,14 +128,14 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
             let result;
             try { result = raw ? JSON.parse(raw) : {}; } catch (parseError) { throw new Error('Respons server bukan JSON yang valid.'); }
             if (!response.ok || result.success !== true) {
-              if (feedback) { feedback.textContent = result.message || `RSVP gagal (${response.status}).`; feedback.className = 'text-center mt-3 text-danger'; }
+              if (feedback) { feedback.textContent = result.message || `Konfirmasi kehadiran gagal (${response.status}).`; feedback.className = 'text-center mt-3 text-danger'; }
               return;
             }
-            if (feedback) { feedback.textContent = result.message || 'RSVP berhasil dikirim.'; feedback.className = 'text-center mt-3 text-success'; }
+            if (feedback) { feedback.textContent = result.message || 'Konfirmasi kehadiran berhasil dikirim.'; feedback.className = 'text-center mt-3 text-success'; }
             form.reset();
           } catch (error) {
-            console.error('[Elix RSVP] submission failed', error);
-            if (feedback) { feedback.textContent = 'Tidak dapat mengirim RSVP. Periksa koneksi lalu coba lagi.'; feedback.className = 'text-center mt-3 text-danger'; }
+            console.error('[Elix] submission failed', error);
+            if (feedback) { feedback.textContent = 'Tidak dapat mengirim konfirmasi kehadiran. Periksa koneksi lalu coba lagi.'; feedback.className = 'text-center mt-3 text-danger'; }
           } finally {
             if (submit) submit.disabled = false;
           }

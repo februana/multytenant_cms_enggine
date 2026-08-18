@@ -51,3 +51,35 @@ After the default cover/music/Open Graph references were emptied, the current cl
 The existing desktop/mobile matrix for all five modes and the real admin matrix remain covered by the preceding verification sections. The post-finalization automated renderer/contract/disabled/regression tests passed with empty optional media. A root-run health-check fixture representing a clean deployment returned 35 PASS, 3 WARNING (optional cover, music, and Open Graph media not provisioned), and 0 FAIL.
 
 Docker build and container browser verification could not be performed in this sandbox because Docker CLI/daemon is unavailable. Native installer execution was intentionally stopped at its prerequisite gate because Composer and rsync are not installed in the sandbox; the gate emitted the documented actionable error before changing the host. These are environment limitations, not application failures.
+
+## Preset selector regression correction
+
+The real Admin HTML/UI was rechecked after separating the selector from the theme-specific panel. Custom, DewanaKL, Elix, Rainier, and Archak each rendered a non-blank Admin page with a visible `Preset / Tema` sidebar link and `#preset-selector` panel. The corresponding current preset was selected in the global `<select id="globalThemePreset">`; Custom exposed the full CMS-native sidebar and builder, while built-in modes exposed only their contract-relevant controls. `Link Tamu`, personalized-link controls, and the global invitation preview remained visible in every mode.
+
+The selector panel appears before the theme-specific `#theme` panel gate, and built-in pages do not expose the manual `Tema & Tampilan` panel. The real Admin page loaded without page-level console errors. Frontend theme renderer, disabled-section, and template-fidelity checks were not changed by this Admin-only correction.
+
+## Indonesian UI and content preservation verification
+
+A fresh browser navigation of the real Admin page at `http://127.0.0.1:8001/admin/` showed the document title **Admin CMS Undangan**, Indonesian dashboard/navigation labels, the globally visible `Preset / Tema` selector, and the `Simpan Preset Aktif` action. The media manager, story/gallery, gift, location, SEO, WhatsApp, guest-link, RSVP, and backup-related application controls were rendered with Indonesian labels. The selector options remained DewanaKL, Elix, Rainier, Archak, and Custom; the source preset names themselves were preserved.
+
+The Admin textarea rendered the sentinel opening value on separate lines in the 390px browser screenshot. The frontend active Archak page retained original source-template identity wording (`OUR STORY`, `TRAVEL & STAY`, `PROMISES`, `We're getting married`, `Travel and Stay`, `Promises`, `Hope to See You!`, and `BLESS US`) while displaying user-entered invitation text and address content without automatic translation. This separation is intentional and required for source-template fidelity.
+
+The save/config/render path is covered by `tools/content_preservation_smoke.php`, which passed for all five modes. The test verifies multilingual Unicode, newlines, meaningful spaces, English user text, CRLF-only normalization, JSON round-trip equality, safe HTML rendering, and no automatic translation call. Browser verification was passive and did not submit or mutate forms.
+
+
+## PR #72 follow-up browser verification (working notes)
+
+A fresh Admin navigation on the PR #72 branch showed `Admin CMS Undangan`, the visible global `Preset / Tema` panel, all five preset options, the selected Archak option, and Indonesian application labels. The opening textarea continued to display the two-line sentinel value.
+
+The active Archak guest page showed Indonesian static labels including `KISAH KAMI`, `PERJALANAN & TEMPAT MENGINAP`, `JANJI`, `Kita Akan Menikah`, `Konfirmasi Kehadiran`, `PETA & DETAIL`, `REKOMENDASI KAMI`, `PILIHAN PENGINAPAN`, `DOAKAN KAMI`, `Sampai Jumpa!`, and `Hubungi Kami`. Sentinel bride/groom names, Indonesian invitation text, address, and gift data remained unchanged. A temporary fixture was also opened for Custom; its user/config section titles were left untouched as required, while its application navigation and action labels are now localized.
+
+
+The DewanaKL fixture rendered `Simpan ke Google Kalender`, `Gulir ke Bawah`, Indonesian countdown units, Indonesian gallery controls (`Sebelumnya`, `Berikutnya`), `Beranda`, and `Hadiah Pernikahan`. The Elix fixture rendered Indonesian navigation (`BERANDA`, `INFORMASI`, `KISAH`, `GALERI`, `KONFIRMASI KEHADIRAN`, `HADIAH`), Indonesian countdown units, and preserved the multiline `Baris 1` / `Baris 3` user content. Both fixtures remained non-blank and retained their expected template layout.
+
+
+The Rainier fixture rendered Indonesian countdown labels, `Tambahkan ke Google Kalender`, `Konfirmasi Kehadiran`, `Detail Acara`, `Jadwal`, `Kata-Kata Inspirasi`, `Mohon konfirmasi kehadiran Anda`, the Indonesian CMS RSVP form (`Nama Anda`, `Kehadiran`, `Pilih`, `Akan Hadir`, `Tidak Dapat Hadir`, `Pesan`, `Kirim Konfirmasi Kehadiran`), and Indonesian footer labels. The Rainier source repository link and `Rainier` attribution remained intact.
+
+The Archak fixture rendered Indonesian navigation, hero, timeline, story, travel/stay, registry, parting, and footer labels. The `@NathArchak` attribution and source link remained intact. User-entered names, invitation text, address, and gift information remained unchanged.
+
+
+The refreshed Custom fixture showed Indonesian application navigation/actions (`Konfirmasi Kehadiran`, `Mode Hemat Data`, `Buka Undangan`, `Tambah ke Kalender`, `Hubungi WA`, `Putar Musik`, `Buka di Google Maps`, and `Kirim Konfirmasi Kehadiran`). Custom section titles such as `Love Story`, `Gallery`, `Events`, `Location`, and `Gift` remained exactly as supplied by the current config; they are user/config content and were intentionally not translated. The Custom multiline opening content remained visible as separate lines. The browser console produced no output for this verification page.

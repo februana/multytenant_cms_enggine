@@ -85,14 +85,14 @@ function render_theme_header(array $config, string $presetKey): string {
 
     switch ($presetKey) {
         case 'elix':
-            return '<header class="topbar topbar-elix"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#undangan">Undangan</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#acara">Acara</a><a href="#lokasi">Lokasi</a><a href="#rsvp">RSVP</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik auto & gallery lazy load">📊 Mode Hemat</button></header>';
+            return '<header class="topbar topbar-elix"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#undangan">Undangan</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#acara">Acara</a><a href="#lokasi">Lokasi</a><a href="#rsvp">Konfirmasi Kehadiran</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik otomatis & pemuatan galeri bertahap">📊 Mode Hemat</button></header>';
         case 'rainier':
-            return '<header class="topbar topbar-rainier"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#undangan">Undangan</a><a href="#acara">Acara</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#lokasi">Lokasi</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik auto & gallery lazy load">📊 Mode Hemat</button></header>';
+            return '<header class="topbar topbar-rainier"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#undangan">Undangan</a><a href="#acara">Acara</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#lokasi">Lokasi</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik otomatis & pemuatan galeri bertahap">📊 Mode Hemat</button></header>';
         case 'archak':
-            return '<header class="topbar topbar-archak"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#hero">Home</a><a href="#acara">Jadwal</a><a href="#cerita">Story</a><a href="#galeri">Gallery</a><a href="#rsvp">RSVP</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik auto & gallery lazy load">📊 Mode Hemat</button></header>';
+            return '<header class="topbar topbar-archak"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#hero">Beranda</a><a href="#acara">Jadwal</a><a href="#cerita">Kisah</a><a href="#galeri">Galeri</a><a href="#rsvp">Konfirmasi Kehadiran</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik otomatis & pemuatan galeri bertahap">📊 Mode Hemat</button></header>';
         case 'dewankl':
         default:
-            return '<header class="topbar"><a class="brand" href="#hero">' . $brand . '</a><nav><a href="#undangan">Undangan</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#acara">Acara</a><a href="#lokasi">Lokasi</a><a href="#rsvp">RSVP</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik auto & gallery lazy load">📊 Mode Hemat</button></header>';
+            return '<header class="topbar"><a class="brand" href="#hero">' . $brand . '</a><nav><a href="#undangan">Undangan</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#acara">Acara</a><a href="#lokasi">Lokasi</a><a href="#rsvp">Konfirmasi Kehadiran</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik otomatis & pemuatan galeri bertahap">📊 Mode Hemat</button></header>';
     }
 }
 
@@ -111,10 +111,14 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
     $whatsappLink = $shared['whatsappLink'];
     $countdownTarget = $shared['countdownTarget'];
     $sectionStyles = $shared['sectionStyles'];
-    $dresscodeTitle = trim((string)($config['dresscode']['title'] ?? 'Dresscode')) ?: 'Dresscode';
-    $dresscodeColor = trim((string)($config['dresscode']['color'] ?? 'Putih / Pastel')) ?: 'Putih / Pastel';
-    $dresscodeRule = trim((string)($config['dresscode']['rule'] ?? 'Rapi dan sopan')) ?: 'Rapi dan sopan';
-    $dresscodeDescription = trim((string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.')) ?: 'Kenakan busana terbaikmu untuk momen spesial.';
+    $dresscodeTitle = (string)($config['dresscode']['title'] ?? 'Dresscode');
+    $dresscodeTitle = $dresscodeTitle === '' ? 'Dresscode' : $dresscodeTitle;
+    $dresscodeColor = (string)($config['dresscode']['color'] ?? 'Putih / Pastel');
+    $dresscodeColor = $dresscodeColor === '' ? 'Putih / Pastel' : $dresscodeColor;
+    $dresscodeRule = (string)($config['dresscode']['rule'] ?? 'Rapi dan sopan');
+    $dresscodeRule = $dresscodeRule === '' ? 'Rapi dan sopan' : $dresscodeRule;
+    $dresscodeDescription = (string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.');
+    $dresscodeDescription = $dresscodeDescription === '' ? 'Kenakan busana terbaikmu untuk momen spesial.' : $dresscodeDescription;
 
     switch ($sectionId) {
         case 'countdown':
@@ -129,9 +133,9 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             $receptionDate = $config['schedule']['reception_date'];
             $receptionTime = $config['schedule']['reception_time'];
             $locationAddress = $config['location']['address'];
-            $cards = '<article class="card"><h3>Akad Nikah</h3><p>' . date('j F Y', strtotime($akadDate)) . '</p><p>' . escape_html($akadTime) . ' WIB</p><p>' . escape_html($locationAddress) . '</p></article><article class="card"><h3>Resepsi</h3><p>' . date('j F Y', strtotime($receptionDate)) . '</p><p>' . escape_html($receptionTime) . ' WIB - Selesai</p><p>' . escape_html($locationAddress) . '</p></article>';
+            $cards = '<article class="card"><h3>Akad Nikah</h3><p>' . date('j F Y', strtotime($akadDate)) . '</p><p>' . escape_html($akadTime) . ' WIB</p><p>' . render_preserved_text($locationAddress) . '</p></article><article class="card"><h3>Resepsi</h3><p>' . date('j F Y', strtotime($receptionDate)) . '</p><p>' . escape_html($receptionTime) . ' WIB - Selesai</p><p>' . render_preserved_text($locationAddress) . '</p></article>';
             if (!empty($config['dresscode']['enabled'])) {
-                $cards .= '<article class="card"><h3>' . escape_html($dresscodeTitle) . '</h3><p>' . escape_html($dresscodeColor) . '</p><p>' . escape_html($dresscodeRule) . '</p><p>' . escape_html($dresscodeDescription) . '</p></article>';
+                $cards .= '<article class="card"><h3>' . escape_html($dresscodeTitle) . '</h3><p>' . render_preserved_text($dresscodeColor) . '</p><p>' . render_preserved_text($dresscodeRule) . '</p><p>' . render_preserved_text($dresscodeDescription) . '</p></article>';
             }
             return '<section id="acara" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'acara', 'Jadwal Acara')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')) . '</h2></div><div class="cards-grid">' . $cards . '</div></div></section>';
         case 'cerita':
@@ -145,7 +149,7 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             $venue = $config['location']['venue'];
             $qrData = rawurlencode($mapsUrl ?: 'https://www.google.com/maps');
             $qrUrl = escape_html(public_path('/admin/qr.php?data=' . $qrData));
-            return '<section id="lokasi" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'lokasi', 'Lokasi')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')) . '</h2></div><div class="location-grid"><div class="card"><h3>Alamat</h3><p>' . escape_html($venue) . '</p><p>' . escape_html($locationAddress) . '</p><p><a href="' . escape_html($mapsUrl) . '" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p></div><div class="card"><h3>QR Lokasi</h3><p class="location-qr"><strong>Scan untuk arah</strong><br /><img id="qrLokasiImg" src="' . $qrUrl . '" alt="QR kode lokasi pernikahan" loading="lazy" decoding="async" /></p></div><div class="map-wrap"><iframe src="' . escape_html($mapsEmbed) . '" title="Lokasi acara" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="map-footnote">Titik lokasi tepat: ' . escape_html($mapsUrl) . '</div></div></div></div></section>';
+            return '<section id="lokasi" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'lokasi', 'Lokasi')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'lokasi', 'Tempat Acara')) . '</h2></div><div class="location-grid"><div class="card"><h3>Alamat</h3><p>' . escape_html($venue) . '</p><p>' . render_preserved_text($locationAddress) . '</p><p><a href="' . escape_html($mapsUrl) . '" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p></div><div class="card"><h3>QR Lokasi</h3><p class="location-qr"><strong>Scan untuk arah</strong><br /><img id="qrLokasiImg" src="' . $qrUrl . '" alt="QR kode lokasi pernikahan" loading="lazy" decoding="async" /></p></div><div class="map-wrap"><iframe src="' . escape_html($mapsEmbed) . '" title="Lokasi acara" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><div class="map-footnote">Titik lokasi tepat: ' . escape_html($mapsUrl) . '</div></div></div></div></section>';
         case 'amplop':
             $giftBank = $config['gift']['bank'];
             $giftAccount = $config['gift']['account_number'];
@@ -153,7 +157,7 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             $giftEwalletNumber = $config['gift']['e_wallet_number'];
             return '<section id="amplop" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'amplop', 'Amplop Digital')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'amplop', 'Tanda Terima Kasih')) . '</h2><p>Jika ingin memberikan amplop digital, berikut data rekening:</p></div><div class="amplop-container"><div class="amplop-card"><div class="amplop-header">Untuk ' . escape_html($config['wedding']['bride_name']) . '</div><div class="amplop-item"><label>Bank:</label><span>' . escape_html($giftBank) . '</span></div><div class="amplop-item"><label>Nomor Rekening:</label><span class="amplop-number" data-account="' . escape_html($giftAccount) . '">' . escape_html($giftAccount) . '</span></div><button type="button" class="amplop-copy-btn" data-account="' . escape_html($giftAccount) . '">Salin Nomor</button><p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p></div><div class="amplop-card"><div class="amplop-header">Untuk ' . escape_html($config['wedding']['groom_name']) . '</div><div class="amplop-item"><label>E-Wallet:</label><span>' . escape_html($giftEwalletLabel) . '</span></div><div class="amplop-item"><label>Nomor Telepon:</label><span class="amplop-number" data-account="' . escape_html($giftEwalletNumber) . '">' . escape_html($giftEwalletNumber) . '</span></div><button type="button" class="amplop-copy-btn" data-account="' . escape_html($giftEwalletNumber) . '">Salin Nomor</button><p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p></div></div></section>';
         case 'rsvp':
-            return '<section id="rsvp" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'rsvp', 'RSVP')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'rsvp', 'Konfirmasi Kehadiran')) . '</h2></div><form id="rsvpForm" class="rsvp-form"><input type="hidden" name="csrf_token" id="csrfToken" /><label>Nama<input type="text" name="nama" placeholder="Nama Anda" required /></label><label>Kehadiran<select name="status" required><option value="Hadir">Hadir</option><option value="Tidak Hadir">Tidak Hadir</option></select></label><label>Ucapan<textarea name="ucapan" rows="4" placeholder="Tulis ucapan dan doa"></textarea></label><input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none"><button type="submit">Kirim RSVP</button><p id="formMessage" class="form-message" role="status" aria-live="polite"></p></form>' . (is_section_enabled($config, 'messages') ? '<div id="messages" class="messages"></div>' : '') . '</div></section>';
+            return '<section id="rsvp" class="section panel"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'rsvp', 'Konfirmasi Kehadiran')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'rsvp', 'Konfirmasi Kehadiran')) . '</h2></div><form id="rsvpForm" class="rsvp-form"><input type="hidden" name="csrf_token" id="csrfToken" /><label>Nama<input type="text" name="nama" placeholder="Nama Anda" required /></label><label>Kehadiran<select name="status" required><option value="Hadir">Hadir</option><option value="Tidak Hadir">Tidak Hadir</option></select></label><label>Ucapan<textarea name="ucapan" rows="4" placeholder="Tulis ucapan dan doa"></textarea></label><input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none"><button type="submit">Kirim Konfirmasi Kehadiran</button><p id="formMessage" class="form-message" role="status" aria-live="polite"></p></form>' . (is_section_enabled($config, 'messages') ? '<div id="messages" class="messages"></div>' : '') . '</div></section>';
         case 'hero':
             return render_theme_hero_markup($config, $shared['presetKey'], $shared['bgHero'], $shared['heroText'], $shared['brideParents'], $shared['groomParents'], $shared['calendarLink'], $shared['whatsappLink'], $shared['musicSrc'], $shared['calendarDownloadName'], $shared['guestFallback']);
         default:
@@ -241,7 +245,7 @@ function render_dewankl_hero(array $config, array $shared): string {
         <p class="eyebrow">Kami Akan Menikah</p>
         <p id="guest-greeting" class="hero-guest">Kepada Yth. ' . $guestLabel . '</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
         <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
         <div class="hero-actions">
@@ -261,7 +265,7 @@ function render_elix_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--soft">
         <p class="eyebrow">Kami Akan Menikah</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
         <div class="hero-actions hero-actions--compact">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
@@ -279,7 +283,7 @@ function render_rainier_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--editorial">
         <p class="eyebrow">Kami Akan Menikah</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <div class="hero-meta-row">
           <span>' . escape_html($config['wedding']['bride_nickname']) . '</span>
           <span class="hero-love-mark">&amp;</span>
@@ -302,7 +306,7 @@ function render_archak_hero(array $config, array $shared): string {
         <div class="hero-card__text">
           <p class="eyebrow">Kami Akan Menikah</p>
           <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-          <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
+          <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         </div>
         <div class="hero-card__meta">
           <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
