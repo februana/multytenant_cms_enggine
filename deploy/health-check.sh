@@ -5,12 +5,17 @@ set -euo pipefail
 # Validates a production deployment at /var/www/wedding
 # Critical checks are limited to the current single-root CMS-first architecture.
 
-DEPLOY_DIR="/var/www/wedding"
+DEPLOY_DIR="${DEPLOY_DIR:-/var/www/wedding}"
+DATA_DIR="${UNDANGAN_DATA_DIR:-$DEPLOY_DIR}"
+CONFIG_FILE_PATH="${UNDANGAN_CONFIG_PATH:-$DATA_DIR/config.json}"
+DB_FILE_PATH="${UNDANGAN_DB_PATH:-$DATA_DIR/database.sqlite}"
 PASS_COUNT=0
+WARN_COUNT=0
 FAIL_COUNT=0
 
-pass() { echo "✓ $1"; ((PASS_COUNT++)) || true; }
-fail() { echo "✗ $1"; ((FAIL_COUNT++)) || true; }
+pass() { echo "PASS: $1"; ((PASS_COUNT++)) || true; }
+warning() { echo "WARNING: $1"; ((WARN_COUNT++)) || true; }
+fail() { echo "FAIL: $1"; ((FAIL_COUNT++)) || true; }
 
 echo "=== Deployment Health Check ==="
 echo "Target: $DEPLOY_DIR"
@@ -34,12 +39,21 @@ else
   fail "Deployment directory missing: $DEPLOY_DIR"
 fi
 
-# Check 2: Required root files exist
-for file in index.php admin.php save.php messages.php gallery.php config.php config.json database.sqlite; do
+# Check 2: Required application files exist in the document root.
+for file in index.php admin.php save.php messages.php gallery.php config.php; do
   if [ -f "$DEPLOY_DIR/$file" ]; then
     pass "File exists: $file"
   else
-    fail "Missing file: $file"
+    fail "Missing required file: $file"
+  fi
+done
+
+# Runtime state may live in /var/data (Docker) or the document root (native).
+for runtime_file in "$CONFIG_FILE_PATH" "$DB_FILE_PATH"; do
+  if [ -f "$runtime_file" ]; then
+    pass "Runtime file exists: $runtime_file"
+  else
+    fail "Missing required runtime file: $runtime_file"
   fi
 done
 
@@ -76,6 +90,35 @@ for dir in cover music gallery background love-story; do
   fi
 done
 
+# Optional media is intentionally not provisioned by a clean checkout.
+read_config_value() {
+  local key="$1"
+  if [ ! -f "$CONFIG_FILE_PATH" ] || ! command -v php >/dev/null 2>&1; then
+    return 0
+  fi
+  CONFIG_KEY="$key" php -r '$value = json_decode(@file_get_contents($argv[1]), true); foreach (explode(".", getenv("CONFIG_KEY")) as $part) { if (!is_array($value) || !array_key_exists($part, $value)) { $value = null; break; } $value = $value[$part]; } if (is_string($value)) echo $value;' "$CONFIG_FILE_PATH" 2>/dev/null || true
+}
+check_optional_media() {
+  local label="$1" reference="$2" resolved
+  if [ -z "$reference" ]; then
+    warning "$label is not provisioned (optional/user-provided)"
+    return 0
+  fi
+  if [[ "$reference" =~ ^https?:// ]]; then
+    pass "$label uses an external URL (local file not checked)"
+    return 0
+  fi
+  if [[ "$reference" = /* ]]; then resolved="$reference"; else resolved="$DEPLOY_DIR/$reference"; fi
+  if [ -f "$resolved" ] && [ -r "$resolved" ]; then
+    pass "$label is readable: $reference"
+  else
+    warning "$label is configured but missing/unreadable: $reference"
+  fi
+}
+check_optional_media "Optional cover media" "$(read_config_value 'media.cover')"
+check_optional_media "Optional music media" "$(read_config_value 'media.music')"
+check_optional_media "Optional Open Graph image" "$(read_config_value 'site.open_graph_image')"
+
 # Check 4: Optional WebDAV should not be treated as a critical dependency
 if [ -d "$DEPLOY_DIR/webdav" ]; then
   if [ -w "$DEPLOY_DIR/webdav" ]; then
@@ -88,18 +131,18 @@ else
 fi
 
 # Check 5: Permissions checks
-CONFIG_PERMS=$(stat -c %a "$DEPLOY_DIR/config.json" 2>/dev/null || echo "000")
-if [[ "$CONFIG_PERMS" == "600" ]] || [[ "$CONFIG_PERMS" == "640" ]]; then
+CONFIG_PERMS=$(stat -c %a "$CONFIG_FILE_PATH" 2>/dev/null || echo "000")
+if [[ "$CONFIG_PERMS" == "600" ]] || [[ "$CONFIG_PERMS" == "640" ]] || [[ "$CONFIG_PERMS" == "660" ]]; then
   pass "Config file permissions secure ($CONFIG_PERMS)"
 else
-  fail "Config file permissions insecure ($CONFIG_PERMS), expected 600 or 640"
+  fail "Config file permissions insecure ($CONFIG_PERMS), expected 600, 640, or 660"
 fi
 
-DB_PERMS=$(stat -c %a "$DEPLOY_DIR/database.sqlite" 2>/dev/null || echo "000")
-if [[ "$DB_PERMS" == "600" ]] || [[ "$DB_PERMS" == "640" ]]; then
+DB_PERMS=$(stat -c %a "$DB_FILE_PATH" 2>/dev/null || echo "000")
+if [[ "$DB_PERMS" == "600" ]] || [[ "$DB_PERMS" == "640" ]] || [[ "$DB_PERMS" == "660" ]]; then
   pass "Database permissions secure ($DB_PERMS)"
 else
-  fail "Database permissions insecure ($DB_PERMS), expected 600 or 640"
+  fail "Database permissions insecure ($DB_PERMS), expected 600, 640, or 660"
 fi
 
 OWNER=$(stat -c %U "$DEPLOY_DIR" 2>/dev/null || echo "unknown")
@@ -245,14 +288,19 @@ fi
 echo ""
 echo "=== Summary ==="
 echo "Passed: $PASS_COUNT"
+echo "Warnings: $WARN_COUNT"
 echo "Failed: $FAIL_COUNT"
 
 if [ $FAIL_COUNT -gt 0 ]; then
   echo ""
-  echo "DEPLOYMENT HAS ISSUES. Review failures above."
+  echo "DEPLOYMENT FAILED: required checks did not pass."
   exit 1
 else
   echo ""
-  echo "DEPLOYMENT HEALTHY"
+  if [ "$WARN_COUNT" -gt 0 ]; then
+    echo "DEPLOYMENT HEALTHY WITH WARNINGS: application is functional but optional media/data is not fully provisioned."
+  else
+    echo "DEPLOYMENT HEALTHY"
+  fi
   exit 0
 fi

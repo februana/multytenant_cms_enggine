@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Layer 2: Configure & Install PHP Extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" gd mbstring zip pdo_sqlite
+    && docker-php-ext-install -j"$(nproc)" gd mbstring zip pdo_sqlite sqlite3
 
 # Layer 3: Enable Apache modules
 RUN a2enmod rewrite headers expires

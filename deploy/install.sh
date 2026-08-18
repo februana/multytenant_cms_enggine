@@ -6,10 +6,22 @@ set -euo pipefail
 # Single-Root Architecture v2.0 - Always deploys to /var/www/wedding
 # Supports both Nginx and Apache web servers
 
-CANONICAL_TARGET="/var/www/wedding"
+CANONICAL_TARGET="${CANONICAL_TARGET:-/var/www/wedding}"
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
+
+log_error() { echo "ERROR: $1" >&2; }
+
+# The installer is intentionally explicit about host prerequisites because it
+# must not silently deploy a partial PHP/web-server runtime.
+for required_command in rsync openssl composer; do
+  if ! command -v "$required_command" >/dev/null 2>&1; then
+    echo "ERROR: missing prerequisite command: $required_command" >&2
+    echo "Install it before retrying (see docs/DEPLOYMENT.md)." >&2
+    exit 2
+  fi
+done
 
 # Track configuration for rollback
 declare -A BACKUP_STATE=(
@@ -282,7 +294,8 @@ else
     "$SOURCE_DIR/" "$CANONICAL_TARGET/"
   
   WORKING_DIR="$CANONICAL_TARGET"
-  CLEANUP_SOURCE=true
+  # Keep the Git checkout intact; /var/www/wedding is deployment output only.
+  CLEANUP_SOURCE=false
 
   # Ensure canonical frontend assets are present at the document root.
   # Preserve backward compatibility for very old installs, but NEVER overwrite
@@ -328,10 +341,10 @@ apt update -qq
 # Install packages based on selected web server
 if [ "$WEB_SERVER" = "nginx" ]; then
     echo "Installing Nginx and PHP-FPM..."
-    apt install -y -qq nginx php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
+    apt install -y -qq nginx php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip rsync openssl ca-certificates curl unzip
 elif [ "$WEB_SERVER" = "apache" ]; then
     echo "Installing Apache and PHP-FPM..."
-    apt install -y -qq apache2 php-fpm php-sqlite3 php-gd php-mbstring php-curl jq ca-certificates curl unzip
+    apt install -y -qq apache2 php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip rsync openssl ca-certificates curl unzip
     
     # Enable required Apache modules
     echo "Enabling Apache modules..." >&2
@@ -411,7 +424,12 @@ fi
 
 # Initialize config if missing
 if [ ! -f "$WORKING_DIR/config.json" ]; then
-  echo '{"site":{"title":"Wedding"},"media":{},"gallery":[]}' > "$WORKING_DIR/config.json"
+  if [ -f "$WORKING_DIR/config.php" ] && command -v php >/dev/null 2>&1; then
+    (cd "$WORKING_DIR" && php -r 'require "config.php"; echo json_encode(config_defaults(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);') > "$WORKING_DIR/config.json"
+  else
+    echo "ERROR: config.php and PHP CLI are required to initialize config.json" >&2
+    exit 1
+  fi
   chown www-data:www-data "$WORKING_DIR/config.json"
   chmod 600 "$WORKING_DIR/config.json"
 fi
@@ -769,12 +787,7 @@ elif [ "$WEB_SERVER" = "apache" ]; then
         WEBDAV_USER_DISPLAY=""
     fi
 fi
-# Cleanup temporary source if needed
-if [ "$CLEANUP_SOURCE" = true ]; then
-  echo ""
-  echo "Cleaning up temporary source directory..."
-  rm -rf "$SOURCE_DIR"
-fi
+# The source checkout is never removed by the installer. Runtime output lives at $WORKING_DIR.
 
 # ===== FINAL VERIFICATION AND HEALTH CHECKS =====
 echo ""

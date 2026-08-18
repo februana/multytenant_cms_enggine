@@ -7,7 +7,7 @@
         "open_graph_title": "Undangan Pernikahan Andi & Februana",
         "open_graph_description": "Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.",
         "twitter_card": "summary_large_image",
-        "open_graph_image": "uploads/cover/cover.jpg",
+        "open_graph_image": "",
         "schema": "{\"@context\": \"https://schema.org\", \"@type\": \"Event\", \"name\": \"Undangan Pernikahan Andi & Februana\", \"startDate\": \"2026-12-29T09:00:00+07:00\", \"location\": {\"@type\": \"Place\", \"name\": \"PFR2+G9H Asinan\", \"address\": {\"@type\": \"PostalAddress\", \"addressLocality\": \"Kabupaten Semarang\", \"addressRegion\": \"Jawa Tengah\", \"addressCountry\": \"ID\"}}, \"description\": \"Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.\", \"eventStatus\": \"https://schema.org/EventScheduled\", \"eventAttendanceMode\": \"https://schema.org/OfflineEventAttendanceMode\"}"
     },
     "wedding": {
@@ -42,11 +42,11 @@
         "maps_embed": "https://maps.google.com/maps?q=-7.2586798,110.4509814&z=17&output=embed"
     },
     "media": {
-        "cover": "uploads/cover/cover.jpg",
+        "cover": "",
         "bride_photo": "",
         "groom_photo": "",
         "couple_photo": "",
-        "music": "music/lagu.mp3",
+        "music": "",
         "background_hero": "",
         "background_sections": []
     },

@@ -1,0 +1,16 @@
+/* Only protects original template typography from unusually long CMS data. */
+#home h2,
+#welcome h2,
+#guest-name {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+@media (max-width: 576px) {
+    #home h2,
+    #welcome h2 {
+        font-size: clamp(1.75rem, 9vw, 2.25rem) !important;
+        line-height: 1.1;
+    }
+}

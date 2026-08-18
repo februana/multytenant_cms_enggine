@@ -8,9 +8,10 @@ services:
     ports:
       - "80:80"
     environment:
-      - ADMIN_USER=admin
-      - ADMIN_PASS=securepassword123
-      - UNDANGAN_DB_PATH=/var/data/database.sqlite
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASS:?Set ADMIN_PASS in .env before starting Compose}
+      UNDANGAN_DATA_DIR: /var/data
+      UNDANGAN_DB_PATH: /var/data/database.sqlite
     volumes:
       - wedding_data:/var/data
       - wedding_uploads:/var/www/wedding/uploads

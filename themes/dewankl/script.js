@@ -198,15 +198,13 @@
         const guestNameEl = document.getElementById('guest-name');
         if (!guestNameEl) return;
         
-        const message = guestNameEl.getAttribute('data-message');
+        const message = guestNameEl.getAttribute('data-message') || 'Kepada Yth Bapak/Ibu/Saudara/i';
         const urlParams = new URLSearchParams(window.location.search);
-        const guestName = urlParams.get('to') || urlParams.get('name');
-        
-        if (guestName) {
-            guestNameEl.innerHTML = '<h3 class="my-2">' + decodeURIComponent(guestName) + '</h3>';
-        } else if (message) {
-            guestNameEl.innerHTML = '<h3 class="my-2">' + message + '</h3>';
-        }
+        const guestName = (urlParams.get('to') || urlParams.get('name') || '').trim();
+        const heading = document.createElement('h3');
+        heading.className = 'my-2';
+        heading.textContent = guestName || message;
+        guestNameEl.replaceChildren(heading);
     }
     
     // Form Submission

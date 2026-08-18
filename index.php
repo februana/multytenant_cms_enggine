@@ -9,6 +9,7 @@ $siteTitle = $config['site']['title'] ?? 'Undangan Pernikahan';
 $weddingTitle = $config['wedding']['title'] ?? $siteTitle;
 $heroText = $config['wedding']['opening_text'] ?? '';
 $guestFallback = 'Bapak/Ibu/Saudara/i';
+$guestName = resolve_guest_name($config);
 
 $akadDate = $config['schedule']['akad_date'] ?? '';
 $akadTime = $config['schedule']['akad_time'] ?? '';
@@ -16,9 +17,9 @@ $akadTime = $config['schedule']['akad_time'] ?? '';
 $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $siteTitle) ?: 'Undangan';
 $whatsappLink = build_whatsapp_link($config);
-$musicSrc = $config['media']['music'] ?? 'music/lagu.mp3';
+$musicSrc = $config['media']['music'] ?? '';
 
-$coverPath = $config['media']['cover'] ?? 'uploads/cover/cover.jpg';
+$coverPath = $config['media']['cover'] ?? '';
 $heroBackground = $config['media']['background_hero'] ?? '';
 $heroBackground = $heroBackground !== '' ? $heroBackground : $coverPath;
 
@@ -66,6 +67,7 @@ $themePageShared = [
     'presetKey' => $activeThemePreset,
     'heroText' => $heroText,
     'guestFallback' => $guestFallback,
+    'guestName' => $guestName,
     'countdownTarget' => $countdownTarget,
     'calendarLink' => $calendarLink,
     'calendarDownloadName' => $calendarDownloadName,
@@ -80,4 +82,10 @@ $themePageShared = [
 ];
 
 $renderedTheme = render_theme_layout($config, $themePageShared);
+if (resolve_theme_mode($config) === 'custom') {
+    $customCss = load_custom_css();
+    $customCssBlock = $customCss !== '' ? "\n<style>" . $customCss . "</style>" : '';
+    $customDocument = '<!DOCTYPE html>\n<html lang="id">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' . escape_html($siteTitle) . '</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Allura&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="/style.css">' . $customCssBlock . '\n</head>\n<body>\n' . $renderedTheme . '\n<script src="/script.js" defer></script>\n</body>\n</html>';
+    $renderedTheme = str_replace('\\n', "\n", $customDocument);
+}
 echo finalize_theme_output($renderedTheme, $config);

@@ -17,6 +17,57 @@ function escape_html(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/**
+ * Normalize the public guest query value without trusting it as HTML.
+ * The guest link format remains compatible with the existing `?to=` flow.
+ */
+function normalize_guest_name(string $value): string {
+    $value = trim($value);
+    if ($value === '') return '';
+    if (function_exists('mb_check_encoding') && !mb_check_encoding($value, 'UTF-8')) return '';
+    $value = preg_replace('/[\x00-\x1F\x7F]/u', '', $value) ?? '';
+    $value = preg_replace('/\s+/u', ' ', $value) ?? '';
+    if (function_exists('mb_substr')) return mb_substr($value, 0, 120, 'UTF-8');
+    return substr($value, 0, 120);
+}
+
+/** Resolve the global personalized guest identity for the active frontend. */
+function resolve_guest_name(array $config = []): string {
+    $queryValue = $_GET['to'] ?? ($_GET['guest'] ?? ($_GET['name'] ?? ($_GET['n'] ?? '')));
+    return normalize_guest_name((string)$queryValue);
+}
+
+/** Resolve visible admin controls without collapsing global and theme-specific capabilities. */
+function theme_admin_capabilities_for_config(array $config): array {
+    $mode = function_exists('get_theme_mode') ? get_theme_mode($config) : 'custom';
+    $global = function_exists('theme_contract_global_admin_capabilities')
+        ? theme_contract_global_admin_capabilities()
+        : ['guest_links'];
+    $specific = $mode === 'custom'
+        ? ['wedding', 'parents', 'schedule', 'countdown', 'sections', 'theme', 'custom_css', 'media', 'story', 'gallery', 'cover', 'background', 'music', 'gift', 'dresscode', 'maps', 'seo', 'whatsapp', 'rsvp', 'backup', 'settings']
+        : (function_exists('theme_contract_admin_capabilities') ? theme_contract_admin_capabilities(resolve_theme_preset_key($config)) : []);
+    return array_values(array_unique(array_merge($global, $specific)));
+}
+
+/** Build a safe personalized invitation URL using the existing `?to=` convention. */
+function build_guest_invitation_url(string $baseUrl, string $guestName): string {
+    $name = normalize_guest_name($guestName);
+    $base = trim($baseUrl);
+    if ($name === '' || $base === '') return '';
+    if ($base[0] === '/') {
+        if (str_starts_with($base, '//')) return '';
+    } else {
+        $parts = parse_url($base);
+        $scheme = strtolower((string)($parts['scheme'] ?? ''));
+        if (!in_array($scheme, ['http', 'https'], true) || empty($parts['host'])) return '';
+    }
+    $normalizedBase = rtrim($base, '/');
+    if ($normalizedBase === '' && $base[0] === '/') $normalizedBase = '/';
+    if (!str_contains($normalizedBase, '?') && $normalizedBase !== '/' && !str_ends_with($normalizedBase, '/')) $normalizedBase .= '/';
+    $separator = str_contains($normalizedBase, '?') ? '&' : '?';
+    return $normalizedBase . $separator . 'to=' . rawurlencode($name);
+}
+
 /** Get theme asset URL. */
 function get_theme_asset_url(string $themeKey, string $filename): string {
     return '/themes/' . preg_replace('/[^a-z0-9_-]/i', '', $themeKey) . '/' . $filename;

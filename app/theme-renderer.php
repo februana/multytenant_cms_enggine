@@ -105,6 +105,8 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
     $sectionPrefix = 'theme-section ' . $sectionId;
     $musicEnabled = is_section_enabled($config, 'music');
     $guestFallback = $shared['guestFallback'];
+    $guestName = normalize_guest_name((string)($shared['guestName'] ?? ''));
+    $guestDisplay = $guestName !== '' ? $guestName : $guestFallback;
     $calendarLink = $shared['calendarLink'];
     $whatsappLink = $shared['whatsappLink'];
     $countdownTarget = $shared['countdownTarget'];
@@ -118,7 +120,7 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
         case 'countdown':
             return '<section id="countdown-section" class="section countdown-section"><div class="section-head"><p class="label">Menuju Hari Bahagia</p><h2>Hitung Mundur Pernikahan</h2></div><div id="countdown" class="countdown" data-countdown="' . escape_html($countdownTarget) . '" aria-label="Hitung mundur acara"><div><strong>00</strong><span>Hari</span></div><div><strong>00</strong><span>Jam</span></div><div><strong>00</strong><span>Menit</span></div><div><strong>00</strong><span>Detik</span></div></div></section>';
         case 'guest_intro':
-            return '<section id="guest-intro" class="section intro-section" style="background:transparent;padding:60px 20px 40px"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'guest_intro', 'Kepada Yth.')) . '</p><h2 id="guestNameDisplay">' . escape_html($guestFallback) . '</h2></div></div></section>';
+            return '<section id="guest-intro" class="section intro-section" style="background:transparent;padding:60px 20px 40px"><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'guest_intro', 'Kepada Yth.')) . '</p><h2 id="guestNameDisplay">' . escape_html($guestDisplay) . '</h2></div></div></section>';
         case 'undangan':
             return '<section id="undangan" class="section intro-section" ' . ($sectionStyles[0] ?? '') . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'undangan', 'Undangan Pernikahan')) . '</p><h2>' . nl2br(escape_html(get_section_subtitle($config, 'undangan', $config['wedding']['quote']))) . '</h2></div><p style="max-width:680px;margin:0 auto 34px;font-size:1.15rem;line-height:1.9;text-align:center;color:var(--muted);white-space:pre-line">' . nl2br(escape_html($config['wedding']['opening_text'])) . '</p></div></section>';
         case 'acara':
@@ -232,9 +234,12 @@ function render_theme_hero_markup(array $config, string $presetKey, string $bgHe
 function render_dewankl_hero(array $config, array $shared): string {
     $themeMode = resolve_theme_mode($config);
     $musicButton = is_section_enabled($config, 'music') ? '<button class="music-btn" type="button" id="musicBtn">Putar Musik</button>' : '';
+    $guestName = normalize_guest_name((string)($shared['guestName'] ?? ''));
+    $guestLabel = escape_html($guestName !== '' ? $guestName : ($shared['guestFallback'] ?? 'Bapak/Ibu/Saudara/i'));
     return '<section id="hero" class="hero" ' . $shared['bgHero'] . '>
       <div class="hero-card hero-card--classic">
         <p class="eyebrow">Kami Akan Menikah</p>
+        <p id="guest-greeting" class="hero-guest">Kepada Yth. ' . $guestLabel . '</p>
         <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
         <p class="hero-text">' . escape_html($shared['heroText']) . '</p>
         <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>

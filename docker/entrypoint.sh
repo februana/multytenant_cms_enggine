@@ -17,9 +17,21 @@ mkdir -p "${APP_DIR}/uploads/cover" \
 if [ ! -f "${DATA_DIR}/database.sqlite" ]; then
     touch "${DATA_DIR}/database.sqlite"
 fi
+if [ ! -f "${DATA_DIR}/config.json" ] && [ -f "${APP_DIR}/config.json" ]; then
+    cp "${APP_DIR}/config.json" "${DATA_DIR}/config.json"
+fi
+if [ ! -f "${DATA_DIR}/guest-links.json" ]; then
+    printf '[]\n' > "${DATA_DIR}/guest-links.json"
+fi
+if [ ! -f "${DATA_DIR}/event.ics" ]; then
+    touch "${DATA_DIR}/event.ics"
+fi
 
 if [ ! -f "${APP_DIR}/database.sqlite" ]; then
     ln -sf "${DATA_DIR}/database.sqlite" "${APP_DIR}/database.sqlite"
+fi
+if [ ! -e "${APP_DIR}/event.ics" ]; then
+    ln -sf "${DATA_DIR}/event.ics" "${APP_DIR}/event.ics"
 fi
 
 if [ ! -f "${APP_DIR}/.env" ] && [ -f "${APP_DIR}/.env.example" ]; then
@@ -33,8 +45,11 @@ if [ ! -f "${APP_DIR}/.env" ] && [ -f "${APP_DIR}/.env.example" ]; then
 fi
 
 chown -R www-data:www-data "${APP_DIR}" "${DATA_DIR}"
-chmod -R 755 "${APP_DIR}"
-chmod 777 "${APP_DIR}/uploads" "${APP_DIR}/backups" "${DATA_DIR}"
-chmod 666 "${DATA_DIR}/database.sqlite" 2>/dev/null || true
-
+find "${APP_DIR}" -type d -exec chmod 755 {} +
+find "${APP_DIR}" -type f -exec chmod 644 {} +
+chmod 775 "${APP_DIR}/uploads" "${APP_DIR}/backups"
+find "${APP_DIR}/uploads" -type d -exec chmod 775 {} +
+chmod 770 "${DATA_DIR}"
+chmod 660 "${DATA_DIR}/database.sqlite" "${DATA_DIR}/config.json" "${DATA_DIR}/guest-links.json" "${DATA_DIR}/event.ics" 2>/dev/null || true
+chmod 640 "${DATA_DIR}/custom.css" 2>/dev/null || true
 exec "$@"
