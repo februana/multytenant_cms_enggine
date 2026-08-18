@@ -53,7 +53,7 @@ if (!empty($_SESSION['admin'])) {
 
 function build_invitation_preview_url(array $config): string {
     $siteUrl = trim((string)($config['site']['url'] ?? ''));
-    return build_guest_invitation_url($siteUrl !== '' ? $siteUrl : '/', 'Bapak Ahmad') ?: '/?to=Bapak%20Ahmad';
+    return build_guest_invitation_url($siteUrl, 'Bapak Ahmad');
 }
 
 if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -956,8 +956,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">WhatsApp</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">RSVP</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
                     </nav>
                 </aside>
 
@@ -967,7 +967,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <p>Undangan Anda dapat dikelola melalui panel ini. Setiap perubahan otomatis akan mempengaruhi halaman utama tanpa perlu edit HTML, CSS, JS, atau PHP.</p>
                         <div class="form-row">
                             <label>Contoh tautan personalisasi</label>
-                            <input type="text" readonly value="<?php echo escape_html($invitationPreview); ?>" id="invitationLink" style="background:#f7f3ed;color:#333;" />
+                            <input type="text" readonly value="<?php echo escape_html($invitationPreview); ?>" placeholder="Konfigurasikan Site URL di Pengaturan" id="invitationLink" style="background:#f7f3ed;color:#333;" />
                             <button type="button" class="button small-button" id="copyInvitationLink">Salin Tautan</button>
                         </div>
                     </section>
@@ -2237,7 +2237,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('backup')): ?>
+                    <?php if ($globalAdminCapabilityEnabled('backup')): ?>
 
                     <section id="backup" class="card panel-section">
                         <h2>Cadangan</h2>
@@ -2255,17 +2255,18 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('settings')): ?>
+                    <?php if ($globalAdminCapabilityEnabled('settings')): ?>
 
                     <section id="settings" class="card panel-section">
                         <h2>Pengaturan</h2>
+                        <?php if (trim((string)($config['site']['url'] ?? '')) === ''): ?><div class="notice">Site URL belum dikonfigurasi. Simpan origin situs di bawah sebelum membuat Link Tamu.</div><?php endif; ?>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_settings">
                             <div class="form-grid">
-                                <div class="form-row"><label>Site URL</label><input type="url" name="site_url" value="<?php echo escape_html($siteUrl); ?>"></div>
-                                <div class="form-row"><label>Admin Username</label><input type="text" name="admin_username" value="<?php echo escape_html($config['admin']['username']); ?>"></div>
-                                <div class="form-row"><label>Admin Password</label><input type="password" name="admin_password" placeholder="Kosongkan jika tidak ingin mengganti"></div>
+                                <div class="form-row"><label>URL Situs / Origin</label><input type="url" name="site_url" value="<?php echo escape_html($siteUrl); ?>"></div>
+                                <div class="form-row"><label>Nama Pengguna Admin</label><input type="text" name="admin_username" value="<?php echo escape_html($config['admin']['username']); ?>"></div>
+                                <div class="form-row"><label>Kata Sandi Admin</label><input type="password" name="admin_password" placeholder="Kosongkan jika tidak ingin mengganti"></div>
                             </div>
                             <button type="submit">Simpan Pengaturan</button>
                         </form>
