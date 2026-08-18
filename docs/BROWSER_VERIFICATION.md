@@ -1,31 +1,37 @@
 # Browser Verification
 
-## DewanaKL
+The final browser pass used a local PHP preview on port 8001 with sentinel CMS data, followed by fresh desktop navigations and automated Chromium renders at **390×844**. The preview endpoint selects one of the five supported modes without changing the production config. Source repositories remain the reference for built-in DOM, CSS, JS, dependency, and UX behavior: [DewanaKL](https://github.com/dewanakl/undangan), [Elix](https://github.com/elix-stack/wedding-invitation-1), [Rainier](https://github.com/Rainier-PS/Invitation-Template), and [Archak](https://github.com/archakNath/wedding-invitation-website).
 
-The preview endpoint rendered a non-blank page with title `TEST TITLE` and visible source-template controls: Google Calendar CTA, Google Maps CTA, two carousel groups with indicators and previous/next controls, two Love Gift info controls, bottom navigation with Home/Mempelai/Tanggal/Galeri, and the original welcome button `openInvitationBtn`. The response contained the expected `#root`, `#home`, `#bride`, `#wedding-date`, `#gallery`, and `#comment` boundaries in the server-rendered HTML.
+## Desktop verification
 
-A subsequent browser view did not retain the same navigation session and opened `about:blank`; this is recorded as a browser-session limitation rather than a passed visual assertion. The remaining visual checks will use fresh navigations and structural/console checks.
+| Mode | Structural and UX observations | Console result |
+|---|---|---|
+| Custom | The CMS-native renderer now appears in a full document with root `style.css` and `script.js`. The hero, top navigation, countdown, story, gallery, event, location, RSVP, gift, footer, guest-name, data-saver, and music controls rendered with sentinel bride/groom values. | No browser console output observed in the fresh baseline check. |
+| DewanaKL | The original welcome/loading/modal flow, `#root`, `#home`, `#bride`, `#wedding-date`, `#gallery`, `#comment`, bottom navigation, two carousel groups, Google Calendar, Google Maps, gift info controls, and RSVP form rendered. AOS and canvas-confetti are declared according to the source loader; the video boundary is absent when no valid video file is configured. | No browser console output observed. |
+| Elix | The original `#hero`, `#home`, `#info`, `#story`, `#gallery`, `#rsvp`, `#gifts`, offcanvas navigation, countdown circles, gallery/lightbox hooks, `#my-form`, `#nama`, `#status`, `#ucapan`, and `#audio-container` rendered. | No browser console output observed. |
+| Rainier | The original `#app`, `#event-title`, `#event-subtitle`, `#event-date`, `#event-time`, `#google-calendar-link`, `#maps-link`, `#schedule-section`, `#quotes-section`, `#rsvp`, footer branding links, and `#audio-control` rendered. The calendar event represented 12:00 in `Asia/Jakarta` as 05:00 UTC. The rendered page had no AOS dependency. | No JavaScript error observed. The earlier non-fatal invalid-end-time warning was removed by only passing an end time when the reception is later on the same date. |
+| Archak | The original `nav`, `.home`, `.timeline`, `#story`, `.gallery`, `#stay`, `#registry`, parting message, RSVP CTA, and footer attribution rendered. Optional parallax hooks remained compatible with absent DOM elements. | No browser console output observed after original `main.js` initialization. |
 
-## Elix
+Each built-in page was non-blank and retained its source-template vocabulary. The checks focused on DOM structure, visible controls, data substitution, responsive-safe names, and lifecycle initialization rather than replacing the template with generic CMS sections.
 
-A fresh browser navigation rendered the original selector vocabulary and CMS data: `#hero`, `#home`, `#info`, `#story`, `#gallery`, `#rsvp`, `#gifts`, offcanvas navigation, countdown circle, original RSVP field IDs `nama`/`status`/`ucapan`, `#my-form`, and `#audio-container`. The page displayed sentinel bride/groom values and event data, and the browser console had no output/errors after initialization.
+## Mobile verification at 390×844
 
-## Rainier
+Automated Chromium generated one PNG and one DOM dump for each mode in `/home/ubuntu/cms-browser-results/`. All five images are non-empty at exactly 390×844, and all five DOM dumps contain the expected source-template markers and sentinel CMS values.
 
-A fresh browser navigation rendered the source template hooks `#app`, `#event-title`, `#google-calendar-link`, `#maps-link`, `#audio-control`, original footer branding/template/repository links, and the adapter-generated CMS RSVP fields. The console had no output/errors after inline event data and the original Rainier adapter initialized. No AOS dependency is loaded by the restored layout.
+| Mode | Mobile assertion | Result |
+|---|---|---|
+| Custom | Full document, styled root shell, sentinel content | Passed |
+| DewanaKL | `#root`, `#wedding-date`, welcome controls, original composition | Passed |
+| Elix | `#hero`, `#my-form`, countdown-circle layout | Passed |
+| Rainier | `#app`, `#audio-control`, dark hero/countdown composition | Passed |
+| Archak | `class="home hz-margin"`, `#registry`, original navigation and CTA | Passed |
 
-## Archak
+Long sentinel names were stress-tested. The fidelity-safe responsive adapters wrap unusually long values in Elix, DewanaKL, and Archak without changing normal source typography or DOM order. Rainier remained stable without an adapter-specific structural change. The first Archak command used an overly exact `class="home"` assertion; the source has `class="home hz-margin"`, and the corrected assertion passed.
 
-A fresh browser navigation rendered the compact original structure: `OUR STORY`, `TRAVEL & STAY`, `PROMISES`, `.home`, timeline ceremony/reception, `#story`, `.gallery`, quote, `#stay`, `#registry`, parting RSVP, and original footer attribution. The server-rendered values used sentinel names, date, venue, maps, bank/e-wallet, and WhatsApp data. The console had no output/errors after the original `main.js` loaded.
+## Functional safety observations
 
-## Mobile viewport
+DewanaKL suppresses the love-story video when the dedicated media field is empty or does not resolve to a valid local video file. Its music control requires both the explicit `enable_music` option and an existing media file. Rainier's audio control is hidden when `music.enabled` is false, and its polling stops when music is disabled. Elix catches autoplay rejection and displays a visible fallback notice. RSVP handlers in Elix and Rainier treat non-2xx responses, malformed JSON, and network failures as user-visible errors rather than uncaught exceptions. Archak's original reveal behavior runs on initial load and its parallax code now tolerates missing optional elements.
 
-Automated Chromium renders completed at `390x844` for DewanaKL, Elix, Rainier, and Archak; all produced non-empty PNGs at the expected viewport size. The Elix screenshot showed the original countdown-circle presentation and no blank screen, but also exposed a horizontal overflow because the long sentinel names exceed the narrow hero width. This is a content-length stress case, but it must be mitigated with a fidelity-safe responsive rule rather than accepting overflow. Rainier rendered the original dark hero, countdown, calendar link, RSVP CTA, and audio control in the narrow viewport with no blank screen.
+## Limitations
 
-The Elix responsive adapter was added after the first mobile screenshot exposed long-name overflow. A new `390x844` render wraps the long sentinel names within the hero instead of extending the horizontal content area; the countdown-circle remains visible.
-
-The DewanaKL mobile screenshot reached the original welcome overlay with `The Wedding Of`, circular cover placeholder, couple names, guest greeting, and `Buka Undangan` control. The long sentinel names still visually exceed the narrow viewport in this original typography shell; this is the same data-length stress case and should receive a source-compatible wrap rule before finalizing.
-
-A second DewanaKL mobile render wraps the long sentinel bride/groom names into multiple lines within the welcome overlay while keeping the original open-invitation flow intact. Archak's mobile render exposed horizontal overflow for long sentinel names in the original `.home` typography; this is the same data-length stress case and requires a small responsive adapter that preserves the original classes/structure.
-
-A second Archak mobile render wraps the long names inside the original `.home h1` while preserving original nav, date/venue block, and RSVP CTA. The Rainier mobile screenshot remains stable with the original dark hero/countdown/CTA/audio-control composition.
+The clean checkout does not provision the sample cover, music, or Open Graph media files, so the browser run intentionally verifies safe absence behavior rather than playback or image delivery from deployment media. A human review with production media and real-content lengths remains advisable before release.

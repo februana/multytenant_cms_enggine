@@ -3,19 +3,40 @@ const EVENT_JSON_URL = null;
 function parseEventDate(dateStr, timeStr, timezone = 'local') {
     if (!dateStr) return null;
 
-    const time = timeStr ? timeStr.replace(' ', '') : '00:00';
+    const time = (timeStr || '00:00').replace(' ', '');
+    const match = `${dateStr}T${time}`.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+    if (!match) return null;
 
-    let date;
-    if (timezone === 'UTC') {
-        date = new Date(`${dateStr}T${time}:00Z`);
-    } else {
-        date = new Date(`${dateStr}T${time}:00`);
-        if (isNaN(date.getTime())) {
-            date = new Date(`${dateStr} ${timeStr || ''}`);
-        }
+    const [, year, month, day, hour, minute, second = '00'] = match;
+    const wallClockAsUtc = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second);
+
+    if (!timezone || timezone === 'local') {
+        const local = new Date(`${dateStr}T${time}:00`);
+        return isNaN(local.getTime()) ? null : local;
     }
 
-    return isNaN(date.getTime()) ? null : date;
+    if (timezone === 'UTC' || timezone === 'Etc/UTC') {
+        return new Date(wallClockAsUtc);
+    }
+
+    try {
+        // Resolve a wall-clock time in an IANA timezone without relying on the
+        // visitor's local timezone. The Intl round-trip also handles DST offsets.
+        const probe = new Date(wallClockAsUtc);
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hourCycle: 'h23'
+        }).formatToParts(probe);
+        const values = Object.fromEntries(parts.filter(({type}) => type !== 'literal').map(({type, value}) => [type, value]));
+        const renderedAsUtc = Date.UTC(+values.year, +values.month - 1, +values.day, +values.hour, +values.minute, +values.second);
+        return new Date(wallClockAsUtc - (renderedAsUtc - wallClockAsUtc));
+    } catch (error) {
+        console.warn(`[timezone] Invalid timezone ${timezone}; using local parsing.`, error);
+        const local = new Date(`${dateStr}T${time}:00`);
+        return isNaN(local.getTime()) ? null : local;
+    }
 }
 
 function normalizeEventDatetime(data) {
@@ -84,17 +105,19 @@ function formatGoogleCalendarDate(data) {
     }
 }
 
-function formatDisplayDate(isoDate, locale = undefined) {
+function formatDisplayDate(isoDate, locale = undefined, timezone = undefined) {
     if (!isoDate) return "";
 
     const date = new Date(isoDate);
     if (isNaN(date.getTime())) return isoDate;
 
-    return date.toLocaleDateString(locale, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+    const options = {year: 'numeric', month: 'long', day: 'numeric'};
+    if (timezone) options.timeZone = timezone;
+    try {
+        return new Intl.DateTimeFormat(locale, options).format(date);
+    } catch (error) {
+        return date.toLocaleDateString(locale, {year: 'numeric', month: 'long', day: 'numeric'});
+    }
 }
 
 function startCountdown(data) {
@@ -174,10 +197,29 @@ function renderRSVPForm(container, rsvp) {
         const message = container.querySelector('.cms-rsvp-message');
         form?.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const response = await fetch(form.action, {method: 'POST', body: new FormData(form)});
-            const result = await response.json();
-            if (message) message.textContent = result.message || '';
-            if (result.success) form.reset();
+            const submit = form.querySelector('button[type="submit"]');
+            if (submit) submit.disabled = true;
+            try {
+                const response = await fetch(form.action, {method: 'POST', body: new FormData(form)});
+                const raw = await response.text();
+                let result;
+                try {
+                    result = raw ? JSON.parse(raw) : {};
+                } catch (parseError) {
+                    throw new Error(`Unexpected server response (${response.status})`);
+                }
+                if (!response.ok || result.success !== true) {
+                    if (message) message.textContent = result.message || `RSVP gagal (${response.status}).`;
+                    return;
+                }
+                if (message) message.textContent = result.message || 'RSVP berhasil dikirim.';
+                form.reset();
+            } catch (error) {
+                console.error('[RSVP] submission failed', error);
+                if (message) message.textContent = 'Tidak dapat mengirim RSVP. Periksa koneksi lalu coba lagi.';
+            } finally {
+                if (submit) submit.disabled = false;
+            }
         });
         return;
     }
@@ -283,7 +325,7 @@ eventDataPromise
         setText("event-subtitle", data.event.subtitle);
         setText("event-description", data.event.description);
 
-        setText("event-date", formatDisplayDate(data.datetime.date));
+        setText("event-date", formatDisplayDate(data.datetime.date, undefined, data.datetime.timezone));
 
         if (data.datetime.allDay) {
             setText("event-time", "All Day");
@@ -552,11 +594,12 @@ eventDataPromise
 
 document.addEventListener('DOMContentLoaded', () => {
     const waitForData = () => {
-        if (!window.__EVENT_DATA__?.music?.enabled) {
+        const data = window.__EVENT_DATA__;
+        if (!data) {
             setTimeout(waitForData, 50);
             return;
         }
-        const data = window.__EVENT_DATA__;
+        if (data.music?.enabled !== true || !data.music.audioUrl) return;
 
         const audio = new Audio();
         audio.src = data.music.audioUrl;
@@ -567,26 +610,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('audio-control');
         const playIcon = document.getElementById('play-icon');
         const pauseIcon = document.getElementById('pause-icon');
+        if (!btn || !playIcon || !pauseIcon) return;
         let isPlaying = false;
 
-        if (btn) {
-            btn.hidden = false;
+        const showPlayState = () => {
+            isPlaying = false;
+            playIcon.style.display = 'block';
+            pauseIcon.style.display = 'none';
+            btn.classList.remove('playing');
+            btn.setAttribute('aria-label', 'Play Music');
+        };
+        const showPauseState = () => {
+            isPlaying = true;
+            playIcon.style.display = 'none';
+            pauseIcon.style.display = 'block';
+            btn.classList.add('playing');
+            btn.setAttribute('aria-label', 'Pause Music');
+        };
 
-            btn.addEventListener('click', () => {
-                if (isPlaying) {
-                    audio.pause();
-                    playIcon.style.display = 'block';
-                    pauseIcon.style.display = 'none';
-                    btn.classList.remove('playing');
-                } else {
-                    audio.play().catch(e => console.log("Audio play blocked", e));
-                    playIcon.style.display = 'none';
-                    pauseIcon.style.display = 'block';
-                    btn.classList.add('playing');
-                }
-                isPlaying = !isPlaying;
-            });
-        }
+        btn.hidden = false;
+        showPlayState();
+        btn.addEventListener('click', async () => {
+            if (isPlaying) {
+                audio.pause();
+                showPlayState();
+                return;
+            }
+            try {
+                await audio.play();
+                showPauseState();
+            } catch (error) {
+                console.info('[audio] playback requires user interaction', error);
+                showPlayState();
+            }
+        });
     };
 
     waitForData();

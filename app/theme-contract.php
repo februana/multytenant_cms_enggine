@@ -24,7 +24,7 @@ if (!function_exists('theme_contract_registry')) {
                 'presentation_capabilities' => [
                     'welcome_overlay', 'loading_screen', 'split_desktop_mobile',
                     'love_story_video', 'gallery_carousel', 'love_gift_cards',
-                    'comment_feed', 'image_modal', 'bottom_navigation'
+                    'comment_feed', 'image_modal', 'bottom_navigation', 'audio_control'
                 ],
                 'sections' => [
                     ['id' => 'home', 'dom_id' => 'home', 'label' => 'Home', 'title' => 'Home', 'embedded_capabilities' => ['wedding', 'calendar', 'guest_name']],
@@ -37,8 +37,8 @@ if (!function_exists('theme_contract_registry')) {
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
                 'assets' => [
-                    'bootstrap@5.3.8', 'fontawesome@7.1.0', 'guest.css', 'guest.js',
-                    'common.css', 'animation.css', 'theme-media'
+                    'bootstrap@5.3.8', 'fontawesome@7.1.0', 'aos@2.3.4', 'canvas-confetti@1.9.3',
+                    'guest.css', 'guest.js', 'common.css', 'animation.css', 'theme-media'
                 ],
             ],
             'elix' => [

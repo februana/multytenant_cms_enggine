@@ -34,3 +34,16 @@ Elix's contract must use the original `#hero`, `#home`, `#info`, `#story`, `#gal
 ## Difference classification
 
 The following are classified as **A/B** only when they inject CMS data or connect backend services while preserving the original selector and structure: dynamic names, dates, venue, media, guest query, CMS RSVP endpoint, CMS gallery data, CMS music source, SEO, and safe media URLs. Replacing original IDs, wrappers, section composition, order, fonts, animation hooks, dependency versions, or JavaScript selectors without a runtime requirement is classified as **D** and must be corrected.
+
+## Final correction audit addendum
+
+Source repositories rechecked: DewanaKL (`https://github.com/dewanakl/undangan`), Elix (`https://github.com/elix-stack/wedding-invitation-1`), Rainier (`https://github.com/Rainier-PS/Invitation-Template`), and Archak (`https://github.com/archakNath/wedding-invitation-website`).
+
+New issues confirmed against the pasted acceptance criteria:
+
+1. DewanaKL source loader includes AOS 2.3.4, canvas-confetti 1.9.3, and additional fonts. The current layout already contains `data-aos` hooks and `initAOS()` but did not load AOS CSS/JS or confetti. The correction must restore these dependencies for DewanaKL only; Rainier must remain AOS-free.
+2. DewanaKL was using `media.background_hero` as the `data-src` for the original `video-love-stroy` wrapper. The correction must use a dedicated `media.love_story_video` reference and omit the video boundary when the reference is absent or is not a valid video file/URL.
+3. Archak original `main.js` directly dereferenced `home-img-lg`, `parallax1`, and `parallax2`, so disabling optional sections could cause null exceptions. The smallest safe correction is null guards plus an initial `reveal()` invocation on load/DOMContentLoaded.
+4. Rainier adapter parsed non-UTC times in the visitor's local timezone and formatted display dates without the configured IANA timezone. It must resolve wall-clock values using the CMS-configured timezone and keep calendar/countdown/display consistent.
+5. Rainier CMS RSVP and Elix inline RSVP assumed a successful JSON response. Both need non-2xx, malformed-response, validation-error, server-error, and network-error handling.
+6. Rainier audio polling could loop indefinitely when music was disabled, and Elix autoplay failure had no visible graceful fallback. The correction must respect explicit music enablement and keep the page functional when autoplay is blocked.

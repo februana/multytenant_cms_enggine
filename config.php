@@ -135,8 +135,9 @@ function config_defaults(): array {
             'groom_photo' => '',
             'couple_photo' => '',
             'music' => 'music/lagu.mp3',
-            'background_hero' => '',
-            'background_sections' => []
+                'background_hero' => '',
+                'love_story_video' => '',
+                'background_sections' => []
         ],
         'gallery' => [
             'cover' => '',
@@ -340,6 +341,7 @@ function config_defaults(): array {
                 'show_bismillah' => true,
                 'enable_confetti' => true,
                 'enable_mouse_animation' => true,
+                'enable_music' => true,
                 'welcome_note' => ''
             ],
             'elix' => [
@@ -529,6 +531,12 @@ function theme_registry(): array {
                     'type' => 'boolean',
                     'label' => 'Animasi Kursor Mouse',
                     'description' => 'Aktifkan animasi jejak kursor mouse.',
+                    'default' => true
+                ],
+                'enable_music' => [
+                    'type' => 'boolean',
+                    'label' => 'Musik Latar',
+                    'description' => 'Tampilkan kontrol dan audio musik latar pada template asli DewanaKL.',
                     'default' => true
                 ],
                 'welcome_note' => [

@@ -13,12 +13,14 @@ $quoteText = escape_html(strip_tags((string)($config['wedding']['quote'] ?? ''))
 $closingText = escape_html(strip_tags((string)($config['wedding']['closing_text'] ?? '')));
 $akadDate = (string)($config['schedule']['akad_date'] ?? '');
 $akadTime = (string)($config['schedule']['akad_time'] ?? '');
+$receptionDate = (string)($config['schedule']['reception_date'] ?? '');
 $receptionTime = (string)($config['schedule']['reception_time'] ?? '');
 $venue = (string)($config['location']['venue'] ?? '');
 $address = (string)($config['location']['address'] ?? '');
 $mapsUrl = (string)($config['location']['maps_url'] ?? '');
 $coverPath = (string)($config['media']['cover'] ?? '');
 $musicPath = (string)($config['media']['music'] ?? '');
+$eventTimezone = trim((string)($config['schedule']['timezone'] ?? ''));
 $csrf = function_exists('get_csrf_token') ? get_csrf_token() : '';
 $calendarLink = build_google_calendar_link($config);
 $stories = $config['love_story']['items'] ?? [];
@@ -33,9 +35,10 @@ if (!$quotes && $quoteText !== '') $quotes[] = ['text' => $quoteText, 'author' =
 $schedule = [];
 if ($akadDate !== '' || $akadTime !== '') $schedule[] = ['time' => trim($akadTime), 'label' => 'Akad Nikah — ' . trim($venue)];
 if ($receptionTime !== '') $schedule[] = ['time' => trim($receptionTime), 'label' => 'Resepsi — ' . trim($venue)];
+$eventEndTime = ($receptionDate !== '' && $receptionDate === $akadDate && $receptionTime !== '' && $receptionTime > $akadTime) ? $receptionTime : '';
 $eventData = [
     'event' => ['title' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'subtitle' => html_entity_decode($openingText, ENT_QUOTES, 'UTF-8'), 'description' => html_entity_decode($description, ENT_QUOTES, 'UTF-8')],
-    'datetime' => ['date' => $akadDate, 'startTime' => $akadTime, 'endTime' => $receptionTime, 'timezone' => $config['schedule']['timezone'] ?? 'Asia/Jakarta', 'allDay' => false],
+    'datetime' => ['date' => $akadDate, 'startTime' => $akadTime, 'endTime' => $eventEndTime, 'timezone' => $eventTimezone, 'allDay' => false],
     'location' => ['name' => $venue, 'address' => $address, 'mapsLink' => $mapsUrl],
     'calendar' => ['enabled' => true, 'providers' => ['google' => true]],
     'schedule' => $schedule,

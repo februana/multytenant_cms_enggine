@@ -64,7 +64,19 @@ $coverPath = $config['media']['cover'] ?? 'uploads/cover/cover.jpg';
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
 $groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
 $couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
-$musicSrc = $config['media']['music'] ?? 'music/lagu.mp3';
+$musicSrc = trim((string)($config['media']['music'] ?? ''));
+$videoPath = trim((string)($config['media']['love_story_video'] ?? ''));
+$mediaReferenceAvailable = static function (string $path): bool {
+    if ($path === '') return false;
+    if (filter_var($path, FILTER_VALIDATE_URL)) {
+        $scheme = strtolower((string)(parse_url($path, PHP_URL_SCHEME) ?? ''));
+        return in_array($scheme, ['http', 'https'], true);
+    }
+    $normalized = function_exists('normalize_media_relative_path') ? normalize_media_relative_path($path) : ltrim(str_replace('\\', '/', $path), '/');
+    return $normalized !== null && is_file(ROOT_DIR . '/' . $normalized);
+};
+$videoExtension = strtolower(pathinfo((string)(parse_url($videoPath, PHP_URL_PATH) ?? $videoPath), PATHINFO_EXTENSION));
+$videoEnabled = in_array($videoExtension, ['mp4', 'webm', 'ogg'], true) && $mediaReferenceAvailable($videoPath);
 
 // WhatsApp
 $whatsappLink = build_whatsapp_link($config);
@@ -72,7 +84,7 @@ $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $config['site']['title'] ?? 'Undangan');
 
 // Section visibility helpers
-$isMusicEnabled = trim((string)$musicSrc) !== '';
+$isMusicEnabled = (bool)(function_exists('get_theme_option') ? get_theme_option($config, 'dewankl', 'enable_music', true) : ($config['theme_options']['dewankl']['enable_music'] ?? true)) && $mediaReferenceAvailable($musicSrc);
 $isGalleryEnabled = theme_section_enabled($config, 'dewankl', 'gallery');
 $isStoryEnabled = theme_section_enabled($config, 'dewankl', 'love_story');
 $isRsvpEnabled = theme_section_enabled($config, 'dewankl', 'comment');
@@ -120,6 +132,11 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
     
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sacramento&family=Noto+Naskh+Arabic&display=swap">
+
+    <!-- Original DewanaKL animation/media dependencies; loaded only for this preset. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <?php if ($enableConfetti === 'true'): ?><script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js"></script><?php endif; ?>
     
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
@@ -269,7 +286,11 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 <section class="bg-light-dark pt-2 pb-4">
                     <div class="container"><div class="bg-theme-auto rounded-5 shadow p-3">
                         <h2 class="font-esthetic text-center py-2 mb-2" style="font-size: 2.125rem;">Kisah Cinta</h2>
-                        <div id="video-love-stroy" class="position-relative rounded-4 mb-2 pb-0" data-src="<?php echo escape_html(public_path($config['media']['background_hero'] ?? '')); ?>" data-vid-class="w-100 rounded-4 shadow-sm m-0 p-0"></div>
+                        <?php if ($videoEnabled): ?>
+                        <div id="video-love-stroy" class="position-relative rounded-4 mb-2 pb-0" data-src="<?php echo escape_html(filter_var($videoPath, FILTER_VALIDATE_URL) ? $videoPath : public_path($videoPath)); ?>" data-vid-class="w-100 rounded-4 shadow-sm m-0 p-0">
+                            <video class="w-100 rounded-4 shadow-sm m-0 p-0" src="<?php echo escape_html(filter_var($videoPath, FILTER_VALIDATE_URL) ? $videoPath : public_path($videoPath)); ?>" controls playsinline preload="metadata" muted></video>
+                        </div>
+                        <?php endif; ?>
                         <div class="overflow-y-scroll overflow-x-hidden p-2 with-scrollbar" style="height: 15rem;">
                             <?php foreach (array_values((array)$config['love_story']['items'] ?? []) as $index => $story): ?>
                             <div class="row"><div class="col-auto position-relative"><p class="position-relative d-flex justify-content-center align-items-center bg-theme-auto border border-secondary border-2 opacity-100 rounded-circle m-0 p-0 z-1" style="width: 2rem; height: 2rem;"><?php echo $index + 1; ?></p><hr class="position-absolute top-0 start-50 translate-middle-x border border-secondary h-100 z-0 opacity-100 m-0 rounded-4 shadow-none"></div><div class="col mt-1 mb-3 ps-0"><p class="fw-bold mb-2"><?php echo escape_html($story['title'] ?? 'Cerita Kami'); ?></p><p class="small mb-0"><?php echo nl2br(escape_html($story['description'] ?? '')); ?></p></div></div>
@@ -280,6 +301,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                 <?php endif; ?>
 
                 <!-- Wedding Date / Countdown Section -->
+                <?php if (theme_section_enabled($config, 'dewankl', 'wedding_date')): ?>
                 <section class="bg-light-dark py-5" id="wedding-date">
                     <div class="container">
                         <div class="border rounded-5 shadow p-3">
@@ -343,6 +365,7 @@ $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_op
                         </div>
                     </div>
                 </section>
+                <?php endif; ?>
                 
                 <!-- Gallery Section -->
                 <?php if ($isGalleryEnabled): ?>

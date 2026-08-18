@@ -103,22 +103,57 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <?php endif; ?>
 
     <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?>
-    <section id="rsvp" class="rsvp"><div class="container"><div class="row justify-content-center"><div class="col-md-8 col-10 text-center"><h2>Konfirmasi Kehadiran</h2><p>Isi form di bawah ini untuk melakukan konfirmasi kehadiran.</p></div><form class="row row-cols-md-auto g-3 align-items-center justify-content-center" method="POST" action="<?php echo escape_html(public_path('save.php')); ?>" id="my-form"><input type="hidden" name="csrf_token" value="<?php echo escape_html($csrf); ?>"><input type="text" name="website" tabindex="-1" autocomplete="off" style="display:none"><div class="col-12"><div class="mb-3"><label for="nama" class="form-label">Nama</label><input type="text" class="form-control" id="nama" name="nama" maxlength="80"></div></div><div class="col-12"><div class="mb-3"><label for="jumlah" class="form-label">Jumlah keluarga hadir</label><input type="number" class="form-control" id="jumlah" name="jumlah" min="1" max="5" value="1"></div></div><div class="col-12"><div class="mb-3"><label for="status" class="form-label">Konfirmasi</label><select name="status" id="status" class="form-select"><option selected>Pilih salah satu</option><option value="Hadir">Hadir</option><option value="Tidak Hadir">Tidak Hadir</option></select></div></div><div class="col-12"><div class="mb-3"><label for="ucapan" class="form-label">Ucapan</label><textarea class="form-control" id="ucapan" name="ucapan" maxlength="500"></textarea></div></div><div class="col-12" style="margin-top:30px"><button class="btn btn-primary">Kirim</button></div></form></div></div></section>
+    <section id="rsvp" class="rsvp"><div class="container"><div class="row justify-content-center"><div class="col-md-8 col-10 text-center"><h2>Konfirmasi Kehadiran</h2><p>Isi form di bawah ini untuk melakukan konfirmasi kehadiran.</p></div><form class="row row-cols-md-auto g-3 align-items-center justify-content-center" method="POST" action="<?php echo escape_html(public_path('save.php')); ?>" id="my-form"><input type="hidden" name="csrf_token" value="<?php echo escape_html($csrf); ?>"><input type="text" name="website" tabindex="-1" autocomplete="off" style="display:none"><div class="col-12"><div class="mb-3"><label for="nama" class="form-label">Nama</label><input type="text" class="form-control" id="nama" name="nama" maxlength="80"></div></div><div class="col-12"><div class="mb-3"><label for="jumlah" class="form-label">Jumlah keluarga hadir</label><input type="number" class="form-control" id="jumlah" name="jumlah" min="1" max="5" value="1"></div></div><div class="col-12"><div class="mb-3"><label for="status" class="form-label">Konfirmasi</label><select name="status" id="status" class="form-select"><option selected>Pilih salah satu</option><option value="Hadir">Hadir</option><option value="Tidak Hadir">Tidak Hadir</option></select></div></div><div class="col-12"><div class="mb-3"><label for="ucapan" class="form-label">Ucapan</label><textarea class="form-control" id="ucapan" name="ucapan" maxlength="500"></textarea></div></div><div class="col-12" style="margin-top:30px"><button class="btn btn-primary" type="submit">Kirim</button></div></form><p id="rsvp-message" class="text-center mt-3" role="status" aria-live="polite"></p></div></div></section>
     <?php endif; ?>
 
     <?php if (theme_section_enabled($config, $presetKey, 'gifts')): ?><section id="gifts" class="gifts"><div class="container"><div class="row justify-content-center"><div class="col-md-8 col-10 text-center"><span>ungkapan tanda kasih</span><h2>Kirim Hadiah</h2><p>Doa restu Anda merupakan hadiah terindah bagi kami.</p></div></div><div class="row justify-content-center text-center"><div class="col-md-6"><ul class="list-group"><li class="list-group-item"><div class="fw-bold"><?php echo escape_html($config['gift']['bank'] ?? ''); ?></div><?php echo escape_html($config['gift']['account_number'] ?? ''); ?> - <?php echo $brideName; ?></li><?php if (!empty($config['gift']['qris_image'])): ?><li class="list-group-item"><div class="fw-bold">QRIS</div><img src="<?php echo escape_html(public_path($config['gift']['qris_image'])); ?>" alt="QRIS" class="img-fluid" width="180"></li><?php endif; ?></ul></div></div></div></section><?php endif; ?>
 
     <footer><div class="container"><div class="row"><div class="col text-center"><small class="block">&copy;<?php echo date('Y'); ?> <?php echo $brideName; ?> &amp; <?php echo $groomName; ?>. All Rights Reserved.</small><small class="block">Design by: <a href="https://github.com/elix-stack/wedding-invitation-1">Elix</a></small><ul class="mt-3"><li><a href="#"><i class="bi bi-instagram"></i></a></li><li><a href="#"><i class="bi bi-youtube"></i></a></li><li><a href="#"><i class="bi bi-twitter"></i></a></li><li><a href="#"><i class="bi bi-facebook"></i></a></li><li><a href="#"><i class="bi bi-tiktok"></i></a></li></ul></div></div></div></footer>
-    <?php if (!empty($musicSrc)): ?><div id="audio-container"><audio id="backSong" autoplay loop><source src="<?php echo escape_html(public_path($musicSrc)); ?>" type="audio/mp3"></audio><div class="audio-icon-wrapper" style="display:none;"><i class="bi bi-disc"></i></div></div><?php endif; ?>
+    <?php if (!empty($musicSrc)): ?><div id="audio-container"><audio id="backSong" autoplay loop preload="metadata" aria-label="Background music"><source src="<?php echo escape_html(public_path($musicSrc)); ?>" type="audio/mp3"></audio><div class="audio-icon-wrapper" style="display:none;" role="status" aria-live="polite"><i class="bi bi-disc"></i><span class="visually-hidden">Klik Lihat Undangan untuk memutar musik</span></div></div><?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bs5-lightbox@1.8.5/dist/index.bundle.min.js"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         if (window.simplyCountdown && document.querySelector('#countdown')) simplyCountdown('#countdown', {year:<?php echo (int)date('Y', $calendarTarget); ?>,month:<?php echo (int)date('n', $calendarTarget); ?>,day:<?php echo (int)date('j', $calendarTarget); ?>,hours:<?php echo (int)date('G', $calendarTarget); ?>,minutes:<?php echo (int)date('i', $calendarTarget); ?>,seconds:<?php echo (int)date('s', $calendarTarget); ?>,words:{days:{root:'day',lambda:(r,n)=>n>1?r+'s':r},hours:{root:'hour',lambda:(r,n)=>n>1?r+'s':r},minutes:{root:'minute',lambda:(r,n)=>n>1?r+'s':r},seconds:{root:'second',lambda:(r,n)=>n>1?r+'s':r}},plural:true,inline:false,refresh:1000,sectionClass:'simply-section',amountClass:'simply-amount',wordClass:'simply-word',zeroPad:false});
-        const form=document.getElementById('my-form'); if(form) form.addEventListener('submit',async function(event){event.preventDefault();const response=await fetch(form.action,{method:'POST',body:new FormData(form)});const result=await response.json();alert(result.message||'Konfirmasi selesai.');if(result.success)form.reset();});
-        const guest=new URLSearchParams(window.location.search).get('n')||new URLSearchParams(window.location.search).get('to')||'';const nameInput=document.getElementById('nama');if(nameInput&&guest)nameInput.value=guest;
+        const form = document.getElementById('my-form');
+        const feedback = document.getElementById('rsvp-message');
+        if (form) form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          const submit = form.querySelector('button[type="submit"]');
+          if (submit) submit.disabled = true;
+          if (feedback) feedback.textContent = 'Mengirim...';
+          try {
+            const response = await fetch(form.action, {method: 'POST', body: new FormData(form)});
+            const raw = await response.text();
+            let result;
+            try { result = raw ? JSON.parse(raw) : {}; } catch (parseError) { throw new Error('Respons server bukan JSON yang valid.'); }
+            if (!response.ok || result.success !== true) {
+              if (feedback) { feedback.textContent = result.message || `RSVP gagal (${response.status}).`; feedback.className = 'text-center mt-3 text-danger'; }
+              return;
+            }
+            if (feedback) { feedback.textContent = result.message || 'RSVP berhasil dikirim.'; feedback.className = 'text-center mt-3 text-success'; }
+            form.reset();
+          } catch (error) {
+            console.error('[Elix RSVP] submission failed', error);
+            if (feedback) { feedback.textContent = 'Tidak dapat mengirim RSVP. Periksa koneksi lalu coba lagi.'; feedback.className = 'text-center mt-3 text-danger'; }
+          } finally {
+            if (submit) submit.disabled = false;
+          }
+        });
+        const guest = new URLSearchParams(window.location.search).get('n') || new URLSearchParams(window.location.search).get('to') || '';
+        const nameInput = document.getElementById('nama');
+        if (nameInput && guest) nameInput.value = guest;
       });
-      function enableScroll(){document.documentElement.style.scrollBehavior='smooth';const audio=document.getElementById('backSong');if(audio)audio.play().catch(()=>{});}
+      function enableScroll(){
+        document.documentElement.style.scrollBehavior='smooth';
+        const audio=document.getElementById('backSong');
+        if(!audio) return;
+        const playback=audio.play();
+        if(playback && typeof playback.catch === 'function') playback.catch(function(){
+          const notice=document.querySelector('.audio-icon-wrapper');
+          if(notice){ notice.style.display='block'; notice.title='Klik kembali untuk memutar musik'; }
+        });
+      }
     </script>
   </body>
 </html>
