@@ -24,7 +24,7 @@ function resolve_theme_preset_key(array $config): string {
     }
 
     $presetKey = trim((string)($config['theme']['theme_preset'] ?? ''));
-    $allowed = ['dewankl', 'elix', 'rainier', 'archak'];
+    $allowed = ['dewankl', 'elix', 'rainier', 'archak', 'parang'];
     if (in_array($presetKey, $allowed, true)) {
         return $presetKey;
     }

@@ -94,6 +94,35 @@ if (!function_exists('theme_contract_registry')) {
                 'admin_capabilities' => ['wedding', 'schedule', 'story', 'rsvp', 'music', 'maps', 'media', 'seo', 'whatsapp'],
                 'assets' => ['cormorant-garamond-outfit', 'invite.css', 'invite-1.js', 'tally-widget-optional'],
             ],
+            'parang' => [
+                'id' => 'parang',
+                'label' => 'Parang',
+                'source' => 'User-provided HTML design reference',
+                'source_revision' => 'attachment:pasted_content_15',
+                'data_capabilities' => [
+                    'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
+                    'gift', 'maps', 'rsvp', 'story', 'guest_name', 'media', 'seo',
+                    'whatsapp', 'calendar'
+                ],
+                'presentation_capabilities' => [
+                    'desktop_sidebar', 'mobile_app_bar', 'mobile_bottom_navigation',
+                    'parang_background', 'gunungan_ornaments', 'couple_cards',
+                    'event_cards', 'gallery_grid', 'digital_gift_cards'
+                ],
+                'sections' => [
+                    ['id' => 'hero', 'dom_id' => 'beranda', 'label' => 'Hero', 'title' => 'Beranda', 'embedded_capabilities' => ['wedding', 'guest_name', 'countdown']],
+                    ['id' => 'couple', 'dom_id' => 'mempelai', 'label' => 'Mempelai', 'title' => 'Mempelai', 'embedded_capabilities' => ['parents']],
+                    ['id' => 'event', 'dom_id' => 'acara', 'label' => 'Acara', 'title' => 'Acara', 'embedded_capabilities' => ['schedule', 'maps']],
+                    ['id' => 'story', 'dom_id' => 'cerita', 'label' => 'Cerita', 'title' => 'Cerita', 'embedded_capabilities' => ['story']],
+                    ['id' => 'gallery', 'dom_id' => 'galeri', 'label' => 'Galeri', 'title' => 'Galeri', 'embedded_capabilities' => ['gallery']],
+                    ['id' => 'location', 'dom_id' => 'lokasi', 'label' => 'Lokasi', 'title' => 'Lokasi', 'embedded_capabilities' => ['maps']],
+                    ['id' => 'gift', 'dom_id' => 'hadiah', 'label' => 'Hadiah', 'title' => 'Hadiah', 'embedded_capabilities' => ['gift']],
+                    ['id' => 'rsvp', 'dom_id' => 'ucapan', 'label' => 'Ucapan & RSVP', 'title' => 'Ucapan & Konfirmasi', 'embedded_capabilities' => ['rsvp', 'messages']],
+                    ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
+                ],
+                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'media', 'seo', 'whatsapp'],
+                'assets' => ['libre-caslon-text-manrope', 'material-symbols-outlined', 'style.css', 'script.js', 'theme-media'],
+            ],
             'archak' => [
                 'id' => 'archak',
                 'label' => 'Archak',

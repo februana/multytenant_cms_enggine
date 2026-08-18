@@ -14,6 +14,7 @@ $expected = [
     'elix' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'countdown_scale'],
     'rainier' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'glass_opacity'],
     'archak' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_title_scale'],
+    'parang' => ['accent_color', 'heading_font', 'body_font', 'hero_background'],
 ];
 
 foreach ($expected as $preset => $keys) {
@@ -33,10 +34,11 @@ visual_assert($legacyValues['glass_opacity'] === '0.67', 'Rainier legacy glass o
 $stored = $base;
 $stored['theme']['mode'] = 'preset';
 $stored['theme']['theme_preset'] = 'elix';
-$stored['theme_visuals'] = [
+$stored['theme_visuals'] = array_replace($base['theme_visuals'] ?? [], [
     'elix' => ['accent_color' => '#123456', 'hero_background' => 'uploads/background/hero.jpg', 'countdown_scale' => '0.66'],
     'rainier' => ['accent_color' => '#654321'],
-];
+]);
+$stored['theme_custom'] = theme_custom_config($stored);
 $elixValues = theme_visual_values_for_config($stored, 'elix');
 $rainierValues = theme_visual_values_for_config($stored, 'rainier');
 visual_assert($elixValues['accent_color'] === '#123456', 'Elix visual override persists');
@@ -47,7 +49,7 @@ visual_assert($rainierValues['accent_color'] !== $elixValues['accent_color'], 'V
 
 $switchBase = $stored;
 $switchBase['theme_visuals']['archak'] = ['accent_color' => '#abcdef', 'hero_title_scale' => '1.05'];
-foreach (['custom', 'dewankl', 'elix', 'rainier', 'archak', 'custom'] as $switchPreset) {
+foreach (['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'] as $switchPreset) {
     $switched = switch_active_theme_preset_config($switchBase, $switchPreset);
     visual_assert(is_array($switched), "switching to {$switchPreset} succeeds");
     visual_assert(($switched['theme_visuals']['elix']['accent_color'] ?? '') === '#123456', "switching to {$switchPreset} preserves Elix visuals");
@@ -140,7 +142,7 @@ visual_assert(is_string($appSource) && !str_contains($appSource, 'innerHTML'), '
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'title="Preview tema undangan"'), 'Theme preview iframe has an accessible title');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'aria-label="Ukuran preview"'), 'Preview viewport controls have an accessible group label');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');
-visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak'], 'Preset selector exposes only renderer-backed built-ins');
+visual_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak', 'parang'], 'Preset selector exposes only renderer-backed built-ins');
 $mediaProbeName = 'uploads/background/visual-contract-probe-' . getmypid() . '.png';
 $mediaProbePath = ROOT_DIR . '/' . $mediaProbeName;
 file_put_contents($mediaProbePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='));
@@ -149,7 +151,7 @@ visual_assert(!theme_visual_image_reference_is_canonical('uploads/background/not
 visual_assert(theme_visual_image_reference_is_canonical('https://cdn.example.test/hero.jpg'), 'HTTPS image URL remains accepted');
 unlink($mediaProbePath);
 
-foreach (['dewankl', 'rainier', 'archak'] as $preset) {
+foreach (['dewankl', 'rainier', 'archak', 'parang'] as $preset) {
     $probe = $stored;
     $probe['theme']['mode'] = 'preset';
     $probe['theme']['theme_preset'] = $preset;
@@ -185,6 +187,14 @@ visual_assert(str_contains($customAdapter, 'custom.jpg'), 'Custom background rea
 visual_assert(str_contains($customAdapter, '--hero-title-scale:1.1'), 'Custom title scale reaches the production adapter');
 visual_assert(str_contains($customAdapter, '--font-heading:Georgia, serif'), 'Custom heading font reaches the production adapter');
 visual_assert(str_contains($customRender, 'id="hero"') || str_contains($customRender, 'theme-section hero'), 'Custom renderer preserves the native hero markup');
+$parangConfig = $base;
+$parangConfig['theme']['mode'] = 'preset';
+$parangConfig['theme']['theme_preset'] = 'parang';
+$parangValues = theme_visual_values_for_config($parangConfig, 'parang');
+visual_assert(($parangValues['hero_background'] ?? '') !== '', 'Parang resolves the supplied source background by default');
+$parangHtml = render_theme_layout($parangConfig, array_replace($shared, ['presetKey' => 'parang']));
+visual_assert(str_contains($parangHtml, 'id="cms-parang-root"'), 'Parang render preserves its native root');
+visual_assert(str_contains($parangHtml, 'aida/AP1WRLtUTK8DchC8OhVkZ4rCvN3p1neL5TYLWUZfyPUZmVK_VpxfkVj3pTmeYE'), 'Parang render retains the supplied parang background asset');
 
 echo "PASS: visual contract smoke test\n";
 ob_end_flush();

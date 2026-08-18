@@ -366,13 +366,15 @@ function config_defaults(): array {
                 'divider_style' => 'ornament',
                 'header_badge_image' => '',
                 'archak_welcome_msg' => ''
-            ]
+            ],
+            'parang' => []
         ],
         'theme_visuals' => [
             'dewankl' => [],
             'elix' => [],
             'rainier' => [],
             'archak' => [],
+            'parang' => [],
             'custom' => []
         ],
         'custom_css' => ''
@@ -704,6 +706,47 @@ function theme_registry(): array {
                 'glass_opacity' => ['type' => 'range', 'label' => 'Opasitas Panel Kaca', 'description' => 'Transparansi panel kaca Rainier.', 'default' => '0.40', 'min' => '0.20', 'max' => '0.90', 'step' => '0.05'],
             ]
         ],
+        'parang' => [
+            'id' => 'parang',
+            'name' => 'Parang',
+            'label' => 'Parang',
+            'description' => 'Nuansa Manten Jawi dengan pola parang, ornamen gunungan, panel cream-gold, dan navigasi editorial responsif.',
+            'version' => '1.0.0',
+            'author' => 'Parang adaptation',
+            'source' => 'User-provided HTML design reference',
+            'license' => 'User-provided design reference; assets retained as supplied',
+            'category' => 'javanese-heritage',
+            'values' => [
+                'primary_color' => '#221002',
+                'secondary_color' => '#7b5902',
+                'accent_color' => '#C49A45',
+                'background_color' => '#fff8f2',
+                'paper_color' => '#F0E3CE',
+                'muted_color' => '#4f453e',
+                'text_color' => '#211b0e',
+                'link_color' => '#7b5902',
+                'button_style' => 'square',
+                'border_radius' => '12px',
+                'shadow' => '0 24px 48px rgba(34,16,2,.20)',
+                'container_width' => '1200px',
+                'section_spacing' => '80px',
+                'heading_font' => 'Libre Caslon Text, serif',
+                'body_font' => 'Manrope, sans-serif',
+                'font_size_base' => '16px'
+            ],
+            'schema' => [],
+            'capabilities' => [
+                'content' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Aksen Emas', 'description' => 'Aksen emas untuk border, tombol, dan ornamen Parang.', 'default' => '#C49A45'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Heading', 'description' => 'Font editorial Libre Caslon Text untuk identitas Manten Jawi.', 'default' => 'Libre Caslon Text, serif', 'options' => ['Libre Caslon Text, serif' => 'Libre Caslon Text', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font Manrope untuk isi, navigasi, form, dan detail acara.', 'default' => 'Manrope, sans-serif', 'options' => ['Manrope, sans-serif' => 'Manrope', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Pola Parang', 'description' => 'Asset background parang yang digunakan desain terlampir.', 'default' => 'https://lh3.googleusercontent.com/aida/AP1WRLtUTK8DchC8OhVkZ4rCvN3p1neL5TYLWUZfyPUZmVK_VpxfkVj3pTmeYE-Ud7yhlmzGCFUfWoWIow5fmTRIcuq8H4tSay9gpj4M4dCPKz_utQcbS51d4MlWZuPXQhxKwcrb_GkG6_YSBPDtftlFMCQ0ZnuhaG1qxQ39bK5EorAXpZkuNiB3bm6-wzUEg9WxojoyB-shrlMFKEI6otgf15IsGU-kKKCQUgjyrT7iztRbf2el57Z0g_UTjQeu']
+            ]
+        ],
         'archak' => [
             'id' => 'archak',
             'name' => 'Archak',
@@ -786,7 +829,7 @@ function theme_registry(): array {
 }
 
 function theme_builtin_preset_keys(): array {
-    return ['dewankl', 'elix', 'rainier', 'archak'];
+    return ['dewankl', 'elix', 'rainier', 'archak', 'parang'];
 }
 
 function theme_presets(): array {
@@ -913,6 +956,12 @@ function load_config(): array {
     ensure_upload_dirs();
     $defaults = config_defaults();
     if (!is_readable(CONFIG_FILE)) {
+        if (function_exists('theme_contract_registry')) {
+            $defaults['theme_sections'] = [];
+            foreach (array_keys(theme_contract_registry()) as $presetKey) {
+                $defaults['theme_sections'][$presetKey] = theme_contract_default_sections($presetKey);
+            }
+        }
         save_config($defaults);
         return $defaults;
     }

@@ -33,12 +33,12 @@ $shared = [
 ];
 
 $config = load_config();
-foreach (['dewankl', 'elix', 'rainier', 'archak', 'custom'] as $preset) {
+foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'] as $preset) {
     $config['theme_visuals'][$preset]['hero_background'] = $probePath;
 }
 media_e2e_assert(save_config($config), 'Visual media references save through production config persistence');
 $reloaded = load_config();
-foreach (['dewankl', 'elix', 'rainier', 'archak', 'custom'] as $preset) {
+foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'custom'] as $preset) {
     media_e2e_assert(($reloaded['theme_visuals'][$preset]['hero_background'] ?? '') === $probePath, "{$preset} media reference survives reload");
     if ($preset === 'custom') {
         media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.png'), 'Custom production adapter includes persisted media URL');
@@ -58,12 +58,13 @@ reset_theme_visual_overrides($resetConfig, 'rainier');
 media_e2e_assert(save_config($resetConfig), 'Reset Rainier persists through production config path');
 $afterReset = load_config();
 media_e2e_assert(($afterReset['theme_visuals']['rainier'] ?? []) === [], 'Reset clears Rainier visual overrides');
-foreach (['dewankl', 'elix', 'archak', 'custom'] as $preset) {
+foreach (['dewankl', 'elix', 'archak', 'parang', 'custom'] as $preset) {
     media_e2e_assert(($afterReset['theme_visuals'][$preset]['hero_background'] ?? '') === $probePath, "Reset Rainier preserves {$preset} media reference");
 }
 $resetConfig['theme_visuals']['elix'] = [];
 $resetConfig['theme_visuals']['dewankl'] = [];
 $resetConfig['theme_visuals']['archak'] = [];
+$resetConfig['theme_visuals']['parang'] = [];
 $resetConfig['theme_visuals']['custom'] = [];
 save_config($resetConfig);
 $final = load_config();

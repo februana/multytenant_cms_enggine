@@ -27,6 +27,7 @@ $markers = [
     'elix' => ['id="hero"', 'offcanvas'],
     'rainier' => ['id="app"', 'id="event-title"', 'id="schedule-section"'],
     'archak' => ['id="story"', 'id="registry"', 'id="home-img-lg"'],
+    'parang' => ['id="cms-parang-root"', 'id="beranda"', 'parang-bg'],
 ];
 
 foreach ($markers as $preset => $required) {

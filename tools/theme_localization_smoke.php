@@ -35,6 +35,10 @@ $expected = [
         'KISAH KAMI', 'PERJALANAN &amp; TEMPAT MENGINAP', 'JANJI', 'Kita Akan Menikah',
         'Merayakan Cinta Kami', 'Perjalanan &amp; Tempat Menginap', 'Sampai Jumpa!', 'Hubungi Kami',
     ],
+    'themes/parang/layout.php' => [
+        'Kepada Yth.', 'Pernikahan Kami', 'Mempelai', 'Acara Pernikahan', 'Cerita Kami',
+        'Galeri', 'Lokasi Acara', 'Hadiah Pernikahan', 'Kirim Konfirmasi Kehadiran', 'Manten Jawi',
+    ],
     'app/theme-renderer.php' => [
         'Konfirmasi Kehadiran', 'Kirim Konfirmasi Kehadiran', 'Hemat data: matikan musik otomatis',
     ],
@@ -65,6 +69,7 @@ $activeGuestSources = [
     $read('themes/rainier/layout.php'),
     $read('themes/rainier/original/invite-1-adapter.js'),
     $read('themes/archak/layout.php'),
+    $read('themes/parang/layout.php'),
     $read('app/theme-renderer.php'),
 ];
 foreach ($forbiddenVisibleEnglish as $needle) {
