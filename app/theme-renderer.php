@@ -33,30 +33,32 @@ function resolve_theme_preset_key(array $config): string {
 }
 
 function theme_capabilities_for(string $presetKey): array {
-    $registry = function_exists('theme_registry') ? theme_registry() : [];
-    if (!isset($registry[$presetKey])) {
+    if ($presetKey === 'custom') {
         return [
             'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'parents', 'rsvp', 'seo', 'whatsapp', 'sections'],
             'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation'],
         ];
     }
 
-    $meta = $registry[$presetKey];
+    $capabilities = function_exists('theme_contract_capabilities') ? theme_contract_capabilities($presetKey) : [];
     return [
-        'content' => array_values((array)($meta['capabilities'] ?? [])),
-        'presentation' => array_values((array)($meta['presentation'] ?? [])),
+        'content' => $capabilities,
+        'presentation' => function_exists('theme_presentation_capabilities') ? theme_presentation_capabilities(['theme' => ['mode' => 'preset', 'theme_preset' => $presetKey]]) : [],
     ];
 }
 
-function theme_preset_layout_order(string $presetKey): array {
-    $orders = [
-        'dewankl' => ['hero', 'countdown', 'guest_intro', 'undangan', 'acara', 'cerita', 'galeri', 'lokasi', 'amplop', 'rsvp'],
-        'elix' => ['hero', 'guest_intro', 'undangan', 'acara', 'countdown', 'cerita', 'galeri', 'lokasi', 'amplop', 'rsvp'],
-        'rainier' => ['hero', 'undangan', 'acara', 'countdown', 'guest_intro', 'cerita', 'galeri', 'lokasi', 'amplop', 'rsvp'],
-        'archak' => ['hero', 'acara', 'countdown', 'guest_intro', 'undangan', 'cerita', 'galeri', 'lokasi', 'amplop', 'rsvp'],
-    ];
+function theme_preset_layout_order(string $presetKey, ?array $config = null): array {
+    // Built-in themes render their own order inside themes/<preset>/layout.php.
+    // This order is only used by the CMS-native Custom renderer.
+    if ($presetKey === 'custom' && is_array($config)) {
+        $sections = (array)($config['sections'] ?? []);
+        usort($sections, static fn(array $a, array $b): int => (int)($a['order'] ?? 0) <=> (int)($b['order'] ?? 0));
+        return array_values(array_filter(array_map(static fn($section): string => normalize_section_id((string)($section['id'] ?? '')), $sections)));
+    }
 
-    return $orders[$presetKey] ?? $orders['dewankl'];
+    // A built-in preset owns its order in themes/<preset>/layout.php. Do not
+    // manufacture a universal fallback order for built-in themes.
+    return [];
 }
 
 function theme_presentation_capabilities(array $config): array {
@@ -164,15 +166,23 @@ function render_theme_layout(array $config, array $shared): string {
     $layoutFile = __DIR__ . '/../themes/' . $presetKey . '/layout.php';
     
     if ($presetKey !== 'custom' && file_exists($layoutFile)) {
-        // Load the theme layout template
+        // Load the theme layout template. Built-in themes own their complete
+        // document and must not fall through to the CMS section renderer.
         ob_start();
         include $layoutFile;
         return ob_get_clean();
     }
-    
-    // Fallback to inline renderer for custom mode or missing layouts
+
+    if ($presetKey !== 'custom') {
+        // A missing built-in layout is a deployment defect, not a reason to
+        // silently replace the theme with the CMS-native universal structure.
+        error_log('Built-in theme layout missing: ' . $presetKey);
+        return '<!-- Built-in theme layout unavailable: ' . escape_html($presetKey) . ' -->';
+    }
+
+    // Only Custom mode uses the CMS-native inline renderer.
     $parts = [];
-    $themeOrder = theme_preset_layout_order($presetKey);
+    $themeOrder = theme_preset_layout_order($presetKey, $config);
     $parts[] = render_theme_header($config, $presetKey);
     foreach ($themeOrder as $sectionId) {
         if ($sectionId === 'hero' && is_section_enabled($config, 'hero')) {

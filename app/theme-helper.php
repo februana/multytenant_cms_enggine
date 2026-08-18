@@ -6,6 +6,7 @@
  */
 
 require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/theme-contract.php';
 
 if (!defined('THEME_HELPER_LOADED')) {
     define('THEME_HELPER_LOADED', true);

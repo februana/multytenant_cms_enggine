@@ -46,15 +46,15 @@ $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $config['site']['title'] ?? 'Undangan');
 
 // Section visibility
-$isMusicEnabled = is_section_enabled($config, 'music');
-$isGalleryEnabled = is_section_enabled($config, 'gallery');
-$isRsvpEnabled = is_section_enabled($config, 'rsvp');
-$isGiftEnabled = is_section_enabled($config, 'gift');
-$isMapsEnabled = is_section_enabled($config, 'lokasi');
-$isCoupleEnabled = is_section_enabled($config, 'couple');
-$isEventEnabled = is_section_enabled($config, 'event');
-$isStoryEnabled = is_section_enabled($config, 'story');
-$isParentsEnabled = is_section_enabled($config, 'parents');
+$isMusicEnabled = theme_section_enabled($config, 'rainier', 'music');
+$isGalleryEnabled = theme_section_enabled($config, 'rainier', 'gallery');
+$isRsvpEnabled = theme_section_enabled($config, 'rainier', 'rsvp');
+$isGiftEnabled = theme_section_enabled($config, 'rainier', 'gift');
+$isMapsEnabled = theme_section_enabled($config, 'rainier', 'location');
+$isCoupleEnabled = theme_section_enabled($config, 'rainier', 'couple');
+$isEventEnabled = theme_section_enabled($config, 'rainier', 'event');
+$isStoryEnabled = theme_section_enabled($config, 'rainier', 'story');
+$isParentsEnabled = theme_section_enabled($config, 'rainier', 'couple');
 
 // Formatted dates
 $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';
@@ -469,7 +469,7 @@ $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($c
                     <div id="rsvp-success" class="rsvp-success hidden"></div>
                 </form>
                 
-                <?php if (is_section_enabled($config, 'messages')): ?>
+                <?php if (theme_section_enabled($config, 'rainier', 'wishes')): ?>
                 <div id="messages" class="messages-container"></div>
                 <?php endif; ?>
             </div>

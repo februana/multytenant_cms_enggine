@@ -141,3 +141,9 @@ The runtime data that must be preserved across updates keeps the current repo co
 - Do not treat `/var/www/wedding` as the Git source tree.
 
 See `ARCHITECTURE.md`, `DEPLOYMENT.md`, `BACKUP_RESTORE.md`, and `SECURITY.md` for repo-aligned operational details.
+
+## Theme-driven preset contract
+
+The CMS exposes data and services, while each built-in preset owns its own frontend composition. `app/theme-contract.php` defines the section vocabulary and consumed capabilities for DewanaKL, Elix, Rainier, and the retained Archak compatibility preset.
+
+`CUSTOM` remains the full CMS-native builder and uses the global `sections` array for composition, ordering, and visibility. Built-in presets use `theme_sections[<preset>]` only for theme-relevant controls; their renderer owns section order and DOM structure. Built-in layouts must use `theme_section_enabled()` rather than global `is_section_enabled()` calls.

@@ -934,6 +934,19 @@ function load_config(): array {
     } else {
         $config['theme_options'] = array_replace_recursive($defaults['theme_options'], $config['theme_options']);
     }
+
+    // Built-in themes keep their own section contract. The legacy global
+    // `sections` array remains untouched for Custom mode and old data.
+    if (!is_array($config['theme_sections'] ?? null)) {
+        $config['theme_sections'] = [];
+    }
+    if (function_exists('theme_contract_registry')) {
+        foreach (array_keys(theme_contract_registry()) as $presetKey) {
+            if (!isset($config['theme_sections'][$presetKey]) || !is_array($config['theme_sections'][$presetKey])) {
+                $config['theme_sections'][$presetKey] = theme_contract_default_sections($presetKey);
+            }
+        }
+    }
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
     }

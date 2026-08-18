@@ -100,3 +100,11 @@ Updates must preserve:
 - `uploads/` is static content only; PHP execution should remain disabled there.
 - `config.json`, `database.sqlite`, and `guest-links.json` require restrictive permissions.
 - `app/` is private implementation, not a second public document root.
+
+## Theme-driven section contracts
+
+Built-in presets are rendered through their own layout files and consume the shared CMS data/services through `app/theme-contract.php`. The contract declares theme-specific section vocabulary, consumed capabilities, admin capabilities, source metadata, and asset hints.
+
+The legacy `sections` array remains the source of truth for `CUSTOM`, including CMS-native ordering and visibility. Built-in preset controls are stored under `theme_sections[<preset>]`; their ordering and composition remain owned by the preset renderer. Existing `sections` data is preserved for backward compatibility and is not used to force built-in themes into a universal page structure.
+
+Built-in layouts use `theme_section_enabled($config, $preset, $section)` rather than global normalized IDs. This prevents aliases such as `story`, `gallery`, or `opening` from silently becoming universal CMS sections during built-in rendering.
