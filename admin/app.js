@@ -336,17 +336,18 @@ if (themeSettingsForm && themePreviewFrame) {
   const themeLabels = JSON.parse(themeSettingsForm.dataset.themeLabels || '{}');
   const visualSchemas = JSON.parse(themeSettingsForm.dataset.visualSchemas || '{}');
   const savedVisualValues = JSON.parse(themeSettingsForm.dataset.visualValues || '{}');
+  const mediaAssets = JSON.parse(themeSettingsForm.dataset.mediaAssets || '[]');
   const visualPanel = document.getElementById('visualCapabilityPanel');
   const visualTitle = document.getElementById('visualCapabilityTitle');
   const visualFields = document.getElementById('visualCapabilityFields');
   const customEditor = themeSettingsForm.querySelector('[data-custom-theme-editor]');
   const hiddenPresetField = themeSettingsForm.elements.theme_preset;
-  let currentPreset = globalThemePreset?.value || hiddenPresetField?.value || visualPanel?.dataset.visualPanel || 'custom';
   let debounceTimer = null;
   const unsavedVisualValues = {};
+  const unsavedThemeValues = {};
 
   function getCurrentPreset() {
-    const selected = globalThemePreset?.value || hiddenPresetField?.value || currentPreset || 'custom';
+    const selected = globalThemePreset?.value || hiddenPresetField?.value || visualPanel?.dataset.visualPanel || 'custom';
     return selected === 'custom' ? 'custom' : (visualSchemas[selected] ? selected : 'custom');
   }
 
@@ -390,8 +391,30 @@ if (themeSettingsForm && themePreviewFrame) {
     return values;
   }
 
-  function captureCurrentVisuals() {
-    if (currentPreset) unsavedVisualValues[currentPreset] = collectVisuals();
+  function captureCurrentVisuals(preset = getCurrentPreset()) {
+    if (preset) unsavedVisualValues[preset] = collectVisuals();
+  }
+
+  function readFieldValue(field) {
+    if (!field) return '';
+    return field.type === 'checkbox' ? field.checked : field.value;
+  }
+
+  function collectEditorThemeState() {
+    const values = {};
+    previewFieldNames.forEach(name => {
+      if (name === 'theme_preset') return;
+      const field = themeSettingsForm.elements[name];
+      if (field) values[name] = readFieldValue(field);
+    });
+    customEditor?.querySelectorAll('[name]').forEach(field => {
+      if (field.name && field.name !== 'theme_preset') values[field.name] = readFieldValue(field);
+    });
+    return values;
+  }
+
+  function captureCurrentTheme(preset = getCurrentPreset()) {
+    if (preset) unsavedThemeValues[preset] = collectEditorThemeState();
   }
 
   function createVisualField(key, definition, value) {
@@ -435,15 +458,33 @@ if (themeSettingsForm && themePreviewFrame) {
       input.type = 'color';
       input.style.cssText = 'width:100%;height:42px;';
     } else if (type === 'image') {
-      input = document.createElement('input');
-      input.type = 'text';
-      input.placeholder = 'Path media atau URL';
-      const file = document.createElement('input');
-      file.type = 'file';
-      file.name = `visual_file_${key}`;
-      file.accept = 'image/*';
-      file.style.marginTop = '0.45rem';
-      row.appendChild(file);
+      input = document.createElement('select');
+      input.dataset.visualMediaSelect = '1';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'Gunakan latar bawaan preset';
+      input.appendChild(defaultOption);
+      const assetPaths = new Set();
+      mediaAssets.filter(asset => asset && asset.type === 'image' && asset.path).forEach(asset => {
+        assetPaths.add(asset.path);
+        const option = document.createElement('option');
+        option.value = asset.path;
+        option.textContent = `${asset.label || 'Media'} — ${asset.name || asset.path}`;
+        input.appendChild(option);
+      });
+      if (value && !assetPaths.has(value)) {
+        const storedOption = document.createElement('option');
+        storedOption.value = value;
+        storedOption.textContent = `Referensi tersimpan — ${value}`;
+        input.appendChild(storedOption);
+      }
+      const mediaNote = document.createElement('small');
+      mediaNote.append('Pilih asset dari Pengelola Media. Untuk upload baru, gunakan ');
+      const mediaLink = document.createElement('a');
+      mediaLink.href = '#file-manager';
+      mediaLink.textContent = 'Kelola Media';
+      mediaNote.append(mediaLink, ', lalu muat ulang halaman.');
+      row.appendChild(mediaNote);
     } else {
       input = document.createElement('input');
       input.type = 'text';
@@ -469,12 +510,16 @@ if (themeSettingsForm && themePreviewFrame) {
     }
     input.addEventListener('input', () => {
       updateVisualDecorations(input);
-      unsavedVisualValues[currentPreset] = collectVisuals();
+      const preset = getCurrentPreset();
+      unsavedVisualValues[preset] = collectVisuals();
+      unsavedThemeValues[preset] = collectEditorThemeState();
       schedulePreview();
     });
     input.addEventListener('change', () => {
       updateVisualDecorations(input);
-      unsavedVisualValues[currentPreset] = collectVisuals();
+      const preset = getCurrentPreset();
+      unsavedVisualValues[preset] = collectVisuals();
+      unsavedThemeValues[preset] = collectEditorThemeState();
       schedulePreview(0);
     });
     return row;
@@ -494,8 +539,10 @@ if (themeSettingsForm && themePreviewFrame) {
   }
 
   function getBaseTheme(preset) {
-    if (preset === 'custom') return {...savedTheme, ...customTheme, theme_preset: 'custom', mode: 'custom'};
-    return {...savedTheme, ...(themePresets[preset] || {}), theme_preset: preset, mode: 'preset'};
+    const base = preset === 'custom'
+      ? {...customTheme}
+      : {...savedTheme, ...(themePresets[preset] || {})};
+    return {...base, ...(unsavedThemeValues[preset] || {}), theme_preset: preset, mode: preset === 'custom' ? 'custom' : 'preset'};
   }
 
   function restoreForm(theme) {
@@ -513,8 +560,11 @@ if (themeSettingsForm && themePreviewFrame) {
 
   function selectPreset(preset, shouldPreview = true) {
     const nextPreset = visualSchemas[preset] ? preset : 'custom';
-    if (currentPreset !== nextPreset) captureCurrentVisuals();
-    currentPreset = nextPreset;
+    const previousPreset = getCurrentPreset();
+    if (previousPreset !== nextPreset) {
+      captureCurrentVisuals(previousPreset);
+      captureCurrentTheme(previousPreset);
+    }
     if (globalThemePreset && globalThemePreset.value !== nextPreset) globalThemePreset.value = nextPreset;
     applyPresetToForm(nextPreset);
     renderVisualPanel(nextPreset);
@@ -567,6 +617,7 @@ if (themeSettingsForm && themePreviewFrame) {
   themePreviewReset?.addEventListener('click', () => {
     const preset = getCurrentPreset();
     delete unsavedVisualValues[preset];
+    delete unsavedThemeValues[preset];
     applyPresetToForm(preset);
     renderVisualPanel(preset);
     postPreview();
@@ -574,6 +625,7 @@ if (themeSettingsForm && themePreviewFrame) {
   themePreviewCancel?.addEventListener('click', () => {
     const preset = getCurrentPreset();
     delete unsavedVisualValues[preset];
+    delete unsavedThemeValues[preset];
     applyPresetToForm(preset);
     renderVisualPanel(preset);
     postPreview();
@@ -586,5 +638,5 @@ if (themeSettingsForm && themePreviewFrame) {
     input.addEventListener('change', () => schedulePreview(input.tagName === 'SELECT' || input.type === 'checkbox' ? 0 : 150));
   });
 
-  selectPreset(currentPreset, false);
+  selectPreset(getCurrentPreset(), false);
 }

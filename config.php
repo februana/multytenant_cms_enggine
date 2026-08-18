@@ -1694,6 +1694,13 @@ function detect_media_usage(array $config, string $relativePath): array {
             $usage[] = 'Love Story';
         }
     }
+    foreach (($config['theme_visuals'] ?? []) as $presetKey => $visualOverrides) {
+        foreach ((array)$visualOverrides as $visualKey => $visualValue) {
+            if ((string)$visualValue !== '' && normalize_media_relative_path((string)$visualValue) === $normalized) {
+                $usage[] = 'Visual ' . ucfirst((string)$presetKey) . ' / ' . str_replace('_', ' ', (string)$visualKey);
+            }
+        }
+    }
     $usage = array_values(array_unique($usage));
     return $usage;
 }
