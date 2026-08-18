@@ -104,9 +104,9 @@ $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_valu
 $dewanklHeroPath = (string)($visuals['hero_background'] ?? '') ?: $coverPath;
 $dewanklAccent = (string)($visuals['accent_color'] ?? '#7b4a3a');
 $dewanklHeadingFont = (string)($visuals['heading_font'] ?? 'Sacramento, cursive');
-$dewanklBodyFont = (string)($visuals['body_font'] ?? 'Inter, sans-serif');
+$dewanklBodyFont = (string)($visuals['body_font'] ?? 'Josefin Sans, sans-serif');
 $dewanklOverlay = (float)($visuals['hero_overlay'] ?? '0.30');
-$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}</style>';
+$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)!important}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="auto">
@@ -138,7 +138,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
     <!-- Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sacramento&family=Noto+Naskh+Arabic&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans&family=Sacramento&family=Noto+Naskh+Arabic&display=swap">
 
     <!-- Original DewanaKL animation/media dependencies; loaded only for this preset. -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">

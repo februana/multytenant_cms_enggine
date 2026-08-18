@@ -105,6 +105,22 @@ visual_assert(strpos($html, '--cms-elix-accent:#123456') !== false, 'Elix render
 visual_assert(strpos($html, 'uploads/background/hero.jpg') !== false, 'Elix render includes the stored hero media bridge');
 visual_assert(strpos($html, '--cms-elix-countdown-scale:0.66') !== false, 'Elix render includes the stored countdown scale bridge');
 visual_assert(strpos($html, '.hero,.hero h1,.hero h4,.hero p{color:#fff}') !== false, 'Elix hero maintains readable contrast over dark backgrounds');
+visual_assert(strpos($html, '#hero{display:flex;justify-content:center;align-items:center;text-align:center;box-sizing:border-box}') !== false, 'Elix hero restores the source flex-centered root relationship');
+visual_assert(strpos($html, '#hero>main{display:flex;flex-direction:column;align-items:center;width:min(100%,56rem);margin:0 auto;text-align:center}') !== false, 'Elix hero restores a centered column content relationship');
+visual_assert(strpos($html, '#hero>main>#countdown{width:100%;display:flex;justify-content:center;align-items:center;text-align:center}') !== false, 'Elix countdown remains in the centered hero flow');
+visual_assert(strpos($html, '#hero>main>a{display:inline-block;align-self:center;margin-right:auto;margin-left:auto}') !== false, 'Elix CTA is structurally centered below the countdown');
+$dewanklSourceConfig = $base;
+$dewanklSourceConfig['theme']['mode'] = 'preset';
+$dewanklSourceConfig['theme']['theme_preset'] = 'dewankl';
+$dewanklDefaults = theme_visual_values_for_config($dewanklSourceConfig, 'dewankl');
+visual_assert(($dewanklDefaults['body_font'] ?? '') === 'Josefin Sans, sans-serif', 'DewanaKL body font default matches the source template');
+$dewanklHtml = render_theme_layout($dewanklSourceConfig, array_replace($shared, ['presetKey' => 'dewankl']));
+visual_assert(strpos($dewanklHtml, '--cms-dewana-body:Josefin Sans, sans-serif') !== false, 'DewanaKL source body font reaches the adapter by default');
+visual_assert(strpos($dewanklHtml, 'body{font-family:var(--cms-dewana-body)!important}') !== false, 'DewanaKL CMS body font can override the source !important rule');
+$dewanklOverride = $dewanklSourceConfig;
+$dewanklOverride['theme_visuals']['dewankl']['body_font'] = 'Arial, sans-serif';
+$dewanklOverrideHtml = render_theme_layout($dewanklOverride, array_replace($shared, ['presetKey' => 'dewankl']));
+visual_assert(strpos($dewanklOverrideHtml, '--cms-dewana-body:Arial, sans-serif') !== false, 'DewanaKL body font override persists independently');
 
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
 $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');

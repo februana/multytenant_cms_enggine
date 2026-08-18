@@ -566,7 +566,7 @@ function theme_registry(): array {
             'visual_capabilities' => [
                 'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen tombol dan elemen interaktif DewanaKL.', 'default' => '#7b4a3a'],
                 'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font dekoratif untuk heading pendek dan nama pasangan.', 'default' => 'Sacramento, cursive', 'options' => ['Sacramento, cursive' => 'Sacramento', 'Georgia, serif' => 'Georgia']],
-                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font readable untuk detail acara dan form.', 'default' => 'system-ui, sans-serif', 'options' => ['system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font readable untuk detail acara dan form.', 'default' => 'Josefin Sans, sans-serif', 'options' => ['Josefin Sans, sans-serif' => 'Josefin Sans', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial', 'Georgia, serif' => 'Georgia']],
                 'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai cover.', 'default' => ''],
                 'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan lapisan gelap pada latar hero.', 'default' => '0.30', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
             ]
