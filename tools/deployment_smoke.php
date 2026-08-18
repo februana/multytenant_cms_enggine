@@ -34,6 +34,7 @@ assert_true(($loaded['media']['music'] ?? null) === '', 'loaded music default mu
 
 $contract = $root . '/deploy/runtime-directories.sh';
 assert_true(is_file($contract), 'shared runtime directory contract exists');
+assert_true(is_file($root . '/tools/deployment_backup_restore_smoke.sh'), 'backup/restore/update fixture smoke test exists');
 $bootstrapRoot = $runtime . '/app';
 $command = 'sh -c ' . escapeshellarg('. ' . escapeshellarg($contract) . '; ensure_runtime_directories ' . escapeshellarg($bootstrapRoot));
 exec($command, $output, $exitCode);

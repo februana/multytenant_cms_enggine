@@ -6,11 +6,13 @@ set -euo pipefail
 # 
 # Usage: sudo ./deploy/update.sh
 
-CANONICAL_TARGET="/var/www/wedding"
+CANONICAL_TARGET="${CANONICAL_TARGET:-/var/www/wedding}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
-TEMP_DIR="/tmp/webserver_undangan_update"
+REPOSITORY_URL="${REPOSITORY_URL:-git@github.com:februana/webserver_undangan.git}"
+BACKUP_SCRIPT="${BACKUP_SCRIPT:-$CANONICAL_TARGET/deploy/backup.sh}"
+HEALTH_CHECK_SCRIPT="${HEALTH_CHECK_SCRIPT:-$CANONICAL_TARGET/deploy/health-check.sh}"
 
 if [ ! -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
     echo "[ERROR] Missing runtime directory contract: $RUNTIME_DIRECTORIES_SCRIPT" >&2
@@ -18,8 +20,6 @@ if [ ! -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
 fi
 . "$RUNTIME_DIRECTORIES_SCRIPT"
 REAL_USER="${SUDO_USER:-$USER}"
-BACKUP_SCRIPT="$CANONICAL_TARGET/deploy/backup.sh"
-HEALTH_CHECK_SCRIPT="$CANONICAL_TARGET/deploy/health-check.sh"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -83,7 +83,15 @@ check_ssl_exists() {
 
 create_backup() {
     log_info "Creating backup..."
-    [ -f "$BACKUP_SCRIPT" ] && "$BACKUP_SCRIPT" || log_warn "Backup script not found"
+    if [ ! -f "$BACKUP_SCRIPT" ]; then
+        log_error "Backup script not found: $BACKUP_SCRIPT"
+        return 1
+    fi
+    if ! bash "$BACKUP_SCRIPT"; then
+        log_error "Backup script failed. No application files were changed."
+        return 1
+    fi
+    return 0
 }
 
 generate_nginx_config() {
@@ -185,66 +193,133 @@ rollback_migration() {
     log_error "Rollback complete"
 }
 
-update_application() {
+update_application() (
+    local temp_dir="${TMPDIR:-/tmp}/webserver_undangan_update.XXXXXX"
+    local preserve_dir=""
+    local source_dir=""
+    local ws=""
+    local php_ver=""
+    local -a preserve_files=("config.json" "custom.css" "guest-links.json" "database.sqlite" ".env" "event.ics")
+    local -a preserve_dirs=("uploads" "webdav" "backups" "storage")
+
+    cleanup_update_staging() {
+        [ -n "$preserve_dir" ] && [ -d "$preserve_dir" ] && rm -rf -- "$preserve_dir"
+        [ -n "$source_dir" ] && [ -d "$source_dir" ] && rm -rf -- "$source_dir"
+    }
+    trap cleanup_update_staging EXIT
+
     log_section "Update Application"
     [ ! -d "$CANONICAL_TARGET" ] && { log_error "App not found"; return 1; }
     [ ! -f "$CANONICAL_TARGET/index.php" ] && { log_error "Invalid install"; return 1; }
-    
-    create_backup
-    [ -d "$TEMP_DIR" ] && rm -rf "$TEMP_DIR"
-    
-    log_info "Downloading source..."
-    git clone --depth 1 git@github.com:februana/webserver_undangan.git "$TEMP_DIR" 2>/dev/null || { log_error "Clone failed"; rm -rf "$TEMP_DIR"; return 1; }
-    
-    cd "$TEMP_DIR"
-    [ -f composer.json ] && command -v composer &>/dev/null && composer install --no-dev --optimize-autoloader --quiet
-    
-    PRESERVE_FILES=("config.json" "custom.css" "guest-links.json" "database.sqlite" ".env" "event.ics")
-    PRESERVE_DIRS=("uploads" "webdav" "backups" "storage")
-    mkdir -p "$TEMP_DIR/_preserve"
-    
-    for f in "${PRESERVE_FILES[@]}"; do [ -f "$CANONICAL_TARGET/$f" ] && cp -a "$CANONICAL_TARGET/$f" "$TEMP_DIR/_preserve/"; done
-    for d in "${PRESERVE_DIRS[@]}"; do [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$CANONICAL_TARGET/$d" "$TEMP_DIR/_preserve/"; done
-    
-    rsync -av --exclude='.git' --exclude='*.md' --exclude='uploads/' --exclude='webdav/' --exclude='backups/' --exclude='storage/' --exclude='config.json' --exclude='custom.css' --exclude='guest-links.json' --exclude='database.sqlite' --exclude='.env' --exclude='event.ics' "$TEMP_DIR/" "$CANONICAL_TARGET/"
-    
-    for f in "${PRESERVE_FILES[@]}"; do [ -f "$TEMP_DIR/_preserve/$f" ] && cp -a "$TEMP_DIR/_preserve/$f" "$CANONICAL_TARGET/"; done
-    for d in "${PRESERVE_DIRS[@]}"; do [ -d "$TEMP_DIR/_preserve/$d" ] && { [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$TEMP_DIR/_preserve/$d/"* "$CANONICAL_TARGET/$d/" 2>/dev/null || cp -a "$TEMP_DIR/_preserve/$d" "$CANONICAL_TARGET/"; }; done
 
-    # Older installations may have no Theme Assets root or preset subdirectories.
-    # Create them after synchronization so update remains idempotent and never
-    # replaces user media.
-    ensure_runtime_directories "$CANONICAL_TARGET"
+    if ! create_backup; then
+        log_error "Backup failed. Update aborted."
+        return 1
+    fi
+
+    source_dir="$(mktemp -d "$temp_dir")" || { log_error "Could not create source staging directory"; return 1; }
+    rm -rf -- "$source_dir"
+    log_info "Downloading source from $REPOSITORY_URL..."
+    if ! git clone --depth 1 "$REPOSITORY_URL" "$source_dir"; then
+        log_error "Clone failed. The existing application was not modified."
+        return 1
+    fi
+    if [ ! -f "$source_dir/index.php" ] || [ ! -f "$source_dir/config.php" ]; then
+        log_error "Cloned source failed application verification. The existing application was not modified."
+        return 1
+    fi
+
+    if [ -f "$source_dir/composer.json" ] && command -v composer >/dev/null 2>&1; then
+        (cd "$source_dir" && composer install --no-dev --optimize-autoloader --quiet) || {
+            log_error "Composer dependency installation failed. The existing application was not modified."
+            return 1
+        }
+    fi
+
+    preserve_dir="$(mktemp -d "${TMPDIR:-/tmp}/webserver_undangan_preserve.XXXXXX")" || {
+        log_error "Could not create user-data preservation directory"
+        return 1
+    }
+    for file in "${preserve_files[@]}"; do
+        if [ -f "$CANONICAL_TARGET/$file" ]; then
+            cp -a -- "$CANONICAL_TARGET/$file" "$preserve_dir/" || { log_error "Could not preserve $file"; return 1; }
+        fi
+    done
+    for directory in "${preserve_dirs[@]}"; do
+        if [ -d "$CANONICAL_TARGET/$directory" ]; then
+            mkdir -p -- "$preserve_dir/$directory"
+            if command -v rsync >/dev/null 2>&1; then
+                rsync -a -- "$CANONICAL_TARGET/$directory/" "$preserve_dir/$directory/" || { log_error "Could not preserve $directory/"; return 1; }
+            else
+                cp -a -- "$CANONICAL_TARGET/$directory/." "$preserve_dir/$directory/" || { log_error "Could not preserve $directory/"; return 1; }
+            fi
+        fi
+    done
+
+    log_info "Synchronizing verified application source..."
+    if command -v rsync >/dev/null 2>&1; then
+        rsync -a --delete \
+            --exclude='.git/' --exclude='*.md' \
+            --exclude='uploads/' --exclude='webdav/' --exclude='backups/' --exclude='storage/' \
+            --exclude='config.json' --exclude='custom.css' --exclude='guest-links.json' \
+            --exclude='database.sqlite' --exclude='.env' --exclude='event.ics' \
+            "$source_dir/" "$CANONICAL_TARGET/" || { log_error "Application source synchronization failed; verified backup retained."; return 1; }
+    else
+        log_error "rsync is required for a safe update; application was not modified."
+        return 1
+    fi
+
+    for file in "${preserve_files[@]}"; do
+        if [ -f "$preserve_dir/$file" ]; then
+            cp -a -- "$preserve_dir/$file" "$CANONICAL_TARGET/" || { log_error "Could not restore preserved $file"; return 1; }
+        fi
+    done
+    for directory in "${preserve_dirs[@]}"; do
+        if [ -d "$preserve_dir/$directory" ]; then
+            mkdir -p -- "$CANONICAL_TARGET/$directory"
+            rsync -a -- "$preserve_dir/$directory/" "$CANONICAL_TARGET/$directory/" || { log_error "Could not restore preserved $directory/"; return 1; }
+        fi
+    done
+
+    ensure_runtime_directories "$CANONICAL_TARGET" || { log_error "Runtime directory bootstrap failed"; return 1; }
     if [ ! -f "$CANONICAL_TARGET/custom.css" ]; then
         : > "$CANONICAL_TARGET/custom.css"
     fi
-    
-    # Canonical frontend assets live in the document root (style.css, script.js).
-    # Do NOT copy from legacy $CANONICAL_TARGET/app/ which may exist on older installs
-    # as that could overwrite the canonical files controlled by this repository.
-    # Legacy app/* files must never overwrite document-root assets.
-    
+
     chown -R www-data:www-data "$CANONICAL_TARGET"
     find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;
-    find "$CANONICAL_TARGET" -type f -name "*.php" -exec chmod 644 {} \;
-    find "$CANONICAL_TARGET" -type f \( -name "config.json" -o -name "guest-links.json" -o -name "database.sqlite" -o -name ".env" \) -exec chmod 600 {} \;
+    find "$CANONICAL_TARGET" -type f -name '*.php' -exec chmod 644 {} \;
+    find "$CANONICAL_TARGET" -type f \( -name 'config.json' -o -name 'guest-links.json' -o -name 'database.sqlite' -o -name '.env' \) -exec chmod 600 {} \;
     chmod 644 "$CANONICAL_TARGET/custom.css" 2>/dev/null || true
     chmod 644 "$CANONICAL_TARGET/event.ics" 2>/dev/null || true
-    
-    PHP_VER=$(get_php_fpm_socket | grep -oP 'php\d\.\d' | head -1)
-    [ -n "$PHP_VER" ] && systemctl restart "${PHP_VER}-fpm" 2>/dev/null || systemctl restart php-fpm 2>/dev/null || true
-    
-    local ws=$(detect_web_server)
-    if [ "$ws" = "nginx" ]; then
-        nginx -t 2>/dev/null && systemctl reload nginx || log_warn "Nginx reload skipped"
-    elif [ "$ws" = "apache" ]; then
-        apache2ctl configtest 2>/dev/null && systemctl reload apache2 || log_warn "Apache reload skipped"
+
+    php_ver="$(get_php_fpm_socket | grep -oP 'php\d\.\d' | head -1 || true)"
+    if [ -n "$php_ver" ]; then
+        systemctl restart "${php_ver}-fpm" 2>/dev/null || true
+    else
+        systemctl restart php-fpm 2>/dev/null || true
     fi
-    
-    [ -f "$HEALTH_CHECK_SCRIPT" ] && "$HEALTH_CHECK_SCRIPT" || log_warn "Health check skipped"
-    rm -rf "$TEMP_DIR"
+
+    ws="$(detect_web_server)"
+    if [ "$ws" = "nginx" ]; then
+        nginx -t || { log_error "Nginx configuration test failed after source replacement; verified backup retained."; return 1; }
+        systemctl reload nginx || { log_error "Nginx reload failed; verified backup retained."; return 1; }
+    elif [ "$ws" = "apache" ]; then
+        apache2ctl configtest || { log_error "Apache configuration test failed after source replacement; verified backup retained."; return 1; }
+        systemctl reload apache2 || { log_error "Apache reload failed; verified backup retained."; return 1; }
+    fi
+
+    if [ ! -f "$HEALTH_CHECK_SCRIPT" ]; then
+        log_error "Health check script missing: $HEALTH_CHECK_SCRIPT"
+        return 1
+    fi
+    if ! bash "$HEALTH_CHECK_SCRIPT"; then
+        log_error "Health check failed after update. Verified backup retained; UPDATE COMPLETE was not emitted."
+        return 1
+    fi
+
     log_info "UPDATE COMPLETE"
-}
+)
 
 migration_mode() {
     log_section "Migration Mode"
@@ -268,7 +343,10 @@ migration_mode() {
     [ "$mtype" = "3" ] && { log_info "Cancelled"; return 0; }
     [ "$mtype" != "1" ] && [ "$mtype" != "2" ] && { log_error "Invalid"; return 1; }
     
-    create_backup
+    if ! create_backup; then
+        log_error "Backup failed. Migration aborted."
+        return 1
+    fi
     local sock=$(get_php_fpm_socket)
     
     # Get domain from existing configuration
