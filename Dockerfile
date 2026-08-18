@@ -57,7 +57,7 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
     && sed -i 's|/var/www/html|/var/www/wedding|g' /etc/apache2/apache2.conf \
     && sed -i 's|/var/www/html|/var/www/wedding|g' /etc/apache2/conf-available/docker-php.conf \
-    && mkdir -p /var/data /var/www/wedding/uploads /var/www/wedding/backups \
+    && mkdir -p /var/data /var/www/wedding/uploads /var/www/wedding/uploads/theme-assets /var/www/wedding/backups \
     && chown -R www-data:www-data /var/www/wedding /var/data
 
 EXPOSE 80

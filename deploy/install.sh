@@ -10,6 +10,13 @@ CANONICAL_TARGET="${CANONICAL_TARGET:-/var/www/wedding}"
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
+RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
+
+if [ ! -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
+  echo "ERROR: missing runtime directory contract: $RUNTIME_DIRECTORIES_SCRIPT" >&2
+  exit 2
+fi
+. "$RUNTIME_DIRECTORIES_SCRIPT"
 
 log_error() { echo "ERROR: $1" >&2; }
 
@@ -400,13 +407,7 @@ echo "Using PHP-FPM socket: $PHP_FPM_SOCK"
 
 echo ""
 echo "Creating runtime directories..."
-mkdir -p "$WORKING_DIR/uploads/cover"
-mkdir -p "$WORKING_DIR/uploads/music"
-mkdir -p "$WORKING_DIR/uploads/gallery"
-mkdir -p "$WORKING_DIR/uploads/background"
-mkdir -p "$WORKING_DIR/uploads/love-story"
-mkdir -p "$WORKING_DIR/webdav"
-mkdir -p "$WORKING_DIR/backups"
+ensure_runtime_directories "$WORKING_DIR"
 
 echo "Setting permissions..."
 chown -R www-data:www-data "$WORKING_DIR"
@@ -441,9 +442,14 @@ if [ ! -f "$WORKING_DIR/guest-links.json" ]; then
   chmod 600 "$WORKING_DIR/guest-links.json"
 fi
 
-# Initialize event.ics
+# Initialize event.ics and optional Custom CSS runtime files.
 touch "$WORKING_DIR/event.ics"
 chown www-data:www-data "$WORKING_DIR/event.ics"
+if [ ! -f "$WORKING_DIR/custom.css" ]; then
+  : > "$WORKING_DIR/custom.css"
+fi
+chown www-data:www-data "$WORKING_DIR/custom.css"
+chmod 644 "$WORKING_DIR/custom.css"
 
 # Handle .env file setup
 ENV_FILE="$WORKING_DIR/.env"

@@ -38,7 +38,7 @@ The installer deploys to `/var/www/wedding` by default and:
 - installs required PHP packages
 - creates the runtime directory
 - creates database and config defaults when missing
-- creates required upload directories
+- sources `deploy/runtime-directories.sh` and creates required upload directories, including preset-scoped `uploads/theme-assets/<preset>/`
 - sets secure permissions on configuration and SQLite files
 - creates `.env` when needed
 - configures Nginx or Apache from the templates in `deploy/templates/`
@@ -56,7 +56,7 @@ The updater should preserve runtime data and user config while updating applicat
 - `config.json`
 - `guest-links.json`
 - `database.sqlite`
-- `uploads/`
+- `uploads/`, including `uploads/theme-assets/<preset>/`
 - `event.ics`
 - `custom.css`
 - `backups/`
@@ -72,7 +72,8 @@ The health check validates critical deployment requirements, including:
 - application root and public files exist
 - active theme files exist
 - config and database are readable and secure
-- required upload directories exist and are writable
+- required upload and preset-scoped Theme Assets directories exist and are writable
+- the active preset is supported and an ImageMagick or PHP GD WebP processor is available
 - public routes respond
 - sensitive files remain blocked from public access
 
@@ -87,9 +88,11 @@ Theme presets live in the repository under:
 /themes/elix/
 /themes/rainier/
 /themes/archak/
+/themes/parang/
+/themes/pawiwahan/
 ```
 
-`deploy/install.sh` and `deploy/update.sh` synchronize the `themes/` directory as application source. Runtime data remains protected separately.
+`deploy/install.sh` and `deploy/update.sh` synchronize the `themes/` directory and `deploy/runtime-directories.sh` as application source. Runtime data remains protected separately. `deploy/install.sh`, `deploy/update.sh`, and `docker/entrypoint.sh` use the shared directory contract so missing Theme Assets folders are recreated without replacing user media.
 
 ## Backup and restore
 

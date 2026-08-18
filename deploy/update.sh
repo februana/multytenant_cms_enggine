@@ -9,7 +9,14 @@ set -euo pipefail
 CANONICAL_TARGET="/var/www/wedding"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
+RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
 TEMP_DIR="/tmp/webserver_undangan_update"
+
+if [ ! -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
+    echo "[ERROR] Missing runtime directory contract: $RUNTIME_DIRECTORIES_SCRIPT" >&2
+    exit 2
+fi
+. "$RUNTIME_DIRECTORIES_SCRIPT"
 REAL_USER="${SUDO_USER:-$USER}"
 BACKUP_SCRIPT="$CANONICAL_TARGET/deploy/backup.sh"
 HEALTH_CHECK_SCRIPT="$CANONICAL_TARGET/deploy/health-check.sh"
@@ -203,6 +210,14 @@ update_application() {
     
     for f in "${PRESERVE_FILES[@]}"; do [ -f "$TEMP_DIR/_preserve/$f" ] && cp -a "$TEMP_DIR/_preserve/$f" "$CANONICAL_TARGET/"; done
     for d in "${PRESERVE_DIRS[@]}"; do [ -d "$TEMP_DIR/_preserve/$d" ] && { [ -d "$CANONICAL_TARGET/$d" ] && cp -a "$TEMP_DIR/_preserve/$d/"* "$CANONICAL_TARGET/$d/" 2>/dev/null || cp -a "$TEMP_DIR/_preserve/$d" "$CANONICAL_TARGET/"; }; done
+
+    # Older installations may have no Theme Assets root or preset subdirectories.
+    # Create them after synchronization so update remains idempotent and never
+    # replaces user media.
+    ensure_runtime_directories "$CANONICAL_TARGET"
+    if [ ! -f "$CANONICAL_TARGET/custom.css" ]; then
+        : > "$CANONICAL_TARGET/custom.css"
+    fi
     
     # Canonical frontend assets live in the document root (style.css, script.js).
     # Do NOT copy from legacy $CANONICAL_TARGET/app/ which may exist on older installs

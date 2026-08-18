@@ -79,3 +79,17 @@ php tools/media_inventory.php --cleanup
 ```
 
 Review the dry-run output first. Unique, referenced, or unverified media is preserved. Backups include the canonical `uploads/` tree, including preset-scoped `uploads/theme-assets/` files, so restore remains WebP-only for newly processed media and does not depend on original uploads.
+
+## Deployment bootstrap and health contract
+
+The application uses `deploy/runtime-directories.sh` as the shared runtime directory contract. Native installation, native updates, and the Docker entrypoint create the upload roots, `uploads/theme-assets/`, and preset-scoped Theme Assets directories for `dewankl`, `elix`, `rainier`, `archak`, `parang`, `pawiwahan`, and `custom`. These directories are storage boundaries only; they do not contain demo wedding media.
+
+After restoring runtime data, run the health check:
+
+```bash
+sudo /var/www/wedding/deploy/health-check.sh
+```
+
+The health check now validates all six built-in theme adapters, the active preset, required upload and Theme Assets directories, runtime state, writable permissions, and ImageMagick or PHP GD WebP availability. Missing optional user media remains a warning, while missing asset directories, unsupported presets, unavailable processing capability, missing runtime state, or unsafe public exposure remain deployment failures.
+
+The update path preserves the entire `uploads/` tree, including `uploads/theme-assets/<preset>/`, and then recreates any missing empty directories without replacing user media. This makes upgrading safe for installations created before the Theme Assets directory contract existed.

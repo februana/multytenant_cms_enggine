@@ -9,6 +9,12 @@ DEPLOY_DIR="${DEPLOY_DIR:-/var/www/wedding}"
 DATA_DIR="${UNDANGAN_DATA_DIR:-$DEPLOY_DIR}"
 CONFIG_FILE_PATH="${UNDANGAN_CONFIG_PATH:-$DATA_DIR/config.json}"
 DB_FILE_PATH="${UNDANGAN_DB_PATH:-$DATA_DIR/database.sqlite}"
+GUEST_LINKS_FILE_PATH="${UNDANGAN_GUEST_LINKS_PATH:-$DATA_DIR/guest-links.json}"
+EVENT_ICS_FILE_PATH="${UNDANGAN_EVENT_ICS_PATH:-$DATA_DIR/event.ics}"
+CUSTOM_CSS_FILE_PATH="${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_DIR/custom.css}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
+WEDDING_BUILTIN_PRESETS="dewankl elix rainier archak parang pawiwahan custom"
 PASS_COUNT=0
 WARN_COUNT=0
 FAIL_COUNT=0
@@ -20,6 +26,12 @@ fail() { echo "FAIL: $1"; ((FAIL_COUNT++)) || true; }
 echo "=== Deployment Health Check ==="
 echo "Target: $DEPLOY_DIR"
 echo ""
+
+if [ -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
+  . "$RUNTIME_DIRECTORIES_SCRIPT"
+else
+  fail "Runtime directory contract missing: $RUNTIME_DIRECTORIES_SCRIPT"
+fi
 
 # Detect web server type
 WEB_SERVER=""
@@ -49,13 +61,18 @@ for file in index.php admin.php save.php messages.php gallery.php config.php; do
 done
 
 # Runtime state may live in /var/data (Docker) or the document root (native).
-for runtime_file in "$CONFIG_FILE_PATH" "$DB_FILE_PATH"; do
+for runtime_file in "$CONFIG_FILE_PATH" "$DB_FILE_PATH" "$GUEST_LINKS_FILE_PATH" "$EVENT_ICS_FILE_PATH"; do
   if [ -f "$runtime_file" ]; then
     pass "Runtime file exists: $runtime_file"
   else
     fail "Missing required runtime file: $runtime_file"
   fi
 done
+if [ -f "$CUSTOM_CSS_FILE_PATH" ]; then
+  pass "Custom CSS runtime file exists: $CUSTOM_CSS_FILE_PATH"
+else
+  warning "Custom CSS runtime file is not provisioned: $CUSTOM_CSS_FILE_PATH"
+fi
 
 # Check 3: Themes directory and required themes exist
 if [ -d "$DEPLOY_DIR/themes" ]; then
@@ -64,7 +81,7 @@ else
   fail "Missing themes directory"
 fi
 
-for theme in dewankl elix rainier archak; do
+for theme in dewankl elix rainier archak parang pawiwahan; do
   if [ -d "$DEPLOY_DIR/themes/$theme" ]; then
     pass "Theme directory exists: themes/$theme"
   else
@@ -81,14 +98,21 @@ for theme in dewankl elix rainier archak; do
   done
 done
 
-# Check 4: Required upload directories exist and are writable
-for dir in cover music gallery background love-story; do
-  if [ -d "$DEPLOY_DIR/uploads/$dir" ] && [ -w "$DEPLOY_DIR/uploads/$dir" ]; then
-    pass "Upload directory writable: uploads/$dir"
-  else
-    fail "Upload directory issue: uploads/$dir"
-  fi
-done
+# Check 4: Required upload directories and preset-scoped Theme Assets exist and are writable.
+if command -v runtime_upload_directories >/dev/null 2>&1; then
+  while IFS= read -r required_dir; do
+    [ -z "$required_dir" ] && continue
+    if [ -d "$required_dir" ] && [ -w "$required_dir" ]; then
+      pass "Runtime directory writable: ${required_dir#$DEPLOY_DIR/}"
+    else
+      fail "Runtime directory issue: ${required_dir#$DEPLOY_DIR/}"
+    fi
+  done <<EOF
+$(runtime_upload_directories "$DEPLOY_DIR")
+EOF
+else
+  fail "Runtime directory contract unavailable; cannot validate upload paths"
+fi
 
 # Optional media is intentionally not provisioned by a clean checkout.
 read_config_value() {
@@ -119,6 +143,20 @@ check_optional_media "Optional cover media" "$(read_config_value 'media.cover')"
 check_optional_media "Optional music media" "$(read_config_value 'media.music')"
 check_optional_media "Optional Open Graph image" "$(read_config_value 'site.open_graph_image')"
 
+ACTIVE_PRESET="$(read_config_value 'theme.theme_preset')"
+case " $WEDDING_BUILTIN_PRESETS " in
+  *" $ACTIVE_PRESET "*) pass "Active preset supported: ${ACTIVE_PRESET:-custom}" ;;
+  *) fail "Active preset is not supported by the built-in contract: ${ACTIVE_PRESET:-empty}" ;;
+esac
+
+if command -v magick >/dev/null 2>&1 || command -v convert >/dev/null 2>&1; then
+  pass "ImageMagick WebP processor is available"
+elif command -v php >/dev/null 2>&1 && php -r 'exit(function_exists("imagewebp") ? 0 : 1);' >/dev/null 2>&1; then
+  pass "PHP GD WebP fallback is available"
+else
+  fail "No ImageMagick or PHP GD WebP processor is available"
+fi
+
 # Check 4: Optional WebDAV should not be treated as a critical dependency
 if [ -d "$DEPLOY_DIR/webdav" ]; then
   if [ -w "$DEPLOY_DIR/webdav" ]; then
@@ -131,6 +169,13 @@ else
 fi
 
 # Check 5: Permissions checks
+DATA_DIR_PERMS=$(stat -c %a "$DATA_DIR" 2>/dev/null || echo "000")
+if [ -d "$DATA_DIR" ] && [ -w "$DATA_DIR" ]; then
+  pass "Runtime data directory writable ($DATA_DIR_PERMS): $DATA_DIR"
+else
+  fail "Runtime data directory missing or not writable: $DATA_DIR"
+fi
+
 CONFIG_PERMS=$(stat -c %a "$CONFIG_FILE_PATH" 2>/dev/null || echo "000")
 if [[ "$CONFIG_PERMS" == "600" ]] || [[ "$CONFIG_PERMS" == "640" ]] || [[ "$CONFIG_PERMS" == "660" ]]; then
   pass "Config file permissions secure ($CONFIG_PERMS)"
