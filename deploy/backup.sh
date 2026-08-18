@@ -2,67 +2,133 @@
 set -euo pipefail
 
 # deploy/backup.sh
-# Creates timestamped backup of all user data
-# Backs up: config.json, guest-links.json, database.sqlite, uploads/, webdav/, event.ics, .davpasswd
+# Creates a validated, timestamped archive of runtime and user data.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-BACKUP_DIR="$ROOT_DIR/backups"
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILE="$BACKUP_DIR/wedding_${TIMESTAMP}.tar.gz"
+ROOT_DIR="${DEPLOY_DIR:-$(dirname "$SCRIPT_DIR")}"
+DATA_ROOT="${UNDANGAN_DATA_DIR:-$ROOT_DIR}"
+BACKUP_DIR="${BACKUP_DIR:-$ROOT_DIR/backups}"
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+BACKUP_FILE="$BACKUP_DIR/wedding_${TIMESTAMP}_$$.tar.gz"
+DAV_PASSWORD_FILE="${APACHE_DAV_PASSWORD_PATH:-/etc/apache2/.davpasswd}"
+STAGE_DIR=""
 
-echo "Starting backup..."
+cleanup() {
+    if [ -n "$STAGE_DIR" ] && [ -d "$STAGE_DIR" ]; then
+        rm -rf -- "$STAGE_DIR"
+    fi
+}
+trap cleanup EXIT
 
-# Ensure backup directory exists
-mkdir -p "$BACKUP_DIR"
-
-# Change to root directory for relative paths in archive
-cd "$ROOT_DIR"
-
-# Create backup archive
-echo "Creating $BACKUP_FILE..."
-
-# Build list of files to backup
-BACKUP_FILES=(
-    "config.json"
-    "custom.css"
-    "guest-links.json"
-    "database.sqlite"
-    "uploads/"
-    "webdav/"
-    "event.ics"
-)
-
-# Include WebDAV password file if it exists
-if [ -f "/etc/apache2/.davpasswd" ]; then
-    echo "Including WebDAV password file in backup..."
-    # Copy to temporary location for inclusion in archive
-    mkdir -p "$BACKUP_DIR/_temp_backup"
-    cp /etc/apache2/.davpasswd "$BACKUP_DIR/_temp_backup/davpasswd"
-    BACKUP_FILES+=("_temp_backup/davpasswd")
-fi
-
-tar -czf "$BACKUP_FILE" "${BACKUP_FILES[@]}" 2>/dev/null || {
-    # Some files might not exist yet, that's OK
-    echo "Warning: Some files were not found (this is normal for new installations)."
-    tar -czf "$BACKUP_FILE" $(ls "${BACKUP_FILES[@]}" 2>/dev/null) || true
+fail_backup() {
+    echo "[ERROR] Backup failed: $*" >&2
+    rm -f -- "$BACKUP_FILE"
+    exit 1
 }
 
-# Cleanup temporary files
-if [ -d "$BACKUP_DIR/_temp_backup" ]; then
-    rm -rf "$BACKUP_DIR/_temp_backup"
+copy_file_if_present() {
+    local source="$1" archive_name="$2"
+    if [ -f "$source" ]; then
+        mkdir -p -- "$STAGE_DIR/$(dirname "$archive_name")"
+        cp -a -- "$source" "$STAGE_DIR/$archive_name" || fail_backup "Could not stage $source"
+        printf '[INFO] Included %s\n' "$archive_name"
+    fi
+}
+
+copy_directory_if_present() {
+    local source="$1" archive_name="$2"
+    if [ -d "$source" ]; then
+        mkdir -p -- "$STAGE_DIR/$archive_name"
+        if command -v rsync >/dev/null 2>&1; then
+            rsync -a -- "$source/" "$STAGE_DIR/$archive_name/" || fail_backup "Could not stage $source"
+        else
+            cp -a -- "$source/." "$STAGE_DIR/$archive_name/" || fail_backup "Could not stage $source"
+        fi
+        printf '[INFO] Included %s/\n' "$archive_name"
+    fi
+}
+
+archive_has_entry() {
+    local expected="$1"
+    tar -tzf "$BACKUP_FILE" | sed 's#^\./##; s#/$##' | grep -Fx -- "$expected" >/dev/null 2>&1
+}
+
+printf '%s\n' 'Starting backup...'
+mkdir -p -- "$BACKUP_DIR" || fail_backup "Cannot create backup directory: $BACKUP_DIR"
+STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/webserver_undangan_backup.XXXXXX")" || fail_backup "Cannot create secure staging directory"
+
+# Root/runtime files. Environment overrides are honored for Docker/native parity.
+copy_file_if_present "${UNDANGAN_CONFIG_PATH:-$DATA_ROOT/config.json}" "config.json"
+copy_file_if_present "${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_ROOT/custom.css}" "custom.css"
+copy_file_if_present "${UNDANGAN_GUEST_LINKS_PATH:-$DATA_ROOT/guest-links.json}" "guest-links.json"
+copy_file_if_present "${UNDANGAN_DB_PATH:-$DATA_ROOT/database.sqlite}" "database.sqlite"
+copy_file_if_present "${UNDANGAN_ENV_PATH:-$DATA_ROOT/.env}" ".env"
+copy_file_if_present "${UNDANGAN_EVENT_ICS_PATH:-$DATA_ROOT/event.ics}" "event.ics"
+
+# Preserve the complete canonical user-media namespaces without scanning or pruning.
+copy_directory_if_present "$ROOT_DIR/uploads" "uploads"
+copy_directory_if_present "$ROOT_DIR/webdav" "webdav"
+
+# The credential is staged outside the application tree and stored only under a
+# backup-private namespace. restore.sh also understands the older archive path.
+if [ -f "$DAV_PASSWORD_FILE" ]; then
+    mkdir -p -- "$STAGE_DIR/.webdav"
+    cp -a -- "$DAV_PASSWORD_FILE" "$STAGE_DIR/.webdav/davpasswd" || fail_backup "Could not stage WebDAV credentials"
+    chmod 600 -- "$STAGE_DIR/.webdav/davpasswd"
+    printf '%s\n' '[INFO] Included Apache WebDAV credentials in protected archive namespace.'
 fi
 
-# Set secure permissions on backup
-chmod 600 "$BACKUP_FILE"
-chown www-data:www-data "$BACKUP_FILE" 2>/dev/null || true
+printf '[INFO] Creating %s...\n' "$BACKUP_FILE"
+if ! tar -czf "$BACKUP_FILE" -C "$STAGE_DIR" .; then
+    fail_backup "tar archive creation failed"
+fi
 
-# Keep only last 10 backups
-echo "Cleaning old backups (keeping last 10)..."
-cd "$BACKUP_DIR"
-ls -t wedding_*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm --
+if [ ! -s "$BACKUP_FILE" ]; then
+    fail_backup "archive is empty"
+fi
+if ! tar -tzf "$BACKUP_FILE" >/dev/null 2>&1; then
+    fail_backup "archive validation failed"
+fi
 
-echo "Backup complete: $BACKUP_FILE"
-echo "Size: $(du -h "$BACKUP_FILE" | cut -f1)"
+# Verify entries for every object that existed before staging.
+for entry in config.json custom.css guest-links.json database.sqlite .env event.ics; do
+    source_path="$DATA_ROOT/$entry"
+    case "$entry" in
+        config.json) source_path="${UNDANGAN_CONFIG_PATH:-$DATA_ROOT/config.json}" ;;
+        custom.css) source_path="${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_ROOT/custom.css}" ;;
+        guest-links.json) source_path="${UNDANGAN_GUEST_LINKS_PATH:-$DATA_ROOT/guest-links.json}" ;;
+        database.sqlite) source_path="${UNDANGAN_DB_PATH:-$DATA_ROOT/database.sqlite}" ;;
+        .env) source_path="${UNDANGAN_ENV_PATH:-$DATA_ROOT/.env}" ;;
+        event.ics) source_path="${UNDANGAN_EVENT_ICS_PATH:-$DATA_ROOT/event.ics}" ;;
+    esac
+    if [ -f "$source_path" ] && ! archive_has_entry "$entry"; then
+        fail_backup "validated archive is missing $entry"
+    fi
+done
+for entry in uploads webdav; do
+    if [ -d "$ROOT_DIR/$entry" ] && ! archive_has_entry "$entry"; then
+        fail_backup "validated archive is missing $entry/"
+    fi
+done
+if [ -f "$DAV_PASSWORD_FILE" ] && ! archive_has_entry '.webdav/davpasswd'; then
+    fail_backup "validated archive is missing WebDAV credentials"
+fi
 
-exit 0
+chmod 600 -- "$BACKUP_FILE" || fail_backup "Cannot restrict archive permissions"
+if id -u www-data >/dev/null 2>&1 && getent group www-data >/dev/null 2>&1; then
+    chown www-data:www-data "$BACKUP_FILE" 2>/dev/null || printf '%s\n' '[WARN] Could not apply www-data ownership to backup.' >&2
+fi
+
+# Retention runs only after the newest archive has been created and validated.
+# Backup filenames contain no spaces, while media filenames inside the archive
+# are handled by tar/rsync without shell expansion.
+printf '%s\n' 'Cleaning old backups (keeping latest 10 valid archives)...'
+find "$BACKUP_DIR" -maxdepth 1 -type f -name 'wedding_*.tar.gz' -printf '%T@ %p\n' \
+    | sort -rn \
+    | awk 'NR > 10 {sub(/^[^ ]+ /, ""); print}' \
+    | while IFS= read -r old_backup; do
+        [ -n "$old_backup" ] && rm -f -- "$old_backup"
+      done
+
+printf 'Backup complete: %s\n' "$BACKUP_FILE"
+printf 'Size: %s\n' "$(du -h -- "$BACKUP_FILE" | cut -f1)"
