@@ -72,13 +72,13 @@ $calendarLink = build_google_calendar_link($config);
 $calendarDownloadName = preg_replace('/[^a-zA-Z0-9_-]/', '-', $config['site']['title'] ?? 'Undangan');
 
 // Section visibility helpers
-$isMusicEnabled = is_section_enabled($config, 'music');
-$isGalleryEnabled = is_section_enabled($config, 'gallery');
-$isStoryEnabled = is_section_enabled($config, 'cerita');
-$isRsvpEnabled = is_section_enabled($config, 'rsvp');
-$isMessagesEnabled = is_section_enabled($config, 'messages');
-$isGiftEnabled = is_section_enabled($config, 'gift');
-$isMapsEnabled = is_section_enabled($config, 'lokasi');
+$isMusicEnabled = theme_section_enabled($config, 'dewankl', 'music');
+$isGalleryEnabled = theme_section_enabled($config, 'dewankl', 'gallery');
+$isStoryEnabled = theme_section_enabled($config, 'dewankl', 'story');
+$isRsvpEnabled = theme_section_enabled($config, 'dewankl', 'rsvp');
+$isMessagesEnabled = theme_section_enabled($config, 'dewankl', 'wishes');
+$isGiftEnabled = theme_section_enabled($config, 'dewankl', 'gift');
+$isMapsEnabled = theme_section_enabled($config, 'dewankl', 'location');
 
 // Format dates
 $akadDateFormatted = $akadDate ? date('l, j F Y', strtotime($akadDate)) : '';

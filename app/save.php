@@ -1,6 +1,7 @@
 <?php
 // Load consolidated canonical config
 require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/theme-contract.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }

@@ -357,35 +357,56 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'save_sections':
                 $newSections = $_POST['sections'] ?? [];
+                $activeMode = get_theme_mode($config);
+                $activePreset = resolve_theme_preset_key($config);
                 if (is_array($newSections) && !empty($newSections)) {
                     $updatedSections = [];
+                    $sourceSections = $activeMode === 'custom'
+                        ? (array)($config['sections'] ?? [])
+                        : theme_sections_for_admin($config, $activePreset);
                     foreach ($newSections as $index => $sectionData) {
-                        $sectionId = normalize_section_id(trim((string)($sectionData['id'] ?? '')));
+                        $rawId = trim((string)($sectionData['id'] ?? ''));
+                        $sectionId = $activeMode === 'custom' ? normalize_section_id($rawId) : preg_replace('/[^a-z0-9_-]/i', '', $rawId);
                         if ($sectionId === '') continue;
-                        
+                        if ($activeMode !== 'custom' && !theme_contract_has_section($activePreset, $sectionId)) continue;
+
                         $originalSection = null;
-                        foreach ($config['sections'] as $origSec) {
-                            if (normalize_section_id((string)($origSec['id'] ?? '')) === $sectionId) {
+                        foreach ($sourceSections as $origSec) {
+                            $candidateId = $activeMode === 'custom'
+                                ? normalize_section_id((string)($origSec['id'] ?? ''))
+                                : (string)($origSec['id'] ?? '');
+                            if ($candidateId === $sectionId) {
                                 $originalSection = $origSec;
                                 break;
                             }
                         }
-                        
+
                         $updatedSections[] = [
                             'id' => $sectionId,
                             'title' => $originalSection['title'] ?? '',
                             'subtitle' => $originalSection['subtitle'] ?? '',
                             'enabled' => !empty($sectionData['enabled']),
-                            'custom_title' => trim((string)($sectionData['custom_title'] ?? '')),
-                            'custom_subtitle' => trim((string)($sectionData['custom_subtitle'] ?? '')),
-                            'order' => (int)($sectionData['order'] ?? 0)
+                            'custom_title' => array_key_exists('custom_title', $sectionData)
+                                ? trim((string)$sectionData['custom_title'])
+                                : (string)($originalSection['custom_title'] ?? ''),
+                            'custom_subtitle' => array_key_exists('custom_subtitle', $sectionData)
+                                ? trim((string)$sectionData['custom_subtitle'])
+                                : (string)($originalSection['custom_subtitle'] ?? ''),
+                            'order' => $activeMode === 'custom'
+                                ? (int)($sectionData['order'] ?? 0)
+                                : (int)($originalSection['order'] ?? ($index + 1)),
                         ];
                     }
-                    usort($updatedSections, function($a, $b) {
-                        return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
-                    });
-                    $config['sections'] = $updatedSections;
+                    if ($activeMode === 'custom') {
+                        usort($updatedSections, static fn(array $a, array $b): int => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+                        $config['sections'] = $updatedSections;
+                    } else {
+                        // Preserve contract-defined composition/order and only store
+                        // theme-relevant visibility and copy overrides.
+                        $config['theme_sections'][$activePreset] = $updatedSections;
+                    }
                 }
+                $saveConfig = true;
                 break;
             case 'save_custom_css':
                 $customCss = (string)($_POST['custom_css'] ?? '');
@@ -819,6 +840,14 @@ $themeRegistry = theme_registry();
 $themeMode = get_theme_mode($config);
 $themeMeta = get_active_theme_meta($config);
 $themePresentationCaps = theme_presentation_capabilities($config);
+$activePresetKey = resolve_theme_preset_key($config);
+$themeAdminCapabilities = $themeMode === 'custom'
+    ? ['wedding', 'parents', 'schedule', 'countdown', 'sections', 'theme', 'custom_css', 'media', 'story', 'gallery', 'cover', 'background', 'music', 'gift', 'dresscode', 'maps', 'seo', 'whatsapp', 'guest_links', 'rsvp', 'backup', 'settings']
+    : theme_contract_admin_capabilities($activePresetKey);
+$adminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $themeAdminCapabilities, true);
+$themeSectionEditorSections = $themeMode === 'custom'
+    ? (array)($config['sections'] ?? [])
+    : theme_sections_for_admin($config, $activePresetKey);
 $themePreviewConfig = $config['theme'] ?? [];
 // Ensure hero settings are included in preview config for backward compatibility
 if (!isset($themePreviewConfig['hero_height'])) {
@@ -895,28 +924,28 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                 <aside class="sidebar">
                     <nav>
                         <a href="#dashboard">Dasbor</a>
-                        <a href="#wedding">Informasi Pernikahan</a>
-                        <a href="#parents">Orang Tua</a>
-                        <a href="#schedule">Jadwal</a>
-                        <a href="#countdown">Hitung Mundur</a>
-                        <a href="#sections">Bagian Website</a>
-                        <a href="#theme">Tema & Tampilan</a>
-                        <a href="#custom-css">CSS Khusus</a>
-                        <a href="#file-manager">Kelola Media</a>
-                        <a href="#love-story">Cerita Cinta</a>
-                        <a href="#gallery">Galeri</a>
-                        <a href="#cover">Cover</a>
-                        <a href="#background">Background</a>
-                        <a href="#music">Musik</a>
-                        <a href="#gift">Hadiah</a>
-                        <a href="#dresscode">Dresscode</a>
-                        <a href="#maps">Lokasi</a>
-                        <a href="#seo">SEO</a>
-                        <a href="#whatsapp">WhatsApp</a>
-                        <a href="#guest-links">Link Tamu</a>
-                        <a href="#rsvp">RSVP</a>
-                        <a href="#backup">Backup</a>
-                        <a href="#settings">Pengaturan</a>
+                        <?php if ($adminCapabilityEnabled('wedding')): ?><a href="#wedding">Informasi Pernikahan</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('parents')): ?><a href="#parents">Orang Tua</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('schedule')): ?><a href="#schedule">Jadwal</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('countdown')): ?><a href="#countdown">Hitung Mundur</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('sections')): ?><a href="#sections">Bagian Website</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('theme')): ?><a href="#theme">Tema & Tampilan</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('custom_css')): ?><a href="#custom-css">CSS Khusus</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Kelola Media</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('gallery')): ?><a href="#gallery">Galeri</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('cover')): ?><a href="#cover">Cover</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Background</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('music')): ?><a href="#music">Musik</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('gift')): ?><a href="#gift">Hadiah</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('dresscode')): ?><a href="#dresscode">Dresscode</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('maps')): ?><a href="#maps">Lokasi</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('seo')): ?><a href="#seo">SEO</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">WhatsApp</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">RSVP</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('backup')): ?><a href="#backup">Backup</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
                     </nav>
                 </aside>
 
@@ -996,32 +1025,35 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     </section>
 
                     <section id="sections" class="card panel-section">
-                        <h2>Sections</h2>
+                        <h2><?php echo $themeMode === 'custom' ? 'CMS-Native Sections' : 'Sections ' . escape_html($themeMeta['label'] ?? $activePresetKey); ?></h2>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_sections">
-                            <p style="margin-bottom:1rem;color:#5c4c32;">Kelola tampilan bagian website. Aktifkan/nonaktifkan, ubah urutan, atau sesuaikan judul setiap bagian.</p>
+                            <?php if ($themeMode === 'custom'): ?>
+                                <p style="margin-bottom:1rem;color:#5c4c32;">Custom mode menyediakan full CMS builder. Aktifkan/nonaktifkan, ubah urutan, atau sesuaikan judul setiap section CMS-native.</p>
+                            <?php else: ?>
+                                <div class="notice" style="margin-bottom:1rem;">Preset <?php echo escape_html($themeMeta['label'] ?? $activePresetKey); ?> mempertahankan komposisi dan urutan template asli. Panel ini hanya mengatur capability yang dipakai tema dan copy yang dapat disesuaikan.</div>
+                            <?php endif; ?>
                             <div id="sections-list">
-                                <?php 
-                                $sections = $config['sections'] ?? [];
-                                usort($sections, function($a, $b) {
-                                    return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
-                                });
-                                foreach ($sections as $index => $section): 
-                                ?>
+                                <?php foreach ($themeSectionEditorSections as $index => $section): ?>
                                 <div class="section-item" style="background:#f7f3ed;padding:1rem;margin-bottom:1rem;border-radius:8px;">
                                     <input type="hidden" name="sections[<?php echo $index; ?>][id]" value="<?php echo escape_html($section['id']); ?>">
                                     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-                                        <span style="font-weight:bold;color:#c84c47;"><?php echo escape_html($section['title']); ?></span>
+                                        <span style="font-weight:bold;color:#c84c47;"><?php echo escape_html($section['title'] ?: ($section['label'] ?? $section['id'])); ?></span>
                                         <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;">
                                             <input type="checkbox" name="sections[<?php echo $index; ?>][enabled]" value="1" <?php echo !empty($section['enabled']) ? 'checked' : ''; ?>>
                                             Enabled
                                         </label>
                                     </div>
-                                    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;">
-                                        <div class="form-row"><label>Custom Title</label><input type="text" name="sections[<?php echo $index; ?>][custom_title]" value="<?php echo escape_html($section['custom_title'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['title']); ?>"></div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr <?php echo $themeMode === 'custom' ? 'auto' : '1fr'; ?>;gap:1rem;">
+                                        <?php if ($themeMode === 'custom'): ?>
+                                        <div class="form-row"><label>Custom Title</label><input type="text" name="sections[<?php echo $index; ?>][custom_title]" value="<?php echo escape_html($section['custom_title'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['title'] ?? ($section['label'] ?? '')); ?>"></div>
                                         <div class="form-row"><label>Custom Subtitle</label><input type="text" name="sections[<?php echo $index; ?>][custom_subtitle]" value="<?php echo escape_html($section['custom_subtitle'] ?? ''); ?>" placeholder="Default: <?php echo escape_html($section['subtitle'] ?? ''); ?>"></div>
-                                        <div class="form-row"><label>Order</label><input type="number" name="sections[<?php echo $index; ?>][order]" value="<?php echo escape_html((string)($section['order'] ?? $index)); ?>" style="width:80px;"></div>
+                                        <div class="form-row"><label>Order</label><input type="number" name="sections[<?php echo $index; ?>][order]" value="<?php echo escape_html((string)($section['order'] ?? $index + 1)); ?>" style="width:80px;"></div>
+                                        <?php else: ?>
+                                        <div class="form-row" style="grid-column:span 2;"><label>Theme-owned copy</label><input type="text" value="<?php echo escape_html($section['title'] ?? ($section['label'] ?? $section['id'])); ?>" readonly style="background:#eee;"></div>
+                                        <div class="form-row"><label>Theme order</label><input type="text" value="<?php echo escape_html((string)($section['order'] ?? $index + 1)); ?>" readonly style="width:80px;background:#eee;"></div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
