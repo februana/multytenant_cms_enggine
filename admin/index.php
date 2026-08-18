@@ -496,6 +496,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $persistVisualOverrides($config, $selectedPreset);
                     break;
                 }
+                $config['theme'] = theme_custom_config($config);
                 $config['theme']['mode'] = 'custom';
                 $config['theme']['theme_preset'] = 'custom';
                 $config['theme']['primary_color'] = trim((string)($_POST['primary_color'] ?? '')) ?: $config['theme']['primary_color'];
@@ -532,6 +533,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $config['theme']['mobile_hero_image_position'] = trim((string)($_POST['mobile_hero_image_position'] ?? '')) ?: ($config['theme']['mobile_hero_image_position'] ?? 'center top');
                 // Mobile button layout
                 $config['buttons']['mobile_layout'] = trim((string)($_POST['buttons_mobile_layout'] ?? '')) ?: ($config['buttons']['mobile_layout'] ?? '2-columns');
+                $config['theme_custom'] = $config['theme'];
                 $persistVisualOverrides($config, 'custom');
                 break;
             case 'save_love_story':
@@ -870,11 +872,14 @@ $backgroundSectionPreviews = [
 $qrisPreview = $config['gift']['qris_image'];
 $customCss = load_custom_css();
 $themePresetPreviewData = [];
+$themePresetLabels = ['custom' => 'Custom'];
+$customThemePreviewConfig = theme_custom_config($config);
 $themeVisualSchemas = ['custom' => theme_visual_capabilities_for_config($config, 'custom')];
 $themeVisualValues = ['custom' => theme_visual_values_for_config($config, 'custom')];
 foreach (theme_presets() as $presetKey => $preset) {
-    $themePresetPreviewData[$presetKey] = $preset['values'] ?? [];
-    $themeVisualSchemas[$presetKey] = theme_visual_capabilities_for_config($config, $presetKey);
+        $themePresetPreviewData[$presetKey] = $preset['values'] ?? [];
+        $themePresetLabels[$presetKey] = $preset['label'] ?? $presetKey;
+        $themeVisualSchemas[$presetKey] = theme_visual_capabilities_for_config($config, $presetKey);
     $themeVisualValues[$presetKey] = theme_visual_values_for_config($config, $presetKey);
 }
 $themeRegistry = theme_registry();
@@ -1154,19 +1159,18 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <h2>Tema & Tampilan</h2>
                         <p class="section-description">Ubah gaya undangan dan lihat hasilnya langsung di preview sebelum menyimpan.</p>
                         <div class="theme-editor-layout">
-                        <form method="post" enctype="multipart/form-data" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-schemas='<?php echo escape_html(json_encode($themeVisualSchemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-values='<?php echo escape_html(json_encode($themeVisualValues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
+                        <form method="post" enctype="multipart/form-data" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-custom-theme='<?php echo escape_html(json_encode($customThemePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-labels='<?php echo escape_html(json_encode($themePresetLabels, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-schemas='<?php echo escape_html(json_encode($themeVisualSchemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-values='<?php echo escape_html(json_encode($themeVisualValues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme">
                             
                             <input type="hidden" name="theme_preset" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'custom'); ?>">
-                            <?php if ($themeMode === 'preset'): ?>
                                 <div class="notice" style="margin:0.5rem 0 1rem;">Preset tetap mempertahankan identitas template asli. Pengaturan di bawah hanya menampilkan visual capability yang benar-benar didukung preset aktif.</div>
-                                <div class="visual-capability-panel" data-visual-panel="<?php echo escape_html($activeVisualPresetKey); ?>" style="margin:1rem 0 1.5rem;padding:1rem;border:1px solid #eadccf;border-radius:14px;background:#fffaf4;">
+                                <div class="visual-capability-panel" id="visualCapabilityPanel" data-visual-panel="<?php echo escape_html($activeVisualPresetKey); ?>" style="margin:1rem 0 1.5rem;padding:1rem;border:1px solid #eadccf;border-radius:14px;background:#fffaf4;">
                                     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-                                        <div><h3 style="margin:0;color:#c84c47;">Tampilan <?php echo escape_html($themeMeta['label'] ?? $activeVisualPresetKey); ?></h3><p style="margin:0.35rem 0 0;color:#6d5148;">Kontrol ini tersimpan khusus untuk preset aktif dan tidak menghapus konfigurasi preset lain.</p></div>
+                                        <div><h3 id="visualCapabilityTitle" style="margin:0;color:#c84c47;">Tampilan <?php echo escape_html($themeMeta['label'] ?? $activeVisualPresetKey); ?></h3><p style="margin:0.35rem 0 0;color:#6d5148;">Kontrol ini tersimpan khusus untuk preset aktif dan tidak menghapus konfigurasi preset lain.</p></div>
                                         <button type="submit" name="reset_visuals" value="1" class="button small-button" form="themeSettingsForm">Atur Ulang Visual</button>
                                     </div>
-                                    <div class="form-grid" style="margin-top:1rem;">
+                                    <div class="form-grid" id="visualCapabilityFields" style="margin-top:1rem;">
                                         <?php foreach ($activeThemeVisualSchema as $visualKey => $visualDefinition): ?>
                                             <?php $visualValue = $activeThemeVisualValues[$visualKey] ?? ($visualDefinition['default'] ?? ''); $visualType = $visualDefinition['type'] ?? 'text'; ?>
                                             <div class="form-row visual-field" data-visual-key="<?php echo escape_html($visualKey); ?>">
@@ -1191,9 +1195,9 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
-                            <?php endif; ?>
 
-                            <?php if ($themeMode === 'custom'): ?>
+                            <div class="custom-theme-editor" data-custom-theme-editor>
+
                             <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Warna</h3>
                             <div class="form-grid">
                                 <div class="form-row"><label>Warna Utama</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
@@ -1395,7 +1399,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 </div>
                             </div>
 
-                            <?php endif; ?>
+                            </div>
 
                             <div class="theme-actions">
                                 <button type="submit">Simpan</button>
@@ -1408,7 +1412,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <form method="post" enctype="multipart/form-data" style="margin-bottom:2rem;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme_options">
-                            <input type="hidden" name="preset_key" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'dewankl'); ?>">
+                            <input type="hidden" name="preset_key" id="themeOptionsPresetKey" value="<?php echo escape_html($config['theme']['theme_preset'] ?? 'dewankl'); ?>">
                             <p style="font-size:0.9rem;color:#6d5148;">Pengaturan unik untuk preset <strong><?php echo escape_html($config['theme']['theme_preset'] ?? 'dewankl'); ?></strong>:</p>
                             <div class="form-grid">
                                 <?php

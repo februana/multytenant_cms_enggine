@@ -630,7 +630,7 @@ function theme_registry(): array {
             'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
 'visual_capabilities' => [
                 'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen tombol, link, dan detail Elix.', 'default' => '#f14e95'],
-                'heading_font' => ['type' => 'font', 'label' => 'Font Display', 'description' => 'Font display untuk nama dan heading pendek.', 'default' => 'Sacramento, cursive', 'options' => ['Sacramento, cursive' => 'Sacramento', 'Pacifico, cursive' => 'Pacifico', 'Georgia, serif' => 'Georgia']],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Display', 'description' => 'Font display brush untuk nama dan heading pendek.', 'default' => 'Pacifico, cursive', 'options' => ['Pacifico, cursive' => 'Pacifico', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi readable untuk informasi dan form.', 'default' => 'Work Sans, sans-serif', 'options' => ['Work Sans, sans-serif' => 'Work Sans', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
                 'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai source default.', 'default' => ''],
                 'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay pada foto hero Elix.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
@@ -785,8 +785,12 @@ function theme_registry(): array {
     ];
 }
 
+function theme_builtin_preset_keys(): array {
+    return ['dewankl', 'elix', 'rainier', 'archak'];
+}
+
 function theme_presets(): array {
-    $registry = theme_registry();
+    $registry = array_intersect_key(theme_registry(), array_flip(theme_builtin_preset_keys()));
     foreach ($registry as $key => $preset) {
         $registry[$key] = array_replace([
             'label' => $preset['name'] ?? ucfirst((string)$key),
@@ -859,6 +863,19 @@ function resolve_theme_preset(array $theme, string $presetKey): array {
 
 function apply_theme_preset(array $theme, string $presetKey): array {
     return resolve_theme_preset($theme, $presetKey);
+}
+
+/** Resolve the CMS-native Custom theme state without losing legacy configs. */
+function theme_custom_config(array $config): array {
+    $defaults = (array)(config_defaults()['theme'] ?? []);
+    $saved = $config['theme_custom'] ?? null;
+    if (!is_array($saved) || $saved === []) {
+        $saved = get_theme_mode($config) === 'custom' ? (array)($config['theme'] ?? []) : $defaults;
+    }
+    $theme = array_replace($defaults, $saved);
+    $theme['mode'] = 'custom';
+    $theme['theme_preset'] = 'custom';
+    return $theme;
 }
 
 function ensure_upload_dirs(): void {
@@ -942,6 +959,10 @@ function load_config(): array {
     }
     if (!in_array($config['theme']['mode'] ?? '', ['preset', 'custom'], true)) {
         $config['theme']['mode'] = get_theme_mode($config);
+    }
+    // Preserve a dedicated Custom snapshot while keeping old config.json files valid.
+    if (!is_array($config['theme_custom'] ?? null) || $config['theme_custom'] === []) {
+        $config['theme_custom'] = theme_custom_config($config);
     }
     // Ensure hero settings exist for backward compatibility
     if (!isset($config['theme']['hero_height'])) {
