@@ -6,11 +6,10 @@ if (!defined('THEME_HELPER_LOADED')) {
 $config = $config ?? [];
 $presetKey = 'parang';
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, $presetKey) : [];
-$sourcePattern = 'https://lh3.googleusercontent.com/aida/AP1WRLtUTK8DchC8OhVkZ4rCvN3p1neL5TYLWUZfyPUZmVK_VpxfkVj3pTmeYE-Ud7yhlmzGCFUfWoWIow5fmTRIcuq8H4tSay9gpj4M4dCPKz_utQcbS51d4MlWZuPXQhxKwcrb_GkG6_YSBPDtftlFMCQ0ZnuhaG1qxQ39bK5EorAXpZkuNiB3bm6-wzUEg9WxojoyB-shrlMFKEI6otgf15IsGU-kKKCQUgjyrT7iztRbf2el57Z0g_UTjQeu';
-$sourceGunungan = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAZpdiZfHHr58zlJndRESjo_ZjxDoAY0gVXcGPK4DwevEj31E0sb5LQUISWr8YGo_TxzY4dMRNKdOwjV_4Y0gy_G_zxyxTAPwYYbTwDzybFBDZ3CUBiJH69Ur8MVUKpghaKAH8pgWRxGeIWCmMSdrompQyBcHR7jJVZC8Eo6VT5wREPQZyC7BYJanU6eLgPnjCs7guF3xQoJKBLrnF_EnrpAtPM97_ti3rVttYkS_jlT9bb6mB9EMGzeg';
-$sourceWayang = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCltOLvnUrHxy789xcyCqcsrXDGscFFKuzB3mAB6zjcuqJWwsj5oo_hgHnOywnWknOrgrUjLdvpUYa7Xtqrggl5rg2Q-tSUxPaqV6hXjnqD-KQLAMhfiaXWfAKuE_cw2RhXsp6-ZEE0s7mI9AbSyDfU1hfA5xdqWXTk1vA03wD3tb7pf3PWVxiZjN0fxBUKryGqZN2S3nvvdGlqLI9xzb4Lig-7PRMOv8uRVKAoUHIppAJmYYCfndwdpA';
-$sourceGroom = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBUsnTzEnTFE6_gceSlPsza8pWhLuyeoga-g_Ojv8jXHXGb_KUxGpHARNODTP6-5IJPKHNshDde-tOLkxCXIF1T4pVu1r4CbomkroK4NhKWA3nVhpSogeTk8Qv01tfqvTRW35-NZG88i7cys_kKzJWaOv1Txg1mQkzCTuUhRst1T4Abvo1YgTTTHiBJabZ2ZU_iNgMiV3IqMci2hQKYjexV9a5eMyrqvBoKpvgu0Gv0gaBPv_7oK8iwMw';
-$sourceBride = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDyGzunEGstLIp2VN4IXJmqz5J7abpugvfR103PZUoq7ZICgdTMDeWvMxIejF6exWbi9BPwnhiVEgJbFsL3oKZn-l-E4sM0Ac4i3oLzP98UpOClakyMo0F6BzTo6XndTgRHnHVaW9cSKJU1unBvf9LvkH2Dd-UGWEgh-AD3MgtuXBwkmgtrT2RY30lV7UIndDwVHOupGAzmjZNUV7zSCHQyVixAZuRqJQLZ8EkJQ3_FYSRJF7NOihnvuQ';
+$sourcePattern = get_theme_asset_url($presetKey, 'assets/parang-pattern.webp');
+$sourceGunungan = get_theme_asset_url($presetKey, 'assets/gunungan.webp');
+$sourceWayang = get_theme_asset_url($presetKey, 'assets/wayang.webp');
+$staticPortraitFallback = $sourceGunungan;
 
 $visualBackground = trim((string)($visuals['hero_background'] ?? '')) ?: $sourcePattern;
 $backgroundCss = theme_visual_css_url($visualBackground);
@@ -23,8 +22,8 @@ $assetUrl = static function (string $configured, string $fallback): string {
     if ($configured === '') return $fallback;
     return function_exists('theme_visual_public_path') ? theme_visual_public_path($configured) : public_path($configured);
 };
-$groomPhoto = $assetUrl((string)($config['media']['groom_photo'] ?? ''), $sourceGroom);
-$bridePhoto = $assetUrl((string)($config['media']['bride_photo'] ?? ''), $sourceBride);
+$groomPhoto = $assetUrl((string)($config['media']['groom_photo'] ?? ''), $staticPortraitFallback);
+$bridePhoto = $assetUrl((string)($config['media']['bride_photo'] ?? ''), $staticPortraitFallback);
 $siteTitle = escape_html((string)($config['site']['title'] ?? 'Undangan Pernikahan'));
 $description = escape_html((string)($config['site']['description'] ?? $config['wedding']['opening_text'] ?? ''));
 $brideNameRaw = (string)($config['wedding']['bride_name'] ?? 'Februana');

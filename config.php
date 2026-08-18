@@ -744,7 +744,7 @@ function theme_registry(): array {
                 'accent_color' => ['type' => 'color', 'label' => 'Aksen Emas', 'description' => 'Aksen emas untuk border, tombol, dan ornamen Parang.', 'default' => '#C49A45'],
                 'heading_font' => ['type' => 'font', 'label' => 'Font Heading', 'description' => 'Font editorial Libre Caslon Text untuk identitas Manten Jawi.', 'default' => 'Libre Caslon Text, serif', 'options' => ['Libre Caslon Text, serif' => 'Libre Caslon Text', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font Manrope untuk isi, navigasi, form, dan detail acara.', 'default' => 'Manrope, sans-serif', 'options' => ['Manrope, sans-serif' => 'Manrope', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
-                'hero_background' => ['type' => 'image', 'label' => 'Pola Parang', 'description' => 'Asset background parang yang digunakan desain terlampir.', 'default' => 'https://lh3.googleusercontent.com/aida/AP1WRLtUTK8DchC8OhVkZ4rCvN3p1neL5TYLWUZfyPUZmVK_VpxfkVj3pTmeYE-Ud7yhlmzGCFUfWoWIow5fmTRIcuq8H4tSay9gpj4M4dCPKz_utQcbS51d4MlWZuPXQhxKwcrb_GkG6_YSBPDtftlFMCQ0ZnuhaG1qxQ39bK5EorAXpZkuNiB3bm6-wzUEg9WxojoyB-shrlMFKEI6otgf15IsGU-kKKCQUgjyrT7iztRbf2el57Z0g_UTjQeu']
+                'hero_background' => ['type' => 'image', 'label' => 'Pola Parang', 'description' => 'Asset background parang yang digunakan desain terlampir.', 'default' => 'themes/parang/assets/parang-pattern.webp']
             ]
         ],
         'archak' => [

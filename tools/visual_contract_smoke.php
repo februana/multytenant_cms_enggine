@@ -194,7 +194,7 @@ $parangValues = theme_visual_values_for_config($parangConfig, 'parang');
 visual_assert(($parangValues['hero_background'] ?? '') !== '', 'Parang resolves the supplied source background by default');
 $parangHtml = render_theme_layout($parangConfig, array_replace($shared, ['presetKey' => 'parang']));
 visual_assert(str_contains($parangHtml, 'id="cms-parang-root"'), 'Parang render preserves its native root');
-visual_assert(str_contains($parangHtml, 'aida/AP1WRLtUTK8DchC8OhVkZ4rCvN3p1neL5TYLWUZfyPUZmVK_VpxfkVj3pTmeYE'), 'Parang render retains the supplied parang background asset');
+visual_assert(str_contains($parangHtml, '/themes/parang/assets/parang-pattern.webp'), 'Parang render retains the supplied local parang background asset');
 
 echo "PASS: visual contract smoke test\n";
 ob_end_flush();

@@ -70,6 +70,10 @@ save_config($resetConfig);
 $final = load_config();
 media_e2e_assert(($final['theme_visuals']['elix'] ?? []) === [], 'Clearing Elix restores source-default state');
 media_e2e_assert(str_contains(render_theme_layout(array_replace_recursive($final, ['theme' => ['mode' => 'preset', 'theme_preset' => 'elix']]), $shared), 'prewed1.jpg'), 'Elix reset returns to source background');
+$parangFinalShared = array_replace($shared, ['presetKey' => 'parang']);
+$parangFinalHtml = render_theme_layout(array_replace_recursive($final, ['theme' => ['mode' => 'preset', 'theme_preset' => 'parang']]), $parangFinalShared);
+media_e2e_assert(str_contains($parangFinalHtml, '/themes/parang/assets/parang-pattern.webp'), 'Parang reset returns to local source background');
+media_e2e_assert(!str_contains($parangFinalHtml, 'googleusercontent.com'), 'Parang normal render has no external image dependency');
 
 @unlink($probeAbsolute);
 @unlink(CONFIG_FILE);
