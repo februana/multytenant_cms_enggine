@@ -118,10 +118,7 @@ const guestLinkStatus = document.getElementById('guestLinkStatus');
 
 function getGuestLinkBaseUrl() {
   const value = guestLinkBaseUrlInput?.value?.trim();
-  if (value) {
-    return value.replace(/\/+$/, '');
-  }
-  return window.location.origin;
+  return value ? value.replace(/\/+$/, '') : '';
 }
 
 function getGuestLinkWhatsappUrl(invitationUrl) {
@@ -144,9 +141,14 @@ function updateGuestLinkOutput() {
       downloadGuestLinkQrBtn.style.display = 'none';
       downloadGuestLinkQrBtn.href = '#';
     }
-    return;
+    return false;
   }
   const baseUrl = getGuestLinkBaseUrl();
+  if (!baseUrl) {
+    guestLinkOutput.value = '';
+    showGuestLinkStatus('Konfigurasikan Site URL di Pengaturan terlebih dahulu.', false);
+    return false;
+  }
   const url = baseUrl + '/?to=' + encodeURIComponent(guestName);
   guestLinkOutput.value = url;
   const qrUrl = '/admin/qr.php?data=' + encodeURIComponent(url);
@@ -158,6 +160,7 @@ function updateGuestLinkOutput() {
     downloadGuestLinkQrBtn.href = qrUrl;
     downloadGuestLinkQrBtn.style.display = 'inline-flex';
   }
+  return true;
 }
 
 function showGuestLinkStatus(message, success = true) {
@@ -178,8 +181,9 @@ generateGuestLinkBtn?.addEventListener('click', () => {
     showGuestLinkStatus('Masukkan nama tamu terlebih dahulu.', false);
     return;
   }
-  updateGuestLinkOutput();
-  showGuestLinkStatus('Link tamu dibuat. Tekan Simpan untuk menyimpan.');
+  if (updateGuestLinkOutput()) {
+    showGuestLinkStatus('Link tamu dibuat. Tekan Simpan untuk menyimpan.');
+  }
 });
 
 copyGuestLinkBtn?.addEventListener('click', async () => {

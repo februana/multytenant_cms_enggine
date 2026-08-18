@@ -154,7 +154,7 @@ if (!function_exists('theme_contract_registry')) {
      */
     function theme_contract_global_admin_capabilities(): array {
         // Global CMS controls are never inferred from a built-in template contract.
-        return ['preset_selector', 'guest_links'];
+        return ['preset_selector', 'guest_links', 'settings', 'backup'];
     }
 
     function theme_contract_assets(string $presetKey): array {

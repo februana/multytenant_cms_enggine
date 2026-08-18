@@ -92,3 +92,12 @@ The four built-in guest-facing themes now translate static application/template 
 The CMS-native Custom renderer also uses Indonesian application navigation and actions. Its configured section titles such as `Love Story`, `Gallery`, `Events`, `Location`, and `Gift` remain unchanged because they are user/config content and the preservation rule prohibits automatic translation of custom titles and subtitles.
 
 `tools/theme_localization_smoke.php` verifies Indonesian static labels across Custom and all four built-in active guest paths, forbids the confirmed visible English phrases, and asserts that `preset_selector` and `guest_links` remain global capabilities with the selector panel gated by the global capability. The existing `tools/admin_guest_smoke.php` continues to verify all five preset states and the complete switching sequence without data/media reset. Browser fixtures for Custom, DewanaKL, Elix, Rainier, and Archak were inspected; all were non-blank, showed Indonesian static UI, preserved sentinel user content and multiline text, and retained source attribution.
+
+
+## PR #72 follow-up: global Settings and Guest Link origin
+
+The root cause was confirmed in the capability layer: `theme_admin_capabilities_for_config()` merged `settings` and `backup` only for Custom mode, while built-in preset contracts did not declare them. Admin navigation and panels also used the theme-specific `$adminCapabilityEnabled()` gate. The global capability contract now owns `settings` and `backup`, and both Admin menu/panel gates use `$globalAdminCapabilityEnabled()`.
+
+The Guest Link Generator no longer falls back silently to `window.location.origin`, `/`, or `example.com`. Clean-install configuration now starts with an empty site URL. When the origin is missing, the Admin displays an actionable Indonesian configuration warning, the preview remains empty, the browser generator refuses to create a URL and reports that Site URL must be configured, and the server-side URL helper returns an empty result. A configured origin such as `https://test.example.id` produces `https://test.example.id/?to=Budi`.
+
+`tools/admin_guest_smoke.php` now verifies global Settings and Backup availability in Custom, DewanaKL, Elix, Rainier, and Archak; the Settings save action; configured-origin URL generation; missing-origin behavior; browser fallback removal; and origin persistence across `custom → dewankl → elix → rainier → archak → custom` switching. The complete existing suite and the localization/content-preservation tests remain passing.

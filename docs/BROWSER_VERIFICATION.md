@@ -83,3 +83,8 @@ The Archak fixture rendered Indonesian navigation, hero, timeline, story, travel
 
 
 The refreshed Custom fixture showed Indonesian application navigation/actions (`Konfirmasi Kehadiran`, `Mode Hemat Data`, `Buka Undangan`, `Tambah ke Kalender`, `Hubungi WA`, `Putar Musik`, `Buka di Google Maps`, and `Kirim Konfirmasi Kehadiran`). Custom section titles such as `Love Story`, `Gallery`, `Events`, `Location`, and `Gift` remained exactly as supplied by the current config; they are user/config content and were intentionally not translated. The Custom multiline opening content remained visible as separate lines. The browser console produced no output for this verification page.
+
+
+## PR #72 follow-up: global Settings and Guest Link Generator
+
+An unauthenticated browser request to the updated Admin confirmed the login page remains available and Indonesian. A previously authenticated Admin request on the updated branch showed the global `Preset / Tema`, `Link Tamu`, `Cadangan`, and `Pengaturan` navigation entries, an empty invitation preview with the placeholder `Konfigurasikan Site URL di Pengaturan`, and the Settings panel’s missing-origin warning. Interactive generation after login could not be completed because the browser session required Admin credentials; the configured-origin and missing-origin paths were verified by `tools/admin_guest_smoke.php` and the complete local suite.

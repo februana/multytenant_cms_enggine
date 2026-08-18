@@ -74,7 +74,7 @@ send_security_header('Permissions-Policy', 'microphone=(), camera=(), geolocatio
 function config_defaults(): array {
     return [
         'site' => [
-            'url' => 'https://example.com',
+            'url' => '',
             'title' => 'Undangan Pernikahan Andi & Februana',
             'description' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
             'keywords' => 'undangan pernikahan, wedding invitation, Andi, Februana',
