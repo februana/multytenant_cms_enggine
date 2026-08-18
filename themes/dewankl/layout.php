@@ -101,6 +101,7 @@ $receptionDateFormatted = $receptionDate ? date('l, j F Y', strtotime($reception
 
 // Preset options (theme_options)
 $showBismillah = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'show_bismillah', true) : ($config['theme_options']['dewankl']['show_bismillah'] ?? true);
+$openingGreeting = render_preserved_text(theme_opening_greeting($config, 'dewankl'));
 $enableConfetti = (function_exists('get_theme_option') ? get_theme_option($config, 'dewankl', 'enable_confetti', true) : ($config['theme_options']['dewankl']['enable_confetti'] ?? true)) ? 'true' : 'false';
 $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'enable_mouse_animation', true) : ($config['theme_options']['dewankl']['enable_mouse_animation'] ?? true);
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'dewankl') : [];
@@ -235,7 +236,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                     <?php if ($showBismillah): ?>
                     <h2 class="font-arabic py-4 m-0" style="font-size: 2rem;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</h2>
                     <?php endif; ?>
-                    <h2 class="font-esthetic py-4 m-0" style="font-size: 2rem;">Assalamualaikum Warahmatullahi Wabarakatuh</h2>
+                    <h2 class="font-esthetic py-4 m-0" style="font-size: 2rem;"><?php echo $openingGreeting; ?></h2>
                     <p class="pb-4 px-2 m-0" style="font-size: 0.95rem;">Tanpa mengurangi rasa hormat, kami mengundang Anda untuk berkenan menghadiri acara pernikahan kami:</p>
                     
                     <div class="overflow-x-hidden pb-4">

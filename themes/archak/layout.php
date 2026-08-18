@@ -22,6 +22,7 @@ $address = nl2br(escape_html($config['location']['address'] ?? ''));
 $mapsUrl = escape_html($config['location']['maps_url'] ?? '');
 $quote = nl2br(escape_html($config['wedding']['quote'] ?? ''));
 $openingText = nl2br(escape_html($config['wedding']['opening_text'] ?? ''));
+$openingGreeting = render_preserved_text(theme_opening_greeting($config, 'archak'));
 $closingText = nl2br(escape_html($config['wedding']['closing_text'] ?? ''));
 $whatsappLink = escape_html(build_whatsapp_link($config));
 $galleryItems = function_exists('get_gallery_items') ? get_gallery_items($config) : [];
@@ -73,6 +74,7 @@ $archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' 
     <div class="home hz-margin">
         <h3>Kita Akan Menikah</h3>
         <p id="guest-greeting" class="guest-greeting">Kepada <?php echo $guestLabel; ?></p>
+        <p class="opening-greeting"><?php echo $openingGreeting; ?></p>
         <h1><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1>
         <div class="container-out"><div class="container-in text"><?php echo $akadDate ? escape_html(date('l, M. j, Y', strtotime($akadDate))) : ''; ?><br><?php echo $venue; ?><button class="huge-btn" type="button" onclick="window.open('<?php echo $whatsappLink; ?>','_blank')">Konfirmasi Kehadiran</button></div><div class="home-img" id="home-img-lg"<?php if ($heroStyle !== ''): ?> style="<?php echo $heroStyle; ?>"<?php endif; ?>></div></div>
     </div>

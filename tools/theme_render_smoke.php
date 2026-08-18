@@ -31,15 +31,30 @@ $markers = [
     'pawiwahan' => ['id="home"', 'id="carouselExampleCaptions"', 'id="welcomeModal"', 'id="hitungmundur"', 'id="galeri"'],
 ];
 
+$greetingSentinels = [
+    'dewankl' => 'Salam Dewankl',
+    'elix' => 'Salam Elix',
+    'rainier' => 'Salam Rainier',
+    'archak' => 'Salam Archak',
+    'parang' => 'Salam Parang',
+    'pawiwahan' => 'Salam Pawiwahan',
+];
+
 foreach ($markers as $preset => $required) {
     $config = $base;
     $config['theme']['mode'] = $preset === 'custom' ? 'custom' : 'preset';
     $config['theme']['theme_preset'] = $preset;
+    if (isset($greetingSentinels[$preset])) {
+        $config['theme_options'][$preset]['opening_greeting'] = $greetingSentinels[$preset];
+    }
     $shared['presetKey'] = $preset;
     $html = render_theme_layout($config, $shared);
     if ($html === '') throw new RuntimeException("Empty render for {$preset}");
     foreach ($required as $marker) {
         if (strpos($html, $marker) === false) throw new RuntimeException("Missing {$marker} in {$preset}");
+    }
+    if (isset($greetingSentinels[$preset]) && strpos($html, $greetingSentinels[$preset]) === false) {
+        throw new RuntimeException("Configured greeting did not render in {$preset}");
     }
     echo "PASS: {$preset} rendered (" . strlen($html) . " bytes)\n";
 }

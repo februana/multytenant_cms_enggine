@@ -23,6 +23,7 @@ $guestName = function_exists('resolve_guest_name') ? resolve_guest_name($config)
 $guestLabel = escape_html($guestName !== '' ? $guestName : 'Bapak/Ibu/Saudara/i');
 $quote = nl2br(escape_html($config['wedding']['quote'] ?? ''));
 $openingText = nl2br(escape_html($config['wedding']['opening_text'] ?? ''));
+$openingGreeting = render_preserved_text(theme_opening_greeting($config, 'elix'));
 $calendarLink = escape_html(build_google_calendar_link($config));
 $whatsappLink = escape_html(build_whatsapp_link($config));
 $calendarTarget = strtotime((string)($config['schedule']['countdown_target'] ?? '')) ?: time();
@@ -72,6 +73,7 @@ $elixVisualStyle = '<style id="cms-elix-visual">:root{--cms-elix-accent:' . $eli
       <main>
         <h4>Kepada Yth.<span><?php echo $guestLabel; ?>, </span></h4>
         <h1><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1>
+        <p class="opening-greeting"><?php echo $openingGreeting; ?></p>
         <p><?php echo $openingText ?: 'Akan melangsungkan resepsi pernikahan dalam:'; ?></p>
         <?php if (!empty($config['schedule']['countdown_target'])): ?><div id="countdown" class="countdown simply-countdown-circle mt-4 mb-4"></div><?php endif; ?>
         <a href="#home" class="btn mt-4" btn-lg onClick="enableScroll()">Lihat Undangan</a>

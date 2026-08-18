@@ -122,3 +122,11 @@ The deployment contract was updated after the Pawiwahan and canonical media addi
 `deploy/health-check.sh` now checks all six built-in theme adapters, the active preset, runtime config/database/guest-link/ICS files, required upload and preset-scoped Theme Assets directories, writable runtime storage, and ImageMagick or PHP GD WebP availability. Optional user media remains a warning; missing runtime directories, unsupported active presets, missing processing capability, missing state, or security failures are blockers.
 
 The deployment smoke test now executes the shared directory contract in an isolated fixture and verifies every upload root plus all seven preset Theme Assets directories. Shell syntax, PHP lint, deployment smoke, and the complete repository regression suite passed after this update.
+
+## Configurable Opening Greetings and Pawiwahan Angpau
+
+The six built-in preset registries now expose a schema-driven `Salam Pembuka` textarea in the existing Theme Options admin panel. Defaults are `Assalamualaikum Warahmatullahi Wabarakatuh` for DewanaKL, `Bismillahirrahmanirrahim` for Elix, Rainier, Archak, and Parang, and `OM Swastiastu` for Pawiwahan. User-entered values are stored under `theme_options[<preset>].opening_greeting`, preserve Unicode and line breaks, and render through the shared escaped text resolver without hardcoding the final greeting in the preset layout.
+
+Pawiwahan’s Angpau trigger and modal now use stable CMS-specific IDs. The adapter explicitly opens the Bootstrap modal when the Bootstrap bundle is available and provides a native modal/backdrop fallback when it is unavailable. The account-copy control and status feedback use the same stable namespaced IDs. The focused Pawiwahan smoke test and all-preset renderer smoke both pass.
+
+An isolated Chromium check rendered the Pawiwahan page with `OM Swastiastu`. Because the sandbox could not load the external Bootstrap JavaScript (`window.bootstrap.Modal` was unavailable), the native fallback path was exercised; it opened the modal with `display: block`, `modal fade show`, `aria-modal="true"`, and `aria-expanded="true"` on the trigger.

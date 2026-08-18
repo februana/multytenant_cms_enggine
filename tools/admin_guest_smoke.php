@@ -105,6 +105,12 @@ assert_true(!str_contains($adminSource, "\$adminCapabilityEnabled('backup')"), '
 assert_true(str_contains($adminSource, 'Site URL belum dikonfigurasi.'), 'missing-origin admin warning is missing');
 assert_true(str_contains($adminSource, 'name="action" value="save_preset"'), 'global preset selector save action missing');
 assert_true(!str_contains($adminSource, "\$adminCapabilityEnabled('preset_selector')"), 'preset selector incorrectly uses theme capability gate');
+foreach (theme_builtin_preset_keys() as $presetKey) {
+    $presetMeta = theme_registry()[$presetKey] ?? [];
+    assert_true(($presetMeta['schema']['opening_greeting']['type'] ?? '') === 'textarea', "$presetKey opening greeting schema missing");
+    assert_true(trim((string)(config_defaults()['theme_options'][$presetKey]['opening_greeting'] ?? '')) !== '', "$presetKey opening greeting default missing");
+}
+assert_true(str_contains($adminSource, 'name="theme_opts[') && str_contains($adminSource, "\$fieldType === 'textarea'"), 'admin Theme Options textarea renderer is missing');
 
 // The selector and visual editor are global, while the full legacy manual editor remains Custom-only.
 assert_true(str_contains($adminSource, "data-visual-schemas="), 'visual schema payload missing');
