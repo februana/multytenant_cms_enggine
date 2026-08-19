@@ -3,6 +3,7 @@
 .gitignore
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 backups/*
@@ -13,3 +14,7 @@ uploads/*
 *.swp
 node_modules
 vendor
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+storage/*

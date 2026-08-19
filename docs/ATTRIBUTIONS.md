@@ -45,8 +45,9 @@ Where a source uses the MIT License, redistribution of substantial portions requ
 **Original project:** Wedding invitation website.  
 **Original author/creator:** Vinit Shahdeo.
 **Repository:** [vinitshahdeo/wedding-website][5]
-**Source revision audited:** `f42fbe6`.
-**License:** MIT as declared by the source repository.
+**Source revision audited:** `f42fbe653b54ff38096c82fd63bb759885a3402b`.
+**License:** MIT License, Copyright (c) 2022 Vinit Shahdeo, as declared by the source repository and retained at [`docs/licenses/SHUBH-VIVAH-LICENSE.txt`](licenses/SHUBH-VIVAH-LICENSE.txt).
+**License status:** Clearly established by the source `LICENSE` file at the audited revision. The MIT copyright and permission notice must remain with substantial source-derived portions.
 **Current integration:** `themes/shubh-vivah/layout.php` and `themes/shubh-vivah/fidelity-adapter.css` retain the source invitation-card atmosphere, floral ornaments, script typography, compact countdown, event, gallery, and RSVP flow while binding CMS data, canonical media, guest identity, calendar, maps, and backend RSVP. Source artwork is bundled locally under `themes/shubh-vivah/assets/`.
 
 ## Yami Buzzy
@@ -54,15 +55,16 @@ Where a source uses the MIT License, redistribution of substantial portions requ
 **Original project:** Yami Buzzy wedding invitation template.
 **Original author/creator:** Tynab.
 **Repository:** [Tynab/Yami-Buzzy][6]
-**Source revision audited:** `367f5a5`.
-**License:** Source repository license retained as the provenance boundary; project-specific CMS integration is isolated in the adapter.
+**Source revision audited:** `367f5a5fb33ce2f902d5fa2db5bb0508136eb2eb`.
+**License:** No SPDX license is declared by GitHub and no `LICENSE`, `COPYING`, `NOTICE`, or `COPYRIGHT` file was found at the audited source revision. The status notice is retained at [`docs/licenses/YAMI-BUZZY-LICENSE.txt`](licenses/YAMI-BUZZY-LICENSE.txt); it is not a license grant.
+**License status:** Unresolved. Yami Buzzy must not be labeled MIT or treated as freely redistributable without explicit permission from the copyright holder. The repository records the source boundary and keeps project-specific CMS integration separate, but an adapter does not change the source template's copyright status.
 **Current integration:** `themes/yami-buzzy/layout.php` and `themes/yami-buzzy/fidelity-adapter.css` retain the welcome modal, full-bleed hero, couple/event cards, dress-code timeline, story, gallery, video, gift, invitation/location, RSVP, closing, and mobile navigation flow while binding CMS data and canonical media. Visible application UI is localized to Bahasa Indonesia.
 
 ## Rainier
 
 **Original project:** Invitation Website Template.  
 **Original author/creator:** Rainier Pearson Saputra.  
-**Repository:** [Rainier-PS/Invitation-Template][3]  
+**Repository:** [Rainier-PS/Invitation-Template][2]
 **Exact source revision used:** `443a04f07d12164a040d20cd4799ace74a6a3e81`  
 **License:** MIT License, Copyright (c) 2026 Rainier-PS.  
 **License status:** Clearly established by the LICENSE file.  
@@ -91,7 +93,7 @@ Where a source uses the MIT License, redistribution of substantial portions requ
 
 **Original project:** Wedding Invitation Website.  
 **Original author/creator:** Archak Nath.  
-**Repository:** [archakNath/wedding-invitation-website][4]  
+**Repository:** [archakNath/wedding-invitation-website][3]
 **Exact source revision used:** `1b549022cf61c1ac4a9092fa65d5bc615b2de3bd` (`1b54902`).  
 **License:** MIT License, Copyright (c) 2022 Archak Nath.  
 **License status:** Clearly established by the LICENSE file.  
@@ -114,11 +116,19 @@ Where a source uses the MIT License, redistribution of substantial portions requ
 
 **Intentional limitations:** Archak intentionally has fewer CMS presentation boundaries than Custom. Missing generic CMS sections are not defects when the original template has no equivalent. The preset preserves its compact composition and original navigation/animation identity.
 
+## Parang
+
+**Original project:** User-provided HTML design reference named Parang.
+**Original author/copyright holder:** Not supplied in the repository context; this preset is recorded as a user-provided reference rather than an identified public source repository.
+**Repository/source:** No public repository URL or external license file was supplied for the reference.
+**License status:** No external license metadata was supplied. The reference should remain limited to the intended project unless the copyright holder provides additional permission or licensing information.
+**Current integration:** The project-specific adapter is `themes/parang/`, with source-compatible layout, ornaments, side navigation, couple/event, story, gallery, gift, maps, RSVP, and music boundaries. CMS data, canonical media, guest identity, and backend services are integrated through the shared contracts.
+
 ## Pawiwahan
 
 **Original project:** Undangan nikah Pawiwahan, Thema 1.
 **Original author/copyright holder:** DE Juna.
-**Repository:** [parta99/pawiwahan][5]
+**Repository:** [parta99/pawiwahan][4]
 **Exact source revision used:** `957b3f38a344a055318173c6adf3e36502e09615` (`957b3f3`).
 **License:** MIT License, Copyright (c) 2021 DE Juna.
 **License status:** Clearly established by `thema-1/LICENSE`. The exact source notice is retained at [`docs/licenses/PAWIWAHAN-LICENSE.txt`](licenses/PAWIWAHAN-LICENSE.txt).

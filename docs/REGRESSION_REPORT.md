@@ -1,5 +1,7 @@
 # Regression Report
 
+> **Historical artifact:** the detailed rows below were captured before PR #84 added Shubh Vivah and Yami Buzzy and removed the retired preset. They remain as forensic evidence of earlier fixes, not as the current preset inventory. Current active presets are documented in [`README.md`](../README.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), and [`repository-consistency-audit.md`](repository-consistency-audit.md).
+
 ## Scope and final status
 
 This report records the final hardening pass for the Dynamic CMS theme architecture. The built-in presets remain source-template-owned renderers, while Custom remains the CMS-native renderer. The final suite passed after the last correction to the DewanaKL disabled `wedding_date` boundary, the Custom document shell, and Rainier's invalid cross-date `endTime` handling.

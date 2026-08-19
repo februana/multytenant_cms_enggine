@@ -1,300 +1,60 @@
-# Release Notes - Version 2.0.0
+# Release Notes — Current Unreleased Change Set
 
-**Release Date**: January 15, 2024  
-**Type**: Major Architecture Update  
-**Breaking Changes**: Yes
+**Scope:** PR #84 on `fix/elix-floral-transition-navigation`
+**Status:** Unreleased
+**Deployment impact:** Docker and native Ubuntu/Linux paths remain supported; runtime data must be backed up before updates.
 
----
+## Overview
 
-## Highlights
+This change set completes the multi-preset wedding invitation CMS transition. The repository now supports seven active built-in presets—DewanaKL, Rainier, Archak, Parang, Pawiwahan, Shubh Vivah, and Yami Buzzy—plus the CMS-native Custom builder. Built-in presets remain source-template adapters rather than generic skins: each preserves its own DOM boundaries, navigation, animation lifecycle, dependencies, and section order.
 
-Version 2.0.0 represents the most significant update to the Wedding Invitation application since its inception. We have completely rearchitected the system from a dual-root structure to a **Single-Root Architecture**, delivering:
+The CMS now has a preset-aware visual capability layer. Admin can use localized controls for supported section backgrounds, Theme Assets, named colors, heading/body font catalogs, previews, and reset-to-default actions. A reset removes only the saved reference and restores the source fallback; it does not delete the physical media file or create a second media pipeline.
 
-- 🔒 **Enhanced Security**: Explicit protection of sensitive files and directories
-- 🚀 **Simplified Deployment**: No more complex path configurations
-- 📦 **Cleaner Codebase**: Removed legacy duplicates and dead code
-- 📚 **Complete Documentation**: Professional-grade guides for every aspect
-- 🔄 **Unified Configuration**: Single source of truth for all settings
+## Content defaults
 
----
+A clean configuration now starts with Indonesian wedding copy for **FEBRUANA** and **ANDI MUHAMAD BASUKI**, including the calls **Febru** and **Andi**, Arabic Bismillah, localized greeting and opening quotation, **QS. Ar-Rum 21**, and an Islamic closing. Admin values override these defaults field by field, and clearing a field resolves back to its default. Calendar metadata is generated from the current title, opening, schedule, and location.
 
-## What's New
+## Deployment changes
 
-### Architecture Improvements
+Docker now declares an image-level HTTP healthcheck and a matching Compose service healthcheck against `http://127.0.0.1/`. Compose persists CMS state, uploads and preset Theme Assets, backup archives, and optional WebDAV data in separate named volumes. The entrypoint recreates the shared runtime directory contract, protects `.env` permissions after recursive normalization, and safely escapes environment substitutions when creating the initial file. `.dockerignore` excludes local runtime data while retaining `.env.example` for bootstrap.
 
-#### Single-Root Design
-The entire application now operates from the repository root. The document root for your web server should point directly to the cloned repository folder.
+Native deployment remains available through `deploy/install.sh` with Nginx or Apache, and `deploy/update.sh`, `deploy/backup.sh`, `deploy/restore.sh`, and `deploy/health-check.sh` remain the operational path. No Render Blueprint or other managed-cloud manifest is claimed because the repository does not contain or test one. The native installer is the supported non-Docker alternative.
 
-**Before (v1.x)**:
-```
-/var/www/wedding/          # Web root
-└── app/                   # Application lived here
-    ├── index.php          # Entry point
-    └── config.php
-```
+## Upgrade procedure
 
-**After (v2.0)**:
-```
-/var/www/wedding/          # Web root AND application root
-├── index.php              # Wrapper entry point
-├── admin.php              # Admin entry point
-├── app/                   # Private logic (blocked from web)
-│   └── index.php          # Implementation
-└── config.json            # Unified configuration
-```
-
-#### Security Hardening
-- Direct access to `/app/` returns 403 Forbidden
-- Configuration files (`*.json`) blocked from download
-- Database file (`*.sqlite`) protected
-- PHP execution disabled in uploads directory
-- Hidden files (`.git`, `.env`) inaccessible via web
-
-#### Entry Point Wrappers
-New public wrapper files provide clean URLs while keeping implementation private:
-- `/index.php` → Frontend
-- `/admin.php` → Admin panel
-- `/save.php` → AJAX save handler
-- `/messages.php` → Messages API
-- `/gallery.php` → Gallery API
-
-### Documentation Suite
-
-Five comprehensive new documents guide every aspect of the application:
-
-1. **ARCHITECTURE.md** - System design and data flow
-2. **DEPLOYMENT.md** - Installation and server configuration
-3. **BACKUP_RESTORE.md** - Disaster recovery procedures
-4. **SECURITY.md** - Security policies and best practices
-5. **RELEASE_NOTES.md** - This file
-
-### Tooling Enhancements
-
-- Improved `deploy/install.sh` with automatic permission setting
-- Enhanced `deploy/backup.sh` focusing on user data only
-- Updated `deploy/restore.sh` with permission restoration
-- New `deploy/health-check.sh` for monitoring
-
----
-
-## Breaking Changes
-
-### URL Structure Changes
-
-All URLs have changed due to the root consolidation:
-
-| Old URL (v1.x) | New URL (v2.0) |
-|----------------|----------------|
-| `/app/index.php` | `/` or `/index.php` |
-| `/app/admin.php` | `/admin.php` |
-| `/app/save.php` | `/save.php` |
-| `/app/messages.php` | `/messages.php` |
-| `/app/gallery.php` | `/gallery.php` |
-| `/app/assets/css/style.css` | `/style.css` |
-| `/app/uploads/cover/image.jpg` | `/uploads/cover/image.jpg` |
-
-**Action Required**: Update any bookmarks, links, or integrations using old URLs.
-
-### Configuration Migration
-
-Fragmented configuration files have been consolidated:
-
-**Removed Files**:
-- `config/site.json` → Merged into `config.json`
-- `config/theme.json` → Merged into `config.json`
-- `config/sections.json` → Merged into `config.json`
-- `config/seo.json` → Merged into `config.json`
-
-**Action Required**: Run the application once after upgrade; it will automatically use the unified `config.json`.
-
-### Deprecated Endpoints
-
-The following files have been removed:
-
-- ❌ `app/upload.php` - Use admin panel upload functionality instead
-- ❌ `app/admin-rsvp.php` - Functionality merged into `admin.php`
-- ❌ `app/whatsapp-redirect.php` - Functionality merged into `admin.php`
-- ❌ `app/export-rsvp.php` - Functionality merged into `admin.php`
-
-**Action Required**: Update any external scripts or webhooks calling these endpoints.
-
-### Web Server Configuration
-
-Old Nginx/Apache configurations are incompatible. You must:
-
-1. Replace `deploy/nginx-site.conf` with the new version
-2. Update document root from `/var/www/wedding/app` to `/var/www/wedding`
-3. Apply new security rules blocking `/app/` and sensitive files
-
-**Action Required**: Follow the migration steps below.
-
----
-
-## Upgrade Guide
-
-### Prerequisites
-
-- Backup your current installation
-- Ensure you have SSH access to the server
-- Verify Git is installed
-
-### Step-by-Step Migration
-
-#### 1. Create Backup
+Before changing an existing native installation, run:
 
 ```bash
-cd /var/www/wedding
-./deploy/backup.sh
+sudo /var/www/wedding/deploy/backup.sh
+sudo /var/www/wedding/deploy/update.sh
+sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-Verify the backup was created:
-```bash
-ls -la backups/
-```
-
-#### 2. Pull Latest Code
+For Docker, retain named volumes during rebuilds:
 
 ```bash
-git pull origin main
+docker compose build
+docker compose up -d --force-recreate
+docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
 ```
 
-Resolve any merge conflicts if you made custom changes.
+Do not run `docker compose down -v` unless intentionally resetting a disposable installation. Read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) for the complete procedure.
 
-#### 3. Run Installation Script
+## Provenance and licensing
 
-```bash
-chmod +x deploy/install.sh
-sudo ./deploy/install.sh
-```
+Shubh Vivah is adapted from [vinitshahdeo/wedding-website](https://github.com/vinitshahdeo/wedding-website), audited at revision `f42fbe653b54ff38096c82fd63bb759885a3402b`, with the MIT notice retained in `docs/licenses/SHUBH-VIVAH-LICENSE.txt`. Yami Buzzy is adapted from [Tynab/Yami-Buzzy](https://github.com/Tynab/Yami-Buzzy), audited at revision `367f5a5fb33ce2f902d5fa2db5bb0508136eb2eb`; no SPDX license or license file was found at that revision, so `docs/licenses/YAMI-BUZZY-LICENSE.txt` records an unresolved status rather than granting or implying MIT rights. Elix is retired and its stale local license residue has been removed.
 
-This sets correct permissions and creates required directories.
+See [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) for every source revision, author, license status, representative source files, and integration boundary.
 
-#### 4. Update Web Server Configuration
+## Validation
 
-**For Nginx**:
+The repository maintains smoke coverage for configuration defaults, theme rendering and contracts, localization, content preservation, visual capabilities, media lifecycle, admin guest access, preset behavior, deployment bootstrap, backup/restore, and update safety. The final audit requires all smoke tests to pass, `git diff --check` to be clean, and no untracked runtime data or generated secrets.
 
-```bash
-sudo cp deploy/nginx-site.conf /etc/nginx/sites-available/wedding
-sudo nginx -t
-sudo systemctl reload nginx
-```
+## Related documents
 
-**For Apache**:
-
-Ensure `.htaccess` is enabled:
-```apache
-<Directory /var/www/wedding>
-    AllowOverride All
-</Directory>
-```
-
-Then restart:
-```bash
-sudo systemctl restart apache2
-```
-
-#### 5. Verify Installation
-
-Run the health check:
-```bash
-./deploy/health-check.sh
-```
-
-Expected output:
-```
-✓ Frontend (http://localhost/) - HTTP 200
-✓ Admin Panel (http://localhost/admin.php) - HTTP 200
-✓ Uploads writable - OK
-```
-
-#### 6. Test Critical Functions
-
-- [ ] Visit frontend: `https://your-domain.com/`
-- [ ] Access admin: `https://your-domain.com/admin.php`
-- [ ] Submit test RSVP
-- [ ] Upload test image
-- [ ] Download event.ics
-- [ ] Create guest link
-
-#### 7. Clean Legacy Files (Optional)
-
-Remove old configuration fragments:
-```bash
-rm -rf config/site.json config/theme.json config/sections.json config/seo.json
-```
-
-Remove legacy app files:
-```bash
-rm -f app/config.proposed.php app/index.html app/admin-rsvp.php
-rm -f app/whatsapp-redirect.php app/export-rsvp.php
-```
-
----
-
-## Known Issues
-
-### Shared Hosting Limitations
-
-On some shared hosting providers:
-- `.htaccess` PHP execution disabling may not work with PHP-FPM
-- Custom Nginx configurations may not be allowed
-
-**Workaround**: Contact your hosting provider about enabling security features or consider migrating to a VPS.
-
-### Browser Caching
-
-Users may experience cached redirects to old `/app/` URLs.
-
-**Solution**: Clear browser cache or wait 24 hours for cache expiration.
-
----
-
-## Performance Impact
-
-- **Page Load Time**: ~5% faster (simplified routing)
-- **Memory Usage**: No change
-- **Disk Space**: Reduced by ~50KB (removed dead code)
-
----
-
-## Security Advisories
-
-All users should upgrade immediately to benefit from:
-- Protected configuration files
-- Blocked source code access
-- Hardened upload directory
-- Improved file permissions
-
----
-
-## Support
-
-If you encounter issues during upgrade:
-
-1. Check logs: `/var/log/nginx/error.log` or `/var/log/apache2/error.log`
-2. Review `DEPLOYMENT.md` for troubleshooting section
-3. Run health check: `./deploy/health-check.sh`
-4. Restore from backup if needed: `./deploy/restore.sh backups/...`
-
----
-
-## What's Next
-
-Version 2.0.0 establishes a solid foundation for future enhancements:
-
-- Planned: Two-factor authentication for admin panel
-- Planned: Email notifications for RSVP submissions
-- Planned: Theme customization interface
-- Planned: Multi-language support
-
----
-
-## Acknowledgments
-
-Thank you to all users who provided feedback during the development of version 2.0.0. Your input shaped this major release.
-
----
-
-**Full Changelog**: See `CHANGELOG.md` for detailed technical changes.
-
-**Questions?**: Refer to `DEPLOYMENT.md` or `ARCHITECTURE.md`.
+- [`README.md`](README.md) — project overview and quick start.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — ownership and capability boundaries.
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — complete deployment operations.
+- [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) — archive and disaster recovery.
+- [`SECURITY.md`](SECURITY.md) — security expectations and reporting.
+- [`CHANGELOG.md`](CHANGELOG.md) — technical change summary.

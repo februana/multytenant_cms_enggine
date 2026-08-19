@@ -160,7 +160,7 @@ After restore or update:
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The health check validates the six built-in adapters, active preset, required runtime files, every canonical upload and Theme Assets directory, runtime writability, restricted config/database permissions, WebP processing capability, WebDAV requirements, and public blocking of sensitive files.
+The health check validates the seven built-in adapters, active preset, required runtime files, every canonical upload and Theme Assets directory, runtime writability, restricted config/database permissions, WebP processing capability, WebDAV requirements, and public blocking of sensitive files.
 
 The repository includes an isolated deployment fixture test covering:
 
