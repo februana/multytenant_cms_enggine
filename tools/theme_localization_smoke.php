@@ -26,6 +26,9 @@ $expected = [
     'themes/yami-buzzy/layout.php' => [
         'Selamat datang', 'Buka Undangan', 'Kami Akan Menikah', 'Mempelai', 'Acara Pernikahan', 'Kisah Cinta', 'Galeri', 'Hadiah', 'Buka di Google Maps', 'Terima Kasih',
     ],
+    'themes/pawiwahan/layout.php' => [
+        'Beranda', 'Tentang Kami', 'Kisah Kami', 'Sebelumnya', 'Berikutnya', 'Lihat Google Maps', 'Amplop Digital', 'Kirim Pesan',
+    ],
     'themes/rainier/layout.php' => [
         'Acara dimulai dalam', 'Tambahkan ke Google Kalender', 'Detail Acara', 'Jadwal', 'Kata-Kata Inspirasi',
         'Mohon konfirmasi kehadiran Anda', 'Diselenggarakan oleh', 'Templat sumber',
@@ -62,6 +65,7 @@ $forbiddenVisibleEnglish = [
     'Scroll Down', 'The Wedding Of', 'Booting application...', 'All Rights Reserved.',
     'Follow on Instagram', 'Hosted by', 'Source template', 'Toggle Simple Mode',
     'Play Music', 'Pause Music', 'Unable to load event details', 'Please check back later.',
+    'View Google Maps', 'Angpao cashless', '>Home<', '>About<', '>Previous</span>', '>Next</span>', '>Our Stories<',
     '>RSVP</a>', '>Kirim RSVP</button>', 'gallery lazy load',
 ];
 
@@ -70,6 +74,7 @@ $activeGuestSources = [
     $read('themes/dewankl/script.js'),
     $read('themes/shubh-vivah/layout.php'),
     $read('themes/yami-buzzy/layout.php'),
+    $read('themes/pawiwahan/layout.php'),
     $read('themes/rainier/layout.php'),
     $read('themes/rainier/original/invite-1-adapter.js'),
     $read('themes/archak/layout.php'),

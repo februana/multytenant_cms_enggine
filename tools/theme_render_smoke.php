@@ -61,6 +61,13 @@ foreach ($markers as $preset => $required) {
     if (isset($greetingSentinels[$preset]) && strpos($html, $greetingSentinels[$preset]) === false) {
         throw new RuntimeException("Configured greeting did not render in {$preset}");
     }
+    if ($preset === 'shubh-vivah') {
+        if (strpos($html, 'source-background.mp3') === false) throw new RuntimeException('Shubh Vivah must use bundled source music when CMS music is empty');
+        if (strpos($html, 'id="shubh-rsvp-form"') === false || strpos($html, "fetch('save.php'") === false) throw new RuntimeException('Shubh Vivah RSVP must use the CMS save endpoint');
+    }
+    if ($preset === 'yami-buzzy') {
+        if (strpos($html, 'id="yami-rsvp-form"') === false || strpos($html, "fetch('save.php'") === false) throw new RuntimeException('Yami Buzzy RSVP must use the CMS save endpoint');
+    }
     echo "PASS: {$preset} rendered (" . strlen($html) . " bytes)\n";
 }
 ob_end_flush();

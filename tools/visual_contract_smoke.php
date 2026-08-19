@@ -116,7 +116,7 @@ visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset_visuals"'), 'Admin exposes per-preset visual reset');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-media-assets='), 'Admin exposes canonical image assets to visual editor');
 visual_assert(is_string($appSource) && str_contains($appSource, 'mediaAssets'), 'Admin visual editor consumes canonical media assets');
-visual_assert(is_string($appSource) && str_contains($appSource, 'imageKeys'), 'Admin visual preview handles scoped image capabilities');
+visual_assert(is_string($appSource) && str_contains($appSource, 'dataset.visualMediaSelect') && str_contains($appSource, 'visualMediaUrl'), 'Admin visual preview handles scoped image capabilities');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'Warna, tulisan, latar, dan gambar yang bisa diubah'), 'Admin explains visual customization in plain Indonesian');
 visual_assert(is_string($appSource) && str_contains($appSource, 'Gunakan gambar bawaan tema'), 'Admin image selector uses plain Indonesian fallback wording');
 
