@@ -59,6 +59,9 @@ foreach ($requiredBootstrapReferences as $script) {
 $dockerfile = (string) file_get_contents($root . '/Dockerfile');
 assert_true(str_contains($dockerfile, 'HEALTHCHECK'), 'Dockerfile declares an HTTP healthcheck');
 assert_true(str_contains($dockerfile, 'http://127.0.0.1/'), 'Dockerfile healthcheck targets the local frontend');
+assert_true(str_contains($dockerfile, 'docker-php-ext-install pdo_sqlite'), 'Dockerfile installs PDO SQLite explicitly');
+assert_true(str_contains($dockerfile, 'docker-php-ext-install sqlite3'), 'Dockerfile installs SQLite3 explicitly');
+assert_true(!str_contains($dockerfile, 'pdo_sqlite sqlite3'), 'Dockerfile does not batch SQLite extensions into one invocation');
 $compose = (string) file_get_contents($root . '/docker-compose.yml');
 assert_true(str_contains($compose, 'healthcheck:'), 'Compose declares a service healthcheck');
 assert_true(str_contains($compose, 'wedding_backups:'), 'Compose persists backup artifacts');
