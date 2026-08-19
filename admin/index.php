@@ -76,6 +76,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     'background' => ALLOWED_IMAGE_TYPES,
                     'gallery' => ALLOWED_IMAGE_TYPES,
                     'love_story' => ALLOWED_IMAGE_TYPES,
+                    'video' => ALLOWED_VIDEO_TYPES,
                     'theme_assets' => ALLOWED_IMAGE_TYPES,
                     'music' => ALLOWED_AUDIO_TYPES,
                 ];
@@ -84,6 +85,7 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     'background' => UPLOADS_BACKGROUND_DIR,
                     'gallery' => UPLOADS_GALLERY_DIR,
                     'love_story' => UPLOADS_LOVE_STORY_DIR,
+                    'video' => UPLOADS_LOVE_STORY_DIR,
                     'theme_assets' => UPLOADS_THEME_ASSETS_DIR . '/' . (preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['theme_preset'] ?? 'custom')) ?: 'custom'),
                     'music' => UPLOADS_MUSIC_DIR,
                 ];
@@ -93,10 +95,17 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     $error = 'Folder atau file media tidak valid.';
                     break;
                 }
-                $result = upload_file($_FILES['media_file'], $destination, $allowed, $targetFolder === 'music' ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE, $targetFolder === 'love_story' ? 'story' : $targetFolder, $config['theme']['theme_preset'] ?? null);
+                $uploadRole = $targetFolder === 'love_story' ? 'story' : ($targetFolder === 'video' ? 'love_story_video' : $targetFolder);
+                $uploadLimit = $targetFolder === 'music' ? MAX_MUSIC_UPLOAD_SIZE : ($targetFolder === 'video' ? MAX_VIDEO_UPLOAD_SIZE : MAX_UPLOAD_SIZE);
+                $result = upload_file($_FILES['media_file'], $destination, $allowed, $uploadLimit, $uploadRole, $config['theme']['theme_preset'] ?? null);
                 if (!empty($result['error'])) {
                     $error = $result['error'];
                 } else {
+                    if ($targetFolder === 'video') {
+                        $newPath = relative_path($result['path']);
+                        $queueMediaCleanup((string)($config['media']['love_story_video'] ?? ''), $newPath);
+                        $config['media']['love_story_video'] = $newPath;
+                    }
                     $success = 'File media berhasil diunggah.';
                 }
                 break;
@@ -208,6 +217,9 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         break;
                     case 'media.music':
                         $config['media']['music'] = $mediaValue;
+                        break;
+                    case 'media.love_story_video':
+                        $config['media']['love_story_video'] = $mediaValue;
                         break;
                     case 'media.background_hero':
                         $config['media']['background_hero'] = $mediaValue;
@@ -943,6 +955,7 @@ $themeMeta = get_active_theme_meta($config);
 $themePresentationCaps = theme_presentation_capabilities($config);
 $activePresetKey = resolve_theme_preset_key($config);
 $themeAdminCapabilities = theme_admin_capabilities_for_config($config);
+$themeMediaRoles = function_exists('theme_contract_media_roles') ? theme_contract_media_roles($activePresetKey) : [];
 $globalAdminCapabilities = theme_contract_global_admin_capabilities();
 $globalAdminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $globalAdminCapabilities, true);
 $adminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $themeAdminCapabilities, true);
@@ -1039,7 +1052,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Foto, Musik, dan File</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gallery')): ?><a href="#gallery">Galeri</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('cover')): ?><a href="#cover">Foto Sampul</a><?php endif; ?>
+                        <?php if (!empty($themeMediaRoles)): ?><a href="#cover">Foto Mempelai &amp; Sampul</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Latar Undangan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('music')): ?><a href="#music">Musik</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gift')): ?><a href="#gift">Hadiah</a><?php endif; ?>
@@ -1593,14 +1606,15 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <option value="cover">Cover</option>
                                         <option value="background">Latar Belakang</option>
                                         <option value="gallery">Galeri</option>
-                                        <option value="love_story">Cerita Cinta</option>
+                                        <option value="love_story">Cerita Cinta (gambar)</option>
+                                        <option value="video">Video Cerita</option>
                                         <option value="theme_assets">Aset khusus gaya aktif</option>
                                         <option value="music">Musik</option>
                                     </select>
                                 </div>
                                 <div class="form-row">
                                     <label>Pilih file</label>
-                                    <input type="file" name="media_file" accept="image/*,audio/*">
+                                    <input type="file" name="media_file" accept="image/*,audio/*,video/mp4">
                                 </div>
                             </div>
                             <button type="submit">Unggah File</button>
@@ -1617,6 +1631,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <option value="all" <?php echo (($_GET['media_type'] ?? 'all') === 'all') ? 'selected' : ''; ?>>Semua</option>
                                     <option value="image" <?php echo (($_GET['media_type'] ?? '') === 'image') ? 'selected' : ''; ?>>Gambar</option>
                                     <option value="audio" <?php echo (($_GET['media_type'] ?? '') === 'audio') ? 'selected' : ''; ?>>Audio</option>
+                                    <option value="video" <?php echo (($_GET['media_type'] ?? '') === 'video') ? 'selected' : ''; ?>>Video</option>
                                 </select>
                             </div>
                             <button type="submit" class="small-button">Cari</button>
@@ -1630,8 +1645,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                     <div class="file-manager-item" style="border:1px solid #e8ddcf;background:#fffaf4;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
                                         <?php if ($item['type'] === 'image'): ?>
                                             <img src="/<?php echo escape_html($item['path']); ?>" alt="<?php echo escape_html($item['name']); ?>" style="width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;">
+                                        <?php elseif ($item['type'] === 'video'): ?>
+                                            <video src="/<?php echo escape_html($item['path']); ?>" controls preload="metadata" style="width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;"></video>
                                         <?php else: ?>
-                                            <div style="width:100%;height:130px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#f3ece3;color:#6d5148;font-size:2rem;">🎵</div>
+                                            <div style="width:100%;height:130px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#f3ece3;color:#6d5148;font-size:2rem;">Audio</div>
                                         <?php endif; ?>
                                         <div style="font-size:0.82rem;color:#665846;">
                                             <strong style="display:block;color:#372d28;word-break:break-word;"><?php echo escape_html($item['name']); ?></strong>
@@ -1645,6 +1662,16 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         </div>
                                         <div style="display:flex;flex-wrap:wrap;gap:8px;">
                                             <a href="/<?php echo escape_html($item['path']); ?>" target="_blank" rel="noopener" class="small-button" style="display:inline-flex;align-items:center;justify-content:center;">Pratinjau</a>
+                                            <?php if (in_array('love_story_video', $themeMediaRoles, true) && $item['type'] === 'video'): ?>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="set_media_default">
+                                                <input type="hidden" name="media_key" value="media.love_story_video">
+                                                <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
+                                                <button type="submit" class="small-button">Jadikan Video Cerita</button>
+                                            </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'image' && in_array('cover', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1652,6 +1679,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Cover</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'image' && in_array('groom_photo', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1659,6 +1688,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Mempelai Pria</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'image' && in_array('bride_photo', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1666,6 +1697,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Mempelai Wanita</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'image' && in_array('couple_photo', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1673,6 +1706,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Foto Pasangan</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'image'): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1680,6 +1715,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Hero</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'audio'): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1687,6 +1724,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Musik</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if ($item['type'] === 'image' && $adminCapabilityEnabled('gift')): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1694,6 +1733,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan QR</button>
                                             </form>
+                                            <?php endif; ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="rename_media_file">
@@ -1904,10 +1944,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('cover')): ?>
+                    <?php if (!empty($themeMediaRoles)): ?>
 
                     <section id="cover" class="card panel-section">
-                        <h2>Cover & Foto</h2>
+                        <h2><?php echo in_array('cover', $themeMediaRoles, true) ? 'Foto Sampul &amp; Mempelai' : 'Foto Mempelai'; ?></h2>
+                        <?php if (in_array('cover', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
                             <h3>Gambar Cover</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
@@ -1939,8 +1980,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
                         </div>
 
+                        <?php endif; ?>
+                        <?php if (in_array('groom_photo', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Mempelai Pria </h3>
+                            <h3>Foto Mempelai Pria</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_groom_photo">
@@ -1970,8 +2013,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
                         </div>
 
+                        <?php endif; ?>
+                        <?php if (in_array('bride_photo', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Mempelai Wanita </h3>
+                            <h3>Foto Mempelai Wanita</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_bride_photo">
@@ -2001,8 +2046,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
                         </div>
 
+                        <?php endif; ?>
+                        <?php if (in_array('couple_photo', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Pasangan </h3>
+                            <h3>Foto Pasangan</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_couple_photo">
@@ -2031,6 +2078,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="image-preview"><img id="couplePreviewImg" alt="Pratinjau foto pasangan" style="display:none;"></div>
                             <?php endif; ?>
                         </div>
+                        <?php endif; ?>
                     </section>
 
                     <?php endif; ?>

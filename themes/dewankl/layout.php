@@ -58,15 +58,18 @@ $giftAccount = escape_html($config['gift']['account_number'] ?? '');
 $giftHolder = escape_html($config['gift']['account_holder'] ?? '');
 $giftEwalletLabel = escape_html($config['gift']['e_wallet_label'] ?? '');
 $giftEwalletNumber = escape_html($config['gift']['e_wallet_number'] ?? '');
+$qrisPath = trim((string)($config['gift']['qris_image'] ?? ''));
+$qrisUrl = $qrisPath !== '' ? public_path($qrisPath) : '';
 
 // Media
 $dewanklSourcePlaceholder = get_theme_asset_url('dewankl', 'assets/placeholder.webp');
 $dewanklSourceIcon = get_theme_asset_url('dewankl', 'assets/icon-192x192.png');
 $dewanklSourceDonate = get_theme_asset_url('dewankl', 'assets/donate.png');
-$coverPath = trim((string)($config['media']['cover'] ?? '')) ?: $dewanklSourcePlaceholder;
+$couplePhoto = trim((string)($config['media']['couple_photo'] ?? ''));
+$coverPath = trim((string)($config['media']['cover'] ?? '')) ?: ($couplePhoto !== '' ? $couplePhoto : $dewanklSourcePlaceholder);
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
 $groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
-$couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
+$couplePhoto = $couplePhoto !== '' ? $couplePhoto : $coverPath;
 $musicSrc = trim((string)($config['media']['music'] ?? ''));
 $videoPath = trim((string)($config['media']['love_story_video'] ?? ''));
 $mediaReferenceAvailable = static function (string $path): bool {
@@ -478,6 +481,13 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                                 <p class="m-0 p-0" style="font-size: 0.85rem;"><?php echo $giftEwalletNumber; ?></p>
                             </div>
                         </div>
+                        <?php if ($qrisUrl !== ''): ?>
+                        <div class="bg-theme-auto rounded-4 shadow p-3 mx-4 mt-4 text-start" data-aos="fade-up" data-aos-duration="2500">
+                            <i class="fa-solid fa-qrcode fa-lg"></i>
+                            <p class="d-inline">QRIS</p>
+                            <img src="<?php echo escape_html($qrisUrl); ?>" alt="QRIS untuk tanda kasih" loading="lazy" decoding="async" style="display:block;width:min(100%,220px);aspect-ratio:1/1;object-fit:contain;background:#fff;padding:10px;border-radius:12px;margin:16px auto 0;">
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </section>
                 <?php endif; ?>
