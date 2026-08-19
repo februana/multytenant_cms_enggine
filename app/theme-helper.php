@@ -105,6 +105,13 @@ function theme_visual_capabilities_for_config(array $config, ?string $presetKey 
             'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL gambar hero. Kosongkan untuk memakai fallback cover.', 'default' => ''],
             'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay gelap di atas gambar hero.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
             'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala relatif judul utama hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.2', 'step' => '0.05'],
+            'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Gambar latar untuk bagian pembuka atau undangan.', 'default' => ''],
+            'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Gambar latar untuk jadwal dan detail acara.', 'default' => ''],
+            'section_background_story' => ['type' => 'image', 'label' => 'Latar Cerita', 'description' => 'Gambar latar untuk cerita perjalanan cinta.', 'default' => ''],
+            'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk galeri foto.', 'default' => ''],
+            'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar untuk alamat dan peta acara.', 'default' => ''],
+            'section_background_gift' => ['type' => 'image', 'label' => 'Latar Hadiah', 'description' => 'Gambar latar untuk amplop digital atau hadiah.', 'default' => ''],
+            'section_background_rsvp' => ['type' => 'image', 'label' => 'Latar Konfirmasi Kehadiran', 'description' => 'Gambar latar untuk formulir konfirmasi kehadiran.', 'default' => ''],
         ];
     }
     $registry = function_exists('theme_registry') ? theme_registry() : [];
@@ -346,14 +353,14 @@ function finalize_theme_output(string $html, array $config): string {
     };
   };
   const visualMap = {
-    'shubh-vivah': {accent_color: '--shubh-accent', heading_font: '--shubh-heading', body_font: '--shubh-body', hero_overlay: '--shubh-overlay', hero_background: '--shubh-hero-bg', ornament_left: '--shubh-left', ornament_right: '--shubh-right'},
-    'yami-buzzy': {accent_color: '--yami-accent', heading_font: '--yami-heading', body_font: '--yami-body', hero_overlay: '--yami-overlay', hero_background: '--yami-hero-bg', welcome_background: '--yami-welcome-bg', section_background_home: '--yami-hero-bg', section_background_couple: '--yami-couple-bg', section_background_event: '--yami-event-bg'},
-    rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity'},
-    archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg'},
-    parang: {accent_color: '--parang-gold', heading_font: '--parang-heading', body_font: '--parang-body', hero_background: '--cms-parang-bg'},
-    pawiwahan: {accent_color: '--pawiwahan-accent', heading_font: '--pawiwahan-heading', body_font: '--pawiwahan-body', hero_background: '--pawiwahan-hero-bg'},
-    dewankl: {accent_color: '--cms-dewana-accent', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay'},
-    custom: {accent_color: '--primary', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay', hero_title_scale: '--hero-title-scale'}
+    'shubh-vivah': {accent_color: '--shubh-accent', heading_font: '--shubh-heading', body_font: '--shubh-body', hero_overlay: '--shubh-overlay', hero_background: '--shubh-hero-bg', section_background_event: '--shubh-event-bg', section_background_gallery: '--shubh-gallery-bg', section_background_rsvp: '--shubh-rsvp-bg', ornament_left: '--shubh-left', ornament_right: '--shubh-right'},
+    'yami-buzzy': {accent_color: '--yami-accent', heading_font: '--yami-heading', body_font: '--yami-body', hero_overlay: '--yami-overlay', hero_background: '--yami-hero-bg', welcome_background: '--yami-welcome-bg', section_background_home: '--yami-home-bg', section_background_couple: '--yami-couple-bg', section_background_event: '--yami-event-bg', section_background_story: '--yami-story-bg', section_background_gallery: '--yami-gallery-bg', section_background_video: '--yami-video-bg', section_background_gift: '--yami-gift-bg', section_background_invitation: '--yami-invitation-bg', section_background_rsvp: '--yami-rsvp-bg', section_background_closing: '--yami-closing-bg'},
+    rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity', hero_background: '--cms-rainier-hero-bg', section_background_event_details: '--cms-rainier-event-bg', section_background_schedule: '--cms-rainier-schedule-bg', section_background_quotes: '--cms-rainier-quotes-bg', section_background_rsvp: '--cms-rainier-rsvp-bg'},
+    archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg', section_background_timeline: '--cms-archak-timeline-bg', section_background_gallery: '--cms-archak-gallery-bg', section_background_stay: '--cms-archak-stay-bg', section_background_registry: '--cms-archak-registry-bg', header_badge: '--cms-archak-badge'},
+    parang: {accent_color: '--parang-gold', heading_font: '--parang-heading', body_font: '--parang-body', hero_background: '--cms-parang-bg', section_background_home: '--cms-parang-home-bg', section_background_gallery: '--cms-parang-gallery-bg', section_background_location: '--cms-parang-location-bg', ornament_left: '--cms-parang-left', ornament_right: '--cms-parang-right'},
+    pawiwahan: {accent_color: '--pawiwahan-accent', heading_font: '--pawiwahan-heading', body_font: '--pawiwahan-body', hero_background: '--pawiwahan-hero-bg', welcome_background: '--pawiwahan-welcome-bg', section_background_gallery: '--pawiwahan-gallery-bg', section_background_location: '--pawiwahan-location-bg', section_background_gift: '--pawiwahan-gift-bg', section_background_messages: '--pawiwahan-messages-bg'},
+    dewankl: {accent_color: '--cms-dewana-accent', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay', hero_background: '--cms-dewana-hero-bg', welcome_background: '--cms-dewana-welcome-bg', section_background_home: '--cms-dewana-home-bg', section_background_bride: '--cms-dewana-bride-bg', section_background_wedding_date: '--cms-dewana-date-bg', section_background_gallery: '--cms-dewana-gallery-bg', section_background_love_gift: '--cms-dewana-gift-bg', section_background_comment: '--cms-dewana-comment-bg'},
+    custom: {accent_color: '--primary', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay', hero_title_scale: '--hero-title-scale', hero_background: '--hero-bg', section_background_home: '--custom-home-bg', section_background_event: '--custom-event-bg', section_background_story: '--custom-story-bg', section_background_gallery: '--custom-gallery-bg', section_background_location: '--custom-location-bg', section_background_gift: '--custom-gift-bg', section_background_rsvp: '--custom-rsvp-bg'}
   };
   const applyVisualPreview = function (theme) {
     const preset = theme.theme_preset || 'custom';
@@ -362,7 +369,7 @@ function finalize_theme_output(string $html, array $config): string {
     Object.keys(mapping).forEach(function (key) {
       if (values[key] === undefined || values[key] === '') return;
       let value = values[key];
-      const imageKeys = ['hero_background', 'welcome_background', 'section_background_home', 'section_background_couple', 'section_background_event', 'ornament_left', 'ornament_right'];
+      const imageKeys = Object.keys(mapping).filter(function (key) { return key === 'hero_background' || key === 'welcome_background' || key.indexOf('section_background_') === 0 || key.indexOf('ornament_') === 0 || key === 'header_badge'; });
       if (imageKeys.indexOf(key) !== -1 && !/^https?:\\/\\//i.test(value) && value.charAt(0) !== '/') value = '/' + value;
       if (imageKeys.indexOf(key) !== -1) value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
       document.documentElement.style.setProperty(mapping[key], value);
@@ -388,6 +395,18 @@ function finalize_theme_output(string $html, array $config): string {
       }
       if (preset === 'dewankl') document.querySelectorAll('img.bg-cover-home').forEach(function (image) { image.src = url; });
       if (preset === 'rainier') document.querySelectorAll('.hero-background, .hero-slide').forEach(function (layer) { layer.style.backgroundImage = 'url("' + url.replace(/"/g, '\\\\"') + '")'; });
+    }
+    if (preset === 'archak' && values.header_badge) {
+      const badgeUrl = /^https?:\\/\\//i.test(values.header_badge) || values.header_badge.charAt(0) === '/' ? values.header_badge : '/' + values.header_badge;
+      document.querySelectorAll('.archak-header-badge').forEach(function (image) { image.src = badgeUrl; });
+    }
+    if (preset === 'custom') {
+      const sectionMap = {section_background_home: '#undangan', section_background_event: '#acara, #countdown-section', section_background_story: '#cerita', section_background_gallery: '#galeri', section_background_location: '#lokasi', section_background_gift: '#amplop', section_background_rsvp: '#rsvp'};
+      Object.keys(sectionMap).forEach(function (key) { if (!values[key]) return; const sectionUrl = values[key].charAt(0) === '/' ? values[key] : '/' + values[key]; document.querySelectorAll(sectionMap[key]).forEach(function (section) { section.style.backgroundImage = 'linear-gradient(rgba(255,250,245,.78),rgba(255,250,245,.88)),url("' + sectionUrl.replace(/"/g, '\\\\"') + '")'; section.style.backgroundSize = 'cover'; section.style.backgroundPosition = 'center'; }); });
+    }
+    if (preset === 'parang') {
+      if (values.ornament_left) { const leftUrl = values.ornament_left.charAt(0) === '/' ? values.ornament_left : '/' + values.ornament_left; document.querySelectorAll('.parang-ornament-left').forEach(function (image) { image.src = leftUrl; }); }
+      if (values.ornament_right) { const rightUrl = values.ornament_right.charAt(0) === '/' ? values.ornament_right : '/' + values.ornament_right; document.querySelectorAll('.parang-ornament-right').forEach(function (image) { image.src = rightUrl; }); }
     }
   };
   window.addEventListener('message', function (event) {

@@ -111,6 +111,9 @@ $dewanklSectionBackgrounds = [
     'home' => trim((string)($visuals['section_background_home'] ?? '')),
     'bride' => trim((string)($visuals['section_background_bride'] ?? '')),
     'wedding-date' => trim((string)($visuals['section_background_wedding_date'] ?? '')),
+    'gallery' => trim((string)($visuals['section_background_gallery'] ?? '')),
+    'love-gift' => trim((string)($visuals['section_background_love_gift'] ?? '')),
+    'comment' => trim((string)($visuals['section_background_comment'] ?? '')),
 ];
 $dewanklAccent = (string)($visuals['accent_color'] ?? '#7b4a3a');
 $dewanklHeadingFont = (string)($visuals['heading_font'] ?? 'Sacramento, cursive');
@@ -119,14 +122,16 @@ $dewanklOverlay = (float)($visuals['hero_overlay'] ?? '0.30');
 $dewanklSectionStyle = static function (string $sectionId) use ($dewanklSectionBackgrounds): string {
     $path = trim((string)($dewanklSectionBackgrounds[$sectionId] ?? ''));
     if ($path === '') return '';
-    return ' data-cms-dewana-section-bg="1" style="--cms-dewana-section-bg:' . escape_html(theme_visual_css_url($path)) . ';"';
+    $variable = '--cms-dewana-' . preg_replace('/[^a-z0-9-]/i', '-', $sectionId) . '-bg';
+    $cssUrl = escape_html(theme_visual_css_url($path));
+    return ' data-cms-dewana-section-bg="1" style="--cms-dewana-section-bg:' . $cssUrl . ';' . $variable . ':' . $cssUrl . ';"';
 };
 $dewanklWelcomeClass = $dewanklWelcomePath !== '' ? ' cms-dewana-welcome-custom-bg' : '';
 $dewanklWelcomeStyle = 'opacity: 0;';
 if ($dewanklWelcomePath !== '') {
     $dewanklWelcomeStyle .= '--cms-dewana-welcome-bg:' . theme_visual_css_url($dewanklWelcomePath) . ';';
 }
-$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)!important}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}#welcome.cms-dewana-welcome-custom-bg{background-image:linear-gradient(rgba(255,250,244,.72),rgba(246,238,229,.78)),var(--cms-dewana-welcome-bg)!important;background-size:cover;background-position:center;background-repeat:no-repeat}#home[data-cms-dewana-section-bg="1"],#bride[data-cms-dewana-section-bg="1"],#wedding-date[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(255,250,244,.76),rgba(246,238,229,.82)),var(--cms-dewana-section-bg)!important;background-size:cover;background-position:center;background-repeat:no-repeat}#home[data-cms-dewana-section-bg="1"]>img{opacity:0!important}html[data-bs-theme="dark"] #welcome.cms-dewana-welcome-custom-bg{background-image:linear-gradient(rgba(20,15,13,.64),rgba(23,19,17,.78)),var(--cms-dewana-welcome-bg)!important}html[data-bs-theme="dark"] #home[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #bride[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #wedding-date[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(20,15,13,.68),rgba(23,19,17,.82)),var(--cms-dewana-section-bg)!important}</style>';
+$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)!important}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}#welcome.cms-dewana-welcome-custom-bg{background-image:linear-gradient(rgba(255,250,244,.72),rgba(246,238,229,.78)),var(--cms-dewana-welcome-bg)!important;background-size:cover;background-position:center;background-repeat:no-repeat}#home[data-cms-dewana-section-bg="1"],#bride[data-cms-dewana-section-bg="1"],#wedding-date[data-cms-dewana-section-bg="1"],#gallery[data-cms-dewana-section-bg="1"],#love-gift[data-cms-dewana-section-bg="1"],#comment[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(255,250,244,.76),rgba(246,238,229,.82)),var(--cms-dewana-section-bg)!important;background-size:cover;background-position:center;background-repeat:no-repeat}#gallery[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(255,250,244,.78),rgba(246,238,229,.86)),var(--cms-dewana-gallery-bg,var(--cms-dewana-section-bg))!important}#love-gift[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(255,250,244,.78),rgba(246,238,229,.86)),var(--cms-dewana-love-gift-bg,var(--cms-dewana-section-bg))!important}#comment[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(255,250,244,.78),rgba(246,238,229,.86)),var(--cms-dewana-comment-bg,var(--cms-dewana-section-bg))!important}#home[data-cms-dewana-section-bg="1"]>img{opacity:0!important}html[data-bs-theme="dark"] #welcome.cms-dewana-welcome-custom-bg{background-image:linear-gradient(rgba(20,15,13,.64),rgba(23,19,17,.78)),var(--cms-dewana-welcome-bg)!important}html[data-bs-theme="dark"] #home[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #bride[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #wedding-date[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #gallery[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #love-gift[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #comment[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(20,15,13,.68),rgba(23,19,17,.82)),var(--cms-dewana-section-bg)!important}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="auto">
@@ -397,7 +402,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                 
                 <!-- Gallery Section -->
                 <?php if ($isGalleryEnabled): ?>
-                <section class="bg-white-black pb-5 pt-3" id="gallery">
+                <section class="bg-white-black pb-5 pt-3" id="gallery"<?php echo $dewanklSectionStyle('gallery'); ?>>
                     <div class="container"><div class="border rounded-5 shadow p-3">
                         <h2 class="font-esthetic text-center py-2 m-0" style="font-size: 2.25rem;">Galeri</h2>
                         <?php $galleryImages = []; foreach ((array)$config['gallery']['items'] as $item) { $galleryImages[] = is_array($item) ? ($item['path'] ?? $item['src'] ?? '') : (string)$item; } while (count($galleryImages) < 6) $galleryImages[] = $coverPath; ?>
@@ -417,7 +422,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                 
                 <!-- Hadiah Pernikahan Section -->
                 <?php if ($isGiftEnabled): ?>
-                <section class="bg-light-dark pb-3">
+                <section class="bg-light-dark pb-3" id="love-gift"<?php echo $dewanklSectionStyle('love-gift'); ?>>
                     <div class="container text-center">
                         <h2 class="font-esthetic pt-3 mb-4" style="font-size: 2.25rem;">Hadiah Pernikahan</h2>
                         <p class="mb-1" style="font-size: 0.95rem;">Dengan hormat, bagi Anda yang ingin memberikan tanda kasih kepada kami, dapat melalui:</p>
@@ -475,7 +480,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                 
                 <!-- RSVP / Comments Section -->
                 <?php if ($isRsvpEnabled): ?>
-                <section class="bg-light-dark my-0 pb-0 pt-3" id="comment">
+                <section class="bg-light-dark my-0 pb-0 pt-3" id="comment"<?php echo $dewanklSectionStyle('comment'); ?>>
                     <div class="container">
                         <div class="border rounded-5 shadow p-3 mb-2">
                             <h2 class="font-esthetic text-center mt-2 mb-4" style="font-size: 2.25rem;">Ucapan &amp; Doa</h2>

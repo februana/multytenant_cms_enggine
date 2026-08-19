@@ -59,6 +59,13 @@ $sectionCss = static function (string $path): string {
 };
 $coupleCss = $sectionCss((string)($visuals['section_background_couple'] ?? ''));
 $eventCss = $sectionCss((string)($visuals['section_background_event'] ?? ''));
+$storyCss = $sectionCss((string)($visuals['section_background_story'] ?? ''));
+$galleryCss = $sectionCss((string)($visuals['section_background_gallery'] ?? ''));
+$videoCss = $sectionCss((string)($visuals['section_background_video'] ?? ''));
+$giftCss = $sectionCss((string)($visuals['section_background_gift'] ?? ''));
+$invitationCss = $sectionCss((string)($visuals['section_background_invitation'] ?? ''));
+$rsvpCss = $sectionCss((string)($visuals['section_background_rsvp'] ?? ''));
+$closingCss = $sectionCss((string)($visuals['section_background_closing'] ?? ''));
 $homeCss = $sectionCss((string)($visuals['section_background_home'] ?? ''));
 $musicPath = trim((string)($config['media']['music'] ?? ''));
 $musicUrl = $musicPath !== '' ? $mediaUrl($musicPath) : '';
@@ -87,10 +94,17 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
   <link rel="icon" href="<?php echo $esc($sourceAsset('assets/pic/favicon.png')); ?>">
   <link rel="stylesheet" href="<?php echo $esc(get_theme_asset_url($presetKey, 'fidelity-adapter.css')); ?>">
   <style id="cms-yami-buzzy-visual">
-    :root{--yami-accent:<?php echo $accent; ?>;--yami-heading:<?php echo $headingFont; ?>;--yami-body:<?php echo $bodyFont; ?>;--yami-hero-bg:<?php echo $heroCss; ?>;--yami-welcome-bg:<?php echo $welcomeCss; ?>;--yami-home-bg:<?php echo $homeCss; ?>;--yami-couple-bg:<?php echo $coupleCss; ?>;--yami-event-bg:<?php echo $eventCss; ?>;--yami-overlay:<?php echo $overlay; ?>}
+    :root{--yami-accent:<?php echo $accent; ?>;--yami-heading:<?php echo $headingFont; ?>;--yami-body:<?php echo $bodyFont; ?>;--yami-hero-bg:<?php echo $heroCss; ?>;--yami-welcome-bg:<?php echo $welcomeCss; ?>;--yami-home-bg:<?php echo $homeCss; ?>;--yami-couple-bg:<?php echo $coupleCss; ?>;--yami-event-bg:<?php echo $eventCss; ?>;--yami-story-bg:<?php echo $storyCss; ?>;--yami-gallery-bg:<?php echo $galleryCss; ?>;--yami-video-bg:<?php echo $videoCss; ?>;--yami-gift-bg:<?php echo $giftCss; ?>;--yami-invitation-bg:<?php echo $invitationCss; ?>;--yami-rsvp-bg:<?php echo $rsvpCss; ?>;--yami-closing-bg:<?php echo $closingCss; ?>;--yami-overlay:<?php echo $overlay; ?>}
     .yami-hero{background-image:linear-gradient(rgba(35,25,28,var(--yami-overlay)),rgba(35,25,28,calc(var(--yami-overlay) + .18))),var(--yami-hero-bg)}
     .yami-couple{background-image:linear-gradient(135deg,rgba(255,255,255,.82),rgba(247,239,234,.78)),var(--yami-couple-bg)}
     .yami-event{background-image:linear-gradient(rgba(243,232,226,.84),rgba(243,232,226,.84)),var(--yami-event-bg)}
+    .yami-story{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--yami-story-bg)}
+    .yami-gallery{background-image:linear-gradient(rgba(250,245,241,.86),rgba(250,245,241,.86)),var(--yami-gallery-bg)}
+    .yami-video{background-image:linear-gradient(rgba(48,43,47,.82),rgba(48,43,47,.82)),var(--yami-video-bg)}
+    .yami-gift{background-image:linear-gradient(rgba(243,232,226,.86),rgba(243,232,226,.86)),var(--yami-gift-bg)}
+    .yami-invitation{background-image:linear-gradient(rgba(255,253,251,.86),rgba(255,253,251,.86)),var(--yami-invitation-bg)}
+    .yami-rsvp{background-image:linear-gradient(rgba(251,245,241,.86),rgba(251,245,241,.86)),var(--yami-rsvp-bg)}
+    .yami-closing{background-image:linear-gradient(rgba(48,34,37,.58),rgba(48,34,37,.72)),var(--yami-closing-bg,var(--yami-welcome-bg))}
     .yami-section-anchor{background-image:linear-gradient(rgba(35,25,28,var(--yami-overlay)),rgba(35,25,28,calc(var(--yami-overlay) + .18))),var(--yami-home-bg),var(--yami-hero-bg)}
   </style>
   <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>

@@ -589,11 +589,14 @@ function theme_registry(): array {
                 'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font dekoratif untuk heading pendek dan nama pasangan.', 'default' => 'Sacramento, cursive', 'options' => ['Sacramento, cursive' => 'Sacramento', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font readable untuk detail acara dan form.', 'default' => 'Josefin Sans, sans-serif', 'options' => ['Josefin Sans, sans-serif' => 'Josefin Sans', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial', 'Georgia, serif' => 'Georgia']],
                 'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai cover.', 'default' => ''],
-                'welcome_background' => ['type' => 'image', 'label' => 'Welcome / Opening Background', 'description' => 'Opsional. Pilih gambar dari Pengelola Media; kosongkan untuk mempertahankan default warm ivory DewanaKL.', 'default' => ''],
-                'section_background_home' => ['type' => 'image', 'label' => 'Background Section — Home', 'description' => 'Opsional. Berlaku hanya untuk section Home DewanaKL dan tidak menjadi item Gallery.', 'default' => ''],
-                'section_background_bride' => ['type' => 'image', 'label' => 'Background Section — Bride & Groom', 'description' => 'Opsional. Berlaku hanya untuk section Bride & Groom DewanaKL dan tidak menjadi item Gallery.', 'default' => ''],
-                'section_background_wedding_date' => ['type' => 'image', 'label' => 'Background Section — Wedding Date', 'description' => 'Opsional. Berlaku hanya untuk section Wedding Date DewanaKL dan tidak menjadi item Gallery.', 'default' => ''],
-                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan lapisan gelap pada latar hero.', 'default' => '0.30', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
+                'welcome_background' => ['type' => 'image', 'label' => 'Latar Pembuka', 'description' => 'Opsional. Pilih gambar dari Pengelola Media; kosongkan untuk mempertahankan default warm ivory DewanaKL.', 'default' => ''],
+                'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Opsional. Berlaku hanya untuk section Home DewanaKL dan tidak menjadi item Gallery.', 'default' => ''],
+                'section_background_bride' => ['type' => 'image', 'label' => 'Latar Mempelai', 'description' => 'Opsional. Berlaku hanya untuk section Bride & Groom DewanaKL dan tidak menjadi item Gallery.', 'default' => ''],
+                'section_background_wedding_date' => ['type' => 'image', 'label' => 'Latar Tanggal Acara', 'description' => 'Gambar latar untuk bagian tanggal acara. Kosongkan untuk memakai tampilan bawaan.', 'default' => ''],
+                'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk bagian galeri foto.', 'default' => ''],
+                'section_background_love_gift' => ['type' => 'image', 'label' => 'Latar Hadiah', 'description' => 'Gambar latar untuk bagian tanda kasih atau hadiah.', 'default' => ''],
+                'section_background_comment' => ['type' => 'image', 'label' => 'Latar Ucapan', 'description' => 'Gambar latar untuk bagian ucapan dan konfirmasi kehadiran.', 'default' => ''],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Lapisan Gelap Pembuka', 'description' => 'Kekuatan lapisan gelap pada latar hero.', 'default' => '0.30', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
             ]
         ],
         'shubh-vivah' => [
@@ -626,7 +629,10 @@ function theme_registry(): array {
                 'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font script untuk identitas pasangan dan heading.', 'default' => 'Dancing Script, cursive', 'options' => ['Dancing Script, cursive' => 'Dancing Script', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi yang terinspirasi dari source template.', 'default' => 'Arvo, Georgia, serif', 'options' => ['Arvo, Georgia, serif' => 'Arvo', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
                 'hero_background' => ['type' => 'image', 'label' => 'Latar Kartu Undangan', 'description' => 'Pilih media canonical untuk latar kartu; kosongkan untuk memakai artwork source.', 'default' => ''],
-                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Kartu', 'description' => 'Kekuatan lapisan warna pada kartu pembuka.', 'default' => '0.10', 'min' => '0', 'max' => '0.60', 'step' => '0.05'],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Lapisan Warna Kartu', 'description' => 'Atur gelap-terang lapisan warna di atas kartu pembuka.', 'default' => '0.10', 'min' => '0', 'max' => '0.60', 'step' => '0.05'],
+                'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Gambar latar untuk detail acara dan lokasi.', 'default' => ''],
+                'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk galeri foto.', 'default' => ''],
+                'section_background_rsvp' => ['type' => 'image', 'label' => 'Latar Konfirmasi Kehadiran', 'description' => 'Gambar latar untuk formulir konfirmasi kehadiran.', 'default' => ''],
                 'ornament_left' => ['type' => 'image', 'label' => 'Ornamen Kiri', 'description' => 'Media canonical opsional untuk ornamen sudut kiri.', 'default' => ''],
                 'ornament_right' => ['type' => 'image', 'label' => 'Ornamen Kanan', 'description' => 'Media canonical opsional untuk ornamen sudut kanan.', 'default' => ''],
             ]
@@ -664,8 +670,15 @@ function theme_registry(): array {
                 'welcome_background' => ['type' => 'image', 'label' => 'Latar Welcome', 'description' => 'Media canonical untuk welcome modal; kosongkan untuk memakai latar hero.', 'default' => ''],
                 'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Media canonical opsional untuk section Beranda.', 'default' => ''],
                 'section_background_couple' => ['type' => 'image', 'label' => 'Latar Mempelai', 'description' => 'Media canonical opsional untuk section Mempelai.', 'default' => ''],
-                'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Media canonical opsional untuk section Acara.', 'default' => ''],
-                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay gelap pada latar hero.', 'default' => '0.28', 'min' => '0', 'max' => '0.75', 'step' => '0.05'],
+                'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Gambar latar untuk detail acara dan lokasi.', 'default' => ''],
+                'section_background_story' => ['type' => 'image', 'label' => 'Latar Kisah Kami', 'description' => 'Gambar latar untuk bagian cerita perjalanan pasangan.', 'default' => ''],
+                'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk kumpulan foto.', 'default' => ''],
+                'section_background_video' => ['type' => 'image', 'label' => 'Latar Video', 'description' => 'Gambar latar untuk bagian video.', 'default' => ''],
+                'section_background_gift' => ['type' => 'image', 'label' => 'Latar Hadiah', 'description' => 'Gambar latar untuk bagian tanda kasih atau hadiah.', 'default' => ''],
+                'section_background_invitation' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar untuk detail undangan dan lokasi acara.', 'default' => ''],
+                'section_background_rsvp' => ['type' => 'image', 'label' => 'Latar Konfirmasi Kehadiran', 'description' => 'Gambar latar untuk formulir konfirmasi kehadiran.', 'default' => ''],
+                'section_background_closing' => ['type' => 'image', 'label' => 'Latar Penutup', 'description' => 'Gambar latar untuk bagian ucapan terima kasih.', 'default' => ''],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Lapisan Gelap Pembuka', 'description' => 'Kekuatan overlay gelap pada latar hero.', 'default' => '0.28', 'min' => '0', 'max' => '0.75', 'step' => '0.05'],
             ]
         ],
         'rainier' => [
@@ -699,7 +712,7 @@ function theme_registry(): array {
             'schema' => [
                 'glass_opacity' => [
                     'type' => 'text',
-                    'label' => 'Opasitas Glassmorphism',
+                    'label' => 'Kejelasan Panel Kaca',
                     'description' => 'Tingkat transparansi panel kaca (contoh: 0.85).',
                     'default' => '0.85'
                 ],
@@ -735,10 +748,14 @@ function theme_registry(): array {
             'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
             'visual_capabilities' => [
                 'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen Rainier.', 'default' => '#b8655d'],
-                'heading_font' => ['type' => 'font', 'label' => 'Font Display', 'description' => 'Font heading editorial Rainier.', 'default' => 'Cormorant Garamond, serif', 'options' => ['Cormorant Garamond, serif' => 'Cormorant Garamond', 'Georgia, serif' => 'Georgia']],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font heading editorial Rainier.', 'default' => 'Cormorant Garamond, serif', 'options' => ['Cormorant Garamond, serif' => 'Cormorant Garamond', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi Rainier.', 'default' => 'Outfit, sans-serif', 'options' => ['Outfit, sans-serif' => 'Outfit', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
-                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai cover/source default.', 'default' => ''],
-                'glass_opacity' => ['type' => 'range', 'label' => 'Opasitas Panel Kaca', 'description' => 'Transparansi panel kaca Rainier.', 'default' => '0.40', 'min' => '0.20', 'max' => '0.90', 'step' => '0.05'],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Pembuka', 'description' => 'Gambar utama pada bagian pembuka. Kosongkan untuk memakai cover bawaan.', 'default' => ''],
+                'section_background_event_details' => ['type' => 'image', 'label' => 'Latar Detail Acara', 'description' => 'Gambar latar untuk tanggal, waktu, dan lokasi acara.', 'default' => ''],
+                'section_background_schedule' => ['type' => 'image', 'label' => 'Latar Jadwal', 'description' => 'Gambar latar untuk rangkaian jadwal acara.', 'default' => ''],
+                'section_background_quotes' => ['type' => 'image', 'label' => 'Latar Kata-Kata', 'description' => 'Gambar latar untuk kutipan dan cerita singkat.', 'default' => ''],
+                'section_background_rsvp' => ['type' => 'image', 'label' => 'Latar Konfirmasi Kehadiran', 'description' => 'Gambar latar untuk bagian konfirmasi kehadiran.', 'default' => ''],
+                'glass_opacity' => ['type' => 'range', 'label' => 'Kejelasan Panel Kaca', 'description' => 'Transparansi panel kaca Rainier.', 'default' => '0.40', 'min' => '0.20', 'max' => '0.90', 'step' => '0.05'],
             ]
         ],
         'parang' => [
@@ -784,9 +801,14 @@ function theme_registry(): array {
             'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
             'visual_capabilities' => [
                 'accent_color' => ['type' => 'color', 'label' => 'Aksen Emas', 'description' => 'Aksen emas untuk border, tombol, dan ornamen Parang.', 'default' => '#C49A45'],
-                'heading_font' => ['type' => 'font', 'label' => 'Font Heading', 'description' => 'Font editorial Libre Caslon Text untuk identitas Manten Jawi.', 'default' => 'Libre Caslon Text, serif', 'options' => ['Libre Caslon Text, serif' => 'Libre Caslon Text', 'Georgia, serif' => 'Georgia']],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font editorial Libre Caslon Text untuk identitas Manten Jawi.', 'default' => 'Libre Caslon Text, serif', 'options' => ['Libre Caslon Text, serif' => 'Libre Caslon Text', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font Manrope untuk isi, navigasi, form, dan detail acara.', 'default' => 'Manrope, sans-serif', 'options' => ['Manrope, sans-serif' => 'Manrope', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
-                'hero_background' => ['type' => 'image', 'label' => 'Pola Parang', 'description' => 'Asset background parang yang digunakan desain terlampir.', 'default' => 'themes/parang/assets/parang-pattern.webp']
+                'hero_background' => ['type' => 'image', 'label' => 'Pola Latar Parang', 'description' => 'Gambar pola utama halaman. Kosongkan untuk memakai pola bawaan.', 'default' => 'themes/parang/assets/parang-pattern.webp'],
+                'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Gambar latar tambahan untuk bagian pembuka.', 'default' => ''],
+                'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar tambahan untuk bagian galeri.', 'default' => ''],
+                'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar tambahan untuk bagian lokasi acara.', 'default' => ''],
+                'ornament_left' => ['type' => 'image', 'label' => 'Ornamen Kiri', 'description' => 'Gambar ornamen kiri dari Media Library. Kosongkan untuk memakai ornamen bawaan.', 'default' => ''],
+                'ornament_right' => ['type' => 'image', 'label' => 'Ornamen Kanan', 'description' => 'Gambar ornamen kanan dari Media Library. Kosongkan untuk memakai ornamen bawaan.', 'default' => '']
             ]
         ],
         'pawiwahan' => [
@@ -836,7 +858,12 @@ function theme_registry(): array {
                 'accent_color' => ['type' => 'color', 'label' => 'Aksen Pawiwahan', 'description' => 'Aksen tombol dan elemen interaktif Pawiwahan.', 'default' => '#ec7272'],
                 'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font display sumber Pawiwahan.', 'default' => 'Tangerine, cursive', 'options' => ['Tangerine, cursive' => 'Tangerine', 'Beau Rivage, cursive' => 'Beau Rivage', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi sumber Pawiwahan.', 'default' => 'Raleway, sans-serif', 'options' => ['Raleway, sans-serif' => 'Raleway', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
-                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai foto source yang dipertahankan lokal.', 'default' => 'themes/pawiwahan/assets/hero-source.jpg']
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Pembuka', 'description' => 'Gambar utama pada pembuka undangan. Kosongkan untuk memakai foto bawaan.', 'default' => 'themes/pawiwahan/assets/hero-source.jpg'],
+                'welcome_background' => ['type' => 'image', 'label' => 'Latar Sampul Pembuka', 'description' => 'Gambar untuk layar pembuka sebelum undangan dibuka.', 'default' => ''],
+                'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk bagian galeri foto.', 'default' => ''],
+                'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar untuk bagian lokasi acara.', 'default' => ''],
+                'section_background_gift' => ['type' => 'image', 'label' => 'Latar Hadiah', 'description' => 'Gambar latar untuk bagian tanda kasih.', 'default' => ''],
+                'section_background_messages' => ['type' => 'image', 'label' => 'Latar Ucapan', 'description' => 'Gambar latar untuk bagian pesan dan doa.', 'default' => '']
             ]
         ],
         'archak' => [
@@ -876,7 +903,7 @@ function theme_registry(): array {
                 ],
                 'enable_preloader' => [
                     'type' => 'boolean',
-                    'label' => 'Tampilkan Preloader',
+                    'label' => 'Tampilkan Layar Pembuka',
                     'description' => 'Tampilkan animasi pemuatan layar pembuka.',
                     'default' => true
                 ],
@@ -917,9 +944,14 @@ function theme_registry(): array {
             'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
             'visual_capabilities' => [
                 'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen Archak.', 'default' => '#8c5a4d'],
-                'heading_font' => ['type' => 'font', 'label' => 'Font Heading', 'description' => 'Font heading identitas Archak.', 'default' => 'Cinzel, serif', 'options' => ['Cinzel, serif' => 'Cinzel', 'Georgia, serif' => 'Georgia']],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font heading identitas Archak.', 'default' => 'Cinzel, serif', 'options' => ['Cinzel, serif' => 'Cinzel', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi readable Archak.', 'default' => 'Quicksand, sans-serif', 'options' => ['Quicksand, sans-serif' => 'Quicksand', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
-                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai foto pasangan.', 'default' => ''],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Pembuka', 'description' => 'Gambar utama pada bagian pembuka. Kosongkan untuk memakai foto pasangan.', 'default' => ''],
+                'section_background_timeline' => ['type' => 'image', 'label' => 'Latar Rangkaian Acara', 'description' => 'Gambar latar untuk bagian rangkaian acara.', 'default' => ''],
+                'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk bagian galeri foto.', 'default' => ''],
+                'section_background_stay' => ['type' => 'image', 'label' => 'Latar Perjalanan dan Penginapan', 'description' => 'Gambar latar untuk informasi perjalanan dan tempat menginap.', 'default' => ''],
+                'section_background_registry' => ['type' => 'image', 'label' => 'Latar Janji dan Hadiah', 'description' => 'Gambar latar untuk bagian janji dan informasi hadiah.', 'default' => ''],
+                'header_badge' => ['type' => 'image', 'label' => 'Emblem Header', 'description' => 'Gambar emblem kecil di bagian atas undangan. Kosongkan untuk memakai bawaan.', 'default' => ''],
                 'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala nama pasangan di hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.10', 'step' => '0.05'],
             ]
         ]

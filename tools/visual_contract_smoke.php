@@ -10,13 +10,14 @@ function visual_assert(bool $condition, string $message): void {
 
 $base = config_defaults();
 $expected = [
-    'dewankl' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_bride', 'section_background_wedding_date', 'hero_overlay'],
-    'rainier' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'glass_opacity'],
-    'archak' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_title_scale'],
-    'parang' => ['accent_color', 'heading_font', 'body_font', 'hero_background'],
-    'pawiwahan' => ['accent_color', 'heading_font', 'body_font', 'hero_background'],
-    'shubh-vivah' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'ornament_left', 'ornament_right'],
-    'yami-buzzy' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_couple', 'section_background_event', 'hero_overlay'],
+    'custom' => ['accent_color', 'background_color', 'paper_color', 'text_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'hero_title_scale', 'section_background_home', 'section_background_event', 'section_background_story', 'section_background_gallery', 'section_background_location', 'section_background_gift', 'section_background_rsvp'],
+    'dewankl' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_bride', 'section_background_wedding_date', 'section_background_gallery', 'section_background_love_gift', 'section_background_comment', 'hero_overlay'],
+    'rainier' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'section_background_event_details', 'section_background_schedule', 'section_background_quotes', 'section_background_rsvp', 'glass_opacity'],
+    'archak' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'section_background_timeline', 'section_background_gallery', 'section_background_stay', 'section_background_registry', 'header_badge', 'hero_title_scale'],
+    'parang' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'section_background_home', 'section_background_gallery', 'section_background_location', 'ornament_left', 'ornament_right'],
+    'pawiwahan' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_gallery', 'section_background_location', 'section_background_gift', 'section_background_messages'],
+    'shubh-vivah' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'section_background_event', 'section_background_gallery', 'section_background_rsvp', 'ornament_left', 'ornament_right'],
+    'yami-buzzy' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_couple', 'section_background_event', 'section_background_story', 'section_background_gallery', 'section_background_video', 'section_background_gift', 'section_background_invitation', 'section_background_rsvp', 'section_background_closing', 'hero_overlay'],
 ];
 foreach ($expected as $preset => $keys) {
     $schema = theme_visual_capabilities_for_config($base, $preset);
@@ -84,6 +85,7 @@ $yamiHtml = render_theme_layout($yamiConfig, array_replace($shared, ['presetKey'
 visual_assert(str_contains($yamiHtml, '--yami-accent:#654321'), 'Yami Buzzy render includes stored accent bridge');
 visual_assert(str_contains($yamiHtml, 'uploads/background/welcome.webp'), 'Yami Buzzy render includes stored welcome media bridge');
 visual_assert(str_contains($yamiHtml, 'id="yami-welcome-modal"') && str_contains($yamiHtml, 'id="yami-story"'), 'Yami Buzzy render preserves modal and story flow');
+visual_assert(str_contains($yamiHtml, '--yami-story-bg') && str_contains($yamiHtml, '--yami-closing-bg'), 'Yami Buzzy render exposes section background variables');
 
 foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'] as $preset) {
     $probe = $base;
@@ -96,6 +98,17 @@ foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 
     visual_assert(strpos($presetHtml, 'uploads/background/hero.jpg') !== false, ucfirst($preset) . ' render includes the stored hero media bridge');
 }
 
+$customRenderConfig = $base;
+$customRenderConfig['theme']['mode'] = 'custom';
+$customRenderConfig['theme']['theme_preset'] = 'custom';
+$customRenderConfig['theme_visuals']['custom']['section_background_gallery'] = 'uploads/background/custom-gallery.webp';
+$customRenderHtml = render_theme_layout($customRenderConfig, $shared);
+visual_assert(str_contains($customRenderHtml, 'custom-gallery.webp') && str_contains($customRenderHtml, 'id="galeri"'), 'Custom renderer exposes gallery background capability');
+$dewanaConfig = $stored;
+$dewanaConfig['theme']['theme_preset'] = 'dewankl';
+$dewanaConfig['theme_visuals']['dewankl']['section_background_gallery'] = 'uploads/background/gallery-bg.webp';
+$dewanaHtml = render_theme_layout($dewanaConfig, array_replace($shared, ['presetKey' => 'dewankl']));
+visual_assert(str_contains($dewanaHtml, 'id="gallery"') && str_contains($dewanaHtml, 'section_background_gallery'), 'DewanaKL render exposes gallery background capability');
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
 $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');
 visual_assert(is_string($appSource) && str_contains($appSource, 'function getCurrentPreset'), 'Admin resolves the current preset at action time');
@@ -104,6 +117,8 @@ visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-media-assets='), 'Admin exposes canonical image assets to visual editor');
 visual_assert(is_string($appSource) && str_contains($appSource, 'mediaAssets'), 'Admin visual editor consumes canonical media assets');
 visual_assert(is_string($appSource) && str_contains($appSource, 'imageKeys'), 'Admin visual preview handles scoped image capabilities');
+visual_assert(is_string($adminSource) && str_contains($adminSource, 'Warna, tulisan, latar, dan gambar yang bisa diubah'), 'Admin explains visual customization in plain Indonesian');
+visual_assert(is_string($appSource) && str_contains($appSource, 'Gunakan gambar bawaan tema'), 'Admin image selector uses plain Indonesian fallback wording');
 
 $customState = $base;
 $customState['theme']['mode'] = 'custom';

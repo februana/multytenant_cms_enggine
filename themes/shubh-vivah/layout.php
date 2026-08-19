@@ -52,6 +52,13 @@ $accent = escape_html((string)($visuals['accent_color'] ?? '#a24747'));
 $headingFont = escape_html((string)($visuals['heading_font'] ?? 'Dancing Script, cursive'));
 $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Arvo, Georgia, serif'));
 $overlay = escape_html((string)($visuals['hero_overlay'] ?? '0.10'));
+$sectionCss = static function (string $key) use ($visuals): string {
+    $path = trim((string)($visuals[$key] ?? ''));
+    return $path === '' ? 'none' : theme_visual_css_url(theme_visual_public_path($path));
+};
+$eventBg = $sectionCss('section_background_event');
+$galleryBg = $sectionCss('section_background_gallery');
+$rsvpBg = $sectionCss('section_background_rsvp');
 $galleryUrls = [];
 foreach (get_gallery_items($config) as $item) {
     $path = is_array($item) ? (string)($item['filename'] ?? $item['path'] ?? '') : (string)$item;
@@ -78,7 +85,8 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
   <link href="https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url($presetKey, 'fidelity-adapter.css')); ?>">
   <style id="cms-shubh-vivah-visual">
-    :root{--shubh-accent:<?php echo $accent; ?>;--shubh-heading:<?php echo $headingFont; ?>;--shubh-body:<?php echo $bodyFont; ?>;--shubh-hero-bg:<?php echo $heroCss; ?>;--shubh-left:<?php echo $leftCss; ?>;--shubh-right:<?php echo $rightCss; ?>;--shubh-overlay:<?php echo $overlay; ?>}
+    :root{--shubh-accent:<?php echo $accent; ?>;--shubh-heading:<?php echo $headingFont; ?>;--shubh-body:<?php echo $bodyFont; ?>;--shubh-hero-bg:<?php echo $heroCss; ?>;--shubh-left:<?php echo $leftCss; ?>;--shubh-right:<?php echo $rightCss; ?>;--shubh-event-bg:<?php echo $eventBg; ?>;--shubh-gallery-bg:<?php echo $galleryBg; ?>;--shubh-rsvp-bg:<?php echo $rsvpBg; ?>;--shubh-overlay:<?php echo $overlay; ?>}
+    .shubh-event,.shubh-gallery,.shubh-rsvp{background-size:cover;background-position:center;background-repeat:no-repeat}.shubh-event{background-image:linear-gradient(rgba(255,250,245,.86),rgba(255,250,245,.90)),var(--shubh-event-bg)}.shubh-gallery{background-image:linear-gradient(rgba(255,250,245,.86),rgba(255,250,245,.90)),var(--shubh-gallery-bg)}.shubh-rsvp{background-image:linear-gradient(rgba(255,250,245,.86),rgba(255,250,245,.90)),var(--shubh-rsvp-bg)}
   </style>
   <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
 </head>

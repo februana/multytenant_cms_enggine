@@ -55,6 +55,14 @@ $rainierSourceHeroImages = [
 ];
 $rainierHeroImages = $rainierHeroPath !== '' ? [theme_visual_public_path($rainierHeroPath)] : ($coverPath !== '' ? [public_path($coverPath)] : $rainierSourceHeroImages);
 $rainierBackgrounds = $rainierHeroImages;
+$rainierSectionCss = static function (string $key) use ($visuals): string {
+    $path = trim((string)($visuals[$key] ?? ''));
+    return $path === '' ? 'none' : theme_visual_css_url(theme_visual_public_path($path));
+};
+$rainierEventBg = $rainierSectionCss('section_background_event_details');
+$rainierScheduleBg = $rainierSectionCss('section_background_schedule');
+$rainierQuotesBg = $rainierSectionCss('section_background_quotes');
+$rainierRsvpBg = $rainierSectionCss('section_background_rsvp');
 $rainierSourceLogo = 'https://raw.githubusercontent.com/Rainier-PS/rainier-ps.github.io/main/images/site/Rainier%20Logo-Primary.svg';
 $rainierFooterLogo = $coverPath !== '' ? public_path($coverPath) : $rainierSourceLogo;
 $eventData = [
@@ -94,6 +102,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original/invite.css'); ?>">
+    <style id="cms-rainier-visual">:root{--cms-rainier-hero-bg:<?php echo $rainierHeroPath !== '' ? theme_visual_css_url(theme_visual_public_path($rainierHeroPath)) : 'none'; ?>;--cms-rainier-event-bg:<?php echo $rainierEventBg; ?>;--cms-rainier-schedule-bg:<?php echo $rainierScheduleBg; ?>;--cms-rainier-quotes-bg:<?php echo $rainierQuotesBg; ?>;--cms-rainier-rsvp-bg:<?php echo $rainierRsvpBg; ?>}.event-details,#schedule-section,#quotes-section,#rsvp{background-size:cover;background-position:center;background-repeat:no-repeat}.event-details{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-event-bg)}#schedule-section{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-schedule-bg)}#quotes-section{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-quotes-bg)}#rsvp{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-rsvp-bg)}</style>
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
     <script defer src="<?php echo get_theme_asset_url($presetKey, 'original/invite-1-adapter.js'); ?>"></script>
 </head>

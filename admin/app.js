@@ -477,7 +477,7 @@ if (themeSettingsForm && themePreviewFrame) {
       input.dataset.visualMediaSelect = '1';
       const defaultOption = document.createElement('option');
       defaultOption.value = '';
-      defaultOption.textContent = 'Gunakan latar bawaan preset';
+      defaultOption.textContent = 'Gunakan gambar bawaan tema';
       input.appendChild(defaultOption);
       const assetPaths = new Set();
       mediaAssets.filter(asset => asset && asset.type === 'image' && asset.path).forEach(asset => {
@@ -490,7 +490,7 @@ if (themeSettingsForm && themePreviewFrame) {
       if (value && !assetPaths.has(value)) {
         const storedOption = document.createElement('option');
         storedOption.value = value;
-        storedOption.textContent = `Referensi tersimpan — ${value}`;
+        storedOption.textContent = `Gambar tersimpan — ${value}`;
         input.appendChild(storedOption);
       }
       const previewWrap = document.createElement('div');
@@ -508,7 +508,7 @@ if (themeSettingsForm && themePreviewFrame) {
       resetButton.name = 'reset_visual_key';
       resetButton.value = key;
       resetButton.className = 'button small-button';
-      resetButton.textContent = 'Reset assignment';
+      resetButton.textContent = 'Kembalikan ke Bawaan';
       const resetRow = document.createElement('div');
       resetRow.style.cssText = 'display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.55rem;';
       resetRow.appendChild(resetButton);
@@ -517,10 +517,10 @@ if (themeSettingsForm && themePreviewFrame) {
       resetRow.appendChild(resetNote);
       row.appendChild(resetRow);
       const mediaNote = document.createElement('small');
-      mediaNote.append('Pilih asset dari Pengelola Media. Untuk upload baru, gunakan ');
+      mediaNote.append('Pilih gambar dari Foto, Musik, dan File. Untuk upload baru, gunakan ');
       const mediaLink = document.createElement('a');
       mediaLink.href = '#file-manager';
-      mediaLink.textContent = 'Kelola Media';
+      mediaLink.textContent = 'Foto, Musik, dan File';
       mediaNote.append(mediaLink, ', lalu muat ulang halaman.');
       row.appendChild(mediaNote);
     } else {

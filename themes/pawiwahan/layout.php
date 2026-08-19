@@ -16,6 +16,17 @@ $sourceHero = $sourceAsset('assets/hero-source.jpg');
 $heroConfigured = trim((string)($visuals['hero_background'] ?? ''));
 $heroUrl = $assetUrl($heroConfigured, $sourceHero);
 $heroCss = theme_visual_css_url($heroUrl);
+$welcomePath = trim((string)($visuals['welcome_background'] ?? ''));
+$welcomeUrl = $assetUrl($welcomePath, $heroUrl);
+$welcomeCss = theme_visual_css_url($welcomeUrl);
+$sectionCss = static function (string $key) use ($visuals): string {
+    $path = trim((string)($visuals[$key] ?? ''));
+    return $path === '' ? 'none' : theme_visual_css_url(theme_visual_public_path($path));
+};
+$pawiwahanGalleryBg = $sectionCss('section_background_gallery');
+$pawiwahanLocationBg = $sectionCss('section_background_location');
+$pawiwahanGiftBg = $sectionCss('section_background_gift');
+$pawiwahanMessagesBg = $sectionCss('section_background_messages');
 $coverUrl = $assetUrl((string)($config['media']['cover'] ?? $config['media']['background_hero'] ?? ''), $heroUrl);
 $brideUrl = $assetUrl((string)($config['media']['bride_photo'] ?? ''), $sourceHero);
 $groomUrl = $assetUrl((string)($config['media']['groom_photo'] ?? ''), $sourceHero);
@@ -86,8 +97,14 @@ $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Raleway, sans-serif')
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
   <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url($presetKey, 'style.css')); ?>">
   <style id="cms-pawiwahan-visual">
-    :root { --pawiwahan-accent: <?php echo $accent; ?>; --pawiwahan-heading: <?php echo $headingFont; ?>; --pawiwahan-body: <?php echo $bodyFont; ?>; --pawiwahan-hero-bg: <?php echo $heroCss; ?>; }
-    .pawiwahan-cover-override, #welcomeModal .hero { background-image: linear-gradient(rgba(153,110,109,.65), rgba(153,110,109,.3)), var(--pawiwahan-hero-bg) !important; }
+    :root { --pawiwahan-accent: <?php echo $accent; ?>; --pawiwahan-heading: <?php echo $headingFont; ?>; --pawiwahan-body: <?php echo $bodyFont; ?>; --pawiwahan-hero-bg: <?php echo $heroCss; ?>; --pawiwahan-welcome-bg: <?php echo $welcomeCss; ?>; --pawiwahan-gallery-bg: <?php echo $pawiwahanGalleryBg; ?>; --pawiwahan-location-bg: <?php echo $pawiwahanLocationBg; ?>; --pawiwahan-gift-bg: <?php echo $pawiwahanGiftBg; ?>; --pawiwahan-messages-bg: <?php echo $pawiwahanMessagesBg; ?>; }
+    .pawiwahan-cover-override { background-image: linear-gradient(rgba(153,110,109,.65), rgba(153,110,109,.3)), var(--pawiwahan-hero-bg) !important; }
+    #welcomeModal .hero { background-image: linear-gradient(rgba(153,110,109,.65), rgba(153,110,109,.3)), var(--pawiwahan-welcome-bg) !important; }
+    #galeri,#lokasi,#gift,#pesan { background-size:cover; background-position:center; background-repeat:no-repeat; }
+    #galeri { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-gallery-bg); }
+    #lokasi { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-location-bg); }
+    #gift { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-gift-bg); }
+    #pesan { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-messages-bg); }
     h1, .parag { font-family: var(--pawiwahan-heading); }
     body { font-family: var(--pawiwahan-body); }
   </style>
