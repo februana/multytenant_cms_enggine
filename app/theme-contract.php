@@ -36,7 +36,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'comment', 'dom_id' => 'comment', 'label' => 'Comment', 'title' => 'Comment', 'embedded_capabilities' => ['rsvp', 'messages']],
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
-                'media_roles' => ['cover', 'bride_photo', 'groom_photo'],
+                'media_roles' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
                 'assets' => [
                     'bootstrap@5.3.8', 'fontawesome@7.1.0', 'aos@2.3.4', 'canvas-confetti@1.9.3',
                     'guest.css', 'guest.js', 'common.css', 'animation.css', 'theme-media'

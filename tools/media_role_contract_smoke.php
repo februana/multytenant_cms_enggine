@@ -11,7 +11,7 @@ function media_role_assert(bool $condition, string $message): void {
 
 $expectedRoles = [
     'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
-    'dewankl' => ['cover', 'bride_photo', 'groom_photo'],
+    'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
     'shubh-vivah' => [],
     'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo'],
     'rainier' => [],
@@ -50,7 +50,7 @@ $shared = [
 ];
 
 $renderMedia = [
-    'dewankl' => ['bride_photo' => 'uploads/cover/dewana-bride-role.webp', 'groom_photo' => 'uploads/cover/dewana-groom-role.webp'],
+    'dewankl' => ['bride_photo' => 'uploads/cover/dewana-bride-role.webp', 'groom_photo' => 'uploads/cover/dewana-groom-role.webp', 'couple_photo' => 'uploads/cover/dewana-couple-role.webp'],
     'yami-buzzy' => ['bride_photo' => 'uploads/cover/yami-bride-role.webp', 'groom_photo' => 'uploads/cover/yami-groom-role.webp'],
     'archak' => ['bride_photo' => 'uploads/cover/archak-bride-role.webp', 'groom_photo' => 'uploads/cover/archak-groom-role.webp', 'couple_photo' => 'uploads/cover/archak-couple-role.webp'],
     'parang' => ['bride_photo' => 'uploads/cover/parang-bride-role.webp', 'groom_photo' => 'uploads/cover/parang-groom-role.webp'],

@@ -63,10 +63,11 @@ $giftEwalletNumber = escape_html($config['gift']['e_wallet_number'] ?? '');
 $dewanklSourcePlaceholder = get_theme_asset_url('dewankl', 'assets/placeholder.webp');
 $dewanklSourceIcon = get_theme_asset_url('dewankl', 'assets/icon-192x192.png');
 $dewanklSourceDonate = get_theme_asset_url('dewankl', 'assets/donate.png');
-$coverPath = trim((string)($config['media']['cover'] ?? '')) ?: $dewanklSourcePlaceholder;
+$couplePhoto = trim((string)($config['media']['couple_photo'] ?? ''));
+$coverPath = trim((string)($config['media']['cover'] ?? '')) ?: ($couplePhoto !== '' ? $couplePhoto : $dewanklSourcePlaceholder);
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : $coverPath;
 $groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : $coverPath;
-$couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : $coverPath;
+$couplePhoto = $couplePhoto !== '' ? $couplePhoto : $coverPath;
 $musicSrc = trim((string)($config['media']['music'] ?? ''));
 $videoPath = trim((string)($config['media']['love_story_video'] ?? ''));
 $mediaReferenceAvailable = static function (string $path): bool {

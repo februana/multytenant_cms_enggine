@@ -26,7 +26,7 @@ $forbidden = [
 ];
 $expectedMediaRoles = [
     'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
-    'dewankl' => ['cover', 'bride_photo', 'groom_photo'],
+    'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
     'shubh-vivah' => [],
     'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo'],
     'rainier' => [],

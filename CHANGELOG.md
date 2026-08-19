@@ -35,6 +35,6 @@ This unreleased change set is prepared for PR #84 and covers the multi-preset CM
 ### Media Role Audit Follow-up
 
 - Added an explicit per-preset media-role contract so the Admin exposes only the cover, bride, groom, and couple-photo controls consumed by the active renderer.
-- Restored DewanaKL's reachable bride/groom upload and assignment flow, while preventing unsupported couple-photo actions from appearing in presets that do not render them.
+- Restored DewanaKL's reachable bride/groom upload and assignment flow, added couple-photo upload with cover/home fallback behavior, and prevented unsupported couple-photo actions from appearing in presets that do not render them.
 - Wired Yami Buzzy couple avatars to canonical bride/groom media, with `couple_photo` fallback and the original letter placeholders retained when no custom image is configured.
 - Added `docs/media-role-audit.md` and `tools/media_role_contract_smoke.php`; the full repository regression suite now covers role mapping, Admin gates, renderer output, and fallback behavior.
