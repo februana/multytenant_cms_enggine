@@ -247,23 +247,15 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 $success = !empty($usage) ? 'Referensi file dilepas. File akan dihapus setelah pengaturan tersimpan.' : 'File siap dihapus.';
                 break;
             case 'save_wedding':
-                $config['wedding']['bride_name'] = preserve_text_input($_POST['bride_name'] ?? '', $config['wedding']['bride_name']);
-                $config['wedding']['groom_name'] = preserve_text_input($_POST['groom_name'] ?? '', $config['wedding']['groom_name']);
-                $config['wedding']['title'] = preserve_text_input($_POST['title'] ?? '', $config['wedding']['title']);
-                $config['wedding']['opening_text'] = preserve_text_input($_POST['opening_text'] ?? '', $config['wedding']['opening_text']);
-                if (trim($config['wedding']['opening_text']) === '') {
-                    $config['wedding']['opening_text'] = config_defaults()['wedding']['opening_text'];
-                }
-                $config['wedding']['closing_text'] = preserve_text_input($_POST['closing_text'] ?? '', $config['wedding']['closing_text']);
-                if (trim($config['wedding']['closing_text']) === '') {
-                    $config['wedding']['closing_text'] = config_defaults()['wedding']['closing_text'];
-                }
-                $config['wedding']['quote'] = preserve_text_input($_POST['quote'] ?? '', $config['wedding']['quote']);
-                if (trim($config['wedding']['quote']) === '') {
-                    $config['wedding']['quote'] = config_defaults()['wedding']['quote'];
-                }
-                $config['wedding']['bride_nickname'] = preserve_text_input($_POST['bride_nickname'] ?? '', $config['wedding']['bride_nickname']);
-                $config['wedding']['groom_nickname'] = preserve_text_input($_POST['groom_nickname'] ?? '', $config['wedding']['groom_nickname']);
+                $defaultWedding = config_defaults()['wedding'];
+                $config['wedding']['bride_name'] = preserve_text_input($_POST['bride_name'] ?? '', $defaultWedding['bride_name']);
+                $config['wedding']['groom_name'] = preserve_text_input($_POST['groom_name'] ?? '', $defaultWedding['groom_name']);
+                $config['wedding']['title'] = preserve_text_input($_POST['title'] ?? '', $defaultWedding['title']);
+                $config['wedding']['opening_text'] = preserve_text_input($_POST['opening_text'] ?? '', $defaultWedding['opening_text']);
+                $config['wedding']['closing_text'] = preserve_text_input($_POST['closing_text'] ?? '', $defaultWedding['closing_text']);
+                $config['wedding']['quote'] = preserve_text_input($_POST['quote'] ?? '', $defaultWedding['quote']);
+                $config['wedding']['bride_nickname'] = preserve_text_input($_POST['bride_nickname'] ?? '', $defaultWedding['bride_nickname']);
+                $config['wedding']['groom_nickname'] = preserve_text_input($_POST['groom_nickname'] ?? '', $defaultWedding['groom_nickname']);
                 break;
             case 'save_parents':
                 $config['parents']['bride_father'] = preserve_text_input($_POST['bride_father'] ?? '', $config['parents']['bride_father']);
@@ -360,6 +352,10 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
 
                             $fieldType = $presetSchema[$optKey]['type'] ?? '';
                             $strVal = str_replace("\r\n", "\n", (string)$optVal);
+                            if ($optKey === 'opening_greeting' && trim($strVal) === '') {
+                                $config['theme_options'][$presetKey][$optKey] = config_defaults()['theme_options'][$presetKey][$optKey] ?? '';
+                                continue;
+                            }
 
                             if ($fieldType === 'image') {
                                 if (isset($uploadedThemeOptionKeys[$optKey])) continue;

@@ -124,3 +124,48 @@ Perluasan capability telah diterapkan secara repository-wide. Semua preset sekar
 [1]: https://github.com/februana/webserver_undangan/pull/84 "PR #84 — Multi-preset CMS audit and fixes"
 [2]: https://github.com/vinitshahdeo/wedding-website "Source repository — Shubh Vivah"
 [3]: https://github.com/Tynab/Yami-Buzzy "Source repository — Yami Buzzy"
+
+
+## Addendum: Default Copy dan Identitas Febru & Andi
+
+### Dasar referensi
+
+Riset copy disimpan pada `docs/wedding-copy-research.md`. Pola yang dipakai menggabungkan struktur undangan Islami yang umum—Bismillah, salam, identitas mempelai, informasi acara, permohonan doa restu, dan salam penutup—dengan kutipan QS. Ar-Rum ayat 21 dalam Arab serta terjemahan ringkas berbahasa Indonesia [4] [5]. Kalimat tentang kehadiran sebagai silaturahmi dan doa restu sebagai hadiah terindah dipilih karena konsisten dengan contoh undangan publik Indonesia [6].
+
+### Default final
+
+| Field | Default |
+|---|---|
+| Nama mempelai wanita | `FEBRUANA` |
+| Nama mempelai pria | `ANDI MUHAMAD BASUKI` |
+| Panggilan wanita | `Febru` |
+| Panggilan pria | `Andi` |
+| Opening text | Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami. |
+| Quote | Teks Arab QS. Ar-Rum: 21 dan terjemahan bahasa Indonesia. |
+| Closing text | Kehadiran dan doa restu Bapak/Ibu/Saudara/i merupakan kebahagiaan dan hadiah terindah bagi kami, disertai ucapan terima kasih dan doa keberkahan. |
+| Greeting preset Islami | Bismillah Arab dan `Assalamu’alaikum Warahmatullahi Wabarakatuh`. |
+| Greeting Pawiwahan | `OM Swastiastu`, dipertahankan sesuai karakter source. |
+
+### Jalur override dan reset
+
+`config_defaults()` menjadi sumber default untuk instalasi baru dan fallback reset. `config.json` aktif telah dimigrasikan agar deployment saat ini memakai identitas serta copy baru. `admin/index.php` sekarang memakai `$defaultWedding = config_defaults()['wedding']` pada `save_wedding`; nama resmi, panggilan, judul, opening, quote, dan closing yang dikosongkan kembali ke default. `save_theme_options` juga mengembalikan `opening_greeting` ke default preset ketika field salam dikosongkan.
+
+Nilai non-kosong tetap dipersist sebagai input admin. Dengan demikian, alurnya adalah **default → override panel admin → reset/pengosongan → default**, tanpa menghapus data media atau mengubah preset lain.
+
+### Metadata turunan
+
+`build_google_calendar_link()` sekarang menghitung ulang URL template Google Calendar dari title, opening, tanggal, waktu, lokasi, dan timezone ketika URL yang tersimpan adalah template default. URL manual non-template tetap dipertahankan. Perubahan nama atau opening dari panel admin tidak lagi meninggalkan metadata kalender lama.
+
+### Bukti render
+
+Browser audit Yami Buzzy melalui HTTP menampilkan Bismillah Arab, salam, `FEBRUANA & ANDI MUHAMAD BASUKI`, opening text, kutipan Ar-Rum 21, calendar metadata baru, dan closing text. Welcome modal tetap aman pada mobile; nama resmi panjang membungkus tanpa keluar viewport. Screenshot default copy seluruh preset tersimpan di `docs/assets/default-copy-audit/`.
+
+### Validasi tambahan
+
+Selain 18 smoke test audit visual sebelumnya, `tools/wedding_copy_default_smoke.php` lulus dan mengunci 19 pemeriksaan konten/fallback/render. Full validation terbaru meluluskan **19 test** secara terisolasi, termasuk test copy default baru.
+
+## Referensi Addendum
+
+[4]: https://weddingmarket.com/artikel/isi-undangan-pernikahan-islami "WeddingMarket — Contoh Isi Undangan Pernikahan Islami"
+[5]: https://quran.nu.or.id/ar-rum/21 "NU Online Quran — Ar-Rum Ayat 21"
+[6]: https://wolipop.detik.com/wedding-news/d-5326072/10-kumpulan-kata-kata-undangan-pernikahan-singkat-dan-sederhana "Wolipop Detik — Kumpulan Kata-Kata Undangan Pernikahan"

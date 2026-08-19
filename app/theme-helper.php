@@ -41,14 +41,14 @@ function preserve_text_input($value, string $fallback = ''): string {
  */
 function theme_opening_greeting(array $config, string $presetKey): string {
     $defaults = [
-        'dewankl' => 'Assalamualaikum Warahmatullahi Wabarakatuh',
-        'shubh-vivah' => 'Bismillahirrahmanirrahim',
-        'yami-buzzy' => 'Bismillahirrahmanirrahim',
-        'rainier' => 'Bismillahirrahmanirrahim',
-        'archak' => 'Bismillahirrahmanirrahim',
-        'parang' => 'Bismillahirrahmanirrahim',
+        'dewankl' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'shubh-vivah' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'yami-buzzy' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'rainier' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'archak' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'parang' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
         'pawiwahan' => 'OM Swastiastu',
-        'custom' => 'Bismillahirrahmanirrahim',
+        'custom' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
     ];
     $fallback = $defaults[$presetKey] ?? $defaults['custom'];
     $configured = function_exists('get_theme_option')

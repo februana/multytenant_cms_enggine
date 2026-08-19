@@ -1,30 +1,30 @@
 {
     "site": {
         "url": "",
-        "title": "TEST TITLE",
-        "description": "Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.",
-        "keywords": "undangan pernikahan, wedding invitation, Andi, Februana",
-        "open_graph_title": "Undangan Pernikahan Andi & Februana",
-        "open_graph_description": "Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.",
+        "title": "Undangan Pernikahan Febru & Andi",
+        "description": "Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.",
+        "keywords": "undangan pernikahan, wedding invitation, FEBRUANA, ANDI MUHAMAD BASUKI, Febru, Andi",
+        "open_graph_title": "Undangan Pernikahan Febru & Andi",
+        "open_graph_description": "Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.",
         "twitter_card": "summary_large_image",
         "open_graph_image": "",
-        "schema": "{\"@context\": \"https://schema.org\", \"@type\": \"Event\", \"name\": \"Undangan Pernikahan Andi & Februana\", \"startDate\": \"2026-12-29T09:00:00+07:00\", \"location\": {\"@type\": \"Place\", \"name\": \"PFR2+G9H Asinan\", \"address\": {\"@type\": \"PostalAddress\", \"addressLocality\": \"Kabupaten Semarang\", \"addressRegion\": \"Jawa Tengah\", \"addressCountry\": \"ID\"}}, \"description\": \"Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.\", \"eventStatus\": \"https://schema.org/EventScheduled\", \"eventAttendanceMode\": \"https://schema.org/OfflineEventAttendanceMode\"}"
+        "schema": "{\"@context\":\"https://schema.org\",\"@type\":\"Event\",\"name\":\"Undangan Pernikahan Febru & Andi\",\"startDate\":\"2026-12-29T09:00:00+07:00\",\"location\":{\"@type\":\"Place\",\"name\":\"PFR2+G9H Asinan\",\"address\":{\"@type\":\"PostalAddress\",\"addressLocality\":\"Kabupaten Semarang\",\"addressRegion\":\"Jawa Tengah\",\"addressCountry\":\"ID\"}},\"description\":\"Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.\",\"eventStatus\":\"https://schema.org/EventScheduled\",\"eventAttendanceMode\":\"https://schema.org/OfflineEventAttendanceMode\"}"
     },
     "wedding": {
-        "bride_name": "E2E_BRIDE_SENTINEL",
-        "groom_name": "E2E_GROOM_SENTINEL",
-        "title": "Undangan Pernikahan Andi & Februana",
-        "opening_text": "Baris 1\n\nBaris 3",
-        "closing_text": "Kami sangat menghargai kehadiran dan doa restu Bapak/Ibu/Saudara/i agar hari ini menjadi lebih berkah.",
-        "quote": "Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir pada hari istimewa kami.",
-        "bride_nickname": "Februana",
+        "bride_name": "FEBRUANA",
+        "groom_name": "ANDI MUHAMAD BASUKI",
+        "title": "Undangan Pernikahan Febru & Andi",
+        "opening_text": "Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.",
+        "closing_text": "Kehadiran dan doa restu Bapak/Ibu/Saudara/i merupakan kebahagiaan dan hadiah terindah bagi kami. Terima kasih atas perhatian, kasih sayang, dan doa yang diberikan. Semoga Allah SWT membalas kebaikan Anda dengan keberkahan.",
+        "quote": "وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةًۗ اِنَّ فِيْ ذٰلِكَ لَاٰيٰتٍ لِّقَوْمٍ يَّتَفَكَّرُوْنَ ۝٢١\n\n“Di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu agar kamu merasa tenteram kepadanya. Dia menjadikan di antaramu rasa cinta dan kasih sayang. Sungguh, pada yang demikian itu benar-benar terdapat tanda-tanda kebesaran Allah bagi kaum yang berpikir.” (QS. Ar-Rum: 21)",
+        "bride_nickname": "Febru",
         "groom_nickname": "Andi"
     },
     "parents": {
         "bride_father": "Ayah Februana",
         "bride_mother": "Ibu Februana",
-        "groom_father": "Ayah Andi",
-        "groom_mother": "Ibu Andi"
+        "groom_father": "Ayah Andi Muhamad Basuki",
+        "groom_mother": "Ibu Andi Muhamad Basuki"
     },
     "schedule": {
         "akad_date": "2026-12-29",
@@ -32,7 +32,7 @@
         "reception_date": "2026-12-29",
         "reception_time": "11:00",
         "timezone": "Asia/Jakarta",
-        "google_calendar_link": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Undangan+Pernikahan+Andi+%26+Februana&dates=20261229T090000/20261229T110000&details=Mohon+doa+restu+dan+kehadiran+Bapak%2FIbu%2FSaudara%2Fi+di+hari+spesial+kami.&location=PFR2%2BG9H+Asinan%2C+Kabupaten+Semarang%2C+Jawa+Tengah&ctz=Asia%2FJakarta",
+        "google_calendar_link": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Undangan+Pernikahan+Febru+%26+Andi&dates=20261229T090000/20261229T110000&details=Dengan+memohon+rahmat+dan+ridha+Allah+SWT%2C+kami+bermaksud+mengundang+Bapak%2FIbu%2FSaudara%2Fi+untuk+hadir+dan+memberikan+doa+restu+pada+acara+pernikahan+kami.&location=PFR2%2BG9H+Asinan%2C+Kabupaten+Semarang%2C+Jawa+Tengah&ctz=Asia%2FJakarta",
         "countdown_target": "2026-12-29T09:00:00+07:00"
     },
     "location": {
@@ -64,7 +64,7 @@
     },
     "whatsapp": {
         "phone": "+6285162909164",
-        "message": "Assalamu'alaikum Andi & Februana, saya ingin mengonfirmasi kehadiran untuk acara pernikahan."
+        "message": "Assalamu’alaikum, saya ingin mengonfirmasi kehadiran pada pernikahan Febru & Andi."
     },
     "admin": {
         "username": "admin",

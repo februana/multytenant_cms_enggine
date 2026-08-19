@@ -77,18 +77,18 @@ function config_defaults(): array {
     return [
         'site' => [
             'url' => '',
-            'title' => 'Undangan Pernikahan Andi & Februana',
-            'description' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
-            'keywords' => 'undangan pernikahan, wedding invitation, Andi, Februana',
-            'open_graph_title' => 'Undangan Pernikahan Andi & Februana',
-            'open_graph_description' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
+            'title' => 'Undangan Pernikahan Febru & Andi',
+            'description' => 'Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.',
+            'keywords' => 'undangan pernikahan, wedding invitation, FEBRUANA, ANDI MUHAMAD BASUKI, Febru, Andi',
+            'open_graph_title' => 'Undangan Pernikahan Febru & Andi',
+            'open_graph_description' => 'Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.',
             'twitter_card' => 'summary_large_image',
             // Optional user-provided media; clean installs start without sample files.
             'open_graph_image' => '',
             'schema' => json_encode([
                 '@context' => 'https://schema.org',
                 '@type' => 'Event',
-                'name' => 'Undangan Pernikahan Andi & Februana',
+                'name' => 'Undangan Pernikahan Febru & Andi',
                 'startDate' => '2026-12-29T09:00:00+07:00',
                 'location' => [
                     '@type' => 'Place',
@@ -100,26 +100,26 @@ function config_defaults(): array {
                         'addressCountry' => 'ID'
                     ]
                 ],
-                'description' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
+                'description' => 'Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.',
                 'eventStatus' => 'https://schema.org/EventScheduled',
                 'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode'
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         ],
         'wedding' => [
-            'bride_name' => 'Februana',
-            'groom_name' => 'Andi',
-            'title' => 'Undangan Pernikahan Andi & Februana',
-            'opening_text' => 'Mohon doa restu dan kehadiran Bapak/Ibu/Saudara/i di hari spesial kami.',
-            'closing_text' => 'Kami sangat menghargai kehadiran dan doa restu Bapak/Ibu/Saudara/i agar hari ini menjadi lebih berkah.',
-            'quote' => 'Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir pada hari istimewa kami.',
-            'bride_nickname' => 'Februana',
+            'bride_name' => 'FEBRUANA',
+            'groom_name' => 'ANDI MUHAMAD BASUKI',
+            'title' => 'Undangan Pernikahan Febru & Andi',
+            'opening_text' => 'Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.',
+            'closing_text' => 'Kehadiran dan doa restu Bapak/Ibu/Saudara/i merupakan kebahagiaan dan hadiah terindah bagi kami. Terima kasih atas perhatian, kasih sayang, dan doa yang diberikan. Semoga Allah SWT membalas kebaikan Anda dengan keberkahan.',
+            'quote' => "وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا لِّتَسْكُنُوْٓا اِلَيْهَا وَجَعَلَ بَيْنَكُمْ مَّوَدَّةً وَّرَحْمَةًۗ اِنَّ فِيْ ذٰلِكَ لَاٰيٰتٍ لِّقَوْمٍ يَّتَفَكَّرُوْنَ ۝٢١\n\n“Di antara tanda-tanda kebesaran-Nya ialah Dia menciptakan pasangan-pasangan untukmu agar kamu merasa tenteram kepadanya. Dia menjadikan di antaramu rasa cinta dan kasih sayang. Sungguh, pada yang demikian itu benar-benar terdapat tanda-tanda kebesaran Allah bagi kaum yang berpikir.” (QS. Ar-Rum: 21)",
+            'bride_nickname' => 'Febru',
             'groom_nickname' => 'Andi'
         ],
         'parents' => [
             'bride_father' => 'Ayah Februana',
             'bride_mother' => 'Ibu Februana',
-            'groom_father' => 'Ayah Andi',
-            'groom_mother' => 'Ibu Andi'
+            'groom_father' => 'Ayah Andi Muhamad Basuki',
+            'groom_mother' => 'Ibu Andi Muhamad Basuki'
         ],
         'schedule' => [
             'akad_date' => '2026-12-29',
@@ -127,7 +127,7 @@ function config_defaults(): array {
             'reception_date' => '2026-12-29',
             'reception_time' => '11:00',
             'timezone' => 'Asia/Jakarta',
-            'google_calendar_link' => 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Undangan+Pernikahan+Andi+%26+Februana&dates=20261229T090000/20261229T110000&details=Mohon+doa+restu+dan+kehadiran+Bapak%2FIbu%2FSaudara%2Fi+di+hari+spesial+kami.&location=PFR2%2BG9H+Asinan%2C+Kabupaten+Semarang%2C+Jawa+Tengah&ctz=Asia%2FJakarta',
+            'google_calendar_link' => 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Undangan+Pernikahan+Febru+%26+Andi&dates=20261229T090000/20261229T110000&details=Dengan+memohon+rahmat+dan+ridha+Allah+SWT%2C+kami+bermaksud+mengundang+Bapak%2FIbu%2FSaudara%2Fi+untuk+hadir+dan+memberikan+doa+restu+pada+acara+pernikahan+kami.&location=PFR2%2BG9H+Asinan%2C+Kabupaten+Semarang%2C+Jawa+Tengah&ctz=Asia%2FJakarta',
             'countdown_target' => '2026-12-29T09:00:00+07:00'
         ],
         'location' => [
@@ -160,7 +160,7 @@ function config_defaults(): array {
         ],
         'whatsapp' => [
             'phone' => '+6285162909164',
-            'message' => 'Assalamu\'alaikum Andi & Februana, saya ingin mengonfirmasi kehadiran untuk acara pernikahan.'
+            'message' => 'Assalamu\'alaikum, saya ingin mengonfirmasi kehadiran pada pernikahan Febru & Andi.'
         ],
         'admin' => [
             'username' => 'admin',
@@ -227,7 +227,7 @@ function config_defaults(): array {
             [
                 'id' => 'undangan',
                 'title' => 'Undangan Pernikahan',
-                'subtitle' => 'Dengan memohon rahmat Allah SWT, kami mengundang Anda untuk hadir pada hari istimewa kami.',
+                'subtitle' => 'Dengan memohon rahmat dan ridha Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk hadir dan memberikan doa restu pada acara pernikahan kami.',
                 'enabled' => true,
                 'order' => 3,
                 'custom_title' => '',
@@ -350,20 +350,20 @@ function config_defaults(): array {
                 'enable_mouse_animation' => true,
                 'enable_music' => true,
                 'welcome_note' => '',
-                'opening_greeting' => 'Assalamualaikum Warahmatullahi Wabarakatuh'
+                "opening_greeting" => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh"
             ],
             'shubh-vivah' => [
-                'opening_greeting' => 'Bismillahirrahmanirrahim'
+                "opening_greeting" => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh"
             ],
             'yami-buzzy' => [
-                'opening_greeting' => 'Bismillahirrahmanirrahim'
+                "opening_greeting" => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh"
             ],
             'rainier' => [
                 'glass_opacity' => '0.85',
                 'show_bismillah' => true,
                 'hero_accent_color' => '#b8655d',
                 'quote_note' => '',
-                'opening_greeting' => 'Bismillahirrahmanirrahim'
+                "opening_greeting" => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh"
             ],
             'archak' => [
                 'enable_parallax' => true,
@@ -371,10 +371,10 @@ function config_defaults(): array {
                 'divider_style' => 'ornament',
                 'header_badge_image' => '',
                 'archak_welcome_msg' => '',
-                'opening_greeting' => 'Bismillahirrahmanirrahim'
+                "opening_greeting" => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh"
             ],
             'parang' => [
-                'opening_greeting' => 'Bismillahirrahmanirrahim'
+                "opening_greeting" => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh"
             ],
             'pawiwahan' => [
                 'opening_greeting' => 'OM Swastiastu'
@@ -2475,7 +2475,29 @@ function build_whatsapp_link(array $config): string {
 }
 
 function build_google_calendar_link(array $config): string {
-    return $config['schedule']['google_calendar_link'] ?: '';
+    $stored = trim((string)($config['schedule']['google_calendar_link'] ?? ''));
+    if ($stored !== '' && !str_starts_with($stored, 'https://calendar.google.com/calendar/render?action=TEMPLATE')) return $stored;
+    $schedule = (array)($config['schedule'] ?? []);
+    $wedding = (array)($config['wedding'] ?? []);
+    $location = (array)($config['location'] ?? []);
+    $title = trim((string)($wedding['title'] ?? ($config['site']['title'] ?? 'Undangan Pernikahan')));
+    if ($title === '') $title = trim((string)($wedding['bride_nickname'] ?? '') . ' & ' . (string)($wedding['groom_nickname'] ?? ''));
+    $details = trim((string)($wedding['opening_text'] ?? ($config['site']['description'] ?? '')));
+    $akadDate = trim((string)($schedule['akad_date'] ?? ''));
+    $akadTime = trim((string)($schedule['akad_time'] ?? ''));
+    $receptionDate = trim((string)($schedule['reception_date'] ?? $akadDate));
+    $receptionTime = trim((string)($schedule['reception_time'] ?? $akadTime));
+    $start = $akadDate !== '' ? date('Ymd\\THis', strtotime($akadDate . ' ' . ($akadTime !== '' ? $akadTime : '00:00'))) : '';
+    $end = $receptionDate !== '' ? date('Ymd\\THis', strtotime($receptionDate . ' ' . ($receptionTime !== '' ? $receptionTime : ($akadTime !== '' ? $akadTime : '00:00')))) : $start;
+    $params = [
+        'action' => 'TEMPLATE',
+        'text' => $title,
+        'dates' => $start . '/' . $end,
+        'details' => $details,
+        'location' => trim((string)($location['address'] ?? $location['venue'] ?? '')),
+        'ctz' => trim((string)($schedule['timezone'] ?? 'Asia/Jakarta')) ?: 'Asia/Jakarta'
+    ];
+    return 'https://calendar.google.com/calendar/render?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
 }
 
 // Minimal exception handler to avoid leaking internals
