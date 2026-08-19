@@ -29,13 +29,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Layer 2: Configure & Install PHP Extensions
-# pdo_sqlite and sqlite3 share PHP's SQLite source tree. Install them in
-# separate docker-php-ext-install invocations so the first invocation's
-# cleanup cannot remove config.m4 before the second extension is processed.
+# The official php:8.3-apache base image already builds pdo_sqlite and
+# sqlite3 against its system SQLite library. Compile only extensions that
+# are not provided by the base image; recompiling SQLite causes config.m4
+# failures in docker-php-ext-install.
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" gd mbstring zip
-RUN docker-php-ext-install pdo_sqlite
-RUN docker-php-ext-install sqlite3
 
 # Layer 3: Enable Apache modules
 RUN a2enmod rewrite headers expires
