@@ -14,7 +14,7 @@ EVENT_ICS_FILE_PATH="${UNDANGAN_EVENT_ICS_PATH:-$DATA_DIR/event.ics}"
 CUSTOM_CSS_FILE_PATH="${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_DIR/custom.css}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
-WEDDING_BUILTIN_PRESETS="dewankl elix rainier archak parang pawiwahan custom"
+WEDDING_BUILTIN_PRESETS="dewankl rainier archak parang pawiwahan shubh-vivah yami-buzzy custom"
 PASS_COUNT=0
 WARN_COUNT=0
 FAIL_COUNT=0
@@ -81,21 +81,34 @@ else
   fail "Missing themes directory"
 fi
 
-for theme in dewankl elix rainier archak parang pawiwahan; do
+for theme in dewankl rainier archak parang pawiwahan shubh-vivah yami-buzzy; do
   if [ -d "$DEPLOY_DIR/themes/$theme" ]; then
     pass "Theme directory exists: themes/$theme"
   else
     fail "Missing theme directory: themes/$theme"
   fi
-  
-  # Check for required theme files
-  for tfile in layout.php style.css script.js; do
-    if [ -f "$DEPLOY_DIR/themes/$theme/$tfile" ]; then
-      pass "Theme file exists: themes/$theme/$tfile"
+
+  # Every preset owns a renderer; legacy presets also retain source style/script files.
+  if [ -f "$DEPLOY_DIR/themes/$theme/layout.php" ]; then
+    pass "Theme file exists: themes/$theme/layout.php"
+  else
+    fail "Missing theme file: themes/$theme/layout.php"
+  fi
+  if [ "$theme" = "shubh-vivah" ] || [ "$theme" = "yami-buzzy" ]; then
+    if [ -f "$DEPLOY_DIR/themes/$theme/fidelity-adapter.css" ]; then
+      pass "Theme adapter exists: themes/$theme/fidelity-adapter.css"
     else
-      fail "Missing theme file: themes/$theme/$tfile"
+      fail "Missing theme adapter: themes/$theme/fidelity-adapter.css"
     fi
-  done
+  else
+    for tfile in style.css script.js; do
+      if [ -f "$DEPLOY_DIR/themes/$theme/$tfile" ]; then
+        pass "Theme file exists: themes/$theme/$tfile"
+      else
+        fail "Missing theme file: themes/$theme/$tfile"
+      fi
+    done
+  fi
 done
 
 # Check 4: Required upload directories and preset-scoped Theme Assets exist and are writable.

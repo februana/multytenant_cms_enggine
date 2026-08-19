@@ -8,6 +8,7 @@ $error = '';
 $success = '';
 $activeTab = 'dashboard';
 $pendingMediaCleanup = [];
+$pendingMediaDeletion = [];
 $queueMediaCleanup = static function (string $oldPath, string $newPath) use (&$pendingMediaCleanup): void {
     $oldPath = trim($oldPath);
     $newPath = trim($newPath);
@@ -236,34 +237,25 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     break;
                 }
                 $usage = detect_media_usage($config, $mediaPath);
-                if (!empty($usage)) {
-                    $error = 'Asset sedang digunakan di: ' . implode(', ', $usage) . '. Hapus referensi dahulu.';
+                $forceDelete = !empty($_POST['force_delete']);
+                if (!empty($usage) && !$forceDelete) {
+                    $error = 'File masih dipakai di: ' . implode(', ', $usage) . '. Gunakan tombol Lepaskan & Hapus jika Anda memang ingin menghapusnya dari semua bagian.';
                     break;
                 }
-                if (!delete_uploaded_asset($mediaPath)) {
-                    $error = 'Gagal menghapus file media.';
-                    break;
-                }
-                $success = 'File media berhasil dihapus.';
+                if (!empty($usage)) clear_media_references($config, $mediaPath);
+                $pendingMediaDeletion[] = $mediaPath;
+                $success = !empty($usage) ? 'Referensi file dilepas. File akan dihapus setelah pengaturan tersimpan.' : 'File siap dihapus.';
                 break;
             case 'save_wedding':
-                $config['wedding']['bride_name'] = preserve_text_input($_POST['bride_name'] ?? '', $config['wedding']['bride_name']);
-                $config['wedding']['groom_name'] = preserve_text_input($_POST['groom_name'] ?? '', $config['wedding']['groom_name']);
-                $config['wedding']['title'] = preserve_text_input($_POST['title'] ?? '', $config['wedding']['title']);
-                $config['wedding']['opening_text'] = preserve_text_input($_POST['opening_text'] ?? '', $config['wedding']['opening_text']);
-                if (trim($config['wedding']['opening_text']) === '') {
-                    $config['wedding']['opening_text'] = config_defaults()['wedding']['opening_text'];
-                }
-                $config['wedding']['closing_text'] = preserve_text_input($_POST['closing_text'] ?? '', $config['wedding']['closing_text']);
-                if (trim($config['wedding']['closing_text']) === '') {
-                    $config['wedding']['closing_text'] = config_defaults()['wedding']['closing_text'];
-                }
-                $config['wedding']['quote'] = preserve_text_input($_POST['quote'] ?? '', $config['wedding']['quote']);
-                if (trim($config['wedding']['quote']) === '') {
-                    $config['wedding']['quote'] = config_defaults()['wedding']['quote'];
-                }
-                $config['wedding']['bride_nickname'] = preserve_text_input($_POST['bride_nickname'] ?? '', $config['wedding']['bride_nickname']);
-                $config['wedding']['groom_nickname'] = preserve_text_input($_POST['groom_nickname'] ?? '', $config['wedding']['groom_nickname']);
+                $defaultWedding = config_defaults()['wedding'];
+                $config['wedding']['bride_name'] = preserve_text_input($_POST['bride_name'] ?? '', $defaultWedding['bride_name']);
+                $config['wedding']['groom_name'] = preserve_text_input($_POST['groom_name'] ?? '', $defaultWedding['groom_name']);
+                $config['wedding']['title'] = preserve_text_input($_POST['title'] ?? '', $defaultWedding['title']);
+                $config['wedding']['opening_text'] = preserve_text_input($_POST['opening_text'] ?? '', $defaultWedding['opening_text']);
+                $config['wedding']['closing_text'] = preserve_text_input($_POST['closing_text'] ?? '', $defaultWedding['closing_text']);
+                $config['wedding']['quote'] = preserve_text_input($_POST['quote'] ?? '', $defaultWedding['quote']);
+                $config['wedding']['bride_nickname'] = preserve_text_input($_POST['bride_nickname'] ?? '', $defaultWedding['bride_nickname']);
+                $config['wedding']['groom_nickname'] = preserve_text_input($_POST['groom_nickname'] ?? '', $defaultWedding['groom_nickname']);
                 break;
             case 'save_parents':
                 $config['parents']['bride_father'] = preserve_text_input($_POST['bride_father'] ?? '', $config['parents']['bride_father']);
@@ -360,6 +352,10 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
 
                             $fieldType = $presetSchema[$optKey]['type'] ?? '';
                             $strVal = str_replace("\r\n", "\n", (string)$optVal);
+                            if ($optKey === 'opening_greeting' && trim($strVal) === '') {
+                                $config['theme_options'][$presetKey][$optKey] = config_defaults()['theme_options'][$presetKey][$optKey] ?? '';
+                                continue;
+                            }
 
                             if ($fieldType === 'image') {
                                 if (isset($uploadedThemeOptionKeys[$optKey])) continue;
@@ -897,7 +893,12 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) {
                         cleanup_replaced_media($oldMediaPath, $config);
                     }
-                    $success = 'Pengaturan berhasil disimpan.';
+                    foreach ($pendingMediaDeletion as $deletePath) {
+                        if (!delete_uploaded_asset($deletePath)) {
+                            $error = 'Pengaturan tersimpan, tetapi file tidak dapat dihapus. Silakan coba lagi.';
+                        }
+                    }
+                    if ($error === '') $success = 'Pengaturan berhasil disimpan.';
                 }
             }
         }
@@ -1027,28 +1028,28 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                 <aside class="sidebar">
                     <nav>
                         <a href="#dashboard">Dasbor</a>
-                        <?php if ($globalAdminCapabilityEnabled('preset_selector')): ?><a href="#preset-selector">Preset / Tema</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('preset_selector')): ?><a href="#preset-selector">Gaya Undangan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('wedding')): ?><a href="#wedding">Informasi Pernikahan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('parents')): ?><a href="#parents">Orang Tua</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('schedule')): ?><a href="#schedule">Jadwal</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('countdown')): ?><a href="#countdown">Hitung Mundur</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('sections')): ?><a href="#sections">Bagian Website</a><?php endif; ?>
-                        <?php if ($globalAdminCapabilityEnabled('theme')): ?><a href="#theme">Tema & Tampilan</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('custom_css')): ?><a href="#custom-css">CSS Khusus</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Kelola Media</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('sections')): ?><a href="#sections">Bagian Undangan</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('theme')): ?><a href="#theme">Tampilan Undangan</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('custom_css')): ?><a href="#custom-css">Pengaturan Lanjutan</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Foto, Musik, dan File</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gallery')): ?><a href="#gallery">Galeri</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('cover')): ?><a href="#cover">Cover</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Latar Belakang</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('cover')): ?><a href="#cover">Foto Sampul</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Latar Undangan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('music')): ?><a href="#music">Musik</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gift')): ?><a href="#gift">Hadiah</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('dresscode')): ?><a href="#dresscode">Dresscode</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('maps')): ?><a href="#maps">Lokasi</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('seo')): ?><a href="#seo">SEO</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">WhatsApp</a><?php endif; ?>
-                        <?php if ($globalAdminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Link Tamu</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">RSVP</a><?php endif; ?>
-                        <?php if ($globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('dresscode')): ?><a href="#dresscode">Pakaian Tamu</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('maps')): ?><a href="#maps">Lokasi Acara</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('seo')): ?><a href="#seo">Tampilan di Google</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">Kontak WhatsApp</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Daftar Tamu</a><?php endif; ?>
+                        <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">Konfirmasi Kehadiran</a><?php endif; ?>
+                        <?php if ($globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan Data</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
                     </nav>
                 </aside>
@@ -1066,13 +1067,13 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php if ($globalAdminCapabilityEnabled('preset_selector')): ?>
                     <section id="preset-selector" class="card panel-section">
-                        <h2>Preset / Tema Aktif</h2>
+                        <h2>Gaya Undangan</h2>
                         <p>Pilih preset presentasi tanpa menghapus konfigurasi CMS, media, link tamu, atau data RSVP yang sudah tersimpan.</p>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_preset">
                             <div class="form-row">
-                                <label for="globalThemePreset">Preset Tema</label>
+                                <label for="globalThemePreset">Pilih gaya undangan</label>
                                 <select id="globalThemePreset" name="theme_preset">
                                     <?php foreach (theme_presets() as $presetKey => $preset): ?>
                                         <option value="<?php echo escape_html($presetKey); ?>" <?php echo ($config['theme']['theme_preset'] ?? '') === $presetKey ? 'selected' : ''; ?>><?php echo escape_html($preset['label'] ?? $presetKey); ?> • v<?php echo escape_html($preset['version'] ?? '1.0.0'); ?></option>
@@ -1210,8 +1211,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($globalAdminCapabilityEnabled('theme')): ?>
 
                     <section id="theme" class="card panel-section">
-                        <h2>Tema & Tampilan</h2>
-                        <p class="section-description">Ubah gaya undangan dan lihat hasilnya langsung di preview sebelum menyimpan.</p>
+                        <h2>Tampilan Undangan</h2>
+                        <p class="section-description">Atur warna, tulisan, gambar pembuka, dan latar setiap bagian undangan. Anda tidak perlu mengedit kode.</p><div class="notice" style="margin:0.75rem 0 1rem;"><strong>Petunjuk singkat:</strong> pilih bagian yang ingin diubah, pilih gambar dari pustaka media, lalu tekan <em>Simpan</em>. Untuk kembali ke tampilan asli tema, gunakan tombol <em>Kembalikan ke Bawaan</em>.</div>
                         <div class="theme-editor-layout">
                         <form method="post" enctype="multipart/form-data" id="themeSettingsForm" data-saved-theme='<?php echo escape_html(json_encode($themePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-custom-theme='<?php echo escape_html(json_encode($customThemePreviewConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-presets='<?php echo escape_html(json_encode($themePresetPreviewData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-theme-labels='<?php echo escape_html(json_encode($themePresetLabels, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-schemas='<?php echo escape_html(json_encode($themeVisualSchemas, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-visual-values='<?php echo escape_html(json_encode($themeVisualValues, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>' data-media-assets='<?php echo escape_html(json_encode($themeVisualMediaOptions, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)); ?>'>
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
@@ -1222,15 +1223,16 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="visual-capability-panel" id="visualCapabilityPanel" data-visual-panel="<?php echo escape_html($activeVisualPresetKey); ?>" style="margin:1rem 0 1.5rem;padding:1rem;border:1px solid #eadccf;border-radius:14px;background:#fffaf4;">
                                     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
                                         <div><h3 id="visualCapabilityTitle" style="margin:0;color:#c84c47;">Tampilan <?php echo escape_html($themeMeta['label'] ?? $activeVisualPresetKey); ?></h3><p style="margin:0.35rem 0 0;color:#6d5148;">Kontrol ini tersimpan khusus untuk preset aktif dan tidak menghapus konfigurasi preset lain.</p></div>
-                                        <button type="submit" name="reset_visuals" value="1" class="button small-button" form="themeSettingsForm">Atur Ulang Visual</button>
+                                        <button type="submit" name="reset_visuals" value="1" class="button small-button" form="themeSettingsForm">Kembalikan ke Bawaan</button>
                                     </div>
-                                    <div class="form-grid" id="visualCapabilityFields" style="margin-top:1rem;">
+                                    <h4 style="margin:1.25rem 0 0.35rem;color:#6d5148;">Warna, tulisan, latar, dan gambar yang bisa diubah</h4><p style="margin:0;color:#806f66;">Pilihan yang muncul mengikuti gaya undangan aktif. Gambar yang dipilih hanya berlaku untuk gaya ini dan tidak mengubah gaya lainnya.</p><div class="form-grid" id="visualCapabilityFields" style="margin-top:1rem;">
                                         <?php foreach ($activeThemeVisualSchema as $visualKey => $visualDefinition): ?>
                                             <?php $visualValue = $activeThemeVisualValues[$visualKey] ?? ($visualDefinition['default'] ?? ''); $visualType = $visualDefinition['type'] ?? 'text'; ?>
                                             <div class="form-row visual-field" data-visual-key="<?php echo escape_html($visualKey); ?>">
                                                 <label for="visual-<?php echo escape_html($visualKey); ?>"><?php echo escape_html($visualDefinition['label'] ?? ucwords(str_replace('_', ' ', $visualKey))); ?></label>
                                                 <?php if ($visualType === 'color'): ?>
-                                                    <input id="visual-<?php echo escape_html($visualKey); ?>" type="color" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" style="width:100%;height:42px;">
+                                                    <input id="visual-<?php echo escape_html($visualKey); ?>" type="color" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" list="visual-palette-<?php echo escape_html($visualKey); ?>" style="width:100%;height:42px;">
+                                                    <?php if (!empty($visualDefinition['palette']) && is_array($visualDefinition['palette'])): ?><div class="visual-color-palette" aria-label="Pilihan warna cepat" style="display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.55rem;"><?php foreach ($visualDefinition['palette'] as $paletteValue => $paletteLabel): ?><button type="button" data-visual-color-palette="<?php echo escape_html((string)$paletteValue); ?>" data-visual-color-palette-static="<?php echo escape_html((string)$paletteValue); ?>" title="<?php echo escape_html((string)$paletteLabel); ?>" aria-label="<?php echo escape_html((string)$paletteLabel); ?>" style="width:28px;height:28px;padding:0;border-radius:50%;border:2px solid #fff;outline:1px solid #d8c9bc;background:<?php echo escape_html((string)$paletteValue); ?>;cursor:pointer;"></button><?php endforeach; ?></div><datalist id="visual-palette-<?php echo escape_html($visualKey); ?>"><?php foreach ($visualDefinition['palette'] as $paletteValue => $paletteLabel): ?><option value="<?php echo escape_html((string)$paletteValue); ?>"><?php echo escape_html((string)$paletteLabel); ?></option><?php endforeach; ?></datalist><?php endif; ?>
                                                 <?php elseif ($visualType === 'font'): ?>
                                                     <select id="visual-<?php echo escape_html($visualKey); ?>" name="visuals[<?php echo escape_html($visualKey); ?>]" data-font-preview="1" style="font-family:<?php echo escape_html((string)$visualValue); ?>;">
                                                         <?php foreach (($visualDefinition['options'] ?? []) as $fontValue => $fontLabel): ?><option value="<?php echo escape_html((string)$fontValue); ?>" style="font-family:<?php echo escape_html((string)$fontValue); ?>;" <?php echo (string)$visualValue === (string)$fontValue ? 'selected' : ''; ?>><?php echo escape_html((string)$fontLabel); ?></option><?php endforeach; ?>
@@ -1250,8 +1252,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                     <div class="visual-media-preview" style="margin-top:0.65rem;<?php echo (string)$visualValue === '' ? 'display:none;' : ''; ?>">
                                                         <img data-visual-preview src="<?php echo escape_html((string)$visualValue !== '' ? theme_visual_public_path((string)$visualValue) : ''); ?>" alt="Pratinjau <?php echo escape_html($visualDefinition['label'] ?? 'latar'); ?>" style="display:block;max-width:100%;width:min(100%,360px);max-height:180px;object-fit:cover;border-radius:10px;border:1px solid #eadccf;">
                                                     </div>
-                                                    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.55rem;"><button type="submit" name="reset_visual_key" value="<?php echo escape_html($visualKey); ?>" class="button small-button">Reset assignment</button><small>Reset hanya menghapus referensi CMS; file media tetap ada.</small></div>
-                                                    <small>Pilih asset dari Pengelola Media. Untuk upload baru, gunakan bagian <a href="#file-manager">Kelola Media</a>, lalu pilih asset setelah halaman dimuat ulang.</small>
+                                                    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.55rem;"><button type="submit" name="reset_visual_key" value="<?php echo escape_html($visualKey); ?>" class="button small-button">Kembalikan ke Bawaan</button><small>Reset hanya menghapus referensi CMS; file media tetap ada.</small></div>
+                                                    <small>Pilih gambar dari bagian <a href="#file-manager">Foto, Musik, dan File</a>. Untuk gambar baru, unggah terlebih dahulu lalu muat ulang halaman.</small>
                                                 <?php else: ?>
                                                     <input id="visual-<?php echo escape_html($visualKey); ?>" type="text" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>">
                                                 <?php endif; ?>
@@ -1473,7 +1475,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             </div>
                         </form>
 
-                        <h3 style="margin:2rem 0 1rem;color:#c84c47;">Opsi Khusus Preset Active (Theme Options)</h3>
+                        <h3 style="margin:2rem 0 1rem;color:#c84c47;">Pengaturan Tambahan Gaya Ini</h3>
                         <form method="post" enctype="multipart/form-data" style="margin-bottom:2rem;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="save_theme_options">
@@ -1516,8 +1518,13 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 </select>
                                             <?php elseif ($fieldType === 'image'): ?>
                                                 <div style="display:flex;flex-direction:column;gap:8px;">
-                                                    <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>" placeholder="Path gambar">
-                                                    <input type="file" name="theme_opts_file_<?php echo escape_html($optKey); ?>" accept="image/*">
+                                                    <select name="theme_opts[<?php echo escape_html($optKey); ?>]">
+                                                        <option value="">Gunakan gambar bawaan gaya</option>
+                                                        <?php foreach ($themeVisualMediaOptions as $mediaOption): ?>
+                                                            <option value="<?php echo escape_html((string)$mediaOption['path']); ?>" <?php echo (string)$optVal === (string)$mediaOption['path'] ? 'selected' : ''; ?>><?php echo escape_html((string)$mediaOption['label'] . ' — ' . (string)$mediaOption['name']); ?></option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                    <label style="font-size:.9rem;color:#6d5148;">Atau unggah gambar baru <input type="file" name="theme_opts_file_<?php echo escape_html($optKey); ?>" accept="image/*"></label>
                                                 </div>
                                             <?php else: ?>
                                                 <input type="text" name="theme_opts[<?php echo escape_html($optKey); ?>]" value="<?php echo escape_html((string)$optVal); ?>">
@@ -1533,13 +1540,13 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         </form>
                         <aside class="theme-preview-panel" aria-label="Live theme preview">
                             <div class="theme-preview-panel__header">
-                                <strong>Live Preview</strong>
-                                <span>Perubahan sementara, belum tersimpan.</span>
+                                <strong>Lihat Hasil Sementara</strong>
+                                <span>Perubahan ini belum disimpan.</span>
                             </div>
                             <div class="preview-viewport-controls" role="group" aria-label="Ukuran preview" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin:0.75rem 0;">
-                                <button type="button" class="button small-button is-active" data-preview-viewport="desktop">Desktop</button>
+                                <button type="button" class="button small-button is-active" data-preview-viewport="desktop">Lebar Penuh</button>
                                 <button type="button" class="button small-button" data-preview-viewport="tablet">Tablet</button>
-                                <button type="button" class="button small-button" data-preview-viewport="mobile">Mobile</button>
+                                <button type="button" class="button small-button" data-preview-viewport="mobile">Ponsel</button>
                             </div>
                             <iframe id="themePreviewFrame" src="/?theme_preview=1" title="Preview tema undangan" loading="lazy"></iframe>
                         </aside>
@@ -1573,8 +1580,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <?php if ($adminCapabilityEnabled('media')): ?>
 
                     <section id="file-manager" class="card panel-section">
-                        <h2>Kelola Media</h2>
-                        <p class="section-description">Unggah, pilih, dan kelola semua media yang dipakai undangan: cover, latar belakang, galeri, cerita, dan musik.</p>
+                        <h2>Foto, Musik, dan File</h2>
+                        <p class="section-description">Unggah dan pilih foto, gambar latar, musik, serta file lain untuk undangan. File yang dipakai satu gaya tetap aman dan tidak tercampur dengan gaya lain.</p>
 
                         <form method="post" enctype="multipart/form-data" style="margin-bottom: 20px;">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
@@ -1587,7 +1594,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <option value="background">Latar Belakang</option>
                                         <option value="gallery">Galeri</option>
                                         <option value="love_story">Cerita Cinta</option>
-                                        <option value="theme_assets">Theme Assets (Preset Aktif)</option>
+                                        <option value="theme_assets">Aset khusus gaya aktif</option>
                                         <option value="music">Musik</option>
                                     </select>
                                 </div>
@@ -1705,7 +1712,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="delete_media_file">
                                                 <input type="hidden" name="media_path" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button" style="background:#a14a45;color:white;" <?php echo $item['is_used'] ? 'disabled title="Asset masih digunakan"' : ''; ?>>Hapus</button>
+                                                <?php if ($item['is_used']): ?><button type="submit" name="force_delete" value="1" class="small-button" style="background:#a14a45;color:white;" onclick="return confirm('File ini sedang dipakai di beberapa bagian. Lepaskan semua pemakaian lalu hapus file?');">Lepaskan &amp; Hapus</button><?php else: ?><button type="submit" class="small-button" style="background:#a14a45;color:white;" onclick="return confirm('Hapus file ini secara permanen?');">Hapus</button><?php endif; ?>
                                             </form>
                                         </div>
                                     </div>

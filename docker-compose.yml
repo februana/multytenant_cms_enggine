@@ -15,7 +15,17 @@ services:
     volumes:
       - wedding_data:/var/data
       - wedding_uploads:/var/www/wedding/uploads
+      - wedding_backups:/var/www/wedding/backups
+      - wedding_webdav:/var/www/wedding/webdav
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   wedding_data:
   wedding_uploads:
+  wedding_backups:
+  wedding_webdav:

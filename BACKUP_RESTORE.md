@@ -17,11 +17,12 @@ The canonical Theme Assets paths are defined by `deploy/runtime-directories.sh` 
 
 ```text
 uploads/theme-assets/dewankl/
-uploads/theme-assets/elix/
 uploads/theme-assets/rainier/
 uploads/theme-assets/archak/
 uploads/theme-assets/parang/
 uploads/theme-assets/pawiwahan/
+uploads/theme-assets/shubh-vivah/
+uploads/theme-assets/yami-buzzy/
 uploads/theme-assets/custom/
 ```
 
@@ -159,7 +160,7 @@ After restore or update:
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The health check validates the six built-in adapters, active preset, required runtime files, every canonical upload and Theme Assets directory, runtime writability, restricted config/database permissions, WebP processing capability, WebDAV requirements, and public blocking of sensitive files.
+The health check validates the seven built-in adapters, active preset, required runtime files, every canonical upload and Theme Assets directory, runtime writability, restricted config/database permissions, WebP processing capability, WebDAV requirements, and public blocking of sensitive files.
 
 The repository includes an isolated deployment fixture test covering:
 

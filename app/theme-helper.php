@@ -41,13 +41,14 @@ function preserve_text_input($value, string $fallback = ''): string {
  */
 function theme_opening_greeting(array $config, string $presetKey): string {
     $defaults = [
-        'dewankl' => 'Assalamualaikum Warahmatullahi Wabarakatuh',
-        'elix' => 'Bismillahirrahmanirrahim',
-        'rainier' => 'Bismillahirrahmanirrahim',
-        'archak' => 'Bismillahirrahmanirrahim',
-        'parang' => 'Bismillahirrahmanirrahim',
+        'dewankl' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'shubh-vivah' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'yami-buzzy' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'rainier' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'archak' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
+        'parang' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
         'pawiwahan' => 'OM Swastiastu',
-        'custom' => 'Bismillahirrahmanirrahim',
+        'custom' => "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\nAssalamu’alaikum Warahmatullahi Wabarakatuh",
     ];
     $fallback = $defaults[$presetKey] ?? $defaults['custom'];
     $configured = function_exists('get_theme_option')
@@ -95,15 +96,25 @@ function theme_visual_capabilities_for_config(array $config, ?string $presetKey 
     $presetKey = $presetKey ?: ($mode === 'custom' ? 'custom' : resolve_theme_preset_key($config));
     if ($presetKey === 'custom') {
         return [
-            'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna utama untuk tombol, tautan, dan detail aksen.', 'default' => '#c84c47'],
-            'background_color' => ['type' => 'color', 'label' => 'Warna Latar', 'description' => 'Warna dasar halaman ketika tidak ada gambar latar.', 'default' => '#fff8f2'],
-            'paper_color' => ['type' => 'color', 'label' => 'Warna Permukaan', 'description' => 'Warna kartu dan permukaan konten.', 'default' => '#ffffff'],
-            'text_color' => ['type' => 'color', 'label' => 'Warna Teks', 'description' => 'Warna teks utama.', 'default' => '#2f2424'],
-            'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font untuk judul dan heading.', 'default' => 'Playfair Display, serif', 'options' => ['Playfair Display, serif' => 'Playfair Display', 'Cormorant Garamond, serif' => 'Cormorant Garamond', 'Georgia, serif' => 'Georgia', 'Great Vibes, cursive' => 'Great Vibes']],
-            'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font yang mudah dibaca untuk isi, jadwal, dan form.', 'default' => 'Lato, sans-serif', 'options' => ['Lato, sans-serif' => 'Lato', 'Inter, sans-serif' => 'Inter', 'Work Sans, sans-serif' => 'Work Sans', 'Poppins, sans-serif' => 'Poppins']],
+            'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna utama untuk tombol, tautan, dan detail aksen.', 'default' => '#c84c47', 'palette' => theme_color_palette()],
+            'background_color' => ['type' => 'color', 'label' => 'Warna Latar', 'description' => 'Warna dasar halaman ketika tidak ada gambar latar.', 'default' => '#fff8f2', 'palette' => theme_color_palette()],
+            'paper_color' => ['type' => 'color', 'label' => 'Warna Permukaan', 'description' => 'Warna kartu dan permukaan konten.', 'default' => '#ffffff', 'palette' => theme_color_palette()],
+            'text_color' => ['type' => 'color', 'label' => 'Warna Teks', 'description' => 'Warna teks utama.', 'default' => '#2f2424', 'palette' => theme_color_palette()],
+            'heading_color' => ['type' => 'color', 'label' => 'Warna Judul', 'description' => 'Warna nama pasangan dan judul section.', 'default' => '#2f2424', 'palette' => theme_color_palette()],
+            'muted_color' => ['type' => 'color', 'label' => 'Warna Teks Sekunder', 'description' => 'Warna label, keterangan, dan metadata.', 'default' => '#806f66', 'palette' => theme_color_palette()],
+            'link_color' => ['type' => 'color', 'label' => 'Warna Tautan', 'description' => 'Warna tautan dan aksi sekunder.', 'default' => '#c84c47', 'palette' => theme_color_palette()],
+            'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font untuk judul dan heading.', 'default' => 'Playfair Display, serif', 'options' => theme_font_catalog('heading')],
+            'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font yang mudah dibaca untuk isi, jadwal, dan form.', 'default' => 'Lato, sans-serif', 'options' => theme_font_catalog('body')],
             'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL gambar hero. Kosongkan untuk memakai fallback cover.', 'default' => ''],
             'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay gelap di atas gambar hero.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
             'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala relatif judul utama hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.2', 'step' => '0.05'],
+            'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Gambar latar untuk bagian pembuka atau undangan.', 'default' => ''],
+            'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Gambar latar untuk jadwal dan detail acara.', 'default' => ''],
+            'section_background_story' => ['type' => 'image', 'label' => 'Latar Cerita', 'description' => 'Gambar latar untuk cerita perjalanan cinta.', 'default' => ''],
+            'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk galeri foto.', 'default' => ''],
+            'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar untuk alamat dan peta acara.', 'default' => ''],
+            'section_background_gift' => ['type' => 'image', 'label' => 'Latar Hadiah', 'description' => 'Gambar latar untuk amplop digital atau hadiah.', 'default' => ''],
+            'section_background_rsvp' => ['type' => 'image', 'label' => 'Latar Konfirmasi Kehadiran', 'description' => 'Gambar latar untuk formulir konfirmasi kehadiran.', 'default' => ''],
         ];
     }
     $registry = function_exists('theme_registry') ? theme_registry() : [];
@@ -165,6 +176,9 @@ function theme_custom_visual_style(array $config): string {
     $background = (string)($visuals['background_color'] ?? '#fff8f2');
     $paper = (string)($visuals['paper_color'] ?? '#ffffff');
     $text = (string)($visuals['text_color'] ?? '#2f2424');
+    $headingColor = (string)($visuals['heading_color'] ?? $text);
+    $muted = (string)($visuals['muted_color'] ?? '#806f66');
+    $link = (string)($visuals['link_color'] ?? $accent);
     $heading = (string)($visuals['heading_font'] ?? 'Playfair Display, serif');
     $body = (string)($visuals['body_font'] ?? 'Lato, sans-serif');
     $overlay = (float)($visuals['hero_overlay'] ?? '0.45');
@@ -174,7 +188,7 @@ function theme_custom_visual_style(array $config): string {
     $overlayStart = 'rgba(22,12,10,' . $overlay . ')';
     $overlayMid = 'rgba(40,20,18,' . min(0.95, $overlay + 0.10) . ')';
     $overlayEnd = 'rgba(55,28,24,' . min(1.0, $overlay + 0.25) . ')';
-    return '<style id="cms-custom-visual">:root{--primary:' . $accent . ';--accent:' . $accent . ';--link:' . $accent . ';--bg:' . $background . ';--paper:' . $paper . ';--paper-solid:' . $paper . ';--text:' . $text . ';--font-heading:' . $heading . ';--font-body:' . $body . ';--hero-title-scale:' . $titleScale . ';--hero-overlay-start:' . $overlayStart . ';--hero-overlay-mid:' . $overlayMid . ';--hero-overlay-end:' . $overlayEnd . ';}' . $heroRule . '</style>';
+    return '<style id="cms-custom-visual">:root{--primary:' . $accent . ';--accent:' . $accent . ';--link:' . $link . ';--heading-color:' . $headingColor . ';--muted:' . $muted . ';--bg:' . $background . ';--paper:' . $paper . ';--paper-solid:' . $paper . ';--text:' . $text . ';--font-heading:' . $heading . ';--font-body:' . $body . ';--hero-title-scale:' . $titleScale . ';--hero-overlay-start:' . $overlayStart . ';--hero-overlay-mid:' . $overlayMid . ';--hero-overlay-end:' . $overlayEnd . ';}' . $heroRule . '</style>';
 }
 
 /** Validate one visual value against its preset-declared schema. */
@@ -345,13 +359,14 @@ function finalize_theme_output(string $html, array $config): string {
     };
   };
   const visualMap = {
-    elix: {accent_color: '--cms-elix-accent', heading_font: '--cms-elix-heading', body_font: '--cms-elix-body', hero_overlay: '--cms-elix-overlay', countdown_scale: '--cms-elix-countdown-scale', hero_background: '--cms-elix-hero-bg'},
-    rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity'},
-    archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg'},
-    parang: {accent_color: '--parang-gold', heading_font: '--parang-heading', body_font: '--parang-body', hero_background: '--cms-parang-bg'},
-    pawiwahan: {accent_color: '--pawiwahan-accent', heading_font: '--pawiwahan-heading', body_font: '--pawiwahan-body', hero_background: '--pawiwahan-hero-bg'},
-    dewankl: {accent_color: '--cms-dewana-accent', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay'},
-    custom: {accent_color: '--primary', background_color: '--bg', paper_color: '--paper', text_color: '--text', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay', hero_title_scale: '--hero-title-scale'}
+    'shubh-vivah': {accent_color: '--shubh-accent', heading_color: '--shubh-heading-color', text_color: '--shubh-ink', muted_color: '--shubh-muted', link_color: '--shubh-link', heading_font: '--shubh-heading', body_font: '--shubh-body', hero_overlay: '--shubh-overlay', hero_background: '--shubh-hero-bg', section_background_home: '--shubh-home-bg', section_background_event: '--shubh-event-bg', section_background_gallery: '--shubh-gallery-bg', section_background_rsvp: '--shubh-rsvp-bg', ornament_left: '--shubh-left', ornament_right: '--shubh-right'},
+    'yami-buzzy': {accent_color: '--yami-accent', heading_color: '--yami-heading-color', text_color: '--yami-ink', muted_color: '--yami-muted', link_color: '--yami-link', heading_font: '--yami-heading', body_font: '--yami-body', hero_overlay: '--yami-overlay', hero_background: '--yami-hero-bg', welcome_background: '--yami-welcome-bg', section_background_home: '--yami-home-bg', section_background_couple: '--yami-couple-bg', section_background_event: '--yami-event-bg', section_background_story: '--yami-story-bg', section_background_gallery: '--yami-gallery-bg', section_background_video: '--yami-video-bg', section_background_gift: '--yami-gift-bg', section_background_invitation: '--yami-invitation-bg', section_background_rsvp: '--yami-rsvp-bg', section_background_closing: '--yami-closing-bg'},
+    rainier: {accent_color: '--primary', heading_color: '--rainier-heading-color', text_color: '--text', muted_color: '--muted', link_color: '--rainier-link', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity', hero_background: '--cms-rainier-hero-bg', section_background_event_details: '--cms-rainier-event-bg', section_background_schedule: '--cms-rainier-schedule-bg', section_background_quotes: '--cms-rainier-quotes-bg', section_background_rsvp: '--cms-rainier-rsvp-bg'},
+    archak: {accent_color: '--cms-archak-accent', heading_color: '--cms-archak-heading-color', text_color: '--cms-archak-text', muted_color: '--cms-archak-muted', link_color: '--cms-archak-link', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg', section_background_timeline: '--cms-archak-timeline-bg', section_background_gallery: '--cms-archak-gallery-bg', section_background_stay: '--cms-archak-stay-bg', section_background_registry: '--cms-archak-registry-bg', header_badge: '--cms-archak-badge'},
+    parang: {accent_color: '--parang-gold', heading_color: '--parang-heading-color', text_color: '--parang-text', muted_color: '--parang-muted', link_color: '--parang-link', heading_font: '--parang-heading', body_font: '--parang-body', hero_background: '--cms-parang-bg', section_background_home: '--cms-parang-home-bg', section_background_gallery: '--cms-parang-gallery-bg', section_background_location: '--cms-parang-location-bg', ornament_left: '--cms-parang-left', ornament_right: '--cms-parang-right'},
+    pawiwahan: {accent_color: '--pawiwahan-accent', heading_color: '--pawiwahan-heading-color', text_color: '--pawiwahan-text', muted_color: '--pawiwahan-muted', link_color: '--pawiwahan-link', heading_font: '--pawiwahan-heading', body_font: '--pawiwahan-body', hero_background: '--pawiwahan-hero-bg', welcome_background: '--pawiwahan-welcome-bg', section_background_gallery: '--pawiwahan-gallery-bg', section_background_location: '--pawiwahan-location-bg', section_background_gift: '--pawiwahan-gift-bg', section_background_messages: '--pawiwahan-messages-bg'},
+    dewankl: {accent_color: '--cms-dewana-accent', heading_color: '--cms-dewana-heading-color', text_color: '--cms-dewana-text', muted_color: '--cms-dewana-muted', link_color: '--cms-dewana-link', heading_font: '--cms-dewana-heading', body_font: '--cms-dewana-body', hero_overlay: '--cms-dewana-overlay', hero_background: '--cms-dewana-hero-bg', welcome_background: '--cms-dewana-welcome-bg', section_background_home: '--cms-dewana-home-bg', section_background_bride: '--cms-dewana-bride-bg', section_background_wedding_date: '--cms-dewana-date-bg', section_background_gallery: '--cms-dewana-gallery-bg', section_background_love_gift: '--cms-dewana-gift-bg', section_background_comment: '--cms-dewana-comment-bg'},
+    custom: {accent_color: '--accent', background_color: '--bg', paper_color: '--paper', heading_color: '--heading-color', text_color: '--text', muted_color: '--muted', link_color: '--link', heading_font: '--font-heading', body_font: '--font-body', hero_overlay: '--hero-overlay', hero_title_scale: '--hero-title-scale', hero_background: '--hero-bg', section_background_home: '--custom-home-bg', section_background_event: '--custom-event-bg', section_background_story: '--custom-story-bg', section_background_gallery: '--custom-gallery-bg', section_background_location: '--custom-location-bg', section_background_gift: '--custom-gift-bg', section_background_rsvp: '--custom-rsvp-bg'}
   };
   const applyVisualPreview = function (theme) {
     const preset = theme.theme_preset || 'custom';
@@ -360,8 +375,9 @@ function finalize_theme_output(string $html, array $config): string {
     Object.keys(mapping).forEach(function (key) {
       if (values[key] === undefined || values[key] === '') return;
       let value = values[key];
-      if (key === 'hero_background' && !/^https?:\\/\\//i.test(value) && value.charAt(0) !== '/') value = '/' + value;
-      if (key === 'hero_background') value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
+      const imageKeys = Object.keys(mapping).filter(function (key) { return key === 'hero_background' || key === 'welcome_background' || key.indexOf('section_background_') === 0 || key.indexOf('ornament_') === 0 || key === 'header_badge'; });
+      if (imageKeys.indexOf(key) !== -1 && !/^https?:\\/\\//i.test(value) && value.charAt(0) !== '/') value = '/' + value;
+      if (imageKeys.indexOf(key) !== -1) value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
       document.documentElement.style.setProperty(mapping[key], value);
     });
     if (preset === 'rainier' && values.glass_opacity !== undefined) {
@@ -385,6 +401,18 @@ function finalize_theme_output(string $html, array $config): string {
       }
       if (preset === 'dewankl') document.querySelectorAll('img.bg-cover-home').forEach(function (image) { image.src = url; });
       if (preset === 'rainier') document.querySelectorAll('.hero-background, .hero-slide').forEach(function (layer) { layer.style.backgroundImage = 'url("' + url.replace(/"/g, '\\\\"') + '")'; });
+    }
+    if (preset === 'archak' && values.header_badge) {
+      const badgeUrl = /^https?:\\/\\//i.test(values.header_badge) || values.header_badge.charAt(0) === '/' ? values.header_badge : '/' + values.header_badge;
+      document.querySelectorAll('.archak-header-badge').forEach(function (image) { image.src = badgeUrl; });
+    }
+    if (preset === 'custom') {
+      const sectionMap = {section_background_home: '#undangan', section_background_event: '#acara, #countdown-section', section_background_story: '#cerita', section_background_gallery: '#galeri', section_background_location: '#lokasi', section_background_gift: '#amplop', section_background_rsvp: '#rsvp'};
+      Object.keys(sectionMap).forEach(function (key) { if (!values[key]) return; const sectionUrl = values[key].charAt(0) === '/' ? values[key] : '/' + values[key]; document.querySelectorAll(sectionMap[key]).forEach(function (section) { section.style.backgroundImage = 'linear-gradient(rgba(255,250,245,.78),rgba(255,250,245,.88)),url("' + sectionUrl.replace(/"/g, '\\\\"') + '")'; section.style.backgroundSize = 'cover'; section.style.backgroundPosition = 'center'; }); });
+    }
+    if (preset === 'parang') {
+      if (values.ornament_left) { const leftUrl = values.ornament_left.charAt(0) === '/' ? values.ornament_left : '/' + values.ornament_left; document.querySelectorAll('.parang-ornament-left').forEach(function (image) { image.src = leftUrl; }); }
+      if (values.ornament_right) { const rightUrl = values.ornament_right.charAt(0) === '/' ? values.ornament_right : '/' + values.ornament_right; document.querySelectorAll('.parang-ornament-right').forEach(function (image) { image.src = rightUrl; }); }
     }
   };
   window.addEventListener('message', function (event) {

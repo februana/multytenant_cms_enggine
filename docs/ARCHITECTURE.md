@@ -33,9 +33,29 @@ The active preset is selected through `config.json` at `theme.theme_preset`. `ap
 
 A CMS capability is not automatically a section. A capability can be a service or data source consumed only where a template has a suitable presentation boundary. It also does not have to appear in every preset. Users who need the broadest section flexibility should use Custom mode.
 
+## Visual capability layer
+
+Visual customization follows the same registry → Admin control → canonical persistence → adapter bridge → scoped CSS → source fallback path as other CMS capabilities. `visual_capabilities` declares the supported section backgrounds and Theme Asset roles for each preset; the Admin panel adds localized labels, previews, color palettes, font catalogs, and reset actions without creating a second media store.
+
+A selected background or Theme Asset stores a canonical reference. Clearing that reference does not delete the physical upload; it only restores the source-template fallback. The renderer emits a scoped variable or asset value only for the supporting preset and section, which prevents a Gallery upload from silently becoming a Hero background or a disabled navigation item from pointing to an empty anchor.
+
+```text
+Media Manager / Theme Asset upload
+              ↓
+  preset-aware Admin selector + preview/reset
+              ↓
+       config.json canonical reference
+              ↓
+ theme adapter bridge + scoped visual variables
+              ↓
+ selected asset OR source-template fallback
+```
+
+The default invitation copy is also data, not hardcoded presentation. `config_defaults()` supplies Indonesian names, greetings, Arabic opening text, Qur'anic quotation, and Islamic closing; Admin values override individual fields, while an empty saved value resolves to the corresponding default. Calendar metadata is generated from the current title, schedule, and location.
+
 ## Preset contract
 
-Built-in capabilities are intentionally different because the source templates are different. DewanaKL has original welcome/video/gallery/gift/comment boundaries; Elix has its original hero/story/gallery/RSVP/gifts/audio boundaries; Rainier has an event-oriented `#app` flow with optional schedule/quotes/RSVP; Archak has a compact navigation, story/gallery/stay/registry, parting-message, and footer composition. A missing generic CMS section in a built-in preset is not a defect when the source template has no equivalent.
+Built-in capabilities are intentionally different because the source templates are different. DewanaKL has original welcome/video/gallery/gift/comment boundaries; Rainier has an event-oriented `#app` flow with optional schedule/quotes/RSVP; Archak has a compact navigation, story/gallery/stay/registry, parting-message, and footer composition; Parang and Pawiwahan retain their source-aligned cultural and carousel boundaries; Shubh Vivah uses a centered invitation card with ornaments, countdown, gallery, and RSVP; Yami Buzzy uses a welcome modal, hero, couple, event, story, gallery, video, gift, invitation, and RSVP flow. A missing generic CMS section in a built-in preset is not a defect when the source template has no equivalent.
 
 `theme_section_enabled()` is the built-in visibility boundary. The global `is_section_enabled()` and `config.sections` ordering belong to Custom mode. Admin UI filtering uses the active preset's `admin_capabilities` plus a small explicit global set. Unsupported preset controls are gated in both navigation and panel body; filtering never deletes stored configuration.
 
@@ -51,14 +71,14 @@ shared guest resolver + theme adapter
 theme-specific greeting presentation
 ```
 
-The markup is not identical across presets. Custom renders the name through its CMS-native hero; DewanaKL retains its original `#guest-name`; Elix retains its original hero flow; Rainier and Archak place the greeting in their respective original hero/home flows.
+The markup is not identical across presets. Custom renders the name through its CMS-native hero; each built-in adapter places the greeting in its source-compatible hero or opening-card flow.
 
 ## Persistence and deployment
 
-The application stores code in the document root and runtime data separately when `UNDANGAN_DATA_DIR` is set. Native installations keep runtime files in the root by default. Docker stores configuration, guest links, custom CSS, event ICS, and SQLite data in `/var/data`, while uploaded media remains in its dedicated volume. This separation prevents container recreation or source updates from silently discarding CMS data.
+The application stores code in the document root and runtime data separately when `UNDANGAN_DATA_DIR` is set. Native installations keep runtime files in the root by default. Docker stores configuration, guest links, custom CSS, event ICS, and SQLite data in `/var/data`; uploaded media, backup archives, and optional WebDAV data use separate named volumes. This separation prevents container recreation or source updates from silently discarding CMS data. The Docker image and Compose service expose an HTTP healthcheck, while `deploy/health-check.sh` performs the deeper CMS, permission, preset, media, and security audit.
 
 The public entrypoint is `index.php`; `admin.php` redirects to the admin UI; `save.php`, `messages.php`, and `gallery.php` expose the backend wrappers used by the frontend. The canonical deployment output is `/var/www/wedding`; it is not a Git working tree.
 
 ## Provenance
 
-The six built-in templates are source adaptations or user-provided design references: DewanaKL, Elix, Rainier, Archak, Parang, and Pawiwahan. See [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for exact revisions, authors, license status, original source files, current integration paths, and attribution requirements. The project intentionally keeps source attribution separate from CMS ownership: CMS integration code is project-specific, while the original template presentation remains attributed to its original creators.
+The seven built-in templates are source adaptations or user-provided design references: DewanaKL, Rainier, Archak, Parang, Pawiwahan, Shubh Vivah, and Yami Buzzy. See [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for exact revisions, authors, license status, original source files, current integration paths, and attribution requirements. The project intentionally keeps source attribution separate from CMS ownership: CMS integration code is project-specific, while the original template presentation remains attributed to its original creators.

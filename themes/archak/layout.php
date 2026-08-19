@@ -37,13 +37,28 @@ if (!is_array($stories) || !$stories) $stories = [['title' => 'Kisah Kami', 'dat
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'archak') : [];
 $archakAccent = (string)($visuals['accent_color'] ?? '#8c5a4d');
+$archakHeadingColor = (string)($visuals['heading_color'] ?? '#211d1a');
+$archakTextColor = (string)($visuals['text_color'] ?? '#211d1a');
+$archakMutedColor = (string)($visuals['muted_color'] ?? '#5d5350');
+$archakLinkColor = (string)($visuals['link_color'] ?? '#8c5a4d');
 $archakHeadingFont = (string)($visuals['heading_font'] ?? 'Cinzel, serif');
 $archakBodyFont = (string)($visuals['body_font'] ?? 'Quicksand, sans-serif');
 $archakHeroPath = (string)($visuals['hero_background'] ?? '') ?: $couplePhoto;
 $archakTitleScale = (float)($visuals['hero_title_scale'] ?? '1');
 $archakHeroImage = $archakHeroPath !== '' ? theme_visual_css_url($archakHeroPath) : '';
+$archakSectionCss = static function (string $key) use ($visuals): string {
+    $path = trim((string)($visuals[$key] ?? ''));
+    return $path === '' ? 'none' : theme_visual_css_url(theme_visual_public_path($path));
+};
+$archakTimelineBg = $archakSectionCss('section_background_timeline');
+$archakGalleryBg = $archakSectionCss('section_background_gallery');
+$archakStayBg = $archakSectionCss('section_background_stay');
+$archakRegistryBg = $archakSectionCss('section_background_registry');
+$archakBadgePath = trim((string)($visuals['header_badge'] ?? ''));
+if ($archakBadgePath === '') $archakBadgePath = trim((string)($config['theme_options']['archak']['header_badge_image'] ?? ''));
+$archakBadgeUrl = $archakBadgePath !== '' ? theme_visual_public_path($archakBadgePath) : '';
 $heroStyle = $archakHeroImage !== '' ? 'background-image: var(--cms-archak-hero-bg);' : '';
-$archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' . $archakAccent . ';--cms-archak-heading:' . $archakHeadingFont . ';--cms-archak-body:' . $archakBodyFont . ';--cms-archak-title-scale:' . $archakTitleScale . ';--cms-archak-hero-bg:' . $archakHeroImage . '}body,body p,body li,body a,body button,body input,body select,body textarea,body .text,body .guest-greeting{font-family:var(--cms-archak-body)}h1,h2,h3,.logo,.checkbtn{font-family:var(--cms-archak-heading)}body .fa,body .fas,body .far,body .fab,body [class^="fa-"],body [class*=" fa-"]{font-family:"Font Awesome 6 Free"!important}body .fab,body [class^="fab"],body [class*=" fab"]{font-family:"Font Awesome 6 Brands"!important}.huge-btn,.links{color:var(--cms-archak-accent);border-color:var(--cms-archak-accent)}nav .logo{color:var(--cms-archak-accent)}.home h1{font-size:calc(var(--h1-size) * var(--cms-archak-title-scale))}@media(max-width:1000px){.v-reposition-container,.h-reposition-container{width:100%;max-width:100%;box-sizing:border-box}.gallery-img{width:100%;max-width:100%;margin-left:0;margin-right:0;position:relative;left:0}}@media(max-width:576px){.home h1{font-size:clamp(2.15rem,11vw,4rem);line-height:1.05;overflow-wrap:anywhere}}</style>';
+$archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' . $archakAccent . ';--cms-archak-heading-color:' . $archakHeadingColor . ';--cms-archak-text:' . $archakTextColor . ';--cms-archak-muted:' . $archakMutedColor . ';--cms-archak-link:' . $archakLinkColor . ';--cms-archak-heading:' . $archakHeadingFont . ';--cms-archak-body:' . $archakBodyFont . ';--cms-archak-title-scale:' . $archakTitleScale . ';--cms-archak-hero-bg:' . $archakHeroImage . ';--cms-archak-timeline-bg:' . $archakTimelineBg . ';--cms-archak-gallery-bg:' . $archakGalleryBg . ';--cms-archak-stay-bg:' . $archakStayBg . ';--cms-archak-registry-bg:' . $archakRegistryBg . ';--cms-archak-badge:' . ($archakBadgeUrl !== '' ? theme_visual_css_url($archakBadgeUrl) : 'none') . '}body,body p,body li,body a,body button,body input,body select,body textarea,body .text,body .guest-greeting{font-family:var(--cms-archak-body)}body{color:var(--cms-archak-text)}body h1,body h2,body h3,.logo,.checkbtn{font-family:var(--cms-archak-heading);color:var(--cms-archak-heading-color)}body .text{color:var(--cms-archak-text)}body .guest-greeting,body small{color:var(--cms-archak-muted)}body a:not(.huge-btn){color:var(--cms-archak-link)}body .fa,body .fas,body .far,body .fab,body [class^="fa-"],body [class*=" fa-"]{font-family:"Font Awesome 6 Free"!important}body .fab,body [class^="fab"],body [class*=" fab"]{font-family:"Font Awesome 6 Brands"!important}.huge-btn,.links{color:var(--cms-archak-accent);border-color:var(--cms-archak-accent)}nav .logo{color:var(--cms-archak-accent)}.home h1{font-size:calc(var(--h1-size) * var(--cms-archak-title-scale))}.timeline,#story,#stay,#registry{background-size:cover;background-position:center;background-repeat:no-repeat}.timeline{background-image:linear-gradient(rgba(246,241,235,.86),rgba(246,241,235,.86)),var(--cms-archak-timeline-bg)}#story{background-image:linear-gradient(rgba(246,241,235,.86),rgba(246,241,235,.86)),var(--cms-archak-gallery-bg)}#stay{background-image:linear-gradient(rgba(246,241,235,.86),rgba(246,241,235,.86)),var(--cms-archak-stay-bg)}#registry{background-image:linear-gradient(rgba(246,241,235,.86),rgba(246,241,235,.86)),var(--cms-archak-registry-bg)}.archak-header-badge{width:42px;height:42px;object-fit:contain;margin-left:12px;vertical-align:middle}@media(max-width:1000px){.v-reposition-container,.h-reposition-container{width:100%;max-width:100%;box-sizing:border-box}.gallery-img{width:100%;max-width:100%;margin-left:0;margin-right:0;position:relative;left:0}}@media(max-width:576px){.home h1{font-size:clamp(2.15rem,11vw,4rem);line-height:1.05;overflow-wrap:anywhere}}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -52,6 +67,9 @@ $archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' 
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo escape_html($config['site']['title'] ?? 'Undangan Pernikahan'); ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="<?php echo escape_html(theme_google_font_stylesheet_url()); ?>">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original/style.css'); ?>">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'fidelity-adapter.css'); ?>">
     <?php echo $archakVisualStyle; ?>
@@ -62,7 +80,7 @@ $archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' 
     <nav>
         <input type="checkbox" id="check">
         <label for="check" class="checkbtn"><i class="fas fa-bars"></i></label>
-        <label class="logo"><?php echo substr($brideNickname, 0, 1); ?>&amp;<?php echo substr($groomNickname, 0, 1); ?></label>
+        <label class="logo"><?php echo substr($brideNickname, 0, 1); ?>&amp;<?php echo substr($groomNickname, 0, 1); ?></label><?php if ($archakBadgeUrl !== ''): ?><img class="archak-header-badge" src="<?php echo escape_html($archakBadgeUrl); ?>" alt="Emblem undangan" loading="lazy"><?php endif; ?>
         <ul class="text">
             <?php if (theme_section_enabled($config, $presetKey, 'story')): ?><li><a href="#story" onclick="myFunction()">KISAH KAMI</a></li><?php endif; ?>
             <?php if (theme_section_enabled($config, $presetKey, 'stay')): ?><li><a href="#stay" onclick="myFunction()">PERJALANAN &amp; TEMPAT MENGINAP</a></li><?php endif; ?>

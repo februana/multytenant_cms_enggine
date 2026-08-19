@@ -9,7 +9,7 @@ The hardening branch starts from `main` at merge commit `714efdb`, which include
 | Preset | Source | Revision | Current baseline finding |
 |---|---|---:|---|
 | DewanaKL | [dewanakl/undangan](https://github.com/dewanakl/undangan) | `99e7c2d` | Current shell preserves `#root`, `#home`, `#bride`, `#gallery`, `#comment`, welcome/loading/modal, but omits original video story, carousel IDs, `#wedding-date` countdown IDs, QR/gift collapses, comment information/pagination, and original dependency/runtime contract. |
-| Elix | [elix-stack/wedding-invitation-1](https://github.com/elix-stack/wedding-invitation-1) | `1ac2394` | Current layout is a different invitation design. It replaces original `#home`, `#info`, `#gifts`, `#my-form`, `#audio-container`, Bootstrap Icons, SimplyCountdown, and bs5-lightbox with invented couple/event/location wrappers, Font Awesome, AOS, and custom overlay DOM. |
+| retired preset | [retired-preset-stack/wedding-invitation-1](#retired-preset-source) | `1ac2394` | Current layout is a different invitation design. It replaces original `#home`, `#info`, `#gifts`, `#my-form`, `#audio-container`, Bootstrap Icons, SimplyCountdown, and bs5-lightbox with invented couple/event/location wrappers, Font Awesome, AOS, and custom overlay DOM. |
 | Rainier | [Rainier-PS/Invitation-Template](https://github.com/Rainier-PS/Invitation-Template) | `443a04f` | Current layout is a different CMS invitation. It replaces the original data-driven `#app` structure, `#event-title`, `#event-subtitle`, `#calendar-actions`, `#schedule-section`, `#quotes-section`, footer branding IDs, and original `invite-1.js` lifecycle. The original does not use AOS. |
 | Archak | [archakNath/wedding-invitation-website](https://github.com/archakNath/wedding-invitation-website) | `1b54902` | Current layout is a different, expanded invitation with preloader, countdown, gallery, gift, RSVP, and modal infrastructure. The original is a compact `nav` + `.home` + `.timeline` + `#story` + `.gallery` + quote + `#stay` + `#registry` + parting message + footer structure powered by `main.js`. |
 | Custom | Current CMS | `714efdb` | CMS-native renderer remains the source of truth for global `config.sections` ordering and full builder behavior. |
@@ -20,14 +20,14 @@ The current contract invents generic presentation sections. Rainier declares `op
 
 DewanaKL's contract aliases and sections also treat combined content as independent generic sections. The original has `#home`, `#bride`, an embedded love-story block, `#wedding-date`, `#gallery`, an embedded Love Gift block, `#comment`, welcome/loading/modal, and bottom navigation. The contract must represent these actual presentation boundaries while keeping gallery, music, RSVP, and media as separate data capabilities.
 
-Elix's contract must use the original `#hero`, `#home`, `#info`, `#story`, `#gallery`, `#rsvp`, `#gifts`, `#audio-container`, and navbar/offcanvas structure. Archak must use the original `.home`, `.timeline`, `#story`, `.gallery`, `.quote`, `#stay`, `#registry`, parting message, and footer boundaries.
+retired preset's contract must use the original `#hero`, `#home`, `#info`, `#story`, `#gallery`, `#rsvp`, `#gifts`, `#audio-container`, and navbar/offcanvas structure. Archak must use the original `.home`, `.timeline`, `#story`, `.gallery`, `.quote`, `#stay`, `#registry`, parting message, and footer boundaries.
 
 ## Dependency findings
 
 | Preset | Original dependency | Current baseline | Required action |
 |---|---|---|---|
 | DewanaKL | Bootstrap `5.3.8`, Font Awesome `7.1.0`, `css/guest.css`, `js/guest.js` and its modular runtime, theme media | Bootstrap `5.3.2`, Font Awesome `6.5.1`, AOS, custom theme JS/CSS | Restore original dependency versions and guest runtime behavior; do not invent AOS as the primary runtime. |
-| Elix | Bootstrap `5.3.5`, Pacifico/Sacramento/Work Sans, Bootstrap Icons, `countdown/circle.css`, SimplyCountdown UMD, bs5-lightbox | Bootstrap `5.3.2`, Cormorant/Inter, Font Awesome, AOS, custom theme JS | Restore original fonts, icons, countdown, lightbox, and DOM hooks. |
+| retired preset | Bootstrap `5.3.5`, Pacifico/Sacramento/Work Sans, Bootstrap Icons, `countdown/circle.css`, SimplyCountdown UMD, bs5-lightbox | Bootstrap `5.3.2`, Cormorant/Inter, Font Awesome, AOS, custom theme JS | Restore original fonts, icons, countdown, lightbox, and DOM hooks. |
 | Rainier | Cormorant Garamond/Outfit, `css/invite.css`, `js/demo/invite-1.js`, optional Tally widget | Different fonts/CSS and custom script; no AOS | Restore original CSS/JS and preserve vanilla lifecycle; never add AOS. |
 | Archak | `style.css`, Font Awesome kit, `main.js` | Different custom CSS/JS and expanded DOM | Restore original DOM and asset contract, then inject CMS data and backend-safe RSVP only where the CMS extends the original. |
 
@@ -37,7 +37,7 @@ The following are classified as **A/B** only when they inject CMS data or connec
 
 ## Final correction audit addendum
 
-Source repositories rechecked: DewanaKL (`https://github.com/dewanakl/undangan`), Elix (`https://github.com/elix-stack/wedding-invitation-1`), Rainier (`https://github.com/Rainier-PS/Invitation-Template`), and Archak (`https://github.com/archakNath/wedding-invitation-website`).
+Source repositories rechecked: DewanaKL (`https://github.com/dewanakl/undangan`), retired preset (`#retired-preset-source`), Rainier (`https://github.com/Rainier-PS/Invitation-Template`), and Archak (`https://github.com/archakNath/wedding-invitation-website`).
 
 New issues confirmed against the pasted acceptance criteria:
 
@@ -45,8 +45,8 @@ New issues confirmed against the pasted acceptance criteria:
 2. DewanaKL was using `media.background_hero` as the `data-src` for the original `video-love-stroy` wrapper. The correction must use a dedicated `media.love_story_video` reference and omit the video boundary when the reference is absent or is not a valid video file/URL.
 3. Archak original `main.js` directly dereferenced `home-img-lg`, `parallax1`, and `parallax2`, so disabling optional sections could cause null exceptions. The smallest safe correction is null guards plus an initial `reveal()` invocation on load/DOMContentLoaded.
 4. Rainier adapter parsed non-UTC times in the visitor's local timezone and formatted display dates without the configured IANA timezone. It must resolve wall-clock values using the CMS-configured timezone and keep calendar/countdown/display consistent.
-5. Rainier CMS RSVP and Elix inline RSVP assumed a successful JSON response. Both need non-2xx, malformed-response, validation-error, server-error, and network-error handling.
-6. Rainier audio polling could loop indefinitely when music was disabled, and Elix autoplay failure had no visible graceful fallback. The correction must respect explicit music enablement and keep the page functional when autoplay is blocked.
+5. Rainier CMS RSVP and retired preset inline RSVP assumed a successful JSON response. Both need non-2xx, malformed-response, validation-error, server-error, and network-error handling.
+6. Rainier audio polling could loop indefinitely when music was disabled, and retired preset autoplay failure had no visible graceful fallback. The correction must respect explicit music enablement and keep the page functional when autoplay is blocked.
 
 ## Addendum: preset-aware admin and global guest services
 
@@ -54,4 +54,4 @@ The admin UI previously derived active preset capabilities for the sidebar but r
 
 The guest-link generator and persistence path remain global CMS services. The existing `guest-links.json` store is reused, generated invitation URLs preserve the `?to=` contract, and the new URL helper validates the base URL and encodes normalized guest names. The data model intentionally remains unchanged; duplicate names are allowed because records do not yet have a stable guest ID.
 
-Personalized greeting is global as a service but presentation remains owned by each theme. A shared resolver accepts existing query aliases, limits control characters and length, and each template escapes the result. DewanaKL's previous raw `innerHTML` guest insertion was replaced with DOM text rendering. Elix no longer double-decodes URLSearchParams values. Rainier and Archak now expose the greeting in theme-specific hero/home locations, while Custom uses the CMS-native hero path.
+Personalized greeting is global as a service but presentation remains owned by each theme. A shared resolver accepts existing query aliases, limits control characters and length, and each template escapes the result. DewanaKL's previous raw `innerHTML` guest insertion was replaced with DOM text rendering. retired preset no longer double-decodes URLSearchParams values. Rainier and Archak now expose the greeting in theme-specific hero/home locations, while Custom uses the CMS-native hero path.

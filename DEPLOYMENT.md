@@ -1,153 +1,51 @@
-# Deployment Guide
+# Deployment Quick Reference
 
-This document reflects the current single-root CMS-first repository structure.
+The repository has two supported deployment paths: **Docker Compose** and **native Ubuntu/Linux** through `deploy/install.sh`. The complete operator guide, persistence model, health semantics, backup/restore flow, troubleshooting, and target limitations are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
-## Prerequisites
+## Native Ubuntu/Linux
 
-- Linux server with root or sudo access
-- PHP 8.1+ with SQLite support
-- Composer installed for QR support
-- Nginx or Apache with PHP-FPM
-- Git available for repository updates
-
-## Source and runtime
-
-The Git working tree is separate from the deployed runtime:
-
-```text
-~/webserver_undangan
-        ↓ deploy/install.sh
-/var/www/wedding
-```
-
-`/var/www/wedding` is deployment output. Do not run Git operations there and do not manually create it for a fresh install; `deploy/install.sh` creates it.
-
-## Fresh install
-
-From the source repository:
+The native installer deploys the checkout to `/var/www/wedding`, configures Nginx or Apache with PHP-FPM, initializes the shared runtime contract, and preserves the source checkout for later updates. It requires root-capable Ubuntu/Linux plus `rsync`, `openssl`, and Composer:
 
 ```bash
-sudo rm -rf /var/www/wedding
-cd ~/webserver_undangan
+cd /path/to/webserver_undangan
 sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The installer deploys to `/var/www/wedding` by default and:
-
-- installs required PHP packages
-- creates the runtime directory
-- creates database and config defaults when missing
-- sources `deploy/runtime-directories.sh` and creates required upload directories, including preset-scoped `uploads/theme-assets/<preset>/`
-- sets secure permissions on configuration and SQLite files
-- creates `.env` when needed
-- configures Nginx or Apache from the templates in `deploy/templates/`
-
-The `rm -rf /var/www/wedding` step is appropriate only for a deliberate fresh-install test because it removes the current runtime. Do not use it for ordinary updates when runtime data must be preserved.
-
-## Update existing install
+For normal operations, use the guarded update and archive scripts:
 
 ```bash
 sudo /var/www/wedding/deploy/update.sh
-```
-
-The updater should preserve runtime data and user config while updating application source. Protected runtime data includes:
-
-- `config.json`
-- `guest-links.json`
-- `database.sqlite`
-- `uploads/`, including `uploads/theme-assets/<preset>/`
-- `event.ics`
-- `custom.css`
-- `backups/`
-
-## Health check
-
-```bash
-sudo /var/www/wedding/deploy/health-check.sh
-```
-
-The health check validates critical deployment requirements, including:
-
-- application root and public files exist
-- active theme files exist
-- config and database are readable and secure
-- required upload and preset-scoped Theme Assets directories exist and are writable
-- the active preset is supported and an ImageMagick or PHP GD WebP processor is available
-- public routes respond
-- sensitive files remain blocked from public access
-
-WebDAV is optional and should not fail a deployment when it is not enabled.
-
-## Theme deployment
-
-Theme presets live in the repository under:
-
-```text
-/themes/dewankl/
-/themes/elix/
-/themes/rainier/
-/themes/archak/
-/themes/parang/
-/themes/pawiwahan/
-```
-
-`deploy/install.sh` and `deploy/update.sh` synchronize the `themes/` directory and `deploy/runtime-directories.sh` as application source. Runtime data remains protected separately. `deploy/install.sh`, `deploy/update.sh`, and `docker/entrypoint.sh` use the shared directory contract so missing Theme Assets folders are recreated without replacing user media.
-
-## Backup and restore
-
-```bash
 sudo /var/www/wedding/deploy/backup.sh
 sudo /var/www/wedding/deploy/restore.sh /path/to/backup.tar.gz
 ```
 
-## Security and permissions
+The updater preserves CMS state, `.env`, the full `uploads/` tree including `uploads/theme-assets/<preset>/`, `event.ics`, WebDAV data, backups, and legacy `storage/` data. The backup and restore scripts validate archives and reject unsafe paths or links.
 
-Minimum runtime permissions should remain aligned with the server configuration:
+## Docker Compose
 
-```bash
-chmod 600 /var/www/wedding/config.json
-chmod 600 /var/www/wedding/database.sqlite
-chmod 600 /var/www/wedding/guest-links.json
-chown -R www-data:www-data /var/www/wedding/uploads
-```
-
-Public access must remain blocked for sensitive files such as `config.json`, `database.sqlite`, and `guest-links.json`.
-
-## Troubleshooting
-
-### Site returns HTTP 500
-
-Run the PHP entrypoint directly to expose the underlying fatal error:
+Create `.env` from the tracked example and set a strong administrator password:
 
 ```bash
-sudo php -d display_errors=1 -d log_errors=1 /var/www/wedding/index.php >/tmp/test-output.html 2>/tmp/test-error.txt
-cat /tmp/test-error.txt
+git clone https://github.com/februana/webserver_undangan.git
+cd webserver_undangan
+cp .env.example .env
+chmod 600 .env
+# Edit .env and set ADMIN_PASS.
+docker compose build
+docker compose up -d
+docker compose ps
+docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
 ```
 
-Then run the full health check:
+Docker persists CMS state in `wedding_data`, uploaded media in `wedding_uploads`, backup archives in `wedding_backups`, and optional WebDAV data in `wedding_webdav`. The image and Compose service both expose an HTTP healthcheck against `http://127.0.0.1/`. Do not run `docker compose down -v` unless intentionally resetting a disposable installation.
 
-```bash
-sudo /var/www/wedding/deploy/health-check.sh
-```
+## Presets and runtime contract
 
-### Site does not load
+The active built-in preset set is `dewankl`, `rainier`, `archak`, `parang`, `pawiwahan`, `shubh-vivah`, and `yami-buzzy`, with `custom` as the CMS-native builder. `deploy/runtime-directories.sh` is the shared source of truth for preset-scoped Theme Asset directories and required upload namespaces. The Admin panel provides localized visual customization, including supported section backgrounds, fonts, colors, Theme Assets, previews, and reset-to-default behavior.
 
-- verify the web server is active
-- verify PHP-FPM is active when used by the selected web server
-- verify the document root is `/var/www/wedding`
-- run `health-check.sh`
-- inspect the web server/PHP logs
+## Health and security
 
-### Permissions problem
+The health check distinguishes required deployment failures from optional administrator media warnings. It verifies application files, all seven built-in theme adapters, runtime state, writable upload/Theme Asset directories, active preset support, WebP processing, ownership, HTTP reachability, and blocking of `.env`, `config.json`, SQLite, guest links, backups, and WebDAV data. Keep production credentials outside Git and use TLS for public native deployments.
 
-```bash
-sudo chown -R www-data:www-data /var/www/wedding/uploads
-sudo chmod 600 /var/www/wedding/config.json
-sudo chmod 600 /var/www/wedding/database.sqlite
-sudo chmod 600 /var/www/wedding/guest-links.json
-```
-
-### 403 on config or database
-
-This is expected and is a required security condition.
+For full details, read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md), [`SECURITY.md`](SECURITY.md), and [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).

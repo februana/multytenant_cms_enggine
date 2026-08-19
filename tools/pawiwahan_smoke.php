@@ -31,7 +31,7 @@ $contract = theme_contract_for('pawiwahan');
 pawiwahan_assert(($contract['source_revision'] ?? '') === '957b3f3', 'contract records the audited Pawiwahan source revision');
 pawiwahan_assert(in_array('messages', $contract['data_capabilities'] ?? [], true), 'contract declares messages capability');
 pawiwahan_assert(!in_array('story', $contract['admin_capabilities'] ?? [], true), 'contract does not invent a Story admin panel');
-pawiwahan_assert(theme_builtin_preset_keys() === ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'], 'Pawiwahan is a renderer-backed built-in preset');
+pawiwahan_assert(theme_builtin_preset_keys() === ['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'], 'Pawiwahan is a renderer-backed built-in preset');
 pawiwahan_assert(is_file($root . '/themes/pawiwahan/original/index.html'), 'original Pawiwahan HTML is retained for provenance');
 pawiwahan_assert(is_file($root . '/themes/pawiwahan/assets/css/pawiwahan.css'), 'original Pawiwahan CSS is retained');
 pawiwahan_assert(is_file($root . '/themes/pawiwahan/assets/js/pawiwahan-source.js'), 'original Pawiwahan JavaScript is retained');

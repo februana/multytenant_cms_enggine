@@ -1,6 +1,6 @@
 # Wedding Invitation CMS
 
-This repository is a PHP/SQLite wedding-invitation CMS with a theme-adapter architecture. It incorporates and adapts six independently authored or user-provided invitation templates; the built-in presets are not presented as original designs of this project.
+This repository is a PHP/SQLite wedding-invitation CMS with a theme-adapter architecture. It incorporates and adapts seven independently authored or user-provided invitation templates; the built-in presets are not presented as original designs of this project.
 
 ## Current architecture
 
@@ -20,7 +20,9 @@ CMS ENGINE
 CUSTOM CMS-NATIVE BUILDER
 ```
 
-The CMS provides data, persistence, backend services, security helpers, and capability metadata. Theme adapters connect those values to individual source templates. Built-in presets preserve their source DOM, CSS, JavaScript lifecycle, dependencies, section order, and UX. Presets intentionally have different capabilities: a CMS capability does not automatically become a section, and it does not have to appear in every preset. Custom is the full CMS-native builder for users who need maximum flexibility.
+The CMS provides data, persistence, backend services, security helpers, capability metadata, and a shared visual customization layer. Theme adapters connect those values to individual source templates. Built-in presets preserve their source DOM, CSS, JavaScript lifecycle, dependencies, section order, and UX. Presets intentionally have different capabilities: a CMS capability does not automatically become a section, and it does not have to appear in every preset. Custom is the full CMS-native builder for users who need maximum flexibility.
+
+The visual capability layer is preset-aware. Where the source template supports the boundary, Admin can select section backgrounds and Theme Assets, choose named heading/body colors, select from the shared font catalogs, preview the result, and reset a selection so the source fallback becomes active again. Uploaded files remain in the canonical Media Manager; visual controls store references rather than creating a competing media pipeline.
 
 The **Guest Link Generator** and **personalized Guest Name** are global CMS capabilities. A generated invitation uses the current URL contract, for example `?to=Andi`; each theme presents the resolved guest name in its own original-compatible location rather than receiving identical markup.
 
@@ -28,16 +30,21 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for ownership boundaries and 
 
 ## Presets
 
-The six built-in presets are:
+The seven built-in presets are:
 
 - **DewanaKL** — original welcome/loading, gallery, video, gift, comment, AOS, and confetti-oriented invitation flow.
-- **Elix** — original hero/story/gallery/RSVP/gifts/audio flow with SimplyCountdown and lightbox support.
 - **Rainier** — original event-oriented `#app` flow with timezone-aware event data, calendar, optional schedule/quotes, RSVP, and footer branding. Rainier does not use AOS.
 - **Archak** — compact original navigation, home, timeline, story, gallery, stay, registry, parting message, footer, parallax, and reveal flow.
 - **Parang** — Javanese-inspired source-adapter flow with preserved ornaments, side navigation, couple, event, story, gallery, gift, maps, RSVP, and music boundaries.
 - **Pawiwahan** — preserved static source flow with Bootstrap carousel, welcome modal, guest resolver, couple, event/countdown, gallery, gift, maps, messages/RSVP, and audio boundaries.
+- **Shubh Vivah** — centered invitation-card flow with floral ornaments, script typography, countdown, gallery, RSVP, and localized Indonesian UI.
+- **Yami Buzzy** — welcome-modal/editorial flow with hero, couple, events, dress code, story, gallery, video, gift, invitation, RSVP, and localized Indonesian UI.
 
 Missing generic CMS functionality in a simple preset is intentional when the original template has no equivalent presentation boundary. Use Custom mode for the complete CMS-native section builder.
+
+## Indonesian default copy
+
+A new clean configuration uses Indonesian wedding copy with the official names **FEBRUANA** and **ANDI MUHAMAD BASUKI**, the familiar calls **Febru** and **Andi**, an Arabic Bismillah opening, a localized greeting and opening quotation, **QS. Ar-Rum 21**, and an Islamic closing. These values are defaults rather than locked content: Admin input replaces them, and clearing a field restores the corresponding default. Calendar metadata is generated from the current title, opening, schedule, and location instead of remaining tied to the default couple.
 
 ## Repository layout
 
@@ -77,7 +84,7 @@ docker compose up -d
 docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
 ```
 
-Docker uses PHP 8.3 Apache. The `wedding_data` volume persists config, guest links, Custom CSS, event ICS, and SQLite state; `wedding_uploads` persists uploaded media and preset-scoped `uploads/theme-assets/<preset>/` directories. The entrypoint sources `deploy/runtime-directories.sh` and recreates missing asset directories on every start without replacing user media. Compose refuses to use a shared hardcoded administrator password.
+Docker uses PHP 8.3 Apache. Named volumes persist CMS state in `wedding_data`, uploaded media and preset-scoped `uploads/theme-assets/<preset>/` directories in `wedding_uploads`, backup archives in `wedding_backups`, and optional WebDAV data in `wedding_webdav`. The image and Compose service both declare an HTTP healthcheck. The entrypoint sources `deploy/runtime-directories.sh`, recreates missing directories without replacing user media, safely bootstraps `.env`, and protects its permissions. Compose refuses to use a shared hardcoded administrator password.
 
 ### Native/server deployment
 
@@ -89,7 +96,7 @@ sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The installer creates `/var/www/wedding`, initializes runtime directories/files through the shared `deploy/runtime-directories.sh` contract, creates preset-scoped Theme Assets directories, configures the selected web server, optionally configures TLS/WebDAV, and leaves the Git checkout intact. `deploy/update.sh` preserves the complete `uploads/` tree and recreates missing runtime asset directories. Use the existing scripts for operations:
+The installer creates `/var/www/wedding`, initializes runtime directories/files through the shared `deploy/runtime-directories.sh` contract, creates preset-scoped Theme Assets directories, configures the selected web server, optionally configures TLS/WebDAV, and leaves the Git checkout intact. `deploy/update.sh` preserves the complete `uploads/` tree, WebDAV data, backups, legacy storage, and recreates missing runtime asset directories. Use the existing scripts for operations:
 
 ```bash
 sudo /var/www/wedding/deploy/update.sh
@@ -107,17 +114,18 @@ Upload or provision media through the Admin UI, then configure the corresponding
 
 ## Runtime data and security
 
-Native mode stores mutable files in the document root by default. Docker sets `UNDANGAN_DATA_DIR=/var/data` and `UNDANGAN_DB_PATH=/var/data/database.sqlite`. Both deployment paths create `uploads/cover`, `music`, `gallery`, `background`, `love-story`, `theme-assets`, and preset-scoped Theme Assets directories. The application blocks direct public access to sensitive config, guest-link, environment, and SQLite files. Do not commit `.env` or production runtime data.
+Native mode stores mutable files in the document root by default. Docker sets `UNDANGAN_DATA_DIR=/var/data` and `UNDANGAN_DB_PATH=/var/data/database.sqlite`, with separate named volumes for uploads, backups, and WebDAV. Both deployment paths create `uploads/cover`, `music`, `gallery`, `background`, `love-story`, `theme-assets`, and preset-scoped Theme Assets directories. The application blocks direct public access to sensitive config, guest-link, environment, SQLite, backup, and WebDAV files. Do not commit `.env` or production runtime data.
 
 ## License and attribution
 
 The CMS integration code is project-specific. The built-in presentation templates are adaptations of the following source repositories:
 
 - [DewanaKL — dewanakl/undangan](https://github.com/dewanakl/undangan)
-- [Elix — elix-stack/wedding-invitation-1](https://github.com/elix-stack/wedding-invitation-1)
+- [Shubh Vivah — vinitshahdeo/wedding-website](https://github.com/vinitshahdeo/wedding-website)
+- [Yami Buzzy — Tynab/Yami-Buzzy](https://github.com/Tynab/Yami-Buzzy)
 - [Rainier — Rainier-PS/Invitation-Template](https://github.com/Rainier-PS/Invitation-Template)
 - [Archak — archakNath/wedding-invitation-website](https://github.com/archakNath/wedding-invitation-website)
 - [Pawiwahan — parta99/pawiwahan](https://github.com/parta99/pawiwahan)
 - Parang — user-provided HTML design reference recorded in `docs/ATTRIBUTIONS.md`
 
-License status, exact revisions, original source files, current integration paths, and attribution requirements are maintained in [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).
+Shubh Vivah is recorded with the MIT notice from Vinit Shahdeo. Yami Buzzy has no detected SPDX license or license file at the audited source revision, so it is documented as an unresolved permission status rather than being labeled MIT. License status, exact revisions, original source files, current integration paths, and attribution requirements are maintained in [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).

@@ -2,17 +2,31 @@
 
 ## [Unreleased]
 
+This unreleased change set is prepared for PR #84 and covers the multi-preset CMS, deployment, provenance, and default-content finalization.
+
 ### Added
-- Docker containerization and Render cloud deployment support via `Dockerfile`, `docker/000-default.conf`, `docker/render-entrypoint.sh`, and `docker/render.ini`.
-- Expanded media contract supporting `media.bride_photo`, `media.groom_photo`, and `media.couple_photo` alongside `media.cover` and `media.background_hero`.
-- Enhanced CMS Admin Media Manager (`admin/index.php`) allowing uploads, File Manager assignment, and previewing of all logical media targets.
+
+- Added the `shubh-vivah` preset from `vinitshahdeo/wedding-website` and the `yami-buzzy` preset from `Tynab/Yami-Buzzy`, with source-compatible adapters, Indonesian UI localization, guest identity, calendar metadata, media fallbacks, and the existing RSVP backend bridge.
+- Added preset-aware visual customization for section backgrounds, Theme Assets, named color palettes, heading/body font catalogs, previews, reset-to-default behavior, and canonical Media Manager references.
+- Added Indonesian default wedding copy for FEBRUANA and ANDI MUHAMAD BASUKI, including Febru/Andi calls, Arabic Bismillah, Islamic opening and closing, and QS. Ar-Rum 21. Clearing Admin fields restores the corresponding defaults.
+- Added Docker image and Compose healthchecks, persistent named volumes for CMS state, uploads, backups, and optional WebDAV data, plus deployment smoke assertions for those contracts.
+- Added local provenance records for the Shubh Vivah MIT notice and the unresolved Yami Buzzy source-license status.
+
+### Changed
+
+- Updated the shared runtime directory contract and deployment documentation for seven built-in presets plus Custom.
+- Hardened the Docker entrypoint so initial environment substitution safely handles sed replacement characters and `.env` remains permission-restricted after recursive ownership normalization.
+- Expanded the Docker build ignore rules to exclude local runtime data while retaining `.env.example` for entrypoint bootstrap.
+- Reconciled README, architecture, deployment, attribution, backup/restore, and release records with the current CMS capability and persistence model.
+- Clarified that native Ubuntu/Linux deployment is the supported non-Docker target; no unimplemented Render Blueprint or managed-cloud manifest is claimed by the repository.
 
 ### Fixed
-- Fixed preloader and loading overlay stalls in `dewankl` (`themes/dewankl/script.js`), `rainier` (`themes/rainier/script.js`), and `archak` (`themes/archak/script.js`) by checking `document.readyState === 'complete'`.
-- Fixed missing `libonig-dev` build dependency for PHP 8.3 `mbstring` extension in `Dockerfile`.
-- Fixed redundant `docker-php-ext-install` call on built-in `pdo_sqlite` driver.
-- Ensured backward compatibility for theme layouts: missing bride/groom/couple photos safely fall back to `media.cover`.
 
-### Cleaned
-- Removed obsolete AI instruction prompt file `master_prompt_cms_first_architecture.txt`.
-- Updated `AGENTS.md` developer guidelines.
+- Restored source-template fallback behavior when an Admin-selected background or Theme Asset reference is cleared without deleting the physical upload.
+- Removed stale references to a retired preset, outdated six-adapter counts, and incorrect attribution reference numbering.
+- Preserved optional-media semantics: missing cover, music, gallery, Open Graph, or love-story media remains a warning or suppressed behavior rather than a fabricated required asset.
+
+### Removed
+
+- Removed the retired Elix preset license residue from `docs/licenses/`.
+- Removed the stale `docs/RENDER.md` guide that claimed missing `render.yaml`, `docker/render-entrypoint.sh`, and `docker/render.ini` files.

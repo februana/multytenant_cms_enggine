@@ -1,33 +1,25 @@
-# Visual Verification Log
+# Visual Verification
 
 ## DewanaKL
 
-Preview URL: `http://127.0.0.1:8000/preview.php?preset=dewankl`
+The existing DewanaKL split desktop/mobile composition, guest welcome surface, home, bride/groom, event/countdown, gallery, Love Gift, wishes/RSVP, music control, and bottom navigation remain covered by the established regression suite. No changes were made to this preset in the new-preset task.
 
-The page rendered the DewanaKL-specific split desktop/mobile composition, guest welcome surface, home section, bride/groom section, wave separators, event/countdown, gallery, love gift, wishes/RSVP, music control, and bottom navigation. Dynamic sentinel names and schedule data were present in the rendered document. No browser console output was reported during the initial render.
+## Rainier, Archak, Parang, Pawiwahan, and Custom
 
-The clean checkout does not contain the configured runtime cover/music files, so image/audio requests show the expected missing-runtime-asset behavior. This is a fixture warning, not a renderer exception.
+The established render, contract, and preservation smoke tests continue to cover these retained presets. Their registry entries, layouts, source assets, and CMS behavior were not redesigned or replaced by the new adapters.
 
-## Elix
+## Shubh Vivah
 
-Preview URL: `http://127.0.0.1:8000/preview.php?preset=elix`
+Fixture URL used for browser verification: `http://127.0.0.1:8090/.tmp-responsive/shubh-vivah.html`.
 
-The initial welcome overlay rendered with a loading lifecycle. After clicking `Buka Undangan`, the page exposed Elix-specific navigation, hero, circular countdown, couple, event, gallery, location, gift, RSVP, and footer content. The browser viewport visibly differed from DewanaKL, with a centered editorial hero and circular countdown. The overlay did not remain stuck after interaction.
+The page rendered a centered invitation card with source floral corner artwork, script typography, Indonesian opening greeting, long CMS names, guest label, countdown, and `Buka Undangan` CTA. Clicking the CTA navigated to `#shubh-event` and exposed the `Acara Pernikahan` section. Automated screenshots were generated at 1440, 1280, 1024, 768, 576, 390, and 360 px. The 360 px capture retained the card within the viewport; long names and the CTA wrapped without visible horizontal clipping.
 
-## Next checks
+## Yami Buzzy
 
-Rainier and Custom still require browser verification. The local preview endpoint is temporary and must be removed before committing the implementation.
+Fixture URL used for browser verification: `http://127.0.0.1:8090/.tmp-responsive/yami-buzzy.html`.
 
-## Rainier
+The page rendered a source-style full-bleed photographic hero with a centered welcome modal, Indonesian opening copy, long CMS names, and `Buka Undangan`. After activation, the modal closed and the hero navigation exposed Indonesian labels including `Konfirmasi Kehadiran`. The navigation link reached `#yami-rsvp`, where the RSVP form was visible. DOM verification at a 1280 px browser viewport found all primary section anchors and reported `horizontalOverflow: false`. Automated screenshots were generated at 1440, 1280, 1024, 768, 576, 390, and 360 px.
 
-Preview URL: `http://127.0.0.1:8000/preview.php?preset=rainier`
+## Evidence files
 
-The welcome overlay rendered with Bismillah, wedding title, date, and `Buka Undangan`. After activation, the page exposed Rainier-specific sticky navigation, editorial hero, couple, event, countdown, gallery, location, gift, RSVP, footer, and music control. The browser did not show a blank screen after the opening interaction. The audited source uses CSS/IntersectionObserver-style animation rather than AOS; no AOS dependency was added by assumption.
-
-## Custom
-
-Preview URL: `http://127.0.0.1:8000/preview.php?preset=custom`
-
-Custom rendered through the CMS-native shared renderer with global navigation, hero, countdown, story, gallery, event, location, RSVP, gift, music, and footer output. Its markup and ordering differ from the built-in template layouts, confirming that Custom remains a separate renderer mode rather than being forced through a built-in theme contract.
-
-The screenshot is intentionally unstyled in the temporary preview because the local preview helper does not reproduce the full custom CSS asset pipeline. PHP smoke rendering and extracted content confirmed that the full CMS-native sections were present.
+Detailed observations and screenshot paths are recorded in [`new-presets-responsive-evidence.md`](new-presets-responsive-evidence.md). Source audit and CMS mapping are recorded in [`new-presets-source-audit.md`](new-presets-source-audit.md) and [`new-presets-cms-mapping.md`](new-presets-cms-mapping.md).

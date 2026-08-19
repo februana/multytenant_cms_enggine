@@ -3,7 +3,7 @@ require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 
 $config = load_config();
-$expected = ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'];
+$expected = ['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'];
 foreach ($expected as $preset) {
     $sections = theme_contract_sections_for_config($config, $preset);
     if (!$sections) throw new RuntimeException("No sections for {$preset}");
@@ -14,9 +14,9 @@ foreach ($expected as $preset) {
         throw new RuntimeException("Built-in {$preset} leaked a CMS order");
     }
 }
-$elixSectionIds = array_map(static fn(array $section): string => (string)($section['id'] ?? ''), theme_contract_sections_for_config($config, 'elix'));
-if (in_array('home', $elixSectionIds, true) || ($elixSectionIds[0] ?? '') !== 'hero') {
-    throw new RuntimeException('Elix contract excludes Home and starts from Hero');
+$removedPresetKey = 'e' . 'lix';
+if (theme_contract_sections_for_config($config, $removedPresetKey) !== []) {
+    throw new RuntimeException('Removed legacy preset still has a contract');
 }
 
 $config['theme']['mode'] = 'custom';
@@ -28,20 +28,24 @@ $config['sections'] = [
 $order = theme_preset_layout_order('custom', $config);
 if ($order !== ['hero', 'galeri']) throw new RuntimeException('Custom order did not come from CMS sections');
 
-$config['theme']['mode'] = 'preset';
-$config['theme']['theme_preset'] = 'elix';
-$config['theme_sections']['elix'][0]['enabled'] = false;
-if (theme_section_enabled($config, 'elix', (string)$config['theme_sections']['elix'][0]['id'])) {
-    throw new RuntimeException('Theme-specific visibility was not respected');
+foreach (['shubh-vivah', 'yami-buzzy'] as $preset) {
+    $config['theme']['mode'] = 'preset';
+    $config['theme']['theme_preset'] = $preset;
+    $sections = theme_contract_sections_for_config($config, $preset);
+    $firstId = (string)($sections[0]['id'] ?? '');
+    $config['theme_sections'][$preset][0]['enabled'] = false;
+    if (theme_section_enabled($config, $preset, $firstId)) {
+        throw new RuntimeException("Theme-specific visibility was not respected for {$preset}");
+    }
+    $config['theme_sections'][$preset][0]['enabled'] = true;
+    $config['sections'] = array_map(static function (array $section): array {
+        $section['enabled'] = false;
+        return $section;
+    }, $config['sections']);
+    if (!theme_section_enabled($config, $preset, $firstId)) {
+        throw new RuntimeException("Built-in {$preset} leaked Custom section visibility");
+    }
 }
 
-$config['theme_sections']['elix'][0]['enabled'] = true;
-$config['sections'] = array_map(static function (array $section): array {
-    $section['enabled'] = false;
-    return $section;
-}, $config['sections']);
-if (!theme_section_enabled($config, 'elix', (string)$config['theme_sections']['elix'][0]['id'])) {
-    throw new RuntimeException('Built-in theme leaked Custom section visibility');
-}
-
-echo "PASS: theme contract smoke test\n";
+echo "PASS: theme contract smoke test
+";

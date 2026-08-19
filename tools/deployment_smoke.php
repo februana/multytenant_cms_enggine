@@ -42,7 +42,7 @@ assert_true($exitCode === 0, 'shared runtime directory contract executes success
 foreach (['cover', 'music', 'gallery', 'background', 'love-story', 'theme-assets'] as $directory) {
     assert_true(is_dir($bootstrapRoot . '/uploads/' . $directory), 'runtime directory created: uploads/' . $directory);
 }
-foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
+foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy', 'custom'] as $preset) {
     assert_true(is_dir($bootstrapRoot . '/uploads/theme-assets/' . $preset), 'preset Theme Assets directory created: ' . $preset);
 }
 $requiredBootstrapReferences = [
@@ -55,6 +55,20 @@ foreach ($requiredBootstrapReferences as $script) {
     $source = file_get_contents($script);
     assert_true(is_string($source) && str_contains($source, 'runtime-directories.sh'), 'deployment path references shared runtime contract: ' . basename($script));
 }
+
+$dockerfile = (string) file_get_contents($root . '/Dockerfile');
+assert_true(str_contains($dockerfile, 'HEALTHCHECK'), 'Dockerfile declares an HTTP healthcheck');
+assert_true(str_contains($dockerfile, 'http://127.0.0.1/'), 'Dockerfile healthcheck targets the local frontend');
+$compose = (string) file_get_contents($root . '/docker-compose.yml');
+assert_true(str_contains($compose, 'healthcheck:'), 'Compose declares a service healthcheck');
+assert_true(str_contains($compose, 'wedding_backups:'), 'Compose persists backup artifacts');
+assert_true(str_contains($compose, 'wedding_webdav:'), 'Compose persists WebDAV data');
+$entrypoint = (string) file_get_contents($root . '/docker/entrypoint.sh');
+assert_true(str_contains($entrypoint, 'escape_sed_replacement'), 'Docker entrypoint escapes environment substitutions');
+assert_true(str_contains($entrypoint, 'chmod 600 "${APP_DIR}/.env"'), 'Docker entrypoint protects .env permissions');
+$dockerignore = (string) file_get_contents($root . '/.dockerignore');
+assert_true(str_contains($dockerignore, '!.env.example'), 'Docker build keeps the environment template for bootstrap');
+assert_true(str_contains($dockerignore, '*.sqlite'), 'Docker build excludes local SQLite runtime data');
 
 foreach (glob($bootstrapRoot . '/uploads/theme-assets/*') ?: [] as $path) {
     if (is_dir($path)) @rmdir($path);

@@ -45,6 +45,10 @@ if ($akadDate !== '' || $akadTime !== '') $schedule[] = ['time' => trim($akadTim
 if ($receptionTime !== '') $schedule[] = ['time' => trim($receptionTime), 'label' => 'Resepsi — ' . trim($venue)];
 $eventEndTime = ($receptionDate !== '' && $receptionDate === $akadDate && $receptionTime !== '' && $receptionTime > $akadTime) ? $receptionTime : '';
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'rainier') : [];
+$rainierHeadingColor = (string)($visuals['heading_color'] ?? '#1d1b22');
+$rainierTextColor = (string)($visuals['text_color'] ?? '#1d1b22');
+$rainierMutedColor = (string)($visuals['muted_color'] ?? '#5c5255');
+$rainierLinkColor = (string)($visuals['link_color'] ?? '#b8655d');
 $rainierHeroPath = (string)($visuals['hero_background'] ?? '');
 $rainierSourceHeroImages = [
     'https://images.unsplash.com/photo-1514876246314-d9a231ea21db?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bmV3JTIweWVhcnxlbnwwfHwwfHx8MA%3D%3D',
@@ -55,6 +59,14 @@ $rainierSourceHeroImages = [
 ];
 $rainierHeroImages = $rainierHeroPath !== '' ? [theme_visual_public_path($rainierHeroPath)] : ($coverPath !== '' ? [public_path($coverPath)] : $rainierSourceHeroImages);
 $rainierBackgrounds = $rainierHeroImages;
+$rainierSectionCss = static function (string $key) use ($visuals): string {
+    $path = trim((string)($visuals[$key] ?? ''));
+    return $path === '' ? 'none' : theme_visual_css_url(theme_visual_public_path($path));
+};
+$rainierEventBg = $rainierSectionCss('section_background_event_details');
+$rainierScheduleBg = $rainierSectionCss('section_background_schedule');
+$rainierQuotesBg = $rainierSectionCss('section_background_quotes');
+$rainierRsvpBg = $rainierSectionCss('section_background_rsvp');
 $rainierSourceLogo = 'https://raw.githubusercontent.com/Rainier-PS/rainier-ps.github.io/main/images/site/Rainier%20Logo-Primary.svg';
 $rainierFooterLogo = $coverPath !== '' ? public_path($coverPath) : $rainierSourceLogo;
 $eventData = [
@@ -74,6 +86,10 @@ $eventData = [
         'backgrounds' => $rainierBackgrounds,
         'headingFont' => (string)($visuals['heading_font'] ?? 'Cormorant Garamond, serif'),
         'bodyFont' => (string)($visuals['body_font'] ?? 'Outfit, sans-serif'),
+        'headingColor' => $rainierHeadingColor,
+        'textColor' => $rainierTextColor,
+        'mutedColor' => $rainierMutedColor,
+        'linkColor' => $rainierLinkColor,
         'glassOpacity' => (string)($visuals['glass_opacity'] ?? '0.40'),
     ],
     'footer' => ['text' => $closingRaw, 'branding' => ['link' => 'https://rainier-ps.github.io/', 'logoUrl' => $rainierFooterLogo, 'logoAlt' => 'Logo Rainier'], 'credits' => ['designByLabel' => 'Diselenggarakan oleh', 'copyrightYear' => date('Y'), 'authorName' => html_entity_decode($brideName . ' & ' . $groomName, ENT_QUOTES, 'UTF-8'), 'templateLabel' => 'Templat', 'templateAuthor' => 'Rainier', 'templateLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLink' => 'https://github.com/Rainier-PS/Invitation-Template', 'repoLabel' => 'Templat sumber']],
@@ -92,8 +108,9 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <title><?php echo $siteTitle; ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="<?php echo escape_html(theme_google_font_stylesheet_url()); ?>" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original/invite.css'); ?>">
+    <style id="cms-rainier-visual">:root{--primary:<?php echo escape_html((string)($visuals['accent_color'] ?? '#b8655d')); ?>;--text:<?php echo escape_html($rainierTextColor); ?>;--muted:<?php echo escape_html($rainierMutedColor); ?>;--rainier-heading-color:<?php echo escape_html($rainierHeadingColor); ?>;--rainier-link:<?php echo escape_html($rainierLinkColor); ?>;--cms-rainier-hero-bg:<?php echo $rainierHeroPath !== '' ? theme_visual_css_url(theme_visual_public_path($rainierHeroPath)) : 'none'; ?>;--cms-rainier-event-bg:<?php echo $rainierEventBg; ?>;--cms-rainier-schedule-bg:<?php echo $rainierScheduleBg; ?>;--cms-rainier-quotes-bg:<?php echo $rainierQuotesBg; ?>;--cms-rainier-rsvp-bg:<?php echo $rainierRsvpBg; ?>}.event-details,#schedule-section,#quotes-section,#rsvp{background-size:cover;background-position:center;background-repeat:no-repeat}.event-details{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-event-bg)}body h1,body h2,body h3{color:var(--rainier-heading-color)}.section p,.section a,footer p,footer a{color:var(--text)}.section a,footer a{color:var(--rainier-link)}.countdown-label,.countdown-unit span{color:var(--muted)}#schedule-section{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-schedule-bg)}#quotes-section{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-quotes-bg)}#rsvp{background-image:linear-gradient(rgba(255,253,251,.88),rgba(255,253,251,.88)),var(--cms-rainier-rsvp-bg)}</style>
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
     <script defer src="<?php echo get_theme_asset_url($presetKey, 'original/invite-1-adapter.js'); ?>"></script>
 </head>

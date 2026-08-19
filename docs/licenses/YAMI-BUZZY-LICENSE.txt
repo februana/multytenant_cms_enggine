@@ -1,0 +1,17 @@
+Yami Buzzy source-license status
+
+Source repository: https://github.com/Tynab/Yami-Buzzy
+Audited source revision: 367f5a5fb33ce2f902d5fa2db5bb0508136eb2eb
+
+No SPDX license is declared in the repository metadata, and no LICENSE,
+COPYING, NOTICE, or COPYRIGHT file was found in the source tree at the audited
+revision. This file is therefore a provenance/status notice, not a license
+grant. The source template remains attributable to Tynab and must not be
+represented as MIT-licensed or otherwise freely redistributable without an
+explicit license or permission from the copyright holder.
+
+The CMS adapter and integration code in this repository are project-specific,
+but the presence of an adapter does not change the licensing status of
+source-derived Yami Buzzy presentation code or assets. Before redistributing
+this preset outside the intended project context, obtain and retain written
+permission or a license from the source copyright holder.

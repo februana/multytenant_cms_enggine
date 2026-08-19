@@ -471,13 +471,45 @@ if (themeSettingsForm && themePreviewFrame) {
     } else if (type === 'color') {
       input = document.createElement('input');
       input.type = 'color';
+      input.setAttribute('list', `visual-palette-${key}`);
       input.style.cssText = 'width:100%;height:42px;';
+      const palette = definition.palette || {};
+      if (Object.keys(palette).length) {
+        const paletteWrap = document.createElement('div');
+        paletteWrap.className = 'visual-color-palette';
+        paletteWrap.setAttribute('aria-label', 'Pilihan warna cepat');
+        paletteWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.55rem;';
+        Object.entries(palette).forEach(([color, labelText]) => {
+          const swatch = document.createElement('button');
+          swatch.type = 'button';
+          swatch.dataset.visualColorPalette = color;
+          swatch.title = labelText;
+          swatch.setAttribute('aria-label', labelText);
+          swatch.style.cssText = `width:28px;height:28px;padding:0;border-radius:50%;border:2px solid #fff;outline:1px solid #d8c9bc;background:${color};cursor:pointer;`;
+          swatch.addEventListener('click', () => {
+            input.value = color;
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+            input.dispatchEvent(new Event('change', {bubbles: true}));
+          });
+          paletteWrap.appendChild(swatch);
+        });
+        row.appendChild(paletteWrap);
+        const datalist = document.createElement('datalist');
+        datalist.id = `visual-palette-${key}`;
+        Object.entries(palette).forEach(([color, labelText]) => {
+          const option = document.createElement('option');
+          option.value = color;
+          option.label = labelText;
+          datalist.appendChild(option);
+        });
+        row.appendChild(datalist);
+      }
     } else if (type === 'image') {
       input = document.createElement('select');
       input.dataset.visualMediaSelect = '1';
       const defaultOption = document.createElement('option');
       defaultOption.value = '';
-      defaultOption.textContent = 'Gunakan latar bawaan preset';
+      defaultOption.textContent = 'Gunakan gambar bawaan tema';
       input.appendChild(defaultOption);
       const assetPaths = new Set();
       mediaAssets.filter(asset => asset && asset.type === 'image' && asset.path).forEach(asset => {
@@ -490,7 +522,7 @@ if (themeSettingsForm && themePreviewFrame) {
       if (value && !assetPaths.has(value)) {
         const storedOption = document.createElement('option');
         storedOption.value = value;
-        storedOption.textContent = `Referensi tersimpan — ${value}`;
+        storedOption.textContent = `Gambar tersimpan — ${value}`;
         input.appendChild(storedOption);
       }
       const previewWrap = document.createElement('div');
@@ -508,7 +540,7 @@ if (themeSettingsForm && themePreviewFrame) {
       resetButton.name = 'reset_visual_key';
       resetButton.value = key;
       resetButton.className = 'button small-button';
-      resetButton.textContent = 'Reset assignment';
+      resetButton.textContent = 'Kembalikan ke Bawaan';
       const resetRow = document.createElement('div');
       resetRow.style.cssText = 'display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.55rem;';
       resetRow.appendChild(resetButton);
@@ -517,10 +549,10 @@ if (themeSettingsForm && themePreviewFrame) {
       resetRow.appendChild(resetNote);
       row.appendChild(resetRow);
       const mediaNote = document.createElement('small');
-      mediaNote.append('Pilih asset dari Pengelola Media. Untuk upload baru, gunakan ');
+      mediaNote.append('Pilih gambar dari Foto, Musik, dan File. Untuk upload baru, gunakan ');
       const mediaLink = document.createElement('a');
       mediaLink.href = '#file-manager';
-      mediaLink.textContent = 'Kelola Media';
+      mediaLink.textContent = 'Foto, Musik, dan File';
       mediaNote.append(mediaLink, ', lalu muat ulang halaman.');
       row.appendChild(mediaNote);
     } else {
@@ -650,6 +682,16 @@ if (themeSettingsForm && themePreviewFrame) {
 
   globalThemePreset?.addEventListener('change', () => selectPreset(globalThemePreset.value));
   themeSettingsForm.elements.theme_preset?.addEventListener('change', () => selectPreset(themeSettingsForm.elements.theme_preset.value));
+  document.addEventListener('click', (event) => {
+    const swatch = event.target.closest('[data-visual-color-palette-static]');
+    if (!swatch || !visualFields?.contains(swatch)) return;
+    event.preventDefault();
+    const field = swatch.closest('.visual-field')?.querySelector('input[type="color"]');
+    if (!field) return;
+    field.value = swatch.dataset.visualColorPaletteStatic || swatch.dataset.visualColorPalette || field.value;
+    field.dispatchEvent(new Event('input', {bubbles: true}));
+    field.dispatchEvent(new Event('change', {bubbles: true}));
+  });
   themePreviewFrame.addEventListener('load', postPreview);
 
   themePreviewReset?.addEventListener('click', () => {

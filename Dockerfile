@@ -62,5 +62,10 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
 
 EXPOSE 80
 
+# Keep the image self-describing for Docker, Swarm, and platforms that read
+# image metadata instead of docker-compose health settings.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+    CMD curl --fail --silent --show-error http://127.0.0.1/ >/dev/null || exit 1
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

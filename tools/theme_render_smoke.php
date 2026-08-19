@@ -24,7 +24,8 @@ $shared = [
 $markers = [
     'custom' => ['hero', 'rsvp'],
     'dewankl' => ['id="home"', 'data-bs-spy="scroll"'],
-    'elix' => ['id="hero"', 'offcanvas'],
+    'shubh-vivah' => ['id="shubh-home"', 'Buka Undangan', 'id="shubh-countdown"'],
+    'yami-buzzy' => ['id="yami-home"', 'id="yami-welcome-modal"', 'Buka Undangan'],
     'rainier' => ['id="app"', 'id="event-title"', 'id="schedule-section"'],
     'archak' => ['id="story"', 'id="registry"', 'id="home-img-lg"'],
     'parang' => ['id="cms-parang-root"', 'id="beranda"', 'parang-bg'],
@@ -33,7 +34,8 @@ $markers = [
 
 $greetingSentinels = [
     'dewankl' => 'Salam Dewankl',
-    'elix' => 'Salam Elix',
+    'shubh-vivah' => 'Salam Shubh Vivah',
+    'yami-buzzy' => 'Salam Yami Buzzy',
     'rainier' => 'Salam Rainier',
     'archak' => 'Salam Archak',
     'parang' => 'Salam Parang',
@@ -58,6 +60,13 @@ foreach ($markers as $preset => $required) {
     }
     if (isset($greetingSentinels[$preset]) && strpos($html, $greetingSentinels[$preset]) === false) {
         throw new RuntimeException("Configured greeting did not render in {$preset}");
+    }
+    if ($preset === 'shubh-vivah') {
+        if (strpos($html, 'source-background.mp3') === false) throw new RuntimeException('Shubh Vivah must use bundled source music when CMS music is empty');
+        if (strpos($html, 'id="shubh-rsvp-form"') === false || strpos($html, "fetch('save.php'") === false) throw new RuntimeException('Shubh Vivah RSVP must use the CMS save endpoint');
+    }
+    if ($preset === 'yami-buzzy') {
+        if (strpos($html, 'id="yami-rsvp-form"') === false || strpos($html, "fetch('save.php'") === false) throw new RuntimeException('Yami Buzzy RSVP must use the CMS save endpoint');
     }
     echo "PASS: {$preset} rendered (" . strlen($html) . " bytes)\n";
 }

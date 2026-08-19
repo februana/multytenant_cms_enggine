@@ -2,7 +2,7 @@
 # Shared runtime directory contract for native, Docker, and update deployments.
 # This file is intentionally POSIX shell so docker/entrypoint.sh can source it.
 
-WEDDING_BUILTIN_PRESETS="dewankl elix rainier archak parang pawiwahan custom"
+WEDDING_BUILTIN_PRESETS="dewankl rainier archak parang pawiwahan shubh-vivah yami-buzzy custom"
 
 runtime_upload_directories() {
     runtime_root="$1"
