@@ -38,3 +38,6 @@ This unreleased change set is prepared for PR #84 and covers the multi-preset CM
 - Restored DewanaKL's reachable bride/groom upload and assignment flow, added couple-photo upload with cover/home fallback behavior, and prevented unsupported couple-photo actions from appearing in presets that do not render them.
 - Wired Yami Buzzy couple avatars to canonical bride/groom media, with `couple_photo` fallback and the original letter placeholders retained when no custom image is configured.
 - Added `docs/media-role-audit.md` and `tools/media_role_contract_smoke.php`; the full repository regression suite now covers role mapping, Admin gates, renderer output, and fallback behavior.
+- Added `docs/user-input-capability-audit.md` and `tools/user_input_capability_smoke.php` to cover user-configured dresscode, QRIS, video upload/assignment, renderer output, and media reference lifecycle.
+- Added canonical `media.love_story_video` upload and Media Manager assignment with MP4 validation, preview, replacement, cleanup, and backward-compatible Yami Buzzy fallback fields.
+- Replaced Yami Buzzy's hardcoded dresscode timeline with Admin-configured title, color, rule, and description fields; QRIS now renders conditionally in all gift-enabled preset renderers.

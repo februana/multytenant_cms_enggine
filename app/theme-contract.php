@@ -19,7 +19,7 @@ if (!function_exists('theme_contract_registry')) {
                 'data_capabilities' => [
                     'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
                     'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media',
-                    'seo', 'whatsapp', 'calendar'
+                    'seo', 'whatsapp', 'calendar', 'dresscode', 'love_story_video'
                 ],
                 'presentation_capabilities' => [
                     'welcome_overlay', 'loading_screen', 'split_desktop_mobile',
@@ -29,14 +29,14 @@ if (!function_exists('theme_contract_registry')) {
                 'sections' => [
                     ['id' => 'home', 'dom_id' => 'home', 'label' => 'Home', 'title' => 'Home', 'embedded_capabilities' => ['wedding', 'calendar', 'guest_name']],
                     ['id' => 'bride', 'dom_id' => 'bride', 'label' => 'Bride & Groom', 'title' => 'Bride & Groom', 'embedded_capabilities' => ['parents']],
-                    ['id' => 'love_story', 'dom_id' => null, 'label' => 'Love Story', 'title' => 'Love Story', 'embedded_capabilities' => ['story', 'love_story_video']],
+                    ['id' => 'love_story', 'dom_id' => null, 'label' => 'Love Story', 'title' => 'Love Story', 'embedded_capabilities' => ['story', 'love_story_video', 'dresscode']],
                     ['id' => 'wedding_date', 'dom_id' => 'wedding-date', 'label' => 'Wedding Date', 'title' => 'Wedding Date', 'embedded_capabilities' => ['schedule', 'countdown', 'maps']],
                     ['id' => 'gallery', 'dom_id' => 'gallery', 'label' => 'Gallery', 'title' => 'Gallery', 'embedded_capabilities' => ['gallery']],
                     ['id' => 'love_gift', 'dom_id' => null, 'label' => 'Love Gift', 'title' => 'Love Gift', 'embedded_capabilities' => ['gift']],
                     ['id' => 'comment', 'dom_id' => 'comment', 'label' => 'Comment', 'title' => 'Comment', 'embedded_capabilities' => ['rsvp', 'messages']],
                 ],
-                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
-                'media_roles' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
+                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp', 'dresscode'],
+                'media_roles' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
                 'assets' => [
                     'bootstrap@5.3.8', 'fontawesome@7.1.0', 'aos@2.3.4', 'canvas-confetti@1.9.3',
                     'guest.css', 'guest.js', 'common.css', 'animation.css', 'theme-media'
@@ -65,23 +65,23 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Yami Buzzy',
                 'source' => 'https://github.com/Tynab/Yami-Buzzy',
                 'source_revision' => '367f5a5',
-                'data_capabilities' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar'],
+                'data_capabilities' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'dresscode', 'love_story_video'],
                 'presentation_capabilities' => ['welcome_modal', 'hero_countdown', 'couple_cards', 'dresscode_timeline', 'love_story_timeline', 'gallery_grid', 'video_panel', 'gift_card', 'mobile_navigation', 'audio_control'],
                 'sections' => [
                     ['id' => 'home', 'dom_id' => 'yami-home', 'label' => 'Beranda', 'title' => 'Beranda', 'embedded_capabilities' => ['wedding', 'guest_name', 'countdown', 'calendar']],
                     ['id' => 'couple', 'dom_id' => 'yami-couple', 'label' => 'Mempelai', 'title' => 'Mempelai', 'embedded_capabilities' => ['parents', 'media']],
                     ['id' => 'event', 'dom_id' => 'yami-event', 'label' => 'Acara', 'title' => 'Acara Pernikahan', 'embedded_capabilities' => ['schedule', 'countdown', 'maps', 'calendar']],
-                    ['id' => 'dresscode', 'dom_id' => 'yami-dresscode', 'label' => 'Dress Code', 'title' => 'Dress Code', 'embedded_capabilities' => []],
+                    ['id' => 'dresscode', 'dom_id' => 'yami-dresscode', 'label' => 'Dress Code', 'title' => 'Dress Code', 'embedded_capabilities' => ['dresscode']],
                     ['id' => 'story', 'dom_id' => 'yami-story', 'label' => 'Kisah Kami', 'title' => 'Kisah Cinta', 'embedded_capabilities' => ['story']],
                     ['id' => 'gallery', 'dom_id' => 'yami-gallery', 'label' => 'Galeri', 'title' => 'Galeri', 'embedded_capabilities' => ['gallery']],
-                    ['id' => 'video', 'dom_id' => 'yami-video', 'label' => 'Video', 'title' => 'Video', 'embedded_capabilities' => ['media']],
+                    ['id' => 'video', 'dom_id' => 'yami-video', 'label' => 'Video', 'title' => 'Video', 'embedded_capabilities' => ['media', 'love_story_video']],
                     ['id' => 'gift', 'dom_id' => 'yami-gift', 'label' => 'Hadiah', 'title' => 'Hadiah', 'embedded_capabilities' => ['gift']],
                     ['id' => 'invitation', 'dom_id' => 'yami-invitation', 'label' => 'Undangan', 'title' => 'Lokasi Acara', 'embedded_capabilities' => ['maps', 'schedule']],
                     ['id' => 'rsvp', 'dom_id' => 'yami-rsvp', 'label' => 'RSVP', 'title' => 'RSVP', 'embedded_capabilities' => ['rsvp', 'messages']],
                     ['id' => 'closing', 'dom_id' => 'yami-closing', 'label' => 'Terima Kasih', 'title' => 'Terima Kasih', 'embedded_capabilities' => ['seo']],
                 ],
-                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
-                'media_roles' => ['bride_photo', 'groom_photo', 'couple_photo'],
+                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp', 'dresscode'],
+                'media_roles' => ['bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
                 'assets' => ['gilroy-font', 'fidelity-adapter.css', 'source-dresscode-icons', 'theme-media'],
             ],
             'rainier' => [
@@ -116,8 +116,7 @@ if (!function_exists('theme_contract_registry')) {
                 'source_revision' => 'attachment:pasted_content_15',
                 'data_capabilities' => [
                     'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
-                    'gift', 'maps', 'rsvp', 'story', 'guest_name', 'media', 'seo',
-                    'whatsapp', 'calendar'
+                    'gift', 'maps', 'rsvp', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'dresscode'
                 ],
                 'presentation_capabilities' => [
                     'desktop_sidebar', 'mobile_app_bar', 'mobile_bottom_navigation',
@@ -127,7 +126,7 @@ if (!function_exists('theme_contract_registry')) {
                 'sections' => [
                     ['id' => 'hero', 'dom_id' => 'beranda', 'label' => 'Hero', 'title' => 'Beranda', 'embedded_capabilities' => ['wedding', 'guest_name', 'countdown']],
                     ['id' => 'couple', 'dom_id' => 'mempelai', 'label' => 'Mempelai', 'title' => 'Mempelai', 'embedded_capabilities' => ['parents']],
-                    ['id' => 'event', 'dom_id' => 'acara', 'label' => 'Acara', 'title' => 'Acara', 'embedded_capabilities' => ['schedule', 'maps']],
+                    ['id' => 'event', 'dom_id' => 'acara', 'label' => 'Acara', 'title' => 'Acara', 'embedded_capabilities' => ['schedule', 'maps', 'dresscode']],
                     ['id' => 'story', 'dom_id' => 'cerita', 'label' => 'Cerita', 'title' => 'Cerita', 'embedded_capabilities' => ['story']],
                     ['id' => 'gallery', 'dom_id' => 'galeri', 'label' => 'Galeri', 'title' => 'Galeri', 'embedded_capabilities' => ['gallery']],
                     ['id' => 'location', 'dom_id' => 'lokasi', 'label' => 'Lokasi', 'title' => 'Lokasi', 'embedded_capabilities' => ['maps']],
@@ -135,7 +134,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'rsvp', 'dom_id' => 'ucapan', 'label' => 'Ucapan & RSVP', 'title' => 'Ucapan & Konfirmasi', 'embedded_capabilities' => ['rsvp', 'messages']],
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
                 ],
-                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'media', 'seo', 'whatsapp'],
+                'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'media', 'seo', 'whatsapp', 'dresscode'],
                 'media_roles' => ['bride_photo', 'groom_photo'],
                 'assets' => ['libre-caslon-text-manrope', 'material-symbols-outlined', 'style.css', 'script.js', 'theme-media'],
             ],
@@ -229,8 +228,8 @@ if (!function_exists('theme_contract_registry')) {
     }
 
     function theme_contract_media_roles(string $presetKey): array {
-        if ($presetKey === 'custom') return ['cover', 'bride_photo', 'groom_photo', 'couple_photo'];
-        $allowed = ['cover', 'bride_photo', 'groom_photo', 'couple_photo'];
+        if ($presetKey === 'custom') return ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'];
+        $allowed = ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'];
         return array_values(array_intersect($allowed, (array)(theme_contract_for($presetKey)['media_roles'] ?? [])));
     }
 

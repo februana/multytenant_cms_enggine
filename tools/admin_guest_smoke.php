@@ -11,24 +11,24 @@ function assert_true(bool $condition, string $message): void {
 
 $expected = [
     'custom' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'sections'],
-    'dewankl' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
+    'dewankl' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'dresscode'],
     'shubh-vivah' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
-    'yami-buzzy' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+    'yami-buzzy' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp', 'dresscode'],
     'rainier' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'story', 'music', 'maps', 'rsvp'],
     'archak' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp'],
-    'parang' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp'],
+    'parang' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'dresscode'],
     'pawiwahan' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages'],
 ];
 $forbidden = [
     'rainier' => ['parents', 'gallery', 'gift', 'dresscode', 'sections'],
     'archak' => ['music', 'dresscode', 'sections'],
-    'dewankl' => ['sections', 'custom_css', 'dresscode', 'cover', 'background'],
+    'dewankl' => ['sections', 'custom_css', 'cover', 'background'],
 ];
 $expectedMediaRoles = [
-    'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
-    'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
+    'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
+    'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
     'shubh-vivah' => [],
-    'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo'],
+    'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
     'rainier' => [],
     'archak' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
     'parang' => ['bride_photo', 'groom_photo'],

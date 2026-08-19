@@ -8,6 +8,7 @@ $groups = [
     'background' => UPLOADS_BACKGROUND_DIR,
     'gallery' => UPLOADS_GALLERY_DIR,
     'love_story' => UPLOADS_LOVE_STORY_DIR,
+    'video' => UPLOADS_LOVE_STORY_DIR,
     'theme_assets' => UPLOADS_THEME_ASSETS_DIR,
 ];
 
@@ -19,7 +20,7 @@ foreach ($groups as $group => $root) {
         if (!$fileInfo->isFile()) continue;
         $path = $fileInfo->getPathname();
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        if (!in_array($extension, array_merge(ALLOWED_IMAGE_TYPES, ['tmp', 'bak']), true)) continue;
+        if (!in_array($extension, array_merge(ALLOWED_IMAGE_TYPES, ALLOWED_VIDEO_TYPES, ['tmp', 'bak']), true)) continue;
         $relative = relative_path($path);
         $usage = detect_media_usage($config, $relative);
         $info = $extension === 'webp' ? @getimagesize($path) : false;
@@ -32,7 +33,7 @@ foreach ($groups as $group => $root) {
             'dimensions' => is_array($info) ? ($info[0] . 'x' . $info[1]) : '',
             'referenced' => !empty($usage),
             'used_by' => $usage,
-            'canonical' => $extension === 'webp' && safe_image_mime($path) === 'image/webp',
+            'canonical' => ($extension === 'webp' && safe_image_mime($path) === 'image/webp') || in_array($extension, ALLOWED_VIDEO_TYPES, true),
         ];
     }
 }

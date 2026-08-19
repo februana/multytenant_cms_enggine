@@ -10,10 +10,10 @@ function media_role_assert(bool $condition, string $message): void {
 }
 
 $expectedRoles = [
-    'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
-    'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
+    'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
+    'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
     'shubh-vivah' => [],
-    'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo'],
+    'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
     'rainier' => [],
     'archak' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
     'parang' => ['bride_photo', 'groom_photo'],

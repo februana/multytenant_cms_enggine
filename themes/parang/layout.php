@@ -37,6 +37,8 @@ $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Manrope, sans-serif')
 
 $groomPhoto = $assetUrl((string)($config['media']['groom_photo'] ?? ''), $staticPortraitFallback);
 $bridePhoto = $assetUrl((string)($config['media']['bride_photo'] ?? ''), $staticPortraitFallback);
+$qrisPath = trim((string)($config['gift']['qris_image'] ?? ''));
+$qrisUrl = $qrisPath !== '' ? $assetUrl($qrisPath, '') : '';
 $siteTitle = escape_html((string)($config['site']['title'] ?? 'Undangan Pernikahan'));
 $description = escape_html((string)($config['site']['description'] ?? $config['wedding']['opening_text'] ?? ''));
 $brideNameRaw = (string)($config['wedding']['bride_name'] ?? 'FEBRUANA');
@@ -253,6 +255,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
                 <div class="parang-info-grid">
                     <article class="parang-card"><h3>Rekening</h3><p><?php echo escape_html((string)($config['gift']['bank'] ?? '')); ?></p><p class="parang-copy-value"><?php echo escape_html((string)($config['gift']['account_number'] ?? '')); ?></p><button type="button" class="parang-copy-button" data-copy="<?php echo escape_html((string)($config['gift']['account_number'] ?? '')); ?>">Salin Nomor</button></article>
                     <article class="parang-card"><h3><?php echo escape_html((string)($config['gift']['e_wallet_label'] ?? 'E-Wallet')); ?></h3><p class="parang-copy-value"><?php echo escape_html((string)($config['gift']['e_wallet_number'] ?? '')); ?></p><button type="button" class="parang-copy-button" data-copy="<?php echo escape_html((string)($config['gift']['e_wallet_number'] ?? '')); ?>">Salin Nomor</button></article>
+                    <?php if ($qrisUrl !== ''): ?><article class="parang-card parang-qris-card"><h3>QRIS</h3><img src="<?php echo escape_html($qrisUrl); ?>" alt="QRIS untuk tanda kasih" loading="lazy" decoding="async" style="display:block;width:min(100%,220px);aspect-ratio:1/1;object-fit:contain;background:#fff;padding:10px;margin:0 auto;border-radius:10px;"></article><?php endif; ?>
                 </div>
             </div>
         </section>

@@ -42,6 +42,7 @@ if (!defined('EVENT_ICS_FILE')) define('EVENT_ICS_FILE', RUNTIME_DATA_DIR . '/ev
 // Security defaults
 if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
 if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 15 * 1024 * 1024));
+if (!defined('MAX_VIDEO_UPLOAD_SIZE')) define('MAX_VIDEO_UPLOAD_SIZE', (int) (getenv('MAX_VIDEO_UPLOAD_SIZE') ?: 50 * 1024 * 1024));
 if (!defined('WEBP_QUALITY')) define('WEBP_QUALITY', max(60, min(95, (int) (getenv('WEBP_QUALITY') ?: 82))));
 if (!defined('SESSION_TIMEOUT')) define('SESSION_TIMEOUT', (int) (getenv('SESSION_TIMEOUT') ?: 3600));
 if (!defined('ALLOWED_IMAGE_TYPES')) define('ALLOWED_IMAGE_TYPES', array_map('strtolower', (array) (getenv('ALLOWED_IMAGE_TYPES') ? explode(',', getenv('ALLOWED_IMAGE_TYPES')) : ['jpg','jpeg','png','webp'])));
@@ -1663,6 +1664,9 @@ function media_role_alias(string $role): string {
         'bride' => 'bride_photo',
         'groom' => 'groom_photo',
         'couple' => 'couple_photo',
+        'video' => 'love_story_video',
+        'love_story_video' => 'love_story_video',
+        'invitation_video' => 'love_story_video',
         'love_story' => 'story',
         'love-story' => 'story',
         'gift' => 'qris_image',
@@ -2028,11 +2032,15 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
     }
     $isImage = in_array($extension, ALLOWED_IMAGE_TYPES, true);
     $isAudio = in_array($extension, ALLOWED_AUDIO_TYPES, true);
+    $isVideo = in_array($extension, ALLOWED_VIDEO_TYPES, true);
     if ($isImage && stripos($mime, 'image/') !== 0) {
         return ['success' => false, 'error' => 'Tipe file bukan gambar.'];
     }
     if ($isAudio && stripos($mime, 'audio/') !== 0 && $mime !== 'application/ogg') {
         return ['success' => false, 'error' => 'Tipe file bukan audio.'];
+    }
+    if ($isVideo && stripos($mime, 'video/') !== 0) {
+        return ['success' => false, 'error' => 'Tipe file bukan video.'];
     }
     if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) {
         return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan.'];
@@ -2159,6 +2167,9 @@ function detect_media_usage(array $config, string $relativePath): array {
         'Hero Background' => $config['media']['background_hero'] ?? '',
         'Open Graph Image' => $config['site']['open_graph_image'] ?? '',
         'Music' => $config['media']['music'] ?? '',
+        'Love Story Video' => $config['media']['love_story_video'] ?? '',
+        'Legacy Video' => $config['media']['video'] ?? '',
+        'Legacy Invitation Video' => $config['media']['invitation_video'] ?? '',
         'QR Gift' => $config['gift']['qris_image'] ?? '',
     ];
     foreach ($checks as $label => $value) {
@@ -2211,6 +2222,7 @@ function list_media_library(array $options = []): array {
         'background' => ['dir' => UPLOADS_BACKGROUND_DIR, 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
         'gallery' => ['dir' => UPLOADS_GALLERY_DIR, 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
         'love_story' => ['dir' => UPLOADS_LOVE_STORY_DIR, 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'video' => ['dir' => UPLOADS_LOVE_STORY_DIR, 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
         'theme_assets' => ['dir' => UPLOADS_THEME_ASSETS_DIR, 'label' => 'Theme Assets', 'allowed' => ALLOWED_IMAGE_TYPES],
         'music' => ['dir' => UPLOADS_MUSIC_DIR, 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
     ];
@@ -2228,7 +2240,8 @@ function list_media_library(array $options = []): array {
             }
             $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
             $isAudio = in_array($ext, ALLOWED_AUDIO_TYPES, true);
-            if (!in_array($ext, $group['allowed'], true) || (!$isAudio && $ext !== 'webp')) {
+            $isVideo = in_array($ext, ALLOWED_VIDEO_TYPES, true);
+            if (!in_array($ext, $group['allowed'], true) || (!$isAudio && !$isVideo && $ext !== 'webp')) {
                 continue;
             }
             $path = relative_path($filePath);
@@ -2236,7 +2249,7 @@ function list_media_library(array $options = []): array {
             if ($search !== '' && stripos($name, $search) === false && stripos($path, $search) === false) {
                 continue;
             }
-            $mediaType = in_array($ext, ALLOWED_AUDIO_TYPES, true) ? 'audio' : 'image';
+            $mediaType = $isAudio ? 'audio' : ($isVideo ? 'video' : 'image');
             if ($typeFilter !== 'all' && $typeFilter !== $mediaType) {
                 continue;
             }
@@ -2266,7 +2279,7 @@ function list_media_library(array $options = []): array {
     }
 
     usort($items, function (array $a, array $b): int {
-        $groupOrder = ['cover' => 1, 'background' => 2, 'gallery' => 3, 'love_story' => 4, 'theme_assets' => 5, 'music' => 6];
+        $groupOrder = ['cover' => 1, 'background' => 2, 'gallery' => 3, 'love_story' => 4, 'video' => 5, 'theme_assets' => 6, 'music' => 7];
         $groupDiff = ($groupOrder[$a['group']] ?? 99) <=> ($groupOrder[$b['group']] ?? 99);
         return $groupDiff !== 0 ? $groupDiff : strcmp($a['name'], $b['name']);
     });
@@ -2323,6 +2336,7 @@ function replace_uploaded_asset(string $relativePath, array $file, ?string $role
     if ($role === null) {
         if (str_contains($basename, 'uploads/gallery/')) $role = 'gallery';
         elseif (str_contains($basename, 'uploads/background/')) $role = 'background';
+        elseif (str_contains($basename, 'uploads/love-story/') && in_array(strtolower(pathinfo($basename, PATHINFO_EXTENSION)), ALLOWED_VIDEO_TYPES, true)) $role = 'love_story_video';
         elseif (str_contains($basename, 'uploads/love-story/')) $role = 'story';
         elseif (str_contains($basename, 'uploads/theme-assets/')) $role = 'theme_asset';
         elseif (str_contains($basename, 'uploads/music/')) $role = 'music';
@@ -2333,9 +2347,11 @@ function replace_uploaded_asset(string $relativePath, array $file, ?string $role
         $parts = explode('/', $basename);
         $preset = $parts[2] ?? null;
     }
-    $isMusic = media_role_alias($role) === 'music';
-    $allowed = $isMusic ? ALLOWED_AUDIO_TYPES : ALLOWED_IMAGE_TYPES;
-    $maxSize = $isMusic ? MAX_MUSIC_UPLOAD_SIZE : MAX_UPLOAD_SIZE;
+    $canonicalRole = media_role_alias($role);
+    $isMusic = $canonicalRole === 'music';
+    $isVideo = $canonicalRole === 'love_story_video';
+    $allowed = $isMusic ? ALLOWED_AUDIO_TYPES : ($isVideo ? ALLOWED_VIDEO_TYPES : ALLOWED_IMAGE_TYPES);
+    $maxSize = $isMusic ? MAX_MUSIC_UPLOAD_SIZE : ($isVideo ? MAX_VIDEO_UPLOAD_SIZE : MAX_UPLOAD_SIZE);
     $result = upload_file($file, $directory, $allowed, $maxSize, $role, $preset);
     if (empty($result['success'])) return ['success' => false, 'error' => $result['error'] ?? 'Gagal memproses file pengganti.'];
     $newPath = relative_path($result['path']);
@@ -2356,7 +2372,7 @@ function replace_media_references(array &$config, string $oldPath, string $newPa
     $replace = static function (&$value) use ($oldPath, $newPath): void {
         if (is_string($value) && media_reference_matches($value, $oldPath)) $value = $newPath;
     };
-    foreach (['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'music', 'background_hero'] as $key) {
+    foreach (['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'music', 'love_story_video', 'video', 'invitation_video', 'background_hero'] as $key) {
         if (isset($config['media'][$key])) $replace($config['media'][$key]);
     }
     foreach (($config['media']['background_sections'] ?? []) as $index => &$value) $replace($value);
@@ -2389,7 +2405,7 @@ function clear_media_references(array &$config, string $oldPath): void {
     $clear = static function (&$value) use ($normalized): void {
         if (media_reference_matches((string)$value, $normalized)) $value = '';
     };
-    foreach (['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'music', 'background_hero'] as $key) {
+    foreach (['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'music', 'love_story_video', 'video', 'invitation_video', 'background_hero'] as $key) {
         if (array_key_exists($key, $config['media'] ?? [])) $clear($config['media'][$key]);
     }
     foreach (($config['media']['background_sections'] ?? []) as $index => $value) {
