@@ -53,6 +53,9 @@ foreach ($markers as $preset => $required) {
     foreach ($required as $marker) {
         if (strpos($html, $marker) === false) throw new RuntimeException("Missing {$marker} in {$preset}");
     }
+    if ($preset === 'pawiwahan' && substr_count($html, 'id="home"') !== 1) {
+        throw new RuntimeException('Pawiwahan must expose one canonical #home anchor');
+    }
     if (isset($greetingSentinels[$preset]) && strpos($html, $greetingSentinels[$preset]) === false) {
         throw new RuntimeException("Configured greeting did not render in {$preset}");
     }
