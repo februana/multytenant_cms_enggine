@@ -36,6 +36,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'comment', 'dom_id' => 'comment', 'label' => 'Comment', 'title' => 'Comment', 'embedded_capabilities' => ['rsvp', 'messages']],
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+                'media_roles' => ['cover', 'bride_photo', 'groom_photo'],
                 'assets' => [
                     'bootstrap@5.3.8', 'fontawesome@7.1.0', 'aos@2.3.4', 'canvas-confetti@1.9.3',
                     'guest.css', 'guest.js', 'common.css', 'animation.css', 'theme-media'
@@ -56,6 +57,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Penutup', 'title' => 'Penutup', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'schedule', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+                'media_roles' => [],
                 'assets' => ['arvo-dancing-script', 'source-ornaments', 'fidelity-adapter.css', 'theme-media'],
             ],
             'yami-buzzy' => [
@@ -79,6 +81,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'closing', 'dom_id' => 'yami-closing', 'label' => 'Terima Kasih', 'title' => 'Terima Kasih', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+                'media_roles' => ['bride_photo', 'groom_photo', 'couple_photo'],
                 'assets' => ['gilroy-font', 'fidelity-adapter.css', 'source-dresscode-icons', 'theme-media'],
             ],
             'rainier' => [
@@ -103,6 +106,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'schedule', 'story', 'rsvp', 'music', 'maps', 'media', 'seo', 'whatsapp'],
+                'media_roles' => [],
                 'assets' => ['cormorant-garamond-outfit', 'invite.css', 'invite-1.js', 'tally-widget-optional'],
             ],
             'parang' => [
@@ -132,6 +136,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'media', 'seo', 'whatsapp'],
+                'media_roles' => ['bride_photo', 'groom_photo'],
                 'assets' => ['libre-caslon-text-manrope', 'material-symbols-outlined', 'style.css', 'script.js', 'theme-media'],
             ],
             'pawiwahan' => [
@@ -162,6 +167,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'welcome', 'dom_id' => 'welcomeModal', 'label' => 'Welcome Modal', 'title' => 'Welcome Modal', 'embedded_capabilities' => ['guest_name', 'music']]
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+                'media_roles' => ['cover', 'bride_photo', 'groom_photo'],
                 'assets' => [
                     'bootstrap@5.0.1', 'bootstrap-icons@1.9.1', 'jquery@3.6.0',
                     'jquery-countdown@2.2.0', 'pawiwahan.css', 'pawiwahan.js', 'theme-media'
@@ -192,6 +198,7 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp', 'media', 'seo', 'whatsapp'],
+                'media_roles' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
                 'assets' => ['fontawesome-kit', 'style.css', 'main.js', 'theme-media'],
             ],
         ];
@@ -219,6 +226,16 @@ if (!function_exists('theme_contract_registry')) {
 
     function theme_contract_admin_capabilities(string $presetKey): array {
         return array_values((array)(theme_contract_for($presetKey)['admin_capabilities'] ?? []));
+    }
+
+    function theme_contract_media_roles(string $presetKey): array {
+        if ($presetKey === 'custom') return ['cover', 'bride_photo', 'groom_photo', 'couple_photo'];
+        $allowed = ['cover', 'bride_photo', 'groom_photo', 'couple_photo'];
+        return array_values(array_intersect($allowed, (array)(theme_contract_for($presetKey)['media_roles'] ?? [])));
+    }
+
+    function theme_contract_has_media_role(string $presetKey, string $role): bool {
+        return in_array($role, theme_contract_media_roles($presetKey), true);
     }
 
     /** Return semantic visual capabilities declared by the preset registry. */

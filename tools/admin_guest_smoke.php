@@ -24,6 +24,16 @@ $forbidden = [
     'archak' => ['music', 'dresscode', 'sections'],
     'dewankl' => ['sections', 'custom_css', 'dresscode', 'cover', 'background'],
 ];
+$expectedMediaRoles = [
+    'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
+    'dewankl' => ['cover', 'bride_photo', 'groom_photo'],
+    'shubh-vivah' => [],
+    'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo'],
+    'rainier' => [],
+    'archak' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
+    'parang' => ['bride_photo', 'groom_photo'],
+    'pawiwahan' => ['cover', 'bride_photo', 'groom_photo'],
+];
 $base = load_config();
 foreach ($expected as $preset => $required) {
     $config = $base;
@@ -32,6 +42,7 @@ foreach ($expected as $preset => $required) {
     $caps = theme_admin_capabilities_for_config($config);
     foreach ($required as $capability) assert_true(in_array($capability, $caps, true), "$preset missing $capability");
     foreach ($forbidden[$preset] ?? [] as $capability) assert_true(!in_array($capability, $caps, true), "$preset exposes forbidden $capability");
+    assert_true(theme_contract_media_roles($preset) === ($expectedMediaRoles[$preset] ?? []), "$preset media role mapping mismatch");
 }
 
 assert_true(theme_contract_global_admin_capabilities() === ['preset_selector', 'guest_links', 'settings', 'backup', 'theme'], 'global admin capability contract changed unexpectedly');
@@ -83,7 +94,12 @@ $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');
 assert_true(is_string($appSource), 'admin guest-link script is unreadable');
 assert_true(!str_contains($appSource, 'return window.location.origin;'), 'guest link script silently falls back to browser origin');
 assert_true(str_contains($appSource, "Konfigurasikan Site URL di Pengaturan terlebih dahulu."), 'guest link missing-origin message is missing');
-assert_true(str_contains($adminSource, "name=\"action\" value=\"save_settings\""), 'settings save action missing');
+assert_true(str_contains($adminSource, 'name="action" value="save_settings"'), 'settings save action missing');
+assert_true(str_contains($adminSource, '$themeMediaRoles ='), 'active media role resolver missing');
+assert_true(str_contains($adminSource, 'if (!empty($themeMediaRoles))'), 'media role panel gate missing');
+assert_true(str_contains($adminSource, "in_array('bride_photo', \$themeMediaRoles, true)"), 'bride photo Admin role gate missing');
+assert_true(str_contains($adminSource, "in_array('groom_photo', \$themeMediaRoles, true)"), 'groom photo Admin role gate missing');
+assert_true(str_contains($adminSource, "in_array('couple_photo', \$themeMediaRoles, true)"), 'couple photo Admin role gate missing');
 $presetPanelMap = ['wedding' => 'wedding', 'parents' => 'parents', 'schedule' => 'schedule', 'sections' => 'sections', 'rsvp' => 'rsvp'];
 foreach ($presetPanelMap as $panel => $capability) {
     assert_true(str_contains($adminSource, "if (\$adminCapabilityEnabled('$capability'))"), "admin preset panel gate missing for $panel");
@@ -108,6 +124,10 @@ assert_true(!str_contains($adminSource, "\$adminCapabilityEnabled('backup')"), '
 assert_true(str_contains($adminSource, 'Site URL belum dikonfigurasi.'), 'missing-origin admin warning is missing');
 assert_true(str_contains($adminSource, 'name="action" value="save_preset"'), 'global preset selector save action missing');
 assert_true(!str_contains($adminSource, "\$adminCapabilityEnabled('preset_selector')"), 'preset selector incorrectly uses theme capability gate');
+$yamiSource = (string)file_get_contents(dirname(__DIR__) . '/themes/yami-buzzy/layout.php');
+assert_true(str_contains($yamiSource, '$bridePhotoUrl'), 'Yami Buzzy bride photo bridge missing');
+assert_true(str_contains($yamiSource, '$groomPhotoUrl'), 'Yami Buzzy groom photo bridge missing');
+assert_true(str_contains($yamiSource, '$couplePhotoPath'), 'Yami Buzzy couple photo fallback missing');
 foreach (theme_builtin_preset_keys() as $presetKey) {
     $presetMeta = theme_registry()[$presetKey] ?? [];
     assert_true(($presetMeta['schema']['opening_greeting']['type'] ?? '') === 'textarea', "$presetKey opening greeting schema missing");

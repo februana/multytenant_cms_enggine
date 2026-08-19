@@ -943,6 +943,7 @@ $themeMeta = get_active_theme_meta($config);
 $themePresentationCaps = theme_presentation_capabilities($config);
 $activePresetKey = resolve_theme_preset_key($config);
 $themeAdminCapabilities = theme_admin_capabilities_for_config($config);
+$themeMediaRoles = function_exists('theme_contract_media_roles') ? theme_contract_media_roles($activePresetKey) : [];
 $globalAdminCapabilities = theme_contract_global_admin_capabilities();
 $globalAdminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $globalAdminCapabilities, true);
 $adminCapabilityEnabled = static fn(string $capability): bool => in_array($capability, $themeAdminCapabilities, true);
@@ -1039,7 +1040,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('media')): ?><a href="#file-manager">Foto, Musik, dan File</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('story')): ?><a href="#love-story">Cerita Cinta</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gallery')): ?><a href="#gallery">Galeri</a><?php endif; ?>
-                        <?php if ($adminCapabilityEnabled('cover')): ?><a href="#cover">Foto Sampul</a><?php endif; ?>
+                        <?php if (!empty($themeMediaRoles)): ?><a href="#cover">Foto Mempelai &amp; Sampul</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('background')): ?><a href="#background">Latar Undangan</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('music')): ?><a href="#music">Musik</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('gift')): ?><a href="#gift">Hadiah</a><?php endif; ?>
@@ -1645,6 +1646,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         </div>
                                         <div style="display:flex;flex-wrap:wrap;gap:8px;">
                                             <a href="/<?php echo escape_html($item['path']); ?>" target="_blank" rel="noopener" class="small-button" style="display:inline-flex;align-items:center;justify-content:center;">Pratinjau</a>
+                                            <?php if (in_array('cover', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1652,6 +1654,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Cover</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if (in_array('groom_photo', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1659,6 +1663,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Mempelai Pria</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if (in_array('bride_photo', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1666,6 +1672,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Mempelai Wanita</button>
                                             </form>
+                                            <?php endif; ?>
+                                            <?php if (in_array('couple_photo', $themeMediaRoles, true)): ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1673,6 +1681,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
                                                 <button type="submit" class="small-button">Jadikan Foto Pasangan</button>
                                             </form>
+                                            <?php endif; ?>
                                             <form method="post" style="display:inline;">
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="set_media_default">
@@ -1904,10 +1913,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($adminCapabilityEnabled('cover')): ?>
+                    <?php if (!empty($themeMediaRoles)): ?>
 
                     <section id="cover" class="card panel-section">
-                        <h2>Cover & Foto</h2>
+                        <h2><?php echo in_array('cover', $themeMediaRoles, true) ? 'Foto Sampul &amp; Mempelai' : 'Foto Mempelai'; ?></h2>
+                        <?php if (in_array('cover', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
                             <h3>Gambar Cover</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
@@ -1939,8 +1949,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
                         </div>
 
+                        <?php endif; ?>
+                        <?php if (in_array('groom_photo', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Mempelai Pria </h3>
+                            <h3>Foto Mempelai Pria</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_groom_photo">
@@ -1970,8 +1982,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
                         </div>
 
+                        <?php endif; ?>
+                        <?php if (in_array('bride_photo', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Mempelai Wanita </h3>
+                            <h3>Foto Mempelai Wanita</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_bride_photo">
@@ -2001,8 +2015,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <?php endif; ?>
                         </div>
 
+                        <?php endif; ?>
+                        <?php if (in_array('couple_photo', $themeMediaRoles, true)): ?>
                         <div style="margin-bottom: 24px;">
-                            <h3>Foto Pasangan </h3>
+                            <h3>Foto Pasangan</h3>
                             <form method="post" enctype="multipart/form-data" style="margin-bottom:16px;">
                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                 <input type="hidden" name="action" value="upload_couple_photo">
@@ -2031,6 +2047,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="image-preview"><img id="couplePreviewImg" alt="Pratinjau foto pasangan" style="display:none;"></div>
                             <?php endif; ?>
                         </div>
+                        <?php endif; ?>
                     </section>
 
                     <?php endif; ?>
