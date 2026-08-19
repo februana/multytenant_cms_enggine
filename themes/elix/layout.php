@@ -44,9 +44,20 @@ $elixBodyFont = (string)($visuals['body_font'] ?? 'Work Sans, sans-serif');
 $elixHeroPath = (string)($visuals['hero_background'] ?? '');
 $elixSourceHeroPath = get_theme_asset_url($presetKey, 'img/prewed1.jpg');
 $elixHeroImage = $elixHeroPath !== '' ? theme_visual_css_url($elixHeroPath) : theme_visual_css_url($elixSourceHeroPath);
+$elixFloraPath = get_theme_asset_url($presetKey, 'img/floraPattern1.png');
+$elixFloraImage = theme_visual_css_url($elixFloraPath);
+$elixFloraStyle = '<style id="cms-elix-flora">:root{--cms-elix-flora-bg:' . $elixFloraImage . '}</style>';
 $elixOverlay = (float)($visuals['hero_overlay'] ?? '0.45');
 $elixCountdownScale = (float)($visuals['countdown_scale'] ?? '0.65');
 $elixVisualStyle = '<style id="cms-elix-visual">:root{--cms-elix-accent:' . $elixAccent . ';--cms-elix-heading:' . $elixHeadingFont . ';--cms-elix-body:' . $elixBodyFont . ';--cms-elix-overlay:' . $elixOverlay . ';--cms-elix-countdown-scale:' . $elixCountdownScale . ';--cms-elix-hero-bg:' . $elixHeroImage . '}body{font-family:var(--cms-elix-body)}.hero h1,.home h2,.home .couple h3,.info h2,.story h2,.gallery h2,.rsvp h2,.gifts h2{font-family:var(--cms-elix-heading)}#hero{display:flex;justify-content:center;align-items:center;text-align:center;box-sizing:border-box}#hero>main{display:flex;flex-direction:column;align-items:center;width:min(100%,56rem);margin:0 auto;text-align:center}#hero>main>h4,#hero>main>h1,#hero>main>p{width:100%;text-align:center}#hero>main>#countdown{width:100%;display:flex;justify-content:center;align-items:center;text-align:center}#hero>main>a{display:inline-block;align-self:center;margin-right:auto;margin-left:auto}.hero,.hero h1,.hero h4,.hero p{color:#fff}.hero::before{background-image:linear-gradient(rgba(0,0,0,var(--cms-elix-overlay)),rgba(0,0,0,var(--cms-elix-overlay))),var(--cms-elix-hero-bg)}.hero a,.home h2,.home .couple h3,.info h2,.story h2,.gallery h2,.rsvp h2,.gifts h2{color:var(--cms-elix-accent)}.simply-countdown-circle{transform:scale(var(--cms-elix-countdown-scale));transform-origin:center}@media(max-width:576px){.hero h1{font-size:clamp(2.15rem,12vw,4rem);line-height:1.05}.hero{padding-top:4rem;padding-bottom:3rem}.hero p{max-width:32rem;margin-left:auto;margin-right:auto}.simply-countdown-circle{gap:.75rem;margin-top:1rem!important;margin-bottom:.75rem!important}.simply-countdown-circle>.simply-section{width:88px;height:88px;padding:.75rem}.simply-countdown-circle .simply-amount{font-size:1.35rem}}</style>';
+$elixNavItems = [
+    ['section' => 'home', 'href' => '#home', 'label' => 'Beranda', 'icon' => 'bi-house-door-fill'],
+    ['section' => 'info', 'href' => '#info', 'label' => 'Informasi', 'icon' => 'bi-info-circle-fill'],
+    ['section' => 'story', 'href' => '#story', 'label' => 'Kisah', 'icon' => 'bi-heart-fill'],
+    ['section' => 'gallery', 'href' => '#gallery', 'label' => 'Galeri', 'icon' => 'bi-images'],
+    ['section' => 'rsvp', 'href' => '#rsvp', 'label' => 'Konfirmasi Kehadiran', 'icon' => 'bi-envelope-fill'],
+    ['section' => 'gifts', 'href' => '#gifts', 'label' => 'Hadiah', 'icon' => 'bi-gift-fill'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -61,7 +72,7 @@ $elixVisualStyle = '<style id="cms-elix-visual">:root{--cms-elix-accent:' . $eli
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Sacramento&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'original-style.css'); ?>" />
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'fidelity-adapter.css'); ?>" />
-    <?php echo $elixVisualStyle; ?>
+    <?php echo $elixVisualStyle . $elixFloraStyle; ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?php echo get_theme_asset_url($presetKey, 'countdown/circle.css'); ?>" />
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
@@ -76,28 +87,27 @@ $elixVisualStyle = '<style id="cms-elix-visual">:root{--cms-elix-accent:' . $eli
         <p class="opening-greeting"><?php echo $openingGreeting; ?></p>
         <p><?php echo $openingText ?: 'Akan melangsungkan resepsi pernikahan dalam:'; ?></p>
         <?php if (!empty($config['schedule']['countdown_target'])): ?><div id="countdown" class="countdown simply-countdown-circle mt-4 mb-4"></div><?php endif; ?>
-        <a href="#home" class="btn mt-4" btn-lg onClick="enableScroll()">Lihat Undangan</a>
+        <a href="#home" class="btn mt-4" btn-lg onClick="enableScroll()"><i class="bi bi-envelope-open-fill me-2" aria-hidden="true"></i><span>Buka Undangan</span></a>
       </main>
     </section>
     <?php endif; ?>
 
-    <nav class="navbar navbar-expand-md bg-transparent sticky-top mynavbar">
+    <div class="elix-transition-shell">
+    <nav class="navbar navbar-expand-md bg-transparent sticky-top mynavbar" aria-label="Navigasi undangan">
       <div class="container">
-        <a class="navbar-brand" href="#home"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></a>
+        <a class="navbar-brand elix-couple-heading" href="#home"><span><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></span></a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Alihkan navigasi"><span class="navbar-toggler-icon"></span></button>
         <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
           <div class="offcanvas-header"><h5 class="offcanvas-title" id="offcanvasNavbarLabel"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Tutup"></button></div>
           <div class="offcanvas-body"><div class="navbar-nav ms-auto">
-            <?php if (theme_section_enabled($config, $presetKey, 'home')): ?><a class="nav-link" href="#home">Beranda</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'info')): ?><a class="nav-link" href="#info">Informasi</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'story')): ?><a class="nav-link" href="#story">Kisah</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'gallery')): ?><a class="nav-link" href="#gallery">Galeri</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'rsvp')): ?><a class="nav-link" href="#rsvp">Konfirmasi Kehadiran</a><?php endif; ?>
-            <?php if (theme_section_enabled($config, $presetKey, 'gifts')): ?><a class="nav-link" href="#gifts">Hadiah</a><?php endif; ?>
+            <?php foreach ($elixNavItems as $navItem): ?>
+              <?php if (theme_section_enabled($config, $presetKey, $navItem['section'])): ?><a class="nav-link" href="<?php echo escape_html($navItem['href']); ?>"><i class="bi <?php echo escape_html($navItem['icon']); ?>" aria-hidden="true"></i><span><?php echo escape_html($navItem['label']); ?></span></a><?php endif; ?>
+            <?php endforeach; ?>
           </div></div>
         </div>
       </div>
     </nav>
+    </div>
 
     <?php if (theme_section_enabled($config, $presetKey, 'home')): ?>
     <section id="home" class="home"><div class="container"><div class="row justify-content-center"><div class="col-md-8 text-center"><h2>Acara Pernikahan</h2><h3><?php echo $akadDate ? escape_html(date('j F Y', strtotime($akadDate))) : ''; ?> di <?php echo $venue; ?></h3><p><?php echo $openingText; ?></p></div><div class="row couple"><div class="col-lg-6"><div class="row"><div class="col-8 text-end"><h3><?php echo $groomName; ?></h3><p><?php echo $quote; ?></p><p>Putra dari <?php echo escape_html($config['parents']['groom_father'] ?? ''); ?><br>dan<br><?php echo escape_html($config['parents']['groom_mother'] ?? ''); ?></p></div><div class="col-4"><img src="<?php echo escape_html(public_path($groomPhoto)); ?>" alt="pengantinPria" class="img-responsive rounded-circle"></div></div></div><span class="heart"><i class="bi bi-heart-fill"></i></span><div class="col-lg-6"><div class="row"><div class="col-4"><img src="<?php echo escape_html(public_path($bridePhoto)); ?>" alt="pengantinWanita" class="img-responsive rounded-circle"></div><div class="col-8"><h3><?php echo $brideName; ?></h3><p><?php echo $quote; ?></p><p>Putri dari <?php echo escape_html($config['parents']['bride_father'] ?? ''); ?><br>dan<br><?php echo escape_html($config['parents']['bride_mother'] ?? ''); ?></p></div></div></div></div></div></div></section>
