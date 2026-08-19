@@ -2248,6 +2248,41 @@ function replace_media_references(array &$config, string $oldPath, string $newPa
     unset($options);
 }
 
+function clear_media_references(array &$config, string $oldPath): void {
+    $normalized = normalize_media_relative_path($oldPath);
+    if ($normalized === null) return;
+    $clear = static function (&$value) use ($normalized): void {
+        if (media_reference_matches((string)$value, $normalized)) $value = '';
+    };
+    foreach (['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'music', 'background_hero'] as $key) {
+        if (array_key_exists($key, $config['media'] ?? [])) $clear($config['media'][$key]);
+    }
+    foreach (($config['media']['background_sections'] ?? []) as $index => $value) {
+        if (media_reference_matches((string)$value, $normalized)) $config['media']['background_sections'][$index] = '';
+    }
+    $clear($config['gift']['qris_image']);
+    $clear($config['site']['open_graph_image']);
+    if (media_reference_matches((string)($config['gallery']['cover'] ?? ''), $normalized)) $config['gallery']['cover'] = '';
+    if (isset($config['gallery']['items']) && is_array($config['gallery']['items'])) {
+        $config['gallery']['items'] = array_values(array_filter($config['gallery']['items'], static fn($item): bool => is_array($item) && !media_reference_matches((string)($item['filename'] ?? ''), $normalized)));
+    }
+    if (isset($config['love_story']['items']) && is_array($config['love_story']['items'])) {
+        foreach ($config['love_story']['items'] as $index => $item) {
+            if (media_reference_matches((string)($item['image'] ?? ''), $normalized)) $config['love_story']['items'][$index]['image'] = '';
+        }
+    }
+    foreach (($config['theme_visuals'] ?? []) as $presetKey => $visualOverrides) {
+        foreach ((array)$visualOverrides as $visualKey => $visualValue) {
+            if (media_reference_matches((string)$visualValue, $normalized)) $config['theme_visuals'][$presetKey][$visualKey] = '';
+        }
+    }
+    foreach (($config['theme_options'] ?? []) as $presetKey => $options) {
+        foreach ((array)$options as $optionKey => $optionValue) {
+            if (media_reference_matches((string)$optionValue, $normalized)) $config['theme_options'][$presetKey][$optionKey] = '';
+        }
+    }
+}
+
 function cleanup_replaced_media(string $oldPath, array $config): bool {
     $normalized = normalize_media_relative_path($oldPath);
     if ($normalized === null || !media_path_is_safe_storage($normalized)) return false;

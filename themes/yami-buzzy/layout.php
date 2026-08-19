@@ -42,7 +42,7 @@ $formatDate = static function (string $value): string {
 };
 $eventDateDisplay = $esc($formatDate($eventDate));
 $calendarLink = $esc(build_google_calendar_link($config));
-$heroFallback = 'https://s3.ap-southeast-1.amazonaws.com/tynab.wedding/image/8430.webp';
+$heroFallback = $sourceAsset('assets/pic/source-hero.webp');
 $heroPath = (string)($visuals['hero_background'] ?? '');
 $heroUrl = $mediaUrl($heroPath, $mediaUrl((string)($config['media']['cover'] ?? ''), $heroFallback));
 $heroCss = theme_visual_css_url($heroUrl);

@@ -8,6 +8,7 @@ $error = '';
 $success = '';
 $activeTab = 'dashboard';
 $pendingMediaCleanup = [];
+$pendingMediaDeletion = [];
 $queueMediaCleanup = static function (string $oldPath, string $newPath) use (&$pendingMediaCleanup): void {
     $oldPath = trim($oldPath);
     $newPath = trim($newPath);
@@ -236,15 +237,14 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     break;
                 }
                 $usage = detect_media_usage($config, $mediaPath);
-                if (!empty($usage)) {
-                    $error = 'Asset sedang digunakan di: ' . implode(', ', $usage) . '. Hapus referensi dahulu.';
+                $forceDelete = !empty($_POST['force_delete']);
+                if (!empty($usage) && !$forceDelete) {
+                    $error = 'File masih dipakai di: ' . implode(', ', $usage) . '. Gunakan tombol Lepaskan & Hapus jika Anda memang ingin menghapusnya dari semua bagian.';
                     break;
                 }
-                if (!delete_uploaded_asset($mediaPath)) {
-                    $error = 'Gagal menghapus file media.';
-                    break;
-                }
-                $success = 'File media berhasil dihapus.';
+                if (!empty($usage)) clear_media_references($config, $mediaPath);
+                $pendingMediaDeletion[] = $mediaPath;
+                $success = !empty($usage) ? 'Referensi file dilepas. File akan dihapus setelah pengaturan tersimpan.' : 'File siap dihapus.';
                 break;
             case 'save_wedding':
                 $config['wedding']['bride_name'] = preserve_text_input($_POST['bride_name'] ?? '', $config['wedding']['bride_name']);
@@ -897,7 +897,12 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                     foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) {
                         cleanup_replaced_media($oldMediaPath, $config);
                     }
-                    $success = 'Pengaturan berhasil disimpan.';
+                    foreach ($pendingMediaDeletion as $deletePath) {
+                        if (!delete_uploaded_asset($deletePath)) {
+                            $error = 'Pengaturan tersimpan, tetapi file tidak dapat dihapus. Silakan coba lagi.';
+                        }
+                    }
+                    if ($error === '') $success = 'Pengaturan berhasil disimpan.';
                 }
             }
         }
@@ -1710,7 +1715,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                                                 <input type="hidden" name="action" value="delete_media_file">
                                                 <input type="hidden" name="media_path" value="<?php echo escape_html($item['path']); ?>">
-                                                <button type="submit" class="small-button" style="background:#a14a45;color:white;" <?php echo $item['is_used'] ? 'disabled title="Asset masih digunakan"' : ''; ?>>Hapus</button>
+                                                <?php if ($item['is_used']): ?><button type="submit" name="force_delete" value="1" class="small-button" style="background:#a14a45;color:white;" onclick="return confirm('File ini sedang dipakai di beberapa bagian. Lepaskan semua pemakaian lalu hapus file?');">Lepaskan &amp; Hapus</button><?php else: ?><button type="submit" class="small-button" style="background:#a14a45;color:white;" onclick="return confirm('Hapus file ini secara permanen?');">Hapus</button><?php endif; ?>
                                             </form>
                                         </div>
                                     </div>
