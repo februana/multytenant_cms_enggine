@@ -1,6 +1,6 @@
 # Wedding Invitation CMS
 
-This repository is a PHP/SQLite wedding-invitation CMS with a theme-adapter architecture. It incorporates and adapts six independently authored or user-provided invitation templates; the built-in presets are not presented as original designs of this project.
+This repository is a PHP/SQLite wedding-invitation CMS with a theme-adapter architecture. It incorporates and adapts seven independently authored or user-provided invitation templates; the built-in presets are not presented as original designs of this project.
 
 ## Current architecture
 
@@ -28,14 +28,15 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for ownership boundaries and 
 
 ## Presets
 
-The six built-in presets are:
+The seven built-in presets are:
 
 - **DewanaKL** — original welcome/loading, gallery, video, gift, comment, AOS, and confetti-oriented invitation flow.
-- **Elix** — original hero/story/gallery/RSVP/gifts/audio flow with SimplyCountdown and lightbox support.
 - **Rainier** — original event-oriented `#app` flow with timezone-aware event data, calendar, optional schedule/quotes, RSVP, and footer branding. Rainier does not use AOS.
 - **Archak** — compact original navigation, home, timeline, story, gallery, stay, registry, parting message, footer, parallax, and reveal flow.
 - **Parang** — Javanese-inspired source-adapter flow with preserved ornaments, side navigation, couple, event, story, gallery, gift, maps, RSVP, and music boundaries.
 - **Pawiwahan** — preserved static source flow with Bootstrap carousel, welcome modal, guest resolver, couple, event/countdown, gallery, gift, maps, messages/RSVP, and audio boundaries.
+- **Shubh Vivah** — centered invitation-card flow with floral ornaments, script typography, countdown, gallery, RSVP, and localized Indonesian UI.
+- **Yami Buzzy** — welcome-modal/editorial flow with hero, couple, events, dress code, story, gallery, video, gift, invitation, RSVP, and localized Indonesian UI.
 
 Missing generic CMS functionality in a simple preset is intentional when the original template has no equivalent presentation boundary. Use Custom mode for the complete CMS-native section builder.
 
@@ -114,7 +115,8 @@ Native mode stores mutable files in the document root by default. Docker sets `U
 The CMS integration code is project-specific. The built-in presentation templates are adaptations of the following source repositories:
 
 - [DewanaKL — dewanakl/undangan](https://github.com/dewanakl/undangan)
-- [Elix — elix-stack/wedding-invitation-1](https://github.com/elix-stack/wedding-invitation-1)
+- [Shubh Vivah — vinitshahdeo/wedding-website](https://github.com/vinitshahdeo/wedding-website)
+- [Yami Buzzy — Tynab/Yami-Buzzy](https://github.com/Tynab/Yami-Buzzy)
 - [Rainier — Rainier-PS/Invitation-Template](https://github.com/Rainier-PS/Invitation-Template)
 - [Archak — archakNath/wedding-invitation-website](https://github.com/archakNath/wedding-invitation-website)
 - [Pawiwahan — parta99/pawiwahan](https://github.com/parta99/pawiwahan)

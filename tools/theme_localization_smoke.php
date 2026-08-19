@@ -20,8 +20,11 @@ $expected = [
     'themes/dewankl/layout.php' => [
         'Simpan ke Google Kalender', 'Gulir ke Bawah', 'Hadiah Pernikahan', 'Beranda', 'Memulai aplikasi...',
     ],
-    'themes/elix/layout.php' => [
-        'Beranda', 'Informasi', 'Kisah', 'Galeri', 'Hadiah', 'Hak Cipta Dilindungi.', 'Hari', 'Jam', 'Menit', 'Detik',
+    'themes/shubh-vivah/layout.php' => [
+        'Kami Mengundang Anda', 'Buka Undangan', 'Acara Pernikahan', 'Galeri', 'Konfirmasi Kehadiran', 'Hari', 'Jam', 'Menit', 'Detik',
+    ],
+    'themes/yami-buzzy/layout.php' => [
+        'Selamat datang', 'Buka Undangan', 'Kami Akan Menikah', 'Mempelai', 'Acara Pernikahan', 'Kisah Cinta', 'Galeri', 'Hadiah', 'Buka di Google Maps', 'Terima Kasih',
     ],
     'themes/rainier/layout.php' => [
         'Acara dimulai dalam', 'Tambahkan ke Google Kalender', 'Detail Acara', 'Jadwal', 'Kata-Kata Inspirasi',
@@ -65,7 +68,8 @@ $forbiddenVisibleEnglish = [
 $activeGuestSources = [
     $read('themes/dewankl/layout.php'),
     $read('themes/dewankl/script.js'),
-    $read('themes/elix/layout.php'),
+    $read('themes/shubh-vivah/layout.php'),
+    $read('themes/yami-buzzy/layout.php'),
     $read('themes/rainier/layout.php'),
     $read('themes/rainier/original/invite-1-adapter.js'),
     $read('themes/archak/layout.php'),

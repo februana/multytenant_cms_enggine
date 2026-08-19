@@ -42,7 +42,7 @@ assert_true($exitCode === 0, 'shared runtime directory contract executes success
 foreach (['cover', 'music', 'gallery', 'background', 'love-story', 'theme-assets'] as $directory) {
     assert_true(is_dir($bootstrapRoot . '/uploads/' . $directory), 'runtime directory created: uploads/' . $directory);
 }
-foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
+foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy', 'custom'] as $preset) {
     assert_true(is_dir($bootstrapRoot . '/uploads/theme-assets/' . $preset), 'preset Theme Assets directory created: ' . $preset);
 }
 $requiredBootstrapReferences = [

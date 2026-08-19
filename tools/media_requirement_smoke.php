@@ -35,7 +35,7 @@ function media_requirement_ratio(int $width, int $height): float {
     return $width / max(1, $height);
 }
 
-$presets = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'];
+$presets = ['custom', 'dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'];
 $shapes = [
     'very-large' => [5000, 3000],
     'correct' => [1200, 800],

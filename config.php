@@ -352,10 +352,10 @@ function config_defaults(): array {
                 'welcome_note' => '',
                 'opening_greeting' => 'Assalamualaikum Warahmatullahi Wabarakatuh'
             ],
-            'elix' => [
-                'timeline_style' => 'vertical',
-                'show_countdown_circle' => true,
-                'header_greeting' => '',
+            'shubh-vivah' => [
+                'opening_greeting' => 'Bismillahirrahmanirrahim'
+            ],
+            'yami-buzzy' => [
                 'opening_greeting' => 'Bismillahirrahmanirrahim'
             ],
             'rainier' => [
@@ -382,7 +382,8 @@ function config_defaults(): array {
         ],
         'theme_visuals' => [
             'dewankl' => [],
-            'elix' => [],
+            'shubh-vivah' => [],
+            'yami-buzzy' => [],
             'rainier' => [],
             'archak' => [],
             'parang' => [],
@@ -595,76 +596,76 @@ function theme_registry(): array {
                 'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan lapisan gelap pada latar hero.', 'default' => '0.30', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
             ]
         ],
-        'elix' => [
-            'id' => 'elix',
-            'name' => 'Elix',
-            'label' => 'Elix',
-            'description' => 'Layout modern airy dengan hero yang lebih terbuka, tulisan elegan, dan tata letak kartu yang lebih segar.',
+        'shubh-vivah' => [
+            'id' => 'shubh-vivah',
+            'name' => 'Shubh Vivah',
+            'label' => 'Shubh Vivah',
+            'description' => 'Undangan berbentuk kartu digital yang hangat dengan ornamen dekoratif, tipografi script, dan alur pembuka yang ringkas.',
             'version' => '1.0.0',
-            'author' => 'Elix adaptation',
-            'source' => 'elix-stack/wedding-invitation-1',
-            'license' => 'Unverified external source; adapted in-project without copying source code',
-            'category' => 'airy-modern',
+            'author' => 'Vinit Shahdeo source adaptation',
+            'source' => 'https://github.com/vinitshahdeo/wedding-website',
+            'license' => 'MIT; source adapted to project CMS contract',
+            'category' => 'invitation-card',
             'values' => [
-                'primary_color' => '#d97774',
-                'secondary_color' => '#f4d9c6',
-                'accent_color' => '#a8c7b6',
-                'background_color' => '#f9f5f2',
-                'paper_color' => '#fffefb',
-                'muted_color' => '#6d5b56',
-                'text_color' => '#2b1f1d',
-                'link_color' => '#c26d62',
-                'button_style' => 'rounded',
-                'border_radius' => '22px',
-                'shadow' => '0 18px 42px rgba(81, 58, 50, .12)',
-                'container_width' => '1180px',
-                'section_spacing' => '96px',
-                'heading_font' => 'Georgia, serif',
-                'body_font' => 'Segoe UI, sans-serif',
-                'font_size_base' => '16px'
+                'primary_color' => '#a24747', 'secondary_color' => '#f3d9d0', 'accent_color' => '#a24747',
+                'background_color' => '#fbf0e9', 'paper_color' => '#fffaf5', 'muted_color' => '#85665f',
+                'text_color' => '#392521', 'link_color' => '#a24747', 'button_style' => 'pill',
+                'border_radius' => '0', 'shadow' => '0 24px 80px rgba(92,48,42,.16)', 'container_width' => '1040px',
+                'section_spacing' => '90px', 'heading_font' => 'Dancing Script, cursive', 'body_font' => 'Arvo, Georgia, serif', 'font_size_base' => '16px'
             ],
             'schema' => [
-                'timeline_style' => [
-                    'type' => 'select',
-                    'label' => 'Gaya Timeline',
-                    'description' => 'Pilih tampilan layout untuk bagian cerita cinta.',
-                    'options' => [
-                        'vertical' => 'Vertikal',
-                        'horizontal' => 'Horizontal'
-                    ],
-                    'default' => 'vertical'
-                ],
-                'show_countdown_circle' => [
-                    'type' => 'boolean',
-                    'label' => 'Hitung Mundur Melingkar',
-                    'description' => 'Tampilkan animasi hitung mundur dalam desain lingkaran.',
-                    'default' => true
-                ],
-                'header_greeting' => [
-                    'type' => 'textarea',
-                    'label' => 'Teks Catatan Header',
-                    'description' => 'Pesan ucapan atau catatan tajuk multi-baris di bagian atas.',
-                    'default' => ''
-                ],
-                'opening_greeting' => [
-                    'type' => 'textarea',
-                    'label' => 'Salam Pembuka',
-                    'description' => 'Teks salam pembuka yang tampil di awal preset.',
-                    'default' => 'Bismillahirrahmanirrahim'
-                ]
+                'opening_greeting' => ['type' => 'textarea', 'label' => 'Salam Pembuka', 'description' => 'Teks salam yang tampil pada kartu undangan.', 'default' => 'Bismillahirrahmanirrahim']
             ],
             'capabilities' => [
-                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'parents', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'sections'],
+                'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'maps', 'seo', 'whatsapp', 'rsvp', 'messages', 'guest_name', 'media', 'calendar', 'sections'],
                 'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
             ],
             'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
-'visual_capabilities' => [
-                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen tombol, link, dan detail Elix.', 'default' => '#f14e95'],
-                'heading_font' => ['type' => 'font', 'label' => 'Font Display', 'description' => 'Font display brush untuk nama dan heading pendek.', 'default' => 'Pacifico, cursive', 'options' => ['Pacifico, cursive' => 'Pacifico', 'Georgia, serif' => 'Georgia']],
-                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi readable untuk informasi dan form.', 'default' => 'Work Sans, sans-serif', 'options' => ['Work Sans, sans-serif' => 'Work Sans', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
-                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL. Kosongkan untuk memakai source default.', 'default' => ''],
-                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay pada foto hero Elix.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
-                'countdown_scale' => ['type' => 'range', 'label' => 'Skala Hitung Mundur', 'description' => 'Skala visual countdown tanpa menghapus countdown.', 'default' => '0.65', 'min' => '0.60', 'max' => '1.00', 'step' => '0.05'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna tombol dan aksen kartu Shubh Vivah.', 'default' => '#a24747'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font script untuk identitas pasangan dan heading.', 'default' => 'Dancing Script, cursive', 'options' => ['Dancing Script, cursive' => 'Dancing Script', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi yang terinspirasi dari source template.', 'default' => 'Arvo, Georgia, serif', 'options' => ['Arvo, Georgia, serif' => 'Arvo', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Kartu Undangan', 'description' => 'Pilih media canonical untuk latar kartu; kosongkan untuk memakai artwork source.', 'default' => ''],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Kartu', 'description' => 'Kekuatan lapisan warna pada kartu pembuka.', 'default' => '0.10', 'min' => '0', 'max' => '0.60', 'step' => '0.05'],
+                'ornament_left' => ['type' => 'image', 'label' => 'Ornamen Kiri', 'description' => 'Media canonical opsional untuk ornamen sudut kiri.', 'default' => ''],
+                'ornament_right' => ['type' => 'image', 'label' => 'Ornamen Kanan', 'description' => 'Media canonical opsional untuk ornamen sudut kanan.', 'default' => ''],
+            ]
+        ],
+        'yami-buzzy' => [
+            'id' => 'yami-buzzy',
+            'name' => 'Yami Buzzy',
+            'label' => 'Yami Buzzy',
+            'description' => 'Undangan editorial modern dengan welcome modal, countdown, kisah cinta, galeri, video, hadiah, dan RSVP.',
+            'version' => '1.0.0',
+            'author' => 'Tynab source adaptation',
+            'source' => 'https://github.com/Tynab/Yami-Buzzy',
+            'license' => 'Source repository license; adapted to project CMS contract',
+            'category' => 'editorial-storytelling',
+            'values' => [
+                'primary_color' => '#ad7c69', 'secondary_color' => '#f3e8e2', 'accent_color' => '#ad7c69',
+                'background_color' => '#fffdfb', 'paper_color' => '#ffffff', 'muted_color' => '#82727a',
+                'text_color' => '#343039', 'link_color' => '#ad7c69', 'button_style' => 'square',
+                'border_radius' => '0', 'shadow' => '0 18px 50px rgba(53,38,35,.12)', 'container_width' => '1120px',
+                'section_spacing' => '110px', 'heading_font' => 'Gilroy, Arial, sans-serif', 'body_font' => 'Gilroy, Arial, sans-serif', 'font_size_base' => '16px'
+            ],
+            'schema' => [
+                'opening_greeting' => ['type' => 'textarea', 'label' => 'Salam Pembuka', 'description' => 'Teks salam yang tampil pada welcome modal dan hero.', 'default' => 'Bismillahirrahmanirrahim']
+            ],
+            'capabilities' => [
+                'content' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'seo', 'whatsapp', 'rsvp', 'messages', 'story', 'guest_name', 'media', 'calendar', 'sections'],
+                'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation']
+            ],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'navigation', 'footer', 'spacing', 'animation'],
+            'visual_capabilities' => [
+                'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna aksen tombol, link, dan timeline Yami Buzzy.', 'default' => '#ad7c69'],
+                'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font display untuk judul dan nama pasangan.', 'default' => 'Gilroy, Arial, sans-serif', 'options' => ['Gilroy, Arial, sans-serif' => 'Gilroy', 'Georgia, serif' => 'Georgia']],
+                'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi untuk detail undangan.', 'default' => 'Gilroy, Arial, sans-serif', 'options' => ['Gilroy, Arial, sans-serif' => 'Gilroy', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
+                'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Media canonical untuk latar hero utama.', 'default' => ''],
+                'welcome_background' => ['type' => 'image', 'label' => 'Latar Welcome', 'description' => 'Media canonical untuk welcome modal; kosongkan untuk memakai latar hero.', 'default' => ''],
+                'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Media canonical opsional untuk section Beranda.', 'default' => ''],
+                'section_background_couple' => ['type' => 'image', 'label' => 'Latar Mempelai', 'description' => 'Media canonical opsional untuk section Mempelai.', 'default' => ''],
+                'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Media canonical opsional untuk section Acara.', 'default' => ''],
+                'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay gelap pada latar hero.', 'default' => '0.28', 'min' => '0', 'max' => '0.75', 'step' => '0.05'],
             ]
         ],
         'rainier' => [
@@ -926,7 +927,7 @@ function theme_registry(): array {
 }
 
 function theme_builtin_preset_keys(): array {
-    return ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'];
+    return ['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'];
 }
 
 function theme_presets(): array {

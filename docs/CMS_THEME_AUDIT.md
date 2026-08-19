@@ -5,7 +5,7 @@
 | Preset | Repository | Audited revision | Notes |
 |---|---|---|---|
 | DewanaKL | [dewanakl/undangan](https://github.com/dewanakl/undangan) | `99e7c2d` | Bootstrap 5, Font Awesome, custom guest runtime, AOS attributes, split desktop/mobile composition, wave separators, couple, quote, love story, gallery, RSVP, music |
-| Elix | [elix-stack/wedding-invitation-1](https://github.com/elix-stack/wedding-invitation-1) | `1ac2394` | Cover/introduction, couple, event timeline, circular countdown, gallery, location, gift, RSVP, music, Bootstrap/AOS-oriented presentation |
+| retired preset | [retired-preset-stack/wedding-invitation-1](#retired-preset-source) | `1ac2394` | Cover/introduction, couple, event timeline, circular countdown, gallery, location, gift, RSVP, music, Bootstrap/AOS-oriented presentation |
 | Rainier | [Rainier-PS/Invitation-Template](https://github.com/Rainier-PS/Invitation-Template) | `443a04f` | Demo invitation renderer, event JSON contract, IntersectionObserver animations, RSVP embed, gallery, music control, responsive editorial layout |
 | Custom | Current CMS | Current branch baseline | CMS-native section builder and full capability set remain the source of truth |
 
@@ -39,4 +39,4 @@ The baseline had no PHP CLI installed in the sandbox. PHP 8.3 CLI with SQLite, m
 
 ## Dependency verification
 
-The final built-in layouts keep their own asset loading. DewanaKL and Elix load Bootstrap and AOS alongside their theme CSS/JavaScript, matching their current layout behavior and `data-aos` markup. Rainier loads its own CSS/JavaScript and does not load AOS because the audited source repository uses CSS and `IntersectionObserver`-style animation rather than AOS. Archak remains on its existing theme CSS/JavaScript path as a compatibility preset.
+The final built-in layouts keep their own asset loading. DewanaKL and retired preset load Bootstrap and AOS alongside their theme CSS/JavaScript, matching their current layout behavior and `data-aos` markup. Rainier loads its own CSS/JavaScript and does not load AOS because the audited source repository uses CSS and `IntersectionObserver`-style animation rather than AOS. Archak remains on its existing theme CSS/JavaScript path as a compatibility preset.

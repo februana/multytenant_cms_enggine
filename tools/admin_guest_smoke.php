@@ -12,7 +12,8 @@ function assert_true(bool $condition, string $message): void {
 $expected = [
     'custom' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'sections'],
     'dewankl' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
-    'elix' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'music', 'gift', 'maps', 'rsvp'],
+    'shubh-vivah' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+    'yami-buzzy' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
     'rainier' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'schedule', 'story', 'music', 'maps', 'rsvp'],
     'archak' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'gift', 'maps', 'rsvp'],
     'parang' => ['preset_selector', 'guest_links', 'settings', 'backup', 'theme', 'wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp'],
@@ -43,7 +44,9 @@ assert_true(build_guest_invitation_url('https://example.com', 'Andi & <script>')
 assert_true(build_guest_invitation_url('/', 'Andi') === '/?to=Andi', 'root guest URL failed');
 assert_true(build_guest_invitation_url('javascript:alert(1)', 'Andi') === '', 'unsafe guest URL base accepted');
 assert_true(normalize_guest_name("  Andi\n\t  ") === 'Andi', 'guest whitespace normalization failed');
-assert_true(mb_strlen(normalize_guest_name(str_repeat('A', 200))) === 120, 'guest length limit failed');
+$normalizedLongGuest = normalize_guest_name(str_repeat('A', 200));
+$normalizedLongGuestLength = function_exists('mb_strlen') ? mb_strlen($normalizedLongGuest) : strlen($normalizedLongGuest);
+assert_true($normalizedLongGuestLength === 120, 'guest length limit failed');
 
 $_GET['to'] = 'Budi%20%26%20Sari';
 assert_true(resolve_guest_name($base) === 'Budi%20%26%20Sari', 'query resolver unexpectedly double-decodes or trusts malformed data');
@@ -61,7 +64,7 @@ $before = $preserved;
 foreach (['mode', 'theme_preset'] as $key) unset($before['theme'][$key]);
 $before = json_encode($before, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-$sequence = ['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'];
+$sequence = ['custom', 'dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy', 'custom'];
 foreach ($sequence as $preset) {
     $switched = switch_active_theme_preset_config($preserved, $preset);
     assert_true(is_array($switched), "switch failed for $preset");

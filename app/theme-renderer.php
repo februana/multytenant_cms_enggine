@@ -24,7 +24,7 @@ function resolve_theme_preset_key(array $config): string {
     }
 
     $presetKey = trim((string)($config['theme']['theme_preset'] ?? ''));
-    $allowed = ['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'];
+    $allowed = ['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'];
     if (in_array($presetKey, $allowed, true)) {
         return $presetKey;
     }
@@ -84,8 +84,6 @@ function render_theme_header(array $config, string $presetKey): string {
     $brand = escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']);
 
     switch ($presetKey) {
-        case 'elix':
-            return '<header class="topbar topbar-elix"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#undangan">Undangan</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#acara">Acara</a><a href="#lokasi">Lokasi</a><a href="#rsvp">Konfirmasi Kehadiran</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik otomatis & pemuatan galeri bertahap">📊 Mode Hemat</button></header>';
         case 'rainier':
             return '<header class="topbar topbar-rainier"><div class="brand-wrap"><a class="brand" href="#hero">' . $brand . '</a></div><nav><a href="#undangan">Undangan</a><a href="#acara">Acara</a><a href="#cerita">Cerita</a><a href="#galeri">Galeri</a><a href="#lokasi">Lokasi</a></nav><button type="button" id="dataSaverBtn" class="data-saver-btn" title="Hemat data: matikan musik otomatis & pemuatan galeri bertahap">📊 Mode Hemat</button></header>';
         case 'archak':
@@ -223,8 +221,6 @@ function render_theme_hero_markup(array $config, string $presetKey, string $bgHe
     ];
 
     switch ($presetKey) {
-        case 'elix':
-            return render_elix_hero($config, $shared);
         case 'rainier':
             return render_rainier_hero($config, $shared);
         case 'archak':
@@ -259,23 +255,6 @@ function render_dewankl_hero(array $config, array $shared): string {
     </section>';
 }
 
-function render_elix_hero(array $config, array $shared): string {
-    $musicButton = is_section_enabled($config, 'music') ? '<button class="music-btn" type="button" id="musicBtn">Putar Musik</button>' : '';
-    return '<section id="hero" class="hero hero-elix" ' . $shared['bgHero'] . '>
-      <div class="hero-card hero-card--soft">
-        <p class="eyebrow">Kami Akan Menikah</p>
-        <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
-        <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
-        <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
-        <div class="hero-actions hero-actions--compact">
-          <button type="button" id="openInvitationBtn">Buka Undangan</button>
-          <a class="calendar-btn" href="' . escape_html($shared['calendarLink']) . '" target="_blank" rel="noreferrer noopener">Tambah ke Kalender</a>
-          <a class="whatsapp-btn" href="' . escape_html($shared['whatsappLink']) . '" target="_blank" rel="noopener noreferrer">Hubungi WA</a>
-        </div>
-        ' . $musicButton . '
-      </div>
-    </section>';
-}
 
 function render_rainier_hero(array $config, array $shared): string {
     $musicButton = is_section_enabled($config, 'music') ? '<button class="music-btn" type="button" id="musicBtn">Putar Musik</button>' : '';

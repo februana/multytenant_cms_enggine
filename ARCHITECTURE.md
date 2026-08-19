@@ -31,9 +31,12 @@ The canonical setting is `theme.theme_preset`.
 Supported official presets:
 
 - `dewankl`
-- `elix`
 - `rainier`
 - `archak`
+- `parang`
+- `pawiwahan`
+- `shubh-vivah`
+- `yami-buzzy`
 
 Unknown preset values fall back safely to `dewankl`. `custom` remains a separate renderer mode where supported by the existing configuration contract.
 

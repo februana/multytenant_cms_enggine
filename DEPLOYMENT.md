@@ -85,11 +85,12 @@ Theme presets live in the repository under:
 
 ```text
 /themes/dewankl/
-/themes/elix/
 /themes/rainier/
 /themes/archak/
 /themes/parang/
 /themes/pawiwahan/
+/themes/shubh-vivah/
+/themes/yami-buzzy/
 ```
 
 `deploy/install.sh` and `deploy/update.sh` synchronize the `themes/` directory and `deploy/runtime-directories.sh` as application source. Runtime data remains protected separately. `deploy/install.sh`, `deploy/update.sh`, and `docker/entrypoint.sh` use the shared directory contract so missing Theme Assets folders are recreated without replacing user media.

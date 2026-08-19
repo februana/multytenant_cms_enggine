@@ -17,11 +17,12 @@ The canonical Theme Assets paths are defined by `deploy/runtime-directories.sh` 
 
 ```text
 uploads/theme-assets/dewankl/
-uploads/theme-assets/elix/
 uploads/theme-assets/rainier/
 uploads/theme-assets/archak/
 uploads/theme-assets/parang/
 uploads/theme-assets/pawiwahan/
+uploads/theme-assets/shubh-vivah/
+uploads/theme-assets/yami-buzzy/
 uploads/theme-assets/custom/
 ```
 

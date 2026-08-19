@@ -35,7 +35,7 @@ $assert = static function (bool $condition, string $message): void {
     if (!$condition) throw new RuntimeException('FAIL: ' . $message);
 };
 
-foreach (['custom', 'dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan'] as $preset) {
+foreach (['custom', 'dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'] as $preset) {
     $config = $base;
     $config['theme']['mode'] = $preset === 'custom' ? 'custom' : 'preset';
     $config['theme']['theme_preset'] = $preset;

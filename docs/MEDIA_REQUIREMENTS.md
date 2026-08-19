@@ -20,10 +20,10 @@ These policies apply to Custom mode and to built-in presets unless a source-back
 | `generic` | max 2400 | max 1600 | preserve | No | No | Safe bounded default for otherwise unclassified raster media. |
 | `cover` | max 1600 | max 1200 | preserve | No | No | Built-in renderers use CSS crop/frame behavior rather than one universal upload canvas. |
 | `background` | max 2400 | max 1600 | preserve | No | No | Full-viewport/background surfaces differ by source and use CSS `cover`/fill behavior. |
-| `bride_photo` | max 1600 | max 1600 | preserve | No | No | Couple frames crop at presentation time in DewanaKL, Elix, Archak, Parang, and Pawiwahan. |
+| `bride_photo` | max 1600 | max 1600 | preserve | No | No | Couple frames crop at presentation time in DewanaKL, retired preset, Archak, Parang, and Pawiwahan. |
 | `groom_photo` | max 1600 | max 1600 | preserve | No | No | Same source-backed circular/square frame behavior as bride photos. |
 | `couple_photo` | max 1800 | max 1200 | preserve | No | No | Used by source adapters as a bounded couple/hero image without a universal canvas. |
-| `gallery` | max 1600 | max 1200 | preserve | No | No | Natural gallery images in DewanaKL, Elix, Rainier, and Pawiwahan; legacy ownership remains explicit. |
+| `gallery` | max 1600 | max 1200 | preserve | No | No | Natural gallery images in DewanaKL, retired preset, Rainier, and Pawiwahan; legacy ownership remains explicit. |
 | `story` | max 1200 | max 900 | preserve | No | No | Story/timeline media remains bounded and ratio-preserving. |
 | `qris_image` | max 1200 | max 1200 | preserve | No | No | QR/gift images must remain readable without distortion. |
 | `og_image` | 1200 | 630 | cover | Yes | Yes | Open Graph requires the standard exact 1200×630 canvas. |
@@ -46,7 +46,7 @@ Only source-backed differences are declared. There are no empty override arrays.
 | Preset | Hero/background presentation | Couple presentation | Gallery presentation | Requirement result |
 |---|---|---|---|---|
 | DewanaKL | Full container image with CSS `object-fit: cover` and gradient mask. | Fixed 13rem circular `object-fit: cover` frame. | Bootstrap carousel with natural `img-fluid` images. | Only `cover` receives a square maximum override; background/gallery remain global bounded preserve. |
-| Elix | Full-height hero section with source hero/background assets and CSS presentation. | Source couple assets are 400×400 square images; visual framing remains in CSS. | Mixed landscape/portrait natural thumbnails in responsive Bootstrap grid. | All roles remain global preserve/maximum policies. |
+| retired preset | Full-height hero section with source hero/background assets and CSS presentation. | Source couple assets are 400×400 square images; visual framing remains in CSS. | Mixed landscape/portrait natural thumbnails in responsive Bootstrap grid. | All roles remain global preserve/maximum policies. |
 | Rainier | `min-height:100vh` hero with absolute full-surface background and dynamic source image set. | No universal fixed couple-photo upload boundary. | No gallery capability in the source contract. | Global bounded preserve policy. |
 | Archak | Background-image cover surfaces and responsive full/half viewport registry frame. | 280×280 circular `object-fit:cover` frame in the current adapter. | Fixed-height 300px masonry images with `object-fit:cover`. | Global bounded preserve; CSS owns final crop to retain source flexibility. |
 | Parang | Repeating decorative background pattern; photographic overrides are still CSS background surfaces. | 12rem circular `object-fit:cover` portraits. | Fixed 1:1 gallery cards with `object-fit:cover`. | Gallery receives the 1:1 cover override; decorative Theme Assets stay preserve/alpha-safe. |
@@ -66,7 +66,7 @@ The requirement catalog is in `config.php` (`media_requirements()` and `media_re
 ## Sources
 
 1. [DewanaKL source repository](https://github.com/dewanakl/undangan)
-2. [Elix source repository](https://github.com/elix-stack/wedding-invitation-1)
+2. [retired preset source repository](#retired-preset-source)
 3. [Rainier source repository](https://github.com/Rainier-PS/Invitation-Template)
 4. [Archak source repository](https://github.com/archakNath/wedding-invitation-website)
 5. [Pawiwahan source repository](https://github.com/parta99/pawiwahan)

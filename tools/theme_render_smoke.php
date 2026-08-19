@@ -24,7 +24,8 @@ $shared = [
 $markers = [
     'custom' => ['hero', 'rsvp'],
     'dewankl' => ['id="home"', 'data-bs-spy="scroll"'],
-    'elix' => ['id="hero"', 'offcanvas'],
+    'shubh-vivah' => ['id="shubh-home"', 'Buka Undangan', 'id="shubh-countdown"'],
+    'yami-buzzy' => ['id="yami-home"', 'id="yami-welcome-modal"', 'Buka Undangan'],
     'rainier' => ['id="app"', 'id="event-title"', 'id="schedule-section"'],
     'archak' => ['id="story"', 'id="registry"', 'id="home-img-lg"'],
     'parang' => ['id="cms-parang-root"', 'id="beranda"', 'parang-bg'],
@@ -33,7 +34,8 @@ $markers = [
 
 $greetingSentinels = [
     'dewankl' => 'Salam Dewankl',
-    'elix' => 'Salam Elix',
+    'shubh-vivah' => 'Salam Shubh Vivah',
+    'yami-buzzy' => 'Salam Yami Buzzy',
     'rainier' => 'Salam Rainier',
     'archak' => 'Salam Archak',
     'parang' => 'Salam Parang',

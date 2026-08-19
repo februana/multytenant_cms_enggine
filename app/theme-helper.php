@@ -42,7 +42,8 @@ function preserve_text_input($value, string $fallback = ''): string {
 function theme_opening_greeting(array $config, string $presetKey): string {
     $defaults = [
         'dewankl' => 'Assalamualaikum Warahmatullahi Wabarakatuh',
-        'elix' => 'Bismillahirrahmanirrahim',
+        'shubh-vivah' => 'Bismillahirrahmanirrahim',
+        'yami-buzzy' => 'Bismillahirrahmanirrahim',
         'rainier' => 'Bismillahirrahmanirrahim',
         'archak' => 'Bismillahirrahmanirrahim',
         'parang' => 'Bismillahirrahmanirrahim',
@@ -345,7 +346,8 @@ function finalize_theme_output(string $html, array $config): string {
     };
   };
   const visualMap = {
-    elix: {accent_color: '--cms-elix-accent', heading_font: '--cms-elix-heading', body_font: '--cms-elix-body', hero_overlay: '--cms-elix-overlay', countdown_scale: '--cms-elix-countdown-scale', hero_background: '--cms-elix-hero-bg'},
+    'shubh-vivah': {accent_color: '--shubh-accent', heading_font: '--shubh-heading', body_font: '--shubh-body', hero_overlay: '--shubh-overlay', hero_background: '--shubh-hero-bg', ornament_left: '--shubh-left', ornament_right: '--shubh-right'},
+    'yami-buzzy': {accent_color: '--yami-accent', heading_font: '--yami-heading', body_font: '--yami-body', hero_overlay: '--yami-overlay', hero_background: '--yami-hero-bg', welcome_background: '--yami-welcome-bg', section_background_home: '--yami-hero-bg', section_background_couple: '--yami-couple-bg', section_background_event: '--yami-event-bg'},
     rainier: {accent_color: '--primary', heading_font: '--font-heading', body_font: '--font-body', glass_opacity: '--cms-rainier-glass-opacity'},
     archak: {accent_color: '--cms-archak-accent', heading_font: '--cms-archak-heading', body_font: '--cms-archak-body', hero_title_scale: '--cms-archak-title-scale', hero_background: '--cms-archak-hero-bg'},
     parang: {accent_color: '--parang-gold', heading_font: '--parang-heading', body_font: '--parang-body', hero_background: '--cms-parang-bg'},
@@ -360,8 +362,9 @@ function finalize_theme_output(string $html, array $config): string {
     Object.keys(mapping).forEach(function (key) {
       if (values[key] === undefined || values[key] === '') return;
       let value = values[key];
-      if (key === 'hero_background' && !/^https?:\\/\\//i.test(value) && value.charAt(0) !== '/') value = '/' + value;
-      if (key === 'hero_background') value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
+      const imageKeys = ['hero_background', 'welcome_background', 'section_background_home', 'section_background_couple', 'section_background_event', 'ornament_left', 'ornament_right'];
+      if (imageKeys.indexOf(key) !== -1 && !/^https?:\\/\\//i.test(value) && value.charAt(0) !== '/') value = '/' + value;
+      if (imageKeys.indexOf(key) !== -1) value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
       document.documentElement.style.setProperty(mapping[key], value);
     });
     if (preset === 'rainier' && values.glass_opacity !== undefined) {

@@ -40,33 +40,23 @@ Where a source uses the MIT License, redistribution of substantial portions requ
 
 **Intentional limitations:** The source template owns the DOM order and UX. CMS capabilities that have no original DewanaKL presentation boundary are not forced into this preset. Cover, music, and video are optional user-provided media; absent files suppress or neutralize the corresponding behavior.
 
-## Elix
+## Shubh Vivah
 
 **Original project:** Wedding invitation website.  
-**Original author/creator:** The repository is published under the `elix-stack` organization; the source commit author is `elix-stack` / Muhammad Ali Yusufgi.  
-**Repository:** [elix-stack/wedding-invitation-1][2]  
-**Exact source revision used:** `1ac23948c42febb1150d4ddf6d10a39211471448`  
-**License:** MIT License. The exact LICENSE file contains the copyright line `Copyright (c) 2025 [Your Name]`.  
-**License status:** MIT terms are clearly present; the copyright-holder text is a placeholder in the source LICENSE and therefore requires manual rights-holder review before any legal redistribution decision.  
-**Attribution requirements:** Preserve the MIT notice and permission text. Do not replace the source LICENSE's placeholder with an invented person or organization. The exact source notice is retained at [`docs/licenses/ELIX-LICENSE.txt`](licenses/ELIX-LICENSE.txt).
+**Original author/creator:** Vinit Shahdeo.
+**Repository:** [vinitshahdeo/wedding-website][5]
+**Source revision audited:** `f42fbe6`.
+**License:** MIT as declared by the source repository.
+**Current integration:** `themes/shubh-vivah/layout.php` and `themes/shubh-vivah/fidelity-adapter.css` retain the source invitation-card atmosphere, floral ornaments, script typography, compact countdown, event, gallery, and RSVP flow while binding CMS data, canonical media, guest identity, calendar, maps, and backend RSVP. Source artwork is bundled locally under `themes/shubh-vivah/assets/`.
 
-**Original characteristics.** Elix is a responsive HTML/CSS/JavaScript invitation with the original `#hero`, `#home`, `#info`, `#story`, `#gallery`, `#rsvp`, `#gifts`, `#audio-container`, navbar, countdown, lightbox, and footer/Design by flow. The source README describes its story timeline, event details, RSVP, responsive behavior, and Google Sheets-inspired integration.
+## Yami Buzzy
 
-**Representative original source files used for provenance:**
-
-- `index.html` — original DOM, IDs, section order, dependency declarations, and inline lifecycle.
-- `style.css` — original visual design and selectors.
-- `countdown/circle.css` — original countdown presentation.
-- `countdown/simplyCountdown.umd.js` — bundled countdown dependency shipped by the source.
-- `img/*` and `audio/cintaVina.mp3` — source demo media references only; not copied as clean-install defaults.
-
-**Current integration.** The adapter is `themes/elix/layout.php` with `themes/elix/script.js`, `themes/elix/original-style.css`, `themes/elix/countdown/circle.css`, and `themes/elix/countdown/simplyCountdown.umd.js`. The PHP layout retains the original section IDs and structure while replacing hardcoded couple/event data with CMS values and replacing the source RSVP transport with the CMS backend. RSVP response parsing and audio autoplay fallback are project-specific safety additions; the original layout and dependency posture remain the source boundary.
-
-**CMS capabilities consumed:** wedding names/dates/location, story, gallery, RSVP, gift data, optional music, guest identity, calendar metadata, SEO, and relevant preset section visibility.
-
-**Important dependencies:** Bootstrap 5.3.5, Pacifico/Sacramento/Work Sans fonts, Bootstrap Icons 1.11.3, SimplyCountdown, countdown circle CSS, and bs5-lightbox 1.8.5. These are documented from the source `index.html`; no AOS dependency is added to Elix by this finalization task.
-
-**Intentional limitations:** The original Elix presentation does not expose every CMS capability. Unsupported CMS controls remain unavailable when Elix is active; Custom is the full CMS-native alternative.
+**Original project:** Yami Buzzy wedding invitation template.
+**Original author/creator:** Tynab.
+**Repository:** [Tynab/Yami-Buzzy][6]
+**Source revision audited:** `367f5a5`.
+**License:** Source repository license retained as the provenance boundary; project-specific CMS integration is isolated in the adapter.
+**Current integration:** `themes/yami-buzzy/layout.php` and `themes/yami-buzzy/fidelity-adapter.css` retain the welcome modal, full-bleed hero, couple/event cards, dress-code timeline, story, gallery, video, gift, invitation/location, RSVP, closing, and mobile navigation flow while binding CMS data and canonical media. Visible application UI is localized to Bahasa Indonesia.
 
 ## Rainier
 
@@ -172,7 +162,8 @@ The integration layer adds CMS data mapping and safety behavior; it does not cla
 ## References
 
 [1]: https://github.com/dewanakl/undangan "DewanaKL undangan source repository"
-[2]: https://github.com/elix-stack/wedding-invitation-1 "Elix wedding invitation source repository"
-[3]: https://github.com/Rainier-PS/Invitation-Template "Rainier Invitation Template source repository"
-[4]: https://github.com/archakNath/wedding-invitation-website "Archak wedding invitation source repository"
-[5]: https://github.com/parta99/pawiwahan "Pawiwahan source repository"
+[2]: https://github.com/Rainier-PS/Invitation-Template "Rainier Invitation Template source repository"
+[3]: https://github.com/archakNath/wedding-invitation-website "Archak wedding invitation source repository"
+[4]: https://github.com/parta99/pawiwahan "Pawiwahan source repository"
+[5]: https://github.com/vinitshahdeo/wedding-website "Shubh Vivah source repository"
+[6]: https://github.com/Tynab/Yami-Buzzy "Yami Buzzy source repository"

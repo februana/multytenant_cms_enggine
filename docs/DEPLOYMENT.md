@@ -49,7 +49,7 @@ docker compose up -d
 
 The container uses PHP 8.3 Apache and installs only the application runtime requirements: GD with JPEG/WebP support, mbstring, PDO SQLite, SQLite3, ZipArchive, and the Composer QR-code dependency. Apache rewrite, headers, and expires modules are enabled. Uploaded files are limited by the application configuration and Apache upload settings.
 
-The entrypoint sources `deploy/runtime-directories.sh` and creates the complete upload contract, including `uploads/theme-assets/` and preset directories for DewanaKL, Elix, Rainier, Archak, Parang, Pawiwahan, and Custom. It also creates `/var/data/database.sqlite`, `/var/data/config.json`, `/var/data/guest-links.json`, `/var/data/event.ics`, and `/var/data/custom.css` when they do not exist. It preserves existing runtime data on later starts and applies owner/group permissions for `www-data`.
+The entrypoint sources `deploy/runtime-directories.sh` and creates the complete upload contract, including `uploads/theme-assets/` and preset directories for DewanaKL, retired preset, Rainier, Archak, Parang, Pawiwahan, and Custom. It also creates `/var/data/database.sqlite`, `/var/data/config.json`, `/var/data/guest-links.json`, `/var/data/event.ics`, and `/var/data/custom.css` when they do not exist. It preserves existing runtime data on later starts and applies owner/group permissions for `www-data`.
 
 ### Access and health check
 

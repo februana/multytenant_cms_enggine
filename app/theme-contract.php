@@ -41,33 +41,45 @@ if (!function_exists('theme_contract_registry')) {
                     'guest.css', 'guest.js', 'common.css', 'animation.css', 'theme-media'
                 ],
             ],
-            'elix' => [
-                'id' => 'elix',
-                'label' => 'Elix',
-                'source' => 'https://github.com/elix-stack/wedding-invitation-1',
-                'source_revision' => '1ac2394',
-                'data_capabilities' => [
-                    'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
-                    'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media',
-                    'seo', 'whatsapp', 'calendar'
-                ],
-                'presentation_capabilities' => [
-                    'hero_cover', 'offcanvas_navigation', 'countdown_circle',
-                    'timeline', 'gallery_lightbox', 'disqus_comments', 'gifts', 'audio_player'
-                ],
+            'shubh-vivah' => [
+                'id' => 'shubh-vivah',
+                'label' => 'Shubh Vivah',
+                'source' => 'https://github.com/vinitshahdeo/wedding-website',
+                'source_revision' => 'f42fbe6',
+                'data_capabilities' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar'],
+                'presentation_capabilities' => ['invitation_card', 'ornamental_corners', 'script_typography', 'countdown', 'gallery_grid', 'audio_control'],
                 'sections' => [
-                    ['id' => 'hero', 'dom_id' => 'hero', 'label' => 'Hero', 'title' => 'Hero', 'embedded_capabilities' => ['guest_name', 'countdown']],
-                    ['id' => 'info', 'dom_id' => 'info', 'label' => 'Info', 'title' => 'Info', 'embedded_capabilities' => ['schedule', 'maps']],
-                    ['id' => 'story', 'dom_id' => 'story', 'label' => 'Story', 'title' => 'Story', 'embedded_capabilities' => ['story']],
-                    ['id' => 'gallery', 'dom_id' => 'gallery', 'label' => 'Gallery', 'title' => 'Gallery', 'embedded_capabilities' => ['gallery']],
-                    ['id' => 'rsvp', 'dom_id' => 'rsvp', 'label' => 'RSVP', 'title' => 'RSVP', 'embedded_capabilities' => ['rsvp', 'messages']],
-                    ['id' => 'gifts', 'dom_id' => 'gifts', 'label' => 'Gifts', 'title' => 'Gifts', 'embedded_capabilities' => ['gift']],
+                    ['id' => 'home', 'dom_id' => 'shubh-home', 'label' => 'Beranda', 'title' => 'Beranda', 'embedded_capabilities' => ['wedding', 'guest_name', 'countdown']],
+                    ['id' => 'event', 'dom_id' => 'shubh-event', 'label' => 'Acara', 'title' => 'Acara Pernikahan', 'embedded_capabilities' => ['schedule', 'maps', 'calendar']],
+                    ['id' => 'gallery', 'dom_id' => 'shubh-gallery', 'label' => 'Galeri', 'title' => 'Galeri', 'embedded_capabilities' => ['gallery']],
+                    ['id' => 'rsvp', 'dom_id' => 'shubh-rsvp', 'label' => 'Konfirmasi Kehadiran', 'title' => 'Konfirmasi Kehadiran', 'embedded_capabilities' => ['rsvp', 'messages']],
+                    ['id' => 'footer', 'dom_id' => null, 'label' => 'Penutup', 'title' => 'Penutup', 'embedded_capabilities' => ['seo']],
+                ],
+                'admin_capabilities' => ['wedding', 'schedule', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
+                'assets' => ['arvo-dancing-script', 'source-ornaments', 'fidelity-adapter.css', 'theme-media'],
+            ],
+            'yami-buzzy' => [
+                'id' => 'yami-buzzy',
+                'label' => 'Yami Buzzy',
+                'source' => 'https://github.com/Tynab/Yami-Buzzy',
+                'source_revision' => '367f5a5',
+                'data_capabilities' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar'],
+                'presentation_capabilities' => ['welcome_modal', 'hero_countdown', 'couple_cards', 'dresscode_timeline', 'love_story_timeline', 'gallery_grid', 'video_panel', 'gift_card', 'mobile_navigation', 'audio_control'],
+                'sections' => [
+                    ['id' => 'home', 'dom_id' => 'yami-home', 'label' => 'Beranda', 'title' => 'Beranda', 'embedded_capabilities' => ['wedding', 'guest_name', 'countdown', 'calendar']],
+                    ['id' => 'couple', 'dom_id' => 'yami-couple', 'label' => 'Mempelai', 'title' => 'Mempelai', 'embedded_capabilities' => ['parents', 'media']],
+                    ['id' => 'event', 'dom_id' => 'yami-event', 'label' => 'Acara', 'title' => 'Acara Pernikahan', 'embedded_capabilities' => ['schedule', 'countdown', 'maps', 'calendar']],
+                    ['id' => 'dresscode', 'dom_id' => 'yami-dresscode', 'label' => 'Dress Code', 'title' => 'Dress Code', 'embedded_capabilities' => []],
+                    ['id' => 'story', 'dom_id' => 'yami-story', 'label' => 'Kisah Kami', 'title' => 'Kisah Cinta', 'embedded_capabilities' => ['story']],
+                    ['id' => 'gallery', 'dom_id' => 'yami-gallery', 'label' => 'Galeri', 'title' => 'Galeri', 'embedded_capabilities' => ['gallery']],
+                    ['id' => 'video', 'dom_id' => 'yami-video', 'label' => 'Video', 'title' => 'Video', 'embedded_capabilities' => ['media']],
+                    ['id' => 'gift', 'dom_id' => 'yami-gift', 'label' => 'Hadiah', 'title' => 'Hadiah', 'embedded_capabilities' => ['gift']],
+                    ['id' => 'invitation', 'dom_id' => 'yami-invitation', 'label' => 'Undangan', 'title' => 'Lokasi Acara', 'embedded_capabilities' => ['maps', 'schedule']],
+                    ['id' => 'rsvp', 'dom_id' => 'yami-rsvp', 'label' => 'RSVP', 'title' => 'RSVP', 'embedded_capabilities' => ['rsvp', 'messages']],
+                    ['id' => 'closing', 'dom_id' => 'yami-closing', 'label' => 'Terima Kasih', 'title' => 'Terima Kasih', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'parents', 'schedule', 'gallery', 'story', 'music', 'gift', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
-                'assets' => [
-                    'bootstrap@5.3.5', 'bootstrap-icons@1.11.3', 'pacifico-sacramento-work-sans',
-                    'simply-countdown', 'countdown/circle.css', 'bs5-lightbox', 'theme-media'
-                ],
+                'assets' => ['gilroy-font', 'fidelity-adapter.css', 'source-dresscode-icons', 'theme-media'],
             ],
             'rainier' => [
                 'id' => 'rainier',
@@ -272,7 +284,6 @@ if (!function_exists('theme_contract_registry')) {
         $stored = $config['theme_sections'][$presetKey] ?? null;
         $legacyMap = [
             'dewankl' => ['hero' => 'home', 'story' => 'love_story', 'gift' => 'love_gift', 'location' => 'wedding_date', 'wishes' => 'comment'],
-            'elix' => ['couple' => 'home', 'event' => 'info', 'timeline' => 'story', 'location' => 'info', 'gift' => 'gifts', 'wishes' => 'rsvp'],
             'rainier' => ['couple' => 'event_details', 'event' => 'event_details', 'countdown' => 'hero', 'story' => 'quotes', 'location' => 'event_details', 'wishes' => 'rsvp'],
             'archak' => ['event' => 'timeline', 'story' => 'story', 'gift' => 'registry', 'location' => 'stay'],
         ][$presetKey] ?? [];

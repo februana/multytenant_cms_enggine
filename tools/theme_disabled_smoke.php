@@ -25,10 +25,12 @@ $cases = [
     ['preset' => 'dewankl', 'section' => 'gallery', 'marker' => 'id="gallery"'],
     ['preset' => 'dewankl', 'section' => 'wedding_date', 'marker' => 'id="wedding-date"'],
     ['preset' => 'dewankl', 'section' => 'comment', 'marker' => 'id="comment"'],
-    ['preset' => 'elix', 'section' => 'gallery', 'marker' => '<section id="gallery"'],
-    ['preset' => 'elix', 'section' => 'story', 'marker' => '<section id="story"'],
-    ['preset' => 'elix', 'section' => 'rsvp', 'marker' => '<section id="rsvp"'],
-    ['preset' => 'elix', 'section' => 'gifts', 'marker' => '<section id="gifts"'],
+
+
+
+    ['preset' => 'shubh-vivah', 'section' => 'gallery', 'marker' => 'id="shubh-gallery"'],
+    ['preset' => 'yami-buzzy', 'section' => 'story', 'marker' => 'id="yami-story"'],
+    ['preset' => 'yami-buzzy', 'section' => 'video', 'marker' => 'id="yami-video"'],
     ['preset' => 'rainier', 'section' => 'schedule', 'marker' => 'id="schedule-section"'],
     ['preset' => 'rainier', 'section' => 'quotes', 'marker' => 'id="quotes-section"'],
     ['preset' => 'rainier', 'section' => 'rsvp', 'marker' => 'id="rsvp"'],

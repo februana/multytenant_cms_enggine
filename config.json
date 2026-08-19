@@ -252,10 +252,11 @@
             "enable_mouse_animation": true,
             "welcome_note": ""
         },
-        "elix": {
-            "timeline_style": "vertical",
-            "show_countdown_circle": true,
-            "header_greeting": ""
+        "shubh-vivah": {
+            "opening_greeting": "Bismillahirrahmanirrahim"
+        },
+        "yami-buzzy": {
+            "opening_greeting": "Bismillahirrahmanirrahim"
         },
         "rainier": {
             "glass_opacity": "0.85",

@@ -35,7 +35,7 @@ A CMS capability is not automatically a section. A capability can be a service o
 
 ## Preset contract
 
-Built-in capabilities are intentionally different because the source templates are different. DewanaKL has original welcome/video/gallery/gift/comment boundaries; Elix has its original hero/story/gallery/RSVP/gifts/audio boundaries; Rainier has an event-oriented `#app` flow with optional schedule/quotes/RSVP; Archak has a compact navigation, story/gallery/stay/registry, parting-message, and footer composition. A missing generic CMS section in a built-in preset is not a defect when the source template has no equivalent.
+Built-in capabilities are intentionally different because the source templates are different. DewanaKL has original welcome/video/gallery/gift/comment boundaries; Rainier has an event-oriented `#app` flow with optional schedule/quotes/RSVP; Archak has a compact navigation, story/gallery/stay/registry, parting-message, and footer composition; Parang and Pawiwahan retain their source-aligned cultural and carousel boundaries; Shubh Vivah uses a centered invitation card with ornaments, countdown, gallery, and RSVP; Yami Buzzy uses a welcome modal, hero, couple, event, story, gallery, video, gift, invitation, and RSVP flow. A missing generic CMS section in a built-in preset is not a defect when the source template has no equivalent.
 
 `theme_section_enabled()` is the built-in visibility boundary. The global `is_section_enabled()` and `config.sections` ordering belong to Custom mode. Admin UI filtering uses the active preset's `admin_capabilities` plus a small explicit global set. Unsupported preset controls are gated in both navigation and panel body; filtering never deletes stored configuration.
 
@@ -51,7 +51,7 @@ shared guest resolver + theme adapter
 theme-specific greeting presentation
 ```
 
-The markup is not identical across presets. Custom renders the name through its CMS-native hero; DewanaKL retains its original `#guest-name`; Elix retains its original hero flow; Rainier and Archak place the greeting in their respective original hero/home flows.
+The markup is not identical across presets. Custom renders the name through its CMS-native hero; each built-in adapter places the greeting in its source-compatible hero or opening-card flow.
 
 ## Persistence and deployment
 
@@ -61,4 +61,4 @@ The public entrypoint is `index.php`; `admin.php` redirects to the admin UI; `sa
 
 ## Provenance
 
-The six built-in templates are source adaptations or user-provided design references: DewanaKL, Elix, Rainier, Archak, Parang, and Pawiwahan. See [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for exact revisions, authors, license status, original source files, current integration paths, and attribution requirements. The project intentionally keeps source attribution separate from CMS ownership: CMS integration code is project-specific, while the original template presentation remains attributed to its original creators.
+The seven built-in templates are source adaptations or user-provided design references: DewanaKL, Rainier, Archak, Parang, Pawiwahan, Shubh Vivah, and Yami Buzzy. See [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for exact revisions, authors, license status, original source files, current integration paths, and attribution requirements. The project intentionally keeps source attribution separate from CMS ownership: CMS integration code is project-specific, while the original template presentation remains attributed to its original creators.
