@@ -368,6 +368,12 @@ if (themeSettingsForm && themePreviewFrame) {
     field.value = value ?? '';
   }
 
+  function visualMediaUrl(value) {
+    const path = String(value || '').trim();
+    if (!path) return '';
+    return /^https?:\/\//i.test(path) ? path : `/${path.replace(/^\/+/, '')}`;
+  }
+
   function updateVisualDecorations(input) {
     if (!input) return;
     if (input.dataset.fontPreview) input.style.fontFamily = input.value;
@@ -375,6 +381,15 @@ if (themeSettingsForm && themePreviewFrame) {
     if (output) output.value = input.value;
     const sample = document.querySelector(`[data-for="${input.id}"]`);
     if (sample) sample.style.fontFamily = input.value;
+    if (input.dataset.visualMediaSelect) {
+      const preview = input.closest('.visual-field')?.querySelector('[data-visual-preview]');
+      const wrap = preview?.closest('.visual-media-preview');
+      if (preview && wrap) {
+        const url = visualMediaUrl(input.value);
+        preview.src = url;
+        wrap.style.display = url ? 'block' : 'none';
+      }
+    }
   }
 
   function getStoredVisuals(preset) {
@@ -478,6 +493,29 @@ if (themeSettingsForm && themePreviewFrame) {
         storedOption.textContent = `Referensi tersimpan — ${value}`;
         input.appendChild(storedOption);
       }
+      const previewWrap = document.createElement('div');
+      previewWrap.className = 'visual-media-preview';
+      previewWrap.style.cssText = `margin-top:0.65rem;${value ? '' : 'display:none;'}`;
+      const preview = document.createElement('img');
+      preview.dataset.visualPreview = '1';
+      preview.src = visualMediaUrl(value);
+      preview.alt = `Pratinjau ${definition.label || key}`;
+      preview.style.cssText = 'display:block;max-width:100%;width:min(100%,360px);max-height:180px;object-fit:cover;border-radius:10px;border:1px solid #eadccf;';
+      previewWrap.appendChild(preview);
+      row.appendChild(previewWrap);
+      const resetButton = document.createElement('button');
+      resetButton.type = 'submit';
+      resetButton.name = 'reset_visual_key';
+      resetButton.value = key;
+      resetButton.className = 'button small-button';
+      resetButton.textContent = 'Reset assignment';
+      const resetRow = document.createElement('div');
+      resetRow.style.cssText = 'display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.55rem;';
+      resetRow.appendChild(resetButton);
+      const resetNote = document.createElement('small');
+      resetNote.textContent = 'Reset hanya menghapus referensi CMS; file media tetap ada.';
+      resetRow.appendChild(resetNote);
+      row.appendChild(resetRow);
       const mediaNote = document.createElement('small');
       mediaNote.append('Pilih asset dari Pengelola Media. Untuk upload baru, gunakan ');
       const mediaLink = document.createElement('a');

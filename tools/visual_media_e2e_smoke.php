@@ -36,10 +36,19 @@ $config = load_config();
 foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
     $config['theme_visuals'][$preset]['hero_background'] = $probePath;
 }
+$config['theme_visuals']['dewankl']['welcome_background'] = $probePath;
+$config['theme_visuals']['dewankl']['section_background_home'] = $probePath;
+$config['theme_visuals']['dewankl']['section_background_bride'] = $probePath;
+$config['theme_visuals']['dewankl']['section_background_wedding_date'] = $probePath;
 media_e2e_assert(save_config($config), 'Visual media references save through production config persistence');
 $reloaded = load_config();
 foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom'] as $preset) {
     media_e2e_assert(($reloaded['theme_visuals'][$preset]['hero_background'] ?? '') === $probePath, "{$preset} media reference survives reload");
+    if ($preset === 'dewankl') {
+        foreach (['welcome_background', 'section_background_home', 'section_background_bride', 'section_background_wedding_date'] as $backgroundKey) {
+            media_e2e_assert(($reloaded['theme_visuals']['dewankl'][$backgroundKey] ?? '') === $probePath, "DewanaKL {$backgroundKey} survives reload");
+        }
+    }
     if ($preset === 'custom') {
         media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.webp'), 'Custom production adapter includes persisted media URL');
         continue;
@@ -51,6 +60,10 @@ foreach (['dewankl', 'elix', 'rainier', 'archak', 'parang', 'pawiwahan', 'custom
     $probeShared['presetKey'] = $preset;
     $html = render_theme_layout($probeConfig, $probeShared);
     media_e2e_assert(str_contains($html, 'visual-media-e2e-probe.webp'), ucfirst($preset) . ' production renderer includes persisted media URL');
+    if ($preset === 'dewankl') {
+        media_e2e_assert(substr_count($html, 'visual-media-e2e-probe.webp') >= 5, 'DewanaKL renderer includes hero, welcome, and section media references independently');
+        media_e2e_assert(!str_contains($html, 'id="gallery" style="--cms-dewana-section-bg'), 'DewanaKL background override does not become a Gallery assignment');
+    }
 }
 
 $resetConfig = $reloaded;
