@@ -1,120 +1,126 @@
-# Audit Konsistensi Repository dan Fidelity Multi-Preset
+# Audit Konsistensi Repository dan Perluasan Visual CMS
 
-**Status akhir: READY TO MERGE**
-
-Audit ini memeriksa konsistensi antara registry preset, kontrak section, renderer, helper visual, panel admin, asset source, dependency frontend, localization, fallback media, alur penghapusan file, serta perilaku browser pada tujuh preset built-in: `dewankl`, `rainier`, `archak`, `parang`, `pawiwahan`, `shubh-vivah`, dan `yami-buzzy`.
+**Status audit lokal: READY TO MERGE setelah commit dan push.** Audit ini mencakup tujuh preset built-in aktif—`dewankl`, `rainier`, `archak`, `parang`, `pawiwahan`, `shubh-vivah`, dan `yami-buzzy`—serta mode `custom`. Fokus tambahan pada iterasi ini adalah memastikan font, warna font, background section, dan asset visual benar-benar mengalir dari panel admin hingga renderer frontend.
 
 ## Ringkasan Eksekutif
 
-Seluruh preset built-in terdaftar dan memiliki jalur render yang konsisten. Audit contract otomatis tidak menemukan duplicate DOM ID, broken anchor, section contract yang tidak dirender, atau visual capability schema yang tidak lengkap. Fallback asset, persistence visual override, reset ke bawaan, dan forced media deletion juga lulus smoke test.
+Katalog visual kini terpusat dan dipakai oleh seluruh preset. Panel admin menyediakan **18 pilihan font judul**, **21 pilihan font isi**, dan **41 warna bernama** yang dapat dipilih melalui swatch palette maupun color picker. Setiap preset aktif dan mode Custom memiliki capability `heading_font`, `body_font`, `accent_color`, `heading_color`, `text_color`, `muted_color`, dan `link_color` dengan default source-preserving, validasi, palette, live preview, persistence, reset, dan bridge CSS scoped.
 
-Dua masalah nyata ditemukan selama audit lanjutan. Pertama, audio source bawaan Shubh Vivah sudah tersedia di repository tetapi tidak digunakan ketika media musik CMS kosong. Kedua, form RSVP Shubh Vivah dan Yami Buzzy hanya mengubah teks status secara lokal tanpa mengirim data ke backend `save.php`. Keduanya telah diperbaiki dan dikunci dengan regression assertion baru.
+Masalah utama yang ditemukan dan diperbaiki adalah enrichment schema yang berpotensi mengganti default font/color bawaan source, stylesheet font yang belum seragam, warna baru yang hanya tersimpan tetapi belum digunakan renderer, serta palette server-rendered yang belum memiliki handler klik pada load awal admin. Semua telah diperbaiki. Background section tidak lagi diperlakukan sebagai alias hero: tiap preset memiliki capability `section_background_*` yang dipetakan ke section renderer masing-masing, dengan fallback kosong yang kembali ke background source/CSS bawaan.
 
-Audit responsif kemudian menemukan overflow pada Shubh Vivah ketika nama pasangan menggunakan token panjang seperti sentinel E2E. Wrapping eksplisit ditambahkan pada setiap nama pasangan. Setelah perbaikan, screenshot mobile menunjukkan nama tetap berada di dalam kartu. Label Inggris yang tersisa pada Pawiwahan juga telah dilokalkan ke Bahasa Indonesia dan ditambahkan ke smoke test localization.
+> **Kesimpulan:** tidak ditemukan ketidak-konsistenan aktif antara registry, helper, schema admin, persistence, preview, renderer, fallback, dan contract setelah validasi akhir. Seluruh 18 smoke test terisolasi lulus.
 
-## Matriks Konsistensi
+## Matriks Capability Final
 
-| Area audit | Hasil | Bukti atau cakupan |
+| Area | Hasil | Bukti |
 |---|---:|---|
-| Registry preset | PASS | Tujuh preset built-in aktif; Elix tidak lagi terdaftar. |
-| Contract section | PASS | Semua preset memiliki section contract dan admin capability yang sesuai. |
-| Renderer | PASS | Setiap preset aktif memiliki `themes/<preset>/layout.php` dan berhasil dirender. |
-| Duplicate DOM ID | PASS | `tools/repo_contract_audit.php` memeriksa semua preset dan custom renderer. |
-| Broken anchor | PASS | Seluruh `href="#..."` memiliki target ID yang dirender. |
-| Visual schema | PASS | Setiap capability memiliki `type`, `label`, dan `default`. |
-| Admin visual editor | PASS | Schema dinamis, media asset canonical, preview image, reset per key, dan Bahasa Indonesia tersedia. |
-| Fallback asset | PASS | Reset visual menghapus override CMS dan mengembalikan asset source lokal. |
-| Media deletion | PASS | `clear_media_references()` membersihkan nested reference sebelum forced delete. |
-| Localization | PASS | UI guest aktif lulus smoke test; label Inggris Pawiwahan yang ditemukan telah diterjemahkan. |
-| Dependency coupling | PASS | Tidak ada selector atau import jQuery/UIkit/Swiper/Fancybox/AOS pada dua preset baru. |
-| Browser critical flow | PASS | Welcome modal, CTA, countdown, navigasi, audio, asset lokal, dan seluruh section teruji. |
-| Responsive screenshots | PASS | Dua preset diuji pada 1440, 1280, 1024, 768, 576, 390, dan 360 piksel. |
+| Registry preset | PASS | Tujuh preset aktif; Elix tidak terdaftar. |
+| Kontrak section | PASS | `theme_contract_smoke.php` dan `repo_contract_audit.php`. |
+| Font judul | PASS | 18 opsi terpusat, default source lama tetap dipertahankan. |
+| Font isi | PASS | 21 opsi terpusat, termasuk font source seperti Josefin Sans, Outfit, Quicksand, Arvo, Gilroy, dan Segoe UI. |
+| Warna font | PASS | `heading_color`, `text_color`, `muted_color`, `link_color`, dan `accent_color` tersedia pada semua preset serta Custom. |
+| Palette warna | PASS | 41 swatch bernama, termasuk seluruh default source aktif. |
+| Background section | PASS | Setiap preset memiliki image capability section-specific dan mapping renderer. |
+| Asset custom | PASS | Image capability yang ditampilkan admin dipastikan digunakan layout/adapter terkait; asset kosong memakai fallback source. |
+| Live preview | PASS | Mapping `visualMap` memiliki variable scoped untuk setiap preset dan warna baru. |
+| Persistence/reset | PASS | Override tersimpan per preset, tidak bocor antar preset, dan reset mengembalikan default tanpa menghapus file. |
+| Media deletion | PASS | Forced delete membersihkan nested reference visual, gallery, dan theme option. |
+| Localization | PASS | UI admin dan frontend aktif tetap Bahasa Indonesia; label Inggris Pawiwahan yang ditemukan telah diperbaiki. |
+| Dependency | PASS | Tidak ada dependency baru yang wajib untuk Shubh Vivah/Yami Buzzy. |
+| Responsive visual | PASS | 14 screenshot override baru: tujuh preset pada 1440×900 dan 390×900. |
 
-## Temuan dan Perbaikan
+## Jumlah Background dan Asset Per Preset
 
-### Penyajian fixture browser
+| Preset | Image capability | Section background | Catatan fallback |
+|---|---:|---:|---|
+| DewanaKL | 8 | 6 | Background kosong kembali ke source/gradient; welcome, hero, dan tiap section memiliki jalur terpisah. |
+| Rainier | 5 | 4 | Hero tetap memakai cover/source images saat tidak ada override. |
+| Archak | 6 | 4 | Hero, timeline, gallery, stay, registry, dan badge tetap memiliki fallback source. |
+| Parang | 6 | 3 | Hero, home, gallery, lokasi, dan ornamen memakai asset source ketika override kosong. |
+| Pawiwahan | 6 | 4 | Hero, welcome, gallery, lokasi, gift, dan messages tetap memakai asset source. |
+| Shubh Vivah | 7 | 4 | Hero/card, home surface, event, gallery, RSVP, dan ornaments tetap memiliki fallback source. |
+| Yami Buzzy | 12 | 10 | Hero, welcome, seluruh section utama, dan dress/source image tetap memakai fallback lokal/source. |
 
-Fixture audit menggunakan URL root-relative seperti `/themes/shubh-vivah/fidelity-adapter.css`. Ketika dibuka melalui `file://`, browser tidak memuat stylesheet sehingga halaman terlihat seperti HTML tanpa render. Ini bukan kegagalan renderer aplikasi. Setelah fixture disajikan melalui HTTP lokal, CSS adapter, font, ornamen, background card, dan asset lokal termuat dengan benar. Karena itu, audit berikutnya menggunakan HTTP agar perilakunya menyerupai deployment nyata.
+Jumlah image capability mencakup field visual image yang benar-benar dideklarasikan oleh schema. Media umum seperti cover, foto pasangan, gallery, musik, dan video tetap berada pada File Manager/CMS Media sesuai kontrak aplikasi; panel preset hanya menampilkan role yang mempunyai jalur renderer.
 
-### Fallback audio Shubh Vivah
+## Perubahan Implementasi
 
-Asset `themes/shubh-vivah/assets/audio/source-background.mp3` sebelumnya tidak menjadi fallback ketika `config['media']['music']` kosong. Renderer sekarang memakai audio source tersebut secara default dan tetap mengutamakan media CMS apabila pengguna memilih musik sendiri. Tombol **Putar Musik** tampil pada render bersih dan berubah menjadi **Jeda Musik** ketika diklik.
+### Registry dan katalog terpusat
 
-### RSVP backend untuk dua preset baru
+`config.php` kini menyediakan `theme_color_palette()`, `theme_font_catalog()`, dan `theme_google_font_stylesheet_url()`. Font source lama tidak diganti secara paksa: enrichment capability membaca default visual yang sudah dideklarasikan preset, kemudian menambahkan pilihan baru. Dengan pendekatan ini, perluasan katalog tidak mengubah tampilan bawaan ketika pengguna belum memilih custom value.
 
-Form Shubh Vivah dan Yami Buzzy sekarang menggunakan pola CMS yang sama dengan Pawiwahan: `fetch('save.php', { method: 'POST', body: new FormData(form), credentials: 'same-origin' })`. CSRF token, field `nama`, `status`, `ucapan`, serta honeypot `website` tetap dipertahankan. Pesan sukses hanya diberikan berdasarkan respons backend dan form di-reset setelah penyimpanan berhasil.
+Stylesheet global memuat keluarga font yang dipakai preset lama maupun katalog baru, termasuk Arvo, Beau Rivage, Bodoni Moda, Caveat, Cinzel, Cormorant Garamond, Dancing Script, DM Sans, DM Serif Display, Fraunces, Great Vibes, Inter, Josefin Sans, Lato, Libre Baskerville, Libre Caslon Text, Lora, Manrope, Merriweather Sans, Montserrat, Noto Naskh Arabic, Nunito Sans, Open Sans, Outfit, Plus Jakarta Sans, Poppins, Playfair Display, Quicksand, Raleway, Sacramento, Tangerine, dan Work Sans. Gilroy tetap memakai file font lokal Yami Buzzy.
 
-### Admin visual preview dan smoke assertion
+### Admin palette dan field visual
 
-Implementasi admin saat ini memakai `mediaAssets`, `dataset.visualMediaSelect`, dan `visualMediaUrl()` untuk selector serta preview gambar. Assertion lama yang mencari `imageKeys` sudah tidak sesuai dengan implementasi aktual dan telah diperbarui agar mengunci kontrak perilaku yang benar, bukan nama variabel lama.
+`admin/index.php` kini merender swatch palette bernama untuk input warna awal. `admin/app.js` menambahkan palette yang sama pada field dinamis ketika preset diganti. Handler delegated untuk swatch server-rendered memastikan klik pada load awal juga mengubah input, memperbarui `unsavedVisualValues`, dan mengirim update ke live preview.
 
-### Lokalisasi Pawiwahan
+Field image tetap memakai canonical Media Library yang sama. Setiap capability image memiliki label Bahasa Indonesia, preview, fallback source, tombol **Kembalikan ke Bawaan**, dan catatan bahwa upload baru dilakukan melalui File Manager kemudian halaman dimuat ulang. Dengan demikian, background yang diunggah dapat dipilih pada `Latar Beranda`, `Latar Acara`, `Latar Galeri`, `Latar RSVP`, dan field section lain yang tersedia—bukan hanya `Latar Hero`.
 
-Label aktif yang masih berbahasa Inggris telah diperbaiki: `Home` menjadi **Beranda**, `About` menjadi **Tentang Kami**, `Our Stories` menjadi **Kisah Kami**, `Previous` menjadi **Sebelumnya**, `Next` menjadi **Berikutnya**, `View Google Maps` menjadi **Lihat Google Maps**, dan `Angpao cashless` menjadi **Amplop Digital**. Smoke test localization sekarang membaca Pawiwahan sebagai guest source aktif dan menolak label-label tersebut apabila muncul kembali.
+### Renderer bridge
 
-### Responsif Shubh Vivah
+Seluruh layout menerima empat warna tambahan melalui variable scoped berikut: warna judul, warna teks, warna sekunder, dan warna tautan. Bridge telah diterapkan pada DewanaKL, Rainier, Archak, Parang, Pawiwahan, Shubh Vivah, dan Yami Buzzy. Selector source yang berpotensi terlalu luas dibatasi dengan scope preset atau root container agar warna tombol, video, footer, ikon, dan overlay tetap mempertahankan kontrak visualnya.
 
-Screenshot 390 piksel dengan nama panjang menunjukkan overflow horizontal karena token nama pada heading belum memiliki wrapping eksplisit. Selector `.shubh-card h1 span` sekarang menggunakan `overflow-wrap:anywhere` dan `word-break:break-word`. Screenshot ulang 390 piksel menunjukkan kedua nama membungkus di dalam kartu tanpa terpotong.
+Background section juga diuji dengan path override yang sama. Smoke test memverifikasi bahwa path tersimpan muncul di HTML renderer pada section yang benar, bukan dipindahkan menjadi hero assignment. Ketika override dihapus, resolver kembali ke `none`, gradient, source image, atau asset fallback sesuai preset.
 
-## Audit Dependency
+## Temuan Browser dan Screenshot
 
-| Preset | Dependency runtime yang dipakai | Keputusan audit |
-|---|---|---|
-| Shubh Vivah | Google Fonts Arvo dan Dancing Script, CSS lokal, JavaScript vanilla, HTML audio | Tidak memerlukan jQuery, AOS, Swiper, Fancybox, UIkit, atau package PHP tambahan. |
-| Yami Buzzy | Font Gilroy lokal, CSS lokal, JavaScript vanilla, HTML audio/video, Clipboard API, Fetch API | Tidak memerlukan UIkit, Swiper, Fancybox, AOS, jQuery, atau package PHP tambahan. |
-| Pawiwahan | Bootstrap 5, Bootstrap Icons, jQuery countdown lokal, JavaScript adapter | Dependency source tetap dipertahankan dan memiliki native fallback untuk countdown, modal, copy, dan RSVP. |
-| DewanaKL | Bootstrap, Font Awesome, AOS, Canvas Confetti | Semua dependency yang dipakai markup dimuat secara eksplisit pada layout preset. |
-| Rainier, Archak, Parang | Asset CSS/JS lokal dan font source masing-masing | Jalur asset lokal tersedia dan smoke test renderer lulus. |
-| Server | PHP 8.3 dan `chillerlan/php-qrcode` pada Composer manifest | Tidak ada dependency backend baru yang dibutuhkan untuk dua preset baru. |
+Fixture override disajikan melalui HTTP lokal agar path root-relative, stylesheet, font, dan asset dimuat seperti deployment nyata. Screenshot representative menunjukkan Shubh Vivah desktop tetap memiliki kartu, ornament, countdown, CTA, dan typography setelah Bodoni Moda serta warna custom diterapkan. Yami Buzzy mobile 390 px tetap memiliki welcome modal terpusat, nama pasangan membungkus, dan tidak menunjukkan overflow horizontal.
+
+DewanaKL diuji melalui browser dengan CTA **Buka Undangan**. Tampilan awal yang sangat pucat merupakan welcome card/overlay; setelah CTA ditekan, hero, kalender, navigasi, konten Arab/Indonesia, gallery, dan form tampil serta JavaScript berjalan. Ruang kosong luas di sisi kiri desktop adalah karakter layout source, bukan kegagalan render.
+
+Seluruh artefak screenshot override tersimpan pada `docs/assets/visual-capability-audit/`, termasuk `contact-sheet.png`, tujuh screenshot desktop, dan tujuh screenshot mobile. Screenshot audit sebelumnya untuk Shubh Vivah dan Yami Buzzy tetap dipertahankan pada `docs/assets/responsive-audit/`.
 
 ## Validasi Akhir
 
-Validasi final dijalankan dengan konfigurasi runtime di-reset sebelum setiap test agar perubahan test sebelumnya tidak memengaruhi test berikutnya. Seluruh 15 suite berikut lulus:
+Runner validasi terisolasi mereset `config.json` dan `database.sqlite` sebelum setiap test, lalu mengembalikan state runtime setelah eksekusi. Seluruh 18 test berikut lulus:
 
 | Test | Status |
 |---|---:|
-| `content_preservation_smoke.php` | PASS |
-| `deployment_smoke.php` | PASS |
-| `media_delete_fallback_smoke.php` | PASS |
-| `media_pipeline_smoke.php` | PASS |
-| `media_requirement_smoke.php` | PASS |
-| `pawiwahan_smoke.php` | PASS |
+| `validate.php` | PASS |
+| `theme_render_smoke.php` | PASS |
 | `theme_contract_smoke.php` | PASS |
 | `theme_disabled_smoke.php` | PASS |
-| `theme_localization_smoke.php` | PASS |
 | `theme_regression_smoke.php` | PASS |
-| `theme_render_smoke.php` | PASS |
-| `visual_contract_smoke.php` | PASS |
-| `visual_media_e2e_smoke.php` | PASS |
-| `admin_guest_smoke.php` | PASS |
+| `theme_localization_smoke.php` | PASS |
+| `content_preservation_smoke.php` | PASS |
 | `repo_contract_audit.php` | PASS |
+| `visual_contract_smoke.php` | PASS |
+| `visual_capability_consistency_audit.php` | PASS |
+| `visual_color_font_smoke.php` | PASS |
+| `visual_media_e2e_smoke.php` | PASS |
+| `media_pipeline_smoke.php` | PASS |
+| `media_requirement_smoke.php` | PASS |
+| `media_delete_fallback_smoke.php` | PASS |
+| `admin_guest_smoke.php` | PASS |
+| `pawiwahan_smoke.php` | PASS |
+| `deployment_smoke.php` | PASS |
 
-Smoke test renderer juga mengunci bahwa Shubh Vivah memakai `source-background.mp3` ketika music CMS kosong, serta bahwa Shubh Vivah dan Yami Buzzy merender form RSVP dengan endpoint `save.php`.
+`visual_capability_consistency_audit.php` mengunci tujuh capability umum, minimal 10 opsi font per kategori, minimal 10 palette entry per warna, default yang selectable, shared font stylesheet, setiap image capability yang mencapai layout, setiap section background yang mencapai renderer, serta setiap variable preview yang benar-benar dikonsumsi oleh layout/CSS.
 
-## Bukti Screenshot Responsif
-
-Screenshot headless disimpan di `docs/assets/responsive-audit/` untuk kedua preset pada tujuh viewport: `1440x900`, `1280x900`, `1024x900`, `768x1000`, `576x1000`, `390x900`, dan `360x900`. Yami Buzzy mempertahankan welcome modal di dalam viewport mobile. Shubh Vivah mempertahankan kartu, ornamen, countdown, CTA, tombol musik, dan nama pasangan setelah perbaikan wrapping.
-
-## Berkas Perubahan Utama
+## Berkas Utama
 
 | Berkas | Perubahan |
 |---|---|
-| `themes/shubh-vivah/layout.php` | Fallback audio source lokal dan submit RSVP ke backend CMS. |
-| `themes/shubh-vivah/fidelity-adapter.css` | Wrapping nama pasangan untuk breakpoint mobile. |
-| `themes/yami-buzzy/layout.php` | Submit RSVP ke backend CMS. |
-| `themes/pawiwahan/layout.php` | Lokalisasi label navigasi, carousel, Google Maps, galeri, dan amplop digital. |
-| `tools/theme_render_smoke.php` | Regression assertion audio source dan endpoint RSVP. |
-| `tools/theme_localization_smoke.php` | Coverage Pawiwahan dan guard label Inggris aktif. |
-| `tools/visual_contract_smoke.php` | Assertion preview image disesuaikan dengan API admin aktual. |
-| `tools/repo_contract_audit.php` | Audit otomatis registry, contract, renderer, ID, anchor, dan schema visual. |
-| `docs/assets/responsive-audit/` | Screenshot tujuh breakpoint untuk dua preset baru. |
+| `config.php` | Katalog font, palette 41 warna, stylesheet global, common visual capability enrichment, dan capability home background Shubh Vivah. |
+| `app/theme-helper.php` | Warna Custom, variable bridge seluruh preset, dan preservation default source. |
+| `admin/index.php` | Swatch palette server-rendered dan datalist warna bernama. |
+| `admin/app.js` | Palette dinamis, handler swatch static, preview, dan persistence state. |
+| `themes/*/layout.php` | Shared font stylesheet serta bridge heading/text/muted/link dan section background. |
+| `themes/shubh-vivah/fidelity-adapter.css` | Selector heading/link memakai variable custom. |
+| `themes/yami-buzzy/fidelity-adapter.css` | Selector heading/link memakai variable custom. |
+| `tools/visual_capability_consistency_audit.php` | Audit registry → schema → preview map → renderer. |
+| `tools/visual_color_font_smoke.php` | Smoke test override nyata font, warna, dan section background seluruh preset. |
+| `tools/visual_contract_smoke.php` | Kontrak capability baru dan palette admin. |
+| `docs/assets/visual-capability-audit/` | 14 screenshot override dan contact sheet. |
+| `docs/visual-capability-expansion-baseline.md` | Baseline, temuan browser, dan bukti visual. |
 
 ## Kesimpulan
 
-Repository berada pada kondisi **READY TO MERGE** untuk PR #84. Tidak ditemukan dependency source yang wajib dipasang untuk Shubh Vivah atau Yami Buzzy. Keduanya sengaja memakai adapter CSS dan JavaScript vanilla agar tidak membawa coupling backend atau library source yang tidak diperlukan, sementara fungsi inti CMS—fallback, visual override, reset, media deletion, localization, dan RSVP—tetap terhubung ke arsitektur aplikasi.
+Perluasan capability telah diterapkan secara repository-wide. Semua preset sekarang mempunyai alur custom font dan warna font yang sama secara arsitektural, tetapi tetap mempertahankan default source masing-masing. Background section dan asset custom hanya diekspos ketika benar-benar memiliki jalur renderer, sehingga tidak ada field admin palsu yang tersimpan tanpa efek frontend. Validasi menyeluruh tidak menemukan mismatch registry-helper-contract-renderer-admin, duplicate yang mematahkan render, broken anchor, default asset yang hilang, atau dependency wajib yang belum dipasang.
 
 ## Referensi
 
-[1]: https://github.com/februana/webserver_undangan/pull/84 "PR #84 — multi-preset CMS audit and fixes"
+[1]: https://github.com/februana/webserver_undangan/pull/84 "PR #84 — Multi-preset CMS audit and fixes"
 [2]: https://github.com/vinitshahdeo/wedding-website "Source repository — Shubh Vivah"
 [3]: https://github.com/Tynab/Yami-Buzzy "Source repository — Yami Buzzy"

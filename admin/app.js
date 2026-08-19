@@ -471,7 +471,39 @@ if (themeSettingsForm && themePreviewFrame) {
     } else if (type === 'color') {
       input = document.createElement('input');
       input.type = 'color';
+      input.setAttribute('list', `visual-palette-${key}`);
       input.style.cssText = 'width:100%;height:42px;';
+      const palette = definition.palette || {};
+      if (Object.keys(palette).length) {
+        const paletteWrap = document.createElement('div');
+        paletteWrap.className = 'visual-color-palette';
+        paletteWrap.setAttribute('aria-label', 'Pilihan warna cepat');
+        paletteWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.55rem;';
+        Object.entries(palette).forEach(([color, labelText]) => {
+          const swatch = document.createElement('button');
+          swatch.type = 'button';
+          swatch.dataset.visualColorPalette = color;
+          swatch.title = labelText;
+          swatch.setAttribute('aria-label', labelText);
+          swatch.style.cssText = `width:28px;height:28px;padding:0;border-radius:50%;border:2px solid #fff;outline:1px solid #d8c9bc;background:${color};cursor:pointer;`;
+          swatch.addEventListener('click', () => {
+            input.value = color;
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+            input.dispatchEvent(new Event('change', {bubbles: true}));
+          });
+          paletteWrap.appendChild(swatch);
+        });
+        row.appendChild(paletteWrap);
+        const datalist = document.createElement('datalist');
+        datalist.id = `visual-palette-${key}`;
+        Object.entries(palette).forEach(([color, labelText]) => {
+          const option = document.createElement('option');
+          option.value = color;
+          option.label = labelText;
+          datalist.appendChild(option);
+        });
+        row.appendChild(datalist);
+      }
     } else if (type === 'image') {
       input = document.createElement('select');
       input.dataset.visualMediaSelect = '1';
@@ -650,6 +682,16 @@ if (themeSettingsForm && themePreviewFrame) {
 
   globalThemePreset?.addEventListener('change', () => selectPreset(globalThemePreset.value));
   themeSettingsForm.elements.theme_preset?.addEventListener('change', () => selectPreset(themeSettingsForm.elements.theme_preset.value));
+  document.addEventListener('click', (event) => {
+    const swatch = event.target.closest('[data-visual-color-palette-static]');
+    if (!swatch || !visualFields?.contains(swatch)) return;
+    event.preventDefault();
+    const field = swatch.closest('.visual-field')?.querySelector('input[type="color"]');
+    if (!field) return;
+    field.value = swatch.dataset.visualColorPaletteStatic || swatch.dataset.visualColorPalette || field.value;
+    field.dispatchEvent(new Event('input', {bubbles: true}));
+    field.dispatchEvent(new Event('change', {bubbles: true}));
+  });
   themePreviewFrame.addEventListener('load', postPreview);
 
   themePreviewReset?.addEventListener('click', () => {

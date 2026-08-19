@@ -395,8 +395,132 @@ function config_defaults(): array {
 }
 
 
-function theme_registry(): array {
+function theme_color_palette(string $role = 'text'): array {
     return [
+        '#1f2937' => 'Arang',
+        '#1d1b22' => 'Hitam Rainier',
+        '#211b0e' => 'Cokelat Parang',
+        '#211d1a' => 'Cokelat Archak',
+        '#2a1f1c' => 'Cokelat Dewana',
+        '#2f2424' => 'Cokelat Teks',
+        '#343039' => 'Abu Yami',
+        '#392521' => 'Cokelat Kopi',
+        '#334155' => 'Slate',
+        '#374151' => 'Abu Tua',
+        '#5b4636' => 'Cokelat Kayu',
+        '#6b4f4f' => 'Mawar Tua',
+        '#6e5a52' => 'Taupe Hangat',
+        '#6e7c63' => 'Sage',
+        '#7a8c7e' => 'Sage Rainier',
+        '#7b4a3a' => 'Terracotta',
+        '#7b5902' => 'Emas Tua',
+        '#806f66' => 'Taupe',
+        '#82727a' => 'Mauve Grey',
+        '#8c5a4d' => 'Cokelat Rose',
+        '#8ca77b' => 'Sage Muda',
+        '#8f4756' => 'Burgundy',
+        '#a24747' => 'Merah Bata',
+        '#ad7c69' => 'Clay',
+        '#b8655d' => 'Rose Terracotta',
+        '#c49a45' => 'Emas',
+        '#c84c47' => 'Coral',
+        '#d77fa1' => 'Pink Mawar',
+        '#372d36' => 'Ungu Pawiwahan',
+        '#4f453e' => 'Taupe Parang',
+        '#5c5255' => 'Abu Rainier',
+        '#5d5350' => 'Abu Archak',
+        '#6d5a62' => 'Mauve Pawiwahan',
+        '#85665f' => 'Taupe Shubh',
+        '#8b4f70' => 'Plum Pawiwahan',
+        '#ec7272' => 'Coral Pawiwahan',
+        '#f2e4d3' => 'Ivory Dewana',
+        '#f6efe7' => 'Ivory',
+        '#fff8f2' => 'Cream',
+        '#ffffff' => 'Putih',
+        '#000000' => 'Hitam'
+    ];
+}
+
+function theme_font_catalog(string $type = 'all'): array {
+    $heading = [
+        'Playfair Display, serif' => 'Playfair Display',
+        'Cormorant Garamond, serif' => 'Cormorant Garamond',
+        'Bodoni Moda, serif' => 'Bodoni Moda',
+        'DM Serif Display, serif' => 'DM Serif Display',
+        'Fraunces, serif' => 'Fraunces',
+        'Lora, serif' => 'Lora',
+        'Libre Baskerville, serif' => 'Libre Baskerville',
+        'Cinzel, serif' => 'Cinzel',
+        'Great Vibes, cursive' => 'Great Vibes',
+        'Dancing Script, cursive' => 'Dancing Script',
+        'Sacramento, cursive' => 'Sacramento',
+        'Beau Rivage, cursive' => 'Beau Rivage',
+        'Tangerine, cursive' => 'Tangerine',
+        'Caveat, cursive' => 'Caveat',
+        'Gilroy, Arial, sans-serif' => 'Gilroy (lokal)',
+        'Libre Caslon Text, serif' => 'Libre Caslon Text (source)',
+        'Georgia, serif' => 'Georgia',
+        'system-ui, sans-serif' => 'System UI'
+    ];
+    $body = [
+        'Lato, sans-serif' => 'Lato',
+        'Josefin Sans, sans-serif' => 'Josefin Sans',
+        'Inter, sans-serif' => 'Inter',
+        'Work Sans, sans-serif' => 'Work Sans',
+        'Poppins, sans-serif' => 'Poppins',
+        'DM Sans, sans-serif' => 'DM Sans',
+        'Nunito Sans, sans-serif' => 'Nunito Sans',
+        'Montserrat, sans-serif' => 'Montserrat',
+        'Open Sans, sans-serif' => 'Open Sans',
+        'Plus Jakarta Sans, sans-serif' => 'Plus Jakarta Sans',
+        'Outfit, sans-serif' => 'Outfit',
+        'Arvo, Georgia, serif' => 'Arvo',
+        'Quicksand, sans-serif' => 'Quicksand',
+        'Manrope, sans-serif' => 'Manrope',
+        'Raleway, sans-serif' => 'Raleway',
+        'Merriweather Sans, sans-serif' => 'Merriweather Sans',
+        'Gilroy, Arial, sans-serif' => 'Gilroy (lokal)',
+        'Segoe UI, sans-serif' => 'Segoe UI',
+        'Libre Baskerville, serif' => 'Libre Baskerville',
+        'Arial, sans-serif' => 'Arial',
+        'system-ui, sans-serif' => 'System UI'
+    ];
+    return match ($type) {
+        'heading' => $heading,
+        'body' => $body,
+        default => array_replace($body, $heading)
+    };
+}
+
+function theme_google_font_stylesheet_url(): string {
+    return 'https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&family=Beau+Rivage&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=Caveat:wght@400;600;700&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Josefin+Sans:wght@400;500;600;700&family=Lato:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Merriweather+Sans:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;700&family=Nunito+Sans:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Playfair+Display:opsz,wght@5..120,400;5..120,500;5..120,600;5..120,700&family=Quicksand:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Sacramento&family=Tangerine:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap';
+}
+
+function theme_common_visual_capabilities(array $values, array $existing = []): array {
+    $default = static function (string $key, string $fallback) use ($values, $existing): string {
+        $existingDefault = $existing[$key]['default'] ?? null;
+        if (is_scalar($existingDefault) && trim((string)$existingDefault) !== '') return (string)$existingDefault;
+        return (string)($values[$key] ?? $fallback);
+    };
+    $text = $default('text_color', '#2f2424');
+    $heading = $default('heading_color', $text);
+    $muted = $default('muted_color', '#806f66');
+    $link = $default('link_color', (string)($values['accent_color'] ?? '#c84c47'));
+    $accent = $default('accent_color', $link);
+    $palette = theme_color_palette();
+    return [
+        'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna tombol, badge, ikon, dan elemen interaktif.', 'default' => $accent, 'palette' => $palette],
+        'heading_color' => ['type' => 'color', 'label' => 'Warna Judul', 'description' => 'Warna nama pasangan dan judul section.', 'default' => $heading, 'palette' => $palette],
+        'text_color' => ['type' => 'color', 'label' => 'Warna Teks', 'description' => 'Warna teks utama, isi undangan, dan detail acara.', 'default' => $text, 'palette' => $palette],
+        'muted_color' => ['type' => 'color', 'label' => 'Warna Teks Sekunder', 'description' => 'Warna teks kecil, label, keterangan, dan metadata.', 'default' => $muted, 'palette' => $palette],
+        'link_color' => ['type' => 'color', 'label' => 'Warna Tautan', 'description' => 'Warna tautan, navigasi, dan aksi sekunder.', 'default' => $link, 'palette' => $palette],
+        'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font untuk nama pasangan, heading, dan judul section.', 'default' => $default('heading_font', 'Playfair Display, serif'), 'options' => theme_font_catalog('heading')],
+        'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font mudah dibaca untuk isi undangan, jadwal, navigasi, dan form.', 'default' => $default('body_font', 'Lato, sans-serif'), 'options' => theme_font_catalog('body')]
+    ];
+}
+
+function theme_registry(): array {
+    $registry = [
         'elegant' => [
             'id' => 'elegant',
             'name' => 'Elegant',
@@ -629,6 +753,7 @@ function theme_registry(): array {
                 'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font script untuk identitas pasangan dan heading.', 'default' => 'Dancing Script, cursive', 'options' => ['Dancing Script, cursive' => 'Dancing Script', 'Georgia, serif' => 'Georgia']],
                 'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font isi yang terinspirasi dari source template.', 'default' => 'Arvo, Georgia, serif', 'options' => ['Arvo, Georgia, serif' => 'Arvo', 'system-ui, sans-serif' => 'System UI', 'Arial, sans-serif' => 'Arial']],
                 'hero_background' => ['type' => 'image', 'label' => 'Latar Kartu Undangan', 'description' => 'Pilih media canonical untuk latar kartu; kosongkan untuk memakai artwork source.', 'default' => ''],
+                'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Gambar latar untuk area pembuka di belakang kartu; kosongkan untuk memakai gradasi bawaan.', 'default' => ''],
                 'hero_overlay' => ['type' => 'range', 'label' => 'Lapisan Warna Kartu', 'description' => 'Atur gelap-terang lapisan warna di atas kartu pembuka.', 'default' => '0.10', 'min' => '0', 'max' => '0.60', 'step' => '0.05'],
                 'section_background_event' => ['type' => 'image', 'label' => 'Latar Acara', 'description' => 'Gambar latar untuk detail acara dan lokasi.', 'default' => ''],
                 'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar untuk galeri foto.', 'default' => ''],
@@ -954,10 +1079,20 @@ function theme_registry(): array {
                 'header_badge' => ['type' => 'image', 'label' => 'Emblem Header', 'description' => 'Gambar emblem kecil di bagian atas undangan. Kosongkan untuk memakai bawaan.', 'default' => ''],
                 'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala nama pasangan di hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.10', 'step' => '0.05'],
             ]
-        ]
+                ]
     ];
+    foreach ($registry as &$preset) {
+        if (!isset($preset['values']) || !is_array($preset['values'])) continue;
+        $presetKey = (string)($preset['id'] ?? '');
+        $existingVisualCapabilities = (array)($preset['visual_capabilities'] ?? []);
+        $preset['visual_capabilities'] = array_merge(
+            $existingVisualCapabilities,
+            theme_common_visual_capabilities($preset['values'], $existingVisualCapabilities)
+        );
+    }
+    unset($preset);
+    return $registry;
 }
-
 function theme_builtin_preset_keys(): array {
     return ['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy'];
 }

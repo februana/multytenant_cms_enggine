@@ -28,6 +28,10 @@ $parangLocationBg = $sectionCss('section_background_location');
 $parangLeft = $assetUrl((string)($visuals['ornament_left'] ?? ''), $sourceWayang);
 $parangRight = $assetUrl((string)($visuals['ornament_right'] ?? ''), $sourceWayang);
 $accent = escape_html((string)($visuals['accent_color'] ?? '#C49A45'));
+$headingColor = escape_html((string)($visuals['heading_color'] ?? '#211b0e'));
+$textColor = escape_html((string)($visuals['text_color'] ?? '#211b0e'));
+$mutedColor = escape_html((string)($visuals['muted_color'] ?? '#4f453e'));
+$linkColor = escape_html((string)($visuals['link_color'] ?? '#7b5902'));
 $headingFont = escape_html((string)($visuals['heading_font'] ?? 'Libre Caslon Text, serif'));
 $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Manrope, sans-serif'));
 
@@ -119,9 +123,10 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <title><?php echo $siteTitle; ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Manrope:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="<?php echo escape_html(theme_google_font_stylesheet_url()); ?>" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url($presetKey, 'style.css')); ?>">
-    <style id="cms-parang-visual">:root{--parang-heading:<?php echo $headingFont; ?>;--parang-body:<?php echo $bodyFont; ?>;--parang-gold:<?php echo $accent; ?>;--cms-parang-bg:<?php echo $backgroundCss; ?>;--cms-parang-home-bg:<?php echo $parangHomeBg; ?>;--cms-parang-gallery-bg:<?php echo $parangGalleryBg; ?>;--cms-parang-location-bg:<?php echo $parangLocationBg; ?>;--cms-parang-left:<?php echo theme_visual_css_url($parangLeft); ?>;--cms-parang-right:<?php echo theme_visual_css_url($parangRight); ?>}#beranda,#galeri,#lokasi{background-size:cover;background-position:center;background-repeat:no-repeat}#beranda{background-image:linear-gradient(rgba(255,248,242,.78),rgba(240,227,206,.86)),var(--cms-parang-home-bg)}#galeri{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-gallery-bg)}#lokasi{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-location-bg)}.parang-ornament-left{content:var(--cms-parang-left)}.parang-ornament-right{content:var(--cms-parang-right)}</style>
+    <style id="cms-parang-visual">:root{--parang-heading:<?php echo $headingFont; ?>;--parang-body:<?php echo $bodyFont; ?>;--parang-heading-color:<?php echo $headingColor; ?>;--parang-text:<?php echo $textColor; ?>;--parang-muted:<?php echo $mutedColor; ?>;--parang-link:<?php echo $linkColor; ?>;--parang-gold:<?php echo $accent; ?>;--cms-parang-bg:<?php echo $backgroundCss; ?>;--cms-parang-home-bg:<?php echo $parangHomeBg; ?>;--cms-parang-gallery-bg:<?php echo $parangGalleryBg; ?>;--cms-parang-location-bg:<?php echo $parangLocationBg; ?>;--cms-parang-left:<?php echo theme_visual_css_url($parangLeft); ?>;--cms-parang-right:<?php echo theme_visual_css_url($parangRight); ?>}#beranda,#galeri,#lokasi{background-size:cover;background-position:center;background-repeat:no-repeat}#beranda{background-image:linear-gradient(rgba(255,248,242,.78),rgba(240,227,206,.86)),var(--cms-parang-home-bg)}#galeri{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-gallery-bg)}#lokasi{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-location-bg)}.parang-ornament-left{content:var(--cms-parang-left)}.parang-ornament-right{content:var(--cms-parang-right)}#cms-parang-root h1,#cms-parang-root h2,#cms-parang-root h3{color:var(--parang-heading-color)}#cms-parang-root a{color:var(--parang-link)}#cms-parang-root .parang-nav-cta,#cms-parang-root .parang-primary-button,#cms-parang-root .parang-copy-button,#cms-parang-root .parang-rsvp-form button{color:var(--parang-cream)}</style>
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
 </head>
 <body data-countdown-target="<?php echo escape_html((string)($config['schedule']['countdown_target'] ?? '')); ?>">

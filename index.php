@@ -85,7 +85,7 @@ $renderedTheme = render_theme_layout($config, $themePageShared);
 if (resolve_theme_mode($config) === 'custom') {
     $customCss = load_custom_css();
     $customCssBlock = $customCss !== '' ? "\n<style>" . $customCss . "</style>" : '';
-    $customDocument = '<!DOCTYPE html>\n<html lang="id">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' . escape_html($siteTitle) . '</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Allura&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="/style.css">' . theme_custom_visual_style($config) . $customCssBlock . '\n</head>\n<body>\n' . $renderedTheme . '\n<script src="/script.js" defer></script>\n</body>\n</html>';
+    $customDocument = '<!DOCTYPE html>\n<html lang="id">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' . escape_html($siteTitle) . '</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="' . escape_html(theme_google_font_stylesheet_url()) . '" rel="stylesheet">\n<link rel="stylesheet" href="/style.css">' . theme_custom_visual_style($config) . $customCssBlock . '\n</head>\n<body>\n' . $renderedTheme . '\n<script src="/script.js" defer></script>\n</body>\n</html>';
     $renderedTheme = str_replace('\\n', "\n", $customDocument);
 }
 echo finalize_theme_output($renderedTheme, $config);

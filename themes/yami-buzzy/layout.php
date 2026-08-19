@@ -50,6 +50,10 @@ $welcomePath = (string)($visuals['welcome_background'] ?? '');
 $welcomeUrl = $mediaUrl($welcomePath, $heroUrl);
 $welcomeCss = theme_visual_css_url($welcomeUrl);
 $accent = $esc($visuals['accent_color'] ?? '#ad7c69');
+$headingColor = $esc($visuals['heading_color'] ?? '#343039');
+$textColor = $esc($visuals['text_color'] ?? '#343039');
+$mutedColor = $esc($visuals['muted_color'] ?? '#82727a');
+$linkColor = $esc($visuals['link_color'] ?? '#ad7c69');
 $headingFont = $esc($visuals['heading_font'] ?? 'Gilroy, Arial, sans-serif');
 $bodyFont = $esc($visuals['body_font'] ?? 'Gilroy, Arial, sans-serif');
 $overlay = $esc($visuals['hero_overlay'] ?? '0.28');
@@ -92,9 +96,12 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
   <meta property="og:image" content="<?php echo $esc($heroUrl); ?>">
   <title><?php echo $siteTitle; ?></title>
   <link rel="icon" href="<?php echo $esc($sourceAsset('assets/pic/favicon.png')); ?>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="<?php echo $esc(theme_google_font_stylesheet_url()); ?>">
   <link rel="stylesheet" href="<?php echo $esc(get_theme_asset_url($presetKey, 'fidelity-adapter.css')); ?>">
   <style id="cms-yami-buzzy-visual">
-    :root{--yami-accent:<?php echo $accent; ?>;--yami-heading:<?php echo $headingFont; ?>;--yami-body:<?php echo $bodyFont; ?>;--yami-hero-bg:<?php echo $heroCss; ?>;--yami-welcome-bg:<?php echo $welcomeCss; ?>;--yami-home-bg:<?php echo $homeCss; ?>;--yami-couple-bg:<?php echo $coupleCss; ?>;--yami-event-bg:<?php echo $eventCss; ?>;--yami-story-bg:<?php echo $storyCss; ?>;--yami-gallery-bg:<?php echo $galleryCss; ?>;--yami-video-bg:<?php echo $videoCss; ?>;--yami-gift-bg:<?php echo $giftCss; ?>;--yami-invitation-bg:<?php echo $invitationCss; ?>;--yami-rsvp-bg:<?php echo $rsvpCss; ?>;--yami-closing-bg:<?php echo $closingCss; ?>;--yami-overlay:<?php echo $overlay; ?>}
+    :root{--yami-accent:<?php echo $accent; ?>;--yami-heading-color:<?php echo $headingColor; ?>;--yami-ink:<?php echo $textColor; ?>;--yami-muted:<?php echo $mutedColor; ?>;--yami-link:<?php echo $linkColor; ?>;--yami-heading:<?php echo $headingFont; ?>;--yami-body:<?php echo $bodyFont; ?>;--yami-hero-bg:<?php echo $heroCss; ?>;--yami-welcome-bg:<?php echo $welcomeCss; ?>;--yami-home-bg:<?php echo $homeCss; ?>;--yami-couple-bg:<?php echo $coupleCss; ?>;--yami-event-bg:<?php echo $eventCss; ?>;--yami-story-bg:<?php echo $storyCss; ?>;--yami-gallery-bg:<?php echo $galleryCss; ?>;--yami-video-bg:<?php echo $videoCss; ?>;--yami-gift-bg:<?php echo $giftCss; ?>;--yami-invitation-bg:<?php echo $invitationCss; ?>;--yami-rsvp-bg:<?php echo $rsvpCss; ?>;--yami-closing-bg:<?php echo $closingCss; ?>;--yami-overlay:<?php echo $overlay; ?>}
     .yami-hero{background-image:linear-gradient(rgba(35,25,28,var(--yami-overlay)),rgba(35,25,28,calc(var(--yami-overlay) + .18))),var(--yami-hero-bg)}
     .yami-couple{background-image:linear-gradient(135deg,rgba(255,255,255,.82),rgba(247,239,234,.78)),var(--yami-couple-bg)}
     .yami-event{background-image:linear-gradient(rgba(243,232,226,.84),rgba(243,232,226,.84)),var(--yami-event-bg)}
@@ -105,7 +112,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     .yami-invitation{background-image:linear-gradient(rgba(255,253,251,.86),rgba(255,253,251,.86)),var(--yami-invitation-bg)}
     .yami-rsvp{background-image:linear-gradient(rgba(251,245,241,.86),rgba(251,245,241,.86)),var(--yami-rsvp-bg)}
     .yami-closing{background-image:linear-gradient(rgba(48,34,37,.58),rgba(48,34,37,.72)),var(--yami-closing-bg,var(--yami-welcome-bg))}
-    .yami-section-anchor{background-image:linear-gradient(rgba(35,25,28,var(--yami-overlay)),rgba(35,25,28,calc(var(--yami-overlay) + .18))),var(--yami-home-bg),var(--yami-hero-bg)}
+    .yami-section-anchor{background-image:linear-gradient(rgba(35,25,28,var(--yami-overlay)),rgba(35,25,28,calc(var(--yami-overlay) + .18))),var(--yami-home-bg),var(--yami-hero-bg)}.yami-header nav a,.yami-nav-mobile a{color:var(--yami-link)}.yami-couple h3,.yami-timeline h3,.yami-location-grid h3,.yami-dress-grid h3{color:var(--yami-heading-color)}
   </style>
   <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
 </head>

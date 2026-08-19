@@ -75,6 +75,10 @@ $carouselGroups = array_chunk($galleryUrls, 3);
 if (!$carouselGroups) $carouselGroups = [[]];
 $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 $accent = escape_html((string)($visuals['accent_color'] ?? '#d77fa1'));
+$headingColor = escape_html((string)($visuals['heading_color'] ?? '#372d36'));
+$textColor = escape_html((string)($visuals['text_color'] ?? '#372d36'));
+$mutedColor = escape_html((string)($visuals['muted_color'] ?? '#6d5a62'));
+$linkColor = escape_html((string)($visuals['link_color'] ?? '#8b4f70'));
 $headingFont = escape_html((string)($visuals['heading_font'] ?? 'Tangerine, cursive'));
 $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Raleway, sans-serif'));
 ?>
@@ -91,13 +95,12 @@ $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Raleway, sans-serif')
   <link rel="manifest" href="<?php echo escape_html($sourceAsset('assets/images/icon/site.webmanifest')); ?>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Beau+Rivage&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Tangerine&display=swap" rel="stylesheet">
+  <link href="<?php echo escape_html(theme_google_font_stylesheet_url()); ?>" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
   <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url($presetKey, 'style.css')); ?>">
   <style id="cms-pawiwahan-visual">
-    :root { --pawiwahan-accent: <?php echo $accent; ?>; --pawiwahan-heading: <?php echo $headingFont; ?>; --pawiwahan-body: <?php echo $bodyFont; ?>; --pawiwahan-hero-bg: <?php echo $heroCss; ?>; --pawiwahan-welcome-bg: <?php echo $welcomeCss; ?>; --pawiwahan-gallery-bg: <?php echo $pawiwahanGalleryBg; ?>; --pawiwahan-location-bg: <?php echo $pawiwahanLocationBg; ?>; --pawiwahan-gift-bg: <?php echo $pawiwahanGiftBg; ?>; --pawiwahan-messages-bg: <?php echo $pawiwahanMessagesBg; ?>; }
+    :root { --pawiwahan-accent: <?php echo $accent; ?>; --pawiwahan-heading-color: <?php echo $headingColor; ?>; --pawiwahan-text: <?php echo $textColor; ?>; --pawiwahan-muted: <?php echo $mutedColor; ?>; --pawiwahan-link: <?php echo $linkColor; ?>; --pawiwahan-heading: <?php echo $headingFont; ?>; --pawiwahan-body: <?php echo $bodyFont; ?>; --pawiwahan-hero-bg: <?php echo $heroCss; ?>; --pawiwahan-welcome-bg: <?php echo $welcomeCss; ?>; --pawiwahan-gallery-bg: <?php echo $pawiwahanGalleryBg; ?>; --pawiwahan-location-bg: <?php echo $pawiwahanLocationBg; ?>; --pawiwahan-gift-bg: <?php echo $pawiwahanGiftBg; ?>; --pawiwahan-messages-bg: <?php echo $pawiwahanMessagesBg; ?>; }
     .pawiwahan-cover-override { background-image: linear-gradient(rgba(153,110,109,.65), rgba(153,110,109,.3)), var(--pawiwahan-hero-bg) !important; }
     #welcomeModal .hero { background-image: linear-gradient(rgba(153,110,109,.65), rgba(153,110,109,.3)), var(--pawiwahan-welcome-bg) !important; }
     #galeri,#lokasi,#gift,#pesan { background-size:cover; background-position:center; background-repeat:no-repeat; }
@@ -105,8 +108,10 @@ $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Raleway, sans-serif')
     #lokasi { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-location-bg); }
     #gift { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-gift-bg); }
     #pesan { background-image:linear-gradient(rgba(255,255,255,.82),rgba(255,255,255,.88)),var(--pawiwahan-messages-bg); }
-    h1, .parag { font-family: var(--pawiwahan-heading); }
-    body { font-family: var(--pawiwahan-body); }
+    h1, h2, h3, .parag { font-family: var(--pawiwahan-heading); color:var(--pawiwahan-heading-color); }
+    body { font-family: var(--pawiwahan-body); color:var(--pawiwahan-text); }
+    body p, body small, body label { color:var(--pawiwahan-muted); }
+    body a:not(.btn) { color:var(--pawiwahan-link); }
   </style>
   <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
   <title><?php echo $siteTitle; ?></title>

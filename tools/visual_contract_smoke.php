@@ -19,9 +19,17 @@ $expected = [
     'shubh-vivah' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'section_background_event', 'section_background_gallery', 'section_background_rsvp', 'ornament_left', 'ornament_right'],
     'yami-buzzy' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_couple', 'section_background_event', 'section_background_story', 'section_background_gallery', 'section_background_video', 'section_background_gift', 'section_background_invitation', 'section_background_rsvp', 'section_background_closing', 'hero_overlay'],
 ];
+$commonVisualKeys = ['heading_color', 'text_color', 'muted_color', 'link_color'];
+foreach ($expected as $preset => &$keys) $keys = array_values(array_unique(array_merge($keys, $commonVisualKeys)));
+unset($keys);
+$expected['shubh-vivah'][] = 'section_background_home';
 foreach ($expected as $preset => $keys) {
     $schema = theme_visual_capabilities_for_config($base, $preset);
-    visual_assert(array_keys($schema) === $keys, "{$preset} declares only its supported visual capabilities");
+    $actualKeys = array_keys($schema);
+    $expectedKeys = $keys;
+    sort($actualKeys);
+    sort($expectedKeys);
+    visual_assert($actualKeys === $expectedKeys, "{$preset} declares only its supported visual capabilities");
     $values = theme_visual_values_for_config($base, $preset);
     foreach ($keys as $key) visual_assert(array_key_exists($key, $values), "{$preset} resolves a default for {$key}");
 }
@@ -114,7 +122,9 @@ $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');
 visual_assert(is_string($appSource) && str_contains($appSource, 'function getCurrentPreset'), 'Admin resolves the current preset at action time');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual-schemas='), 'Admin exposes dynamic visual schemas to the editor');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset_visuals"'), 'Admin exposes per-preset visual reset');
-visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-media-assets='), 'Admin exposes canonical image assets to visual editor');
+    visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-media-assets='), 'Admin exposes canonical image assets to visual editor');
+    visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual-color-palette='), 'Admin exposes named color palettes to visual editor');
+    visual_assert(is_string($appSource) && str_contains($appSource, 'visualColorPalette'), 'Admin dynamic editor applies named color palette selections');
 visual_assert(is_string($appSource) && str_contains($appSource, 'mediaAssets'), 'Admin visual editor consumes canonical media assets');
 visual_assert(is_string($appSource) && str_contains($appSource, 'dataset.visualMediaSelect') && str_contains($appSource, 'visualMediaUrl'), 'Admin visual preview handles scoped image capabilities');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'Warna, tulisan, latar, dan gambar yang bisa diubah'), 'Admin explains visual customization in plain Indonesian');
