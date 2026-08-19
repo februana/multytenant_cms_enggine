@@ -19,6 +19,7 @@ This unreleased change set is prepared for PR #84 and covers the multi-preset CM
 - Expanded the Docker build ignore rules to exclude local runtime data while retaining `.env.example` for entrypoint bootstrap.
 - Reconciled README, architecture, deployment, attribution, backup/restore, and release records with the current CMS capability and persistence model.
 - Clarified that native Ubuntu/Linux deployment is the supported non-Docker target; no unimplemented Render Blueprint or managed-cloud manifest is claimed by the repository.
+- Split `pdo_sqlite` and `sqlite3` into separate `docker-php-ext-install` invocations. They share PHP's SQLite source tree, and batching them caused the Render build to remove `config.m4` before the second extension was processed.
 
 ### Fixed
 
