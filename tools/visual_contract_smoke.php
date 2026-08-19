@@ -112,6 +112,13 @@ visual_assert(strpos($html, '#hero{display:flex;justify-content:center;align-ite
 visual_assert(strpos($html, '#hero>main{display:flex;flex-direction:column;align-items:center;width:min(100%,56rem);margin:0 auto;text-align:center}') !== false, 'Elix hero restores a centered column content relationship');
 visual_assert(strpos($html, '#hero>main>#countdown{width:100%;display:flex;justify-content:center;align-items:center;text-align:center}') !== false, 'Elix countdown remains in the centered hero flow');
 visual_assert(strpos($html, '#hero>main>a{display:inline-block;align-self:center;margin-right:auto;margin-left:auto}') !== false, 'Elix CTA is structurally centered below the countdown');
+visual_assert(!str_contains($html, 'id="home"'), 'Elix render omits the original Home section completely');
+visual_assert(!str_contains($html, 'class="home"'), 'Elix render omits Home-only presentation markup');
+visual_assert(!str_contains($html, 'href="#home"'), 'Elix render has no broken #home anchors');
+visual_assert(str_contains($html, 'href="#hero"'), 'Elix Beranda and CTA target the Hero');
+$elixNavPos = strpos($html, 'aria-label="Navigasi undangan"');
+$elixInfoPos = strpos($html, 'id="info"');
+visual_assert($elixNavPos !== false && $elixInfoPos !== false && $elixNavPos < $elixInfoPos, 'Elix navigation precedes the first real content section');
 visual_assert(is_file(dirname(__DIR__) . '/themes/elix/img/prewed1.jpg'), 'Elix source hero asset is bundled locally');
 visual_assert(is_file(dirname(__DIR__) . '/themes/elix/img/floraPattern1.png'), 'Elix source home pattern is bundled locally');
 visual_assert(strpos($html, '/themes/elix/img/prewed1.jpg') !== false || strpos($html, 'uploads/background/hero.jpg') !== false, 'Elix render has a valid local source or CMS hero background');
@@ -168,6 +175,7 @@ visual_assert(is_string($appSource) && str_contains($appSource, 'input.dataset.v
 visual_assert(is_string($appSource) && str_contains($appSource, 'visualMediaUrl'), 'Admin image capability updates the preview from the selected media reference');
 visual_assert(is_string($appSource) && str_contains($appSource, 'label.htmlFor = id'), 'Dynamic visual fields associate labels with controls');
 visual_assert(is_string($appSource) && !str_contains($appSource, 'innerHTML'), 'Dynamic visual editor avoids raw HTML injection');
+visual_assert(!str_contains(file_get_contents(dirname(__DIR__) . '/themes/elix/script.js'), '#home'), 'Elix JavaScript has no #home runtime dependency');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'title="Preview tema undangan"'), 'Theme preview iframe has an accessible title');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'aria-label="Ukuran preview"'), 'Preview viewport controls have an accessible group label');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');
