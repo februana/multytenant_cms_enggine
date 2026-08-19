@@ -32,26 +32,28 @@ if (isset($_GET['logout'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $username = trim((string)($_POST['username'] ?? ''));
-    $password = trim((string)($_POST['password'] ?? ''));
+    $password = (string)($_POST['password'] ?? '');
+    $identity = authenticate_user($username, $password);
     if ($username === '' || $password === '') {
         $error = 'Username dan password wajib diisi.';
-    } elseif ($username !== $config['admin']['username'] && $username !== (getenv('ADMIN_USER') ?: 'admin')) {
-        $error = 'Username atau password salah.';
-    } elseif (!verify_admin_password($password, $config)) {
-        $error = 'Username atau password salah.';
+    } elseif (!is_array($identity)) {
+        $error = 'Username/password salah, domain tidak terdaftar, atau akun tidak berwenang pada domain ini.';
     } else {
-        $_SESSION['admin'] = true;
-        $_SESSION['last_activity'] = time();
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
         session_regenerate_id(true);
+        $_SESSION['admin'] = true;
+        $_SESSION['user_id'] = $identity['id'];
+        $_SESSION['username'] = $identity['username'];
+        $_SESSION['role'] = $identity['role'];
+        $_SESSION['tenant_id'] = $identity['tenant_id'];
+        $_SESSION['tenant_domain'] = $identity['domain'];
+        $_SESSION['last_activity'] = time();
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         header('Location: /admin');
         exit;
     }
 }
 
-if (!empty($_SESSION['admin'])) {
+if (session_admin_is_valid()) {
     $_SESSION['last_activity'] = time();
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -63,7 +65,7 @@ function build_invitation_preview_url(array $config): string {
     return build_guest_invitation_url($siteUrl, 'Bapak Ahmad');
 }
 
-if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Token CSRF tidak valid.';
     } else {
@@ -753,8 +755,14 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                 break;
             case 'save_settings':
                 $config['site']['url'] = trim((string)($_POST['site_url'] ?? '')) ?: $config['site']['url'];
-                $config['admin']['username'] = trim((string)($_POST['admin_username'] ?? '')) ?: $config['admin']['username'];
-                $newPassword = trim((string)($_POST['admin_password'] ?? ''));
+                $requestedUsername = trim((string)($_POST['admin_username'] ?? '')) ?: $config['admin']['username'];
+                $config['admin']['username'] = $requestedUsername;
+                if ($requestedUsername !== (string)($_SESSION['username'] ?? '')) {
+                    if (!update_current_user_username($requestedUsername)) {
+                        $error = 'Gagal memperbarui username akun.';
+                    }
+                }
+                $newPassword = (string)($_POST['admin_password'] ?? '');
                 if ($newPassword !== '') {
                     set_admin_password($newPassword, $config);
                 }
@@ -1032,6 +1040,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <h1>Dasbor CMS Undangan</h1>
                     <p style="margin:4px 0;color:#6b5b45;">Kelola undangan tanpa mengedit kode.</p>
                 </div>
+                <span><?= escape_html((string)($_SESSION['role'] ?? '')) ?> · <?= escape_html(request_host()) ?></span>
+                <?php if (is_super_admin()): ?><a href="/admin/super-admin.php">Super Admin</a><?php endif; ?>
                 <a href="?logout=1">Keluar</a>
             </div>
             <?php if ($success): ?><div class="notice"><?php echo escape_html($success); ?></div><?php endif; ?>
@@ -2404,8 +2414,14 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <?php
                                 try {
                                     if (is_readable(DB_PATH)) {
-                                        $db = new SQLite3(DB_PATH, SQLITE3_OPEN_READONLY);
-                                        $result = $db->query('SELECT id, nama, status, ucapan, created_at, visible FROM tamu ORDER BY id DESC LIMIT 50');
+                                        $db = tenant_database(true);
+                                        if (is_super_admin()) {
+                                            $result = $db->query('SELECT id, nama, status, ucapan, created_at, visible FROM tamu ORDER BY id DESC LIMIT 50');
+                                        } else {
+                                            $stmt = $db->prepare('SELECT id, nama, status, ucapan, created_at, visible FROM tamu WHERE tenant_id = :tenant_id ORDER BY id DESC LIMIT 50');
+                                            $stmt->bindValue(':tenant_id', current_tenant_id(), SQLITE3_INTEGER);
+                                            $result = $stmt->execute();
+                                        }
                                         while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                                             $visible = $row['visible'] ? 'Yes' : 'No';
                                             echo '<tr>';

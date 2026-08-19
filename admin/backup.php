@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_admin();
+if (!is_super_admin()) {
+    http_response_code(403);
+    exit('Backup database hanya dapat dilakukan oleh Super Admin.');
+}
 
 $timestamp = gmdate('Ymd\THis');
 $filename = 'wedding-invitation-backup-' . $timestamp . '.zip';

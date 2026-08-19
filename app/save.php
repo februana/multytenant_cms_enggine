@@ -2,10 +2,10 @@
 // Load consolidated canonical config
 require_once dirname(__DIR__) . '/config.php';
 require_once __DIR__ . '/theme-contract.php';
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+init_session();
 header('Content-Type: application/json; charset=utf-8');
+$tenant = current_tenant(false);
+if (!is_array($tenant)) respond(false, 'Domain tidak terdaftar atau sedang ditangguhkan.');
 function respond($success, $message = '', $extra = []) {
     echo json_encode(array_merge(['success' => (bool)$success, 'message' => $message], $extra), JSON_UNESCAPED_UNICODE);
     exit;
@@ -20,8 +20,8 @@ if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_PO
 // Handle admin photo upload actions if posted to save.php
 $action = trim((string)($_POST['action'] ?? ''));
 if ($action !== '') {
-    if (empty($_SESSION['admin'])) {
-        respond(false, 'Akses ditolak.');
+    if (!session_admin_is_valid()) {
+        respond(false, 'Akses ditolak atau sesi tidak berlaku untuk domain ini.');
     }
     $config = load_config();
     $pendingMediaCleanup = [];
@@ -142,8 +142,9 @@ if (!in_array($status, ['Hadir','Tidak Hadir'], true)) respond(false, 'Status ti
 
 try {
     init_database();
-    $db = new SQLite3(DB_PATH, SQLITE3_OPEN_READWRITE);
-    $stmt = $db->prepare('INSERT INTO tamu (nama,status,ucapan,visible) VALUES (:nama,:status,:ucapan,1)');
+    $db = tenant_database(false);
+    $stmt = $db->prepare('INSERT INTO tamu (tenant_id,nama,status,ucapan,visible) VALUES (:tenant_id,:nama,:status,:ucapan,1)');
+    $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
     $stmt->bindValue(':nama', $nama, SQLITE3_TEXT);
     $stmt->bindValue(':status', $status, SQLITE3_TEXT);
     $stmt->bindValue(':ucapan', $ucapan, SQLITE3_TEXT);

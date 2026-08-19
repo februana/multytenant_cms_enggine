@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_admin();
+if (!is_super_admin()) {
+    http_response_code(403);
+    exit('Restore database hanya dapat dilakukan oleh Super Admin.');
+}
 
 function safe_extract_path(string $name): ?string {
     $clean = str_replace(['\\', '..'], ['', ''], $name);

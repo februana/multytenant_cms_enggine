@@ -3,6 +3,8 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/app/theme-helper.php';
 require_once __DIR__ . '/app/theme-renderer.php';
 
+// Resolve the tenant exclusively from the Cloudflare-forwarded Host header.
+$currentTenant = current_tenant(true);
 $config = load_config();
 
 $siteTitle = $config['site']['title'] ?? 'Undangan Pernikahan';

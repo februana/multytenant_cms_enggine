@@ -60,6 +60,284 @@ if (getenv('UNDANGAN_DB_PATH')) {
 if (!defined('DB_PATH')) define('DB_PATH', $dbPath);
 if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', RUNTIME_DATA_DIR . '/guest-links.json');
 
+/**
+ * Multi-tenant runtime helpers. All tenant selection is server-side and is
+ * derived from the normalized Host header or the authenticated session.
+ */
+function normalize_tenant_domain(string $host): string {
+    $host = strtolower(trim($host));
+    if ($host === '') return '';
+    if (str_starts_with($host, '[')) {
+        $host = trim((string)preg_replace('/^\\[([^\\]]+)\\](?::\\d+)?$/', '$1', $host));
+    } else {
+        $host = preg_replace('/:\\d+$/', '', $host) ?? $host;
+    }
+    return rtrim($host, '.');
+}
+
+function request_host(): string {
+    $host = (string)($_SERVER['HTTP_HOST'] ?? '');
+    if ($host === '' && PHP_SAPI === 'cli') {
+        $host = (string)(getenv('UNDANGAN_MAIN_DOMAIN') ?: getenv('MAIN_DOMAIN') ?: 'localhost');
+    }
+    return normalize_tenant_domain($host);
+}
+
+function password_encryption_key(): string {
+    $configured = trim((string)(getenv('UNDANGAN_PASSWORD_KEY') ?: ''));
+    if ($configured === '') {
+        error_log('UNDANGAN_PASSWORD_KEY is not configured; visible passwords cannot be decrypted.');
+        return '';
+    }
+    return hash('sha256', $configured, true);
+}
+
+function encrypt_visible_password(string $password): string {
+    $key = password_encryption_key();
+    if ($key === '') return '';
+    $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+    $iv = random_bytes($ivLength);
+    $ciphertext = openssl_encrypt($password, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+    if ($ciphertext === false) return '';
+    return base64_encode($iv . $ciphertext);
+}
+
+function decrypt_visible_password(?string $encoded): string {
+    $encoded = trim((string)$encoded);
+    $key = password_encryption_key();
+    if ($encoded === '' || $key === '') return '';
+    $raw = base64_decode($encoded, true);
+    $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+    if ($raw === false || strlen($raw) <= $ivLength) return '';
+    $iv = substr($raw, 0, $ivLength);
+    $ciphertext = substr($raw, $ivLength);
+    $password = openssl_decrypt($ciphertext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+    return $password === false ? '' : $password;
+}
+
+function generate_random_password(int $length = 12): string {
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    $result = '';
+    $max = strlen($alphabet) - 1;
+    for ($i = 0; $i < max(1, $length); $i++) $result .= $alphabet[random_int(0, $max)];
+    return $result;
+}
+
+function is_valid_tenant_domain(string $domain): bool {
+    $domain = normalize_tenant_domain($domain);
+    return $domain !== '' && (bool)preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,}$/', $domain);
+}
+
+function tenant_admin_username_for_domain(string $domain): string {
+    $label = explode('.', normalize_tenant_domain($domain))[0] ?? 'tenant';
+    $label = preg_replace('/[^a-z0-9_-]/i', '-', $label) ?: 'tenant';
+    return substr('admin-' . strtolower(trim($label, '-_')), 0, 48);
+}
+
+function tenant_database(bool $readOnly = false): SQLite3 {
+    $flags = $readOnly ? SQLITE3_OPEN_READONLY : (SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+    $db = new SQLite3(DB_PATH, $flags);
+    $db->busyTimeout(5000);
+    if (!$readOnly) $db->exec('PRAGMA foreign_keys = ON');
+    return $db;
+}
+
+function table_has_column(SQLite3 $db, string $table, string $column): bool {
+    $stmt = $db->prepare("SELECT 1 FROM pragma_table_info(:table) WHERE name = :column LIMIT 1");
+    $stmt->bindValue(':table', $table, SQLITE3_TEXT);
+    $stmt->bindValue(':column', $column, SQLITE3_TEXT);
+    return (bool)$stmt->execute()->fetchArray(SQLITE3_NUM);
+}
+
+function tenant_from_domain(SQLite3 $db, string $domain, bool $activeOnly = true): ?array {
+    $sql = 'SELECT id, domain, status, created_at FROM tenants WHERE domain = :domain';
+    if ($activeOnly) $sql .= " AND status = 'active'";
+    $sql .= ' LIMIT 1';
+    $stmt = $db->prepare($sql);
+    $stmt->bindValue(':domain', normalize_tenant_domain($domain), SQLITE3_TEXT);
+    $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+    return is_array($row) ? $row : null;
+}
+
+function current_tenant(bool $required = true): ?array {
+    static $resolved = false;
+    static $tenant = null;
+    if ($resolved) {
+        if ($required && $tenant === null) tenant_http_error(404, 'Domain tidak terdaftar.');
+        return $tenant;
+    }
+    $resolved = true;
+    try {
+        init_database();
+        $db = tenant_database(false);
+        $domain = request_host();
+        $tenant = tenant_from_domain($db, $domain, true);
+        if ($tenant === null && (getenv('UNDANGAN_AUTO_PROVISION') !== '0')) {
+            $tenant = auto_provision_tenant($db, $domain);
+        }
+        if (is_array($tenant)) {
+            recreate_tamu_with_tenant_fk($db, (int)$tenant['id']);
+            ensure_tenant_seed($db, (int)$tenant['id']);
+        }
+        $db->close();
+    } catch (Throwable $e) {
+        error_log('Tenant resolution failed: ' . $e->getMessage());
+        $tenant = null;
+    }
+    if ($required && $tenant === null) tenant_http_error(404, 'Domain tidak terdaftar atau sedang ditangguhkan.');
+    return $tenant;
+}
+
+function tenant_http_error(int $status, string $message): void {
+    if (PHP_SAPI !== 'cli') {
+        http_response_code($status);
+        header('Content-Type: text/plain; charset=utf-8');
+    }
+    echo $message;
+    exit;
+}
+
+function current_tenant_id(): int {
+    $tenant = current_tenant(true);
+    return (int)$tenant['id'];
+}
+
+function current_user_role(): string {
+    init_session();
+    return (string)($_SESSION['role'] ?? '');
+}
+
+function is_super_admin(): bool {
+    return current_user_role() === 'super_admin';
+}
+
+function tenant_query_scope(string $column = 'tenant_id'): array {
+    if (is_super_admin()) return ['', []];
+    return [" AND {$column} = :current_tenant_id", [':current_tenant_id' => current_tenant_id()]];
+}
+
+function tenant_default_config_from_legacy(): array {
+    $defaults = function_exists('config_defaults') ? config_defaults() : [];
+    if (!is_readable(CONFIG_FILE)) return $defaults;
+    $raw = @file_get_contents(CONFIG_FILE);
+    $legacy = is_string($raw) ? json_decode($raw, true) : null;
+    return is_array($legacy) ? array_replace_recursive($defaults, $legacy) : $defaults;
+}
+
+function ensure_tenant_user_seed(SQLite3 $db, int $defaultTenantId): void {
+    $count = (int)$db->querySingle("SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND tenant_id IS NULL");
+    if ($count > 0) return;
+    $legacy = tenant_default_config_from_legacy();
+    $username = trim((string)(getenv('ADMIN_USER') ?: ($legacy['admin']['username'] ?? 'admin'))) ?: 'admin';
+    $passwordHash = trim((string)($legacy['admin']['password_hash'] ?? ''));
+    $envPassword = getenv('ADMIN_PASS');
+    $plainPassword = is_string($envPassword) && $envPassword !== '' ? $envPassword : '';
+    if ($passwordHash === '' && $plainPassword !== '') $passwordHash = password_hash($plainPassword, PASSWORD_DEFAULT);
+    if ($passwordHash === '') return;
+    $stmt = $db->prepare("INSERT OR IGNORE INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (NULL, :username, :hash, :visible_password, 'super_admin')");
+    $stmt->bindValue(':username', $username, SQLITE3_TEXT);
+    $stmt->bindValue(':hash', $passwordHash, SQLITE3_TEXT);
+    $stmt->bindValue(':visible_password', encrypt_visible_password($plainPassword), SQLITE3_TEXT);
+    $stmt->execute();
+}
+
+function ensure_tenant_seed(SQLite3 $db, int $tenantId): void {
+    $stmt = $db->prepare('SELECT 1 FROM tenant_configs WHERE tenant_id = :tenant_id LIMIT 1');
+    $stmt->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+    if ($stmt->execute()->fetchArray(SQLITE3_NUM)) return;
+    $config = tenant_default_config_from_legacy();
+    $json = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($json === false) $json = '{}';
+    $customCss = is_readable(CUSTOM_CSS_FILE) ? (string)@file_get_contents(CUSTOM_CSS_FILE) : '';
+    $eventIcs = is_readable(EVENT_ICS_FILE) ? (string)@file_get_contents(EVENT_ICS_FILE) : '';
+    $insert = $db->prepare('INSERT OR IGNORE INTO tenant_configs (tenant_id, config_json, custom_css, event_ics) VALUES (:tenant_id, :config_json, :custom_css, :event_ics)');
+    $insert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+    $insert->bindValue(':config_json', $json, SQLITE3_TEXT);
+    $insert->bindValue(':custom_css', $customCss, SQLITE3_TEXT);
+    $insert->bindValue(':event_ics', $eventIcs, SQLITE3_TEXT);
+    $insert->execute();
+    if ((int)$db->querySingle('SELECT COUNT(*) FROM guest_links WHERE tenant_id = ' . $tenantId) === 0 && is_readable(GUEST_LINKS_FILE)) {
+        $links = json_decode((string)@file_get_contents(GUEST_LINKS_FILE), true);
+        if (is_array($links)) {
+            foreach ($links as $link) {
+                if (!is_array($link)) continue;
+                $linkInsert = $db->prepare('INSERT INTO guest_links (tenant_id, guest_name, invitation_url, created_at) VALUES (:tenant_id, :guest_name, :invitation_url, :created_at)');
+                $linkInsert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+                $linkInsert->bindValue(':guest_name', trim((string)($link['guest_name'] ?? '')), SQLITE3_TEXT);
+                $linkInsert->bindValue(':invitation_url', trim((string)($link['invitation_url'] ?? '')), SQLITE3_TEXT);
+                $linkInsert->bindValue(':created_at', trim((string)($link['created_at'] ?? gmdate('c'))), SQLITE3_TEXT);
+                $linkInsert->execute();
+            }
+        }
+    }
+}
+
+function auto_provision_tenant(SQLite3 $db, string $domain): ?array {
+    $domain = normalize_tenant_domain($domain);
+    if (!is_valid_tenant_domain($domain) || password_encryption_key() === '') return null;
+    $existing = tenant_from_domain($db, $domain, false);
+    if (is_array($existing)) return ($existing['status'] ?? '') === 'active' ? $existing : null;
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $tenantInsert = $db->prepare("INSERT INTO tenants (domain, status) VALUES (:domain, 'active')");
+        $tenantInsert->bindValue(':domain', $domain, SQLITE3_TEXT);
+        if (!$tenantInsert->execute()) throw new RuntimeException('Tenant insert failed.');
+        $tenantId = (int)$db->lastInsertRowID();
+        ensure_tenant_seed($db, $tenantId);
+        $username = tenant_admin_username_for_domain($domain);
+        $password = generate_random_password(8);
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $visiblePassword = encrypt_visible_password($password);
+        if ($visiblePassword === '') throw new RuntimeException('Tenant password encryption failed.');
+        $userInsert = $db->prepare("INSERT INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (:tenant_id, :username, :password_hash, :visible_password, 'tenant_admin')");
+        $userInsert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+        $userInsert->bindValue(':username', $username, SQLITE3_TEXT);
+        $userInsert->bindValue(':password_hash', $passwordHash, SQLITE3_TEXT);
+        $userInsert->bindValue(':visible_password', $visiblePassword, SQLITE3_TEXT);
+        if (!$userInsert->execute()) throw new RuntimeException('Tenant admin insert failed.');
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        $existingAfterRace = tenant_from_domain($db, $domain, true);
+        if (is_array($existingAfterRace)) return $existingAfterRace;
+        error_log('Tenant auto-provisioning failed for ' . $domain . ': ' . $e->getMessage());
+        return null;
+    }
+    error_log('Auto-provisioned tenant ' . $domain . ' with Tenant Admin username ' . $username . '. Password is available only in the Super Admin Dashboard.');
+    $tenant = tenant_from_domain($db, $domain, true);
+    return is_array($tenant) ? $tenant : null;
+}
+
+function recreate_tamu_with_tenant_fk(SQLite3 $db, int $defaultTenantId): void {
+    if (!table_has_column($db, 'tamu', 'tenant_id')) {
+        $db->exec('ALTER TABLE tamu ADD COLUMN tenant_id INTEGER');
+    }
+    $foreignKeys = [];
+    $result = $db->query('PRAGMA foreign_key_list(tamu)');
+    while ($row = $result->fetchArray(SQLITE3_ASSOC)) $foreignKeys[] = $row;
+    $hasTenantForeignKey = false;
+    foreach ($foreignKeys as $row) {
+        if (($row['from'] ?? '') === 'tenant_id' && ($row['table'] ?? '') === 'tenants') $hasTenantForeignKey = true;
+    }
+    $db->exec('UPDATE tamu SET tenant_id = ' . (int)$defaultTenantId . ' WHERE tenant_id IS NULL');
+    if ($hasTenantForeignKey) {
+        $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
+        return;
+    }
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $db->exec('CREATE TABLE tamu_new (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, nama TEXT NOT NULL, status TEXT NOT NULL, ucapan TEXT, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)');
+        $db->exec('INSERT INTO tamu_new (id, tenant_id, nama, status, ucapan, visible, created_at) SELECT id, COALESCE(tenant_id, ' . (int)$defaultTenantId . '), nama, status, ucapan, COALESCE(visible, 1), COALESCE(created_at, CURRENT_TIMESTAMP) FROM tamu');
+        $db->exec('DROP TABLE tamu');
+        $db->exec('ALTER TABLE tamu_new RENAME TO tamu');
+        $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
+        $db->exec('COMMIT');
+    } catch (Throwable $e) {
+        $db->exec('ROLLBACK');
+        throw $e;
+    }
+}
+
 // Security headers
 function send_security_header(string $name, string $value): void {
     $exists = false;
@@ -1198,17 +1476,63 @@ function ensure_upload_dirs(): void {
 function init_database(string $dbPath = DB_PATH): bool {
     try {
         $db = new SQLite3($dbPath, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-        $db->exec('CREATE TABLE IF NOT EXISTS tamu (
+        $db->busyTimeout(5000);
+        $db->exec('PRAGMA foreign_keys = ON');
+        $db->exec("CREATE TABLE IF NOT EXISTS tenants (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nama TEXT NOT NULL,
-            status TEXT NOT NULL,
-            ucapan TEXT,
-            visible INTEGER DEFAULT 1,
+            domain TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )');
-        $checkCol = $db->querySingle("SELECT 1 FROM pragma_table_info('tamu') WHERE name='visible'");
-        if (!$checkCol) {
-            @$db->exec('ALTER TABLE tamu ADD COLUMN visible INTEGER DEFAULT 1');
+        )");
+        $db->exec("CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id INTEGER NULL REFERENCES tenants(id) ON DELETE CASCADE,
+            username TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            visible_password TEXT NOT NULL DEFAULT '',
+            role TEXT NOT NULL CHECK (role IN ('super_admin', 'tenant_admin')),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (tenant_id, username)
+        )");
+        if (!table_has_column($db, 'users', 'visible_password')) {
+            @$db->exec("ALTER TABLE users ADD COLUMN visible_password TEXT NOT NULL DEFAULT ''");
+        }
+        $db->exec('CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)');
+        $db->exec("CREATE TABLE IF NOT EXISTS tenant_configs (
+            tenant_id INTEGER PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
+            config_json TEXT NOT NULL,
+            custom_css TEXT NOT NULL DEFAULT '',
+            event_ics TEXT NOT NULL DEFAULT '',
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )");
+        $db->exec("CREATE TABLE IF NOT EXISTS guest_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+            guest_name TEXT NOT NULL,
+            invitation_url TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )");
+        $db->exec('CREATE INDEX IF NOT EXISTS idx_guest_links_tenant_id ON guest_links(tenant_id)');
+
+        $hasTamu = (bool)$db->querySingle("SELECT 1 FROM sqlite_master WHERE type='table' AND name='tamu'");
+        if (!$hasTamu) {
+            $db->exec('CREATE TABLE tamu (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, nama TEXT NOT NULL, status TEXT NOT NULL, ucapan TEXT, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)');
+            $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
+        } else {
+            if (!table_has_column($db, 'tamu', 'visible')) @$db->exec('ALTER TABLE tamu ADD COLUMN visible INTEGER DEFAULT 1');
+        }
+
+        $domain = normalize_tenant_domain((string)(getenv('UNDANGAN_MAIN_DOMAIN') ?: getenv('MAIN_DOMAIN') ?: (PHP_SAPI === 'cli' ? 'localhost' : '')));
+        if ($domain !== '') {
+            $stmt = $db->prepare("INSERT OR IGNORE INTO tenants (domain, status) VALUES (:domain, 'active')");
+            $stmt->bindValue(':domain', $domain, SQLITE3_TEXT);
+            $stmt->execute();
+        }
+        $defaultTenantId = (int)$db->querySingle('SELECT id FROM tenants ORDER BY id LIMIT 1');
+        if ($defaultTenantId > 0) {
+            recreate_tamu_with_tenant_fk($db, $defaultTenantId);
+            ensure_tenant_seed($db, $defaultTenantId);
+            ensure_tenant_user_seed($db, $defaultTenantId);
         }
         $db->close();
         return true;
@@ -1221,7 +1545,21 @@ function init_database(string $dbPath = DB_PATH): bool {
 function load_config(): array {
     ensure_upload_dirs();
     $defaults = config_defaults();
-    if (!is_readable(CONFIG_FILE)) {
+    $tenantConfigRaw = null;
+    $tenant = current_tenant(false);
+    if (is_array($tenant)) {
+        try {
+            $db = tenant_database(true);
+            $stmt = $db->prepare('SELECT config_json FROM tenant_configs WHERE tenant_id = :tenant_id LIMIT 1');
+            $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+            $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+            if (is_array($row) && isset($row['config_json'])) $tenantConfigRaw = (string)$row['config_json'];
+            $db->close();
+        } catch (Throwable $e) {
+            error_log('Tenant config read failed: ' . $e->getMessage());
+        }
+    }
+    if ($tenantConfigRaw === null && !is_readable(CONFIG_FILE)) {
         if (function_exists('theme_contract_registry')) {
             $defaults['theme_sections'] = [];
             foreach (array_keys(theme_contract_registry()) as $presetKey) {
@@ -1231,7 +1569,7 @@ function load_config(): array {
         save_config($defaults);
         return $defaults;
     }
-    $raw = @file_get_contents(CONFIG_FILE);
+    $raw = $tenantConfigRaw ?? @file_get_contents(CONFIG_FILE);
     if ($raw === false) {
         return $defaults;
     }
@@ -1369,55 +1707,71 @@ function save_config(array $config): bool {
     ensure_upload_dirs();
     $config = array_replace_recursive(config_defaults(), $config);
     $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($json === false) {
-        return false;
+    if ($json === false) return false;
+    $tenant = current_tenant(false);
+    if (is_array($tenant)) {
+        try {
+            init_database();
+            $db = tenant_database(false);
+            $stmt = $db->prepare("INSERT INTO tenant_configs (tenant_id, config_json, custom_css, event_ics, updated_at) VALUES (:tenant_id, :config_json, :custom_css, :event_ics, CURRENT_TIMESTAMP) ON CONFLICT(tenant_id) DO UPDATE SET config_json = excluded.config_json, event_ics = excluded.event_ics, updated_at = CURRENT_TIMESTAMP");
+            $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+            $stmt->bindValue(':config_json', $json, SQLITE3_TEXT);
+            $stmt->bindValue(':custom_css', (string)($config['custom_css'] ?? ''), SQLITE3_TEXT);
+            $stmt->bindValue(':event_ics', '', SQLITE3_TEXT);
+            if (!$stmt->execute()) return false;
+            $db->close();
+        } catch (Throwable $e) {
+            error_log('Tenant config save failed: ' . $e->getMessage());
+            return false;
+        }
     }
+    // Keep the legacy files as a safe migration/export mirror for existing tools.
     $tmp = CONFIG_FILE . '.tmp';
-    if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
-        return false;
-    }
-    if (!@rename($tmp, CONFIG_FILE)) {
-        @unlink($tmp);
-        return false;
-    }
+    if (@file_put_contents($tmp, $json, LOCK_EX) === false) return false;
+    if (!@rename($tmp, CONFIG_FILE)) { @unlink($tmp); return false; }
     write_event_ics($config);
     return true;
 }
 
 function load_guest_links(): array {
-    if (!is_readable(GUEST_LINKS_FILE)) {
-        return [];
+    $tenant = current_tenant(false);
+    if (is_array($tenant)) {
+        try {
+            $db = tenant_database(true);
+            $stmt = $db->prepare('SELECT guest_name, invitation_url, created_at FROM guest_links WHERE tenant_id = :tenant_id ORDER BY id DESC');
+            $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+            $result = $stmt->execute();
+            $rows = [];
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) $rows[] = $row;
+            $db->close();
+            return $rows;
+        } catch (Throwable $e) {
+            error_log('Tenant guest-link read failed: ' . $e->getMessage());
+        }
     }
+    if (!is_readable(GUEST_LINKS_FILE)) return [];
     $raw = @file_get_contents(GUEST_LINKS_FILE);
-    if ($raw === false) {
-        return [];
-    }
-    $data = json_decode($raw, true);
-    if (!is_array($data)) {
-        return [];
-    }
-    $result = [];
-    foreach ($data as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-        if (!isset($item['guest_name'], $item['invitation_url'], $item['created_at'])) {
-            continue;
-        }
-        $result[] = [
-            'guest_name' => trim((string)$item['guest_name']),
-            'invitation_url' => trim((string)$item['invitation_url']),
-            'created_at' => trim((string)$item['created_at'])
-        ];
-    }
-    return $result;
+    $data = $raw === false ? null : json_decode($raw, true);
+    if (!is_array($data)) return [];
+    return array_values(array_filter(array_map(static function ($item) {
+        if (!is_array($item) || !isset($item['guest_name'], $item['invitation_url'], $item['created_at'])) return null;
+        return ['guest_name' => trim((string)$item['guest_name']), 'invitation_url' => trim((string)$item['invitation_url']), 'created_at' => trim((string)$item['created_at'])];
+    }, $data)));
 }
 
 function load_custom_css(): string {
-    if (!is_readable(CUSTOM_CSS_FILE)) {
-        $config = load_config();
-        return (string)($config['custom_css'] ?? '');
+    $tenant = current_tenant(false);
+    if (is_array($tenant)) {
+        try {
+            $db = tenant_database(true);
+            $stmt = $db->prepare('SELECT custom_css FROM tenant_configs WHERE tenant_id = :tenant_id LIMIT 1');
+            $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+            $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+            $db->close();
+            if (is_array($row)) return (string)($row['custom_css'] ?? '');
+        } catch (Throwable $e) { error_log('Tenant CSS read failed: ' . $e->getMessage()); }
     }
+    if (!is_readable(CUSTOM_CSS_FILE)) return (string)(load_config()['custom_css'] ?? '');
     $css = @file_get_contents(CUSTOM_CSS_FILE);
     return $css === false ? '' : $css;
 }
@@ -1470,32 +1824,53 @@ function validate_custom_css(string $css): array {
 }
 
 function save_custom_css(string $css): bool {
+    $tenant = current_tenant(false);
+    if (is_array($tenant)) {
+        try {
+            init_database();
+            $db = tenant_database(false);
+            $stmt = $db->prepare('UPDATE tenant_configs SET custom_css = :custom_css, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = :tenant_id');
+            $stmt->bindValue(':custom_css', $css, SQLITE3_TEXT);
+            $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+            $stmt->execute();
+            $db->close();
+        } catch (Throwable $e) { error_log('Tenant CSS save failed: ' . $e->getMessage()); return false; }
+    }
     $tmp = CUSTOM_CSS_FILE . '.tmp';
-    if (@file_put_contents($tmp, $css, LOCK_EX) === false) {
-        return false;
-    }
-    if (!@rename($tmp, CUSTOM_CSS_FILE)) {
-        @unlink($tmp);
-        return false;
-    }
+    if (@file_put_contents($tmp, $css, LOCK_EX) === false) return false;
+    if (!@rename($tmp, CUSTOM_CSS_FILE)) { @unlink($tmp); return false; }
     @chmod(CUSTOM_CSS_FILE, 0644);
     return true;
 }
 
 function save_guest_links(array $links): bool {
     $data = array_values($links);
+    $tenant = current_tenant(false);
+    if (is_array($tenant)) {
+        try {
+            init_database();
+            $db = tenant_database(false);
+            $tenantId = (int)$tenant['id'];
+            $delete = $db->prepare('DELETE FROM guest_links WHERE tenant_id = :tenant_id');
+            $delete->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+            $delete->execute();
+            foreach ($data as $item) {
+                if (!is_array($item)) continue;
+                $insert = $db->prepare('INSERT INTO guest_links (tenant_id, guest_name, invitation_url, created_at) VALUES (:tenant_id, :guest_name, :invitation_url, :created_at)');
+                $insert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+                $insert->bindValue(':guest_name', trim((string)($item['guest_name'] ?? '')), SQLITE3_TEXT);
+                $insert->bindValue(':invitation_url', trim((string)($item['invitation_url'] ?? '')), SQLITE3_TEXT);
+                $insert->bindValue(':created_at', trim((string)($item['created_at'] ?? gmdate('c'))), SQLITE3_TEXT);
+                $insert->execute();
+            }
+            $db->close();
+        } catch (Throwable $e) { error_log('Tenant guest-link save failed: ' . $e->getMessage()); return false; }
+    }
     $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($json === false) {
-        return false;
-    }
+    if ($json === false) return false;
     $tmp = GUEST_LINKS_FILE . '.tmp';
-    if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
-        return false;
-    }
-    if (!@rename($tmp, GUEST_LINKS_FILE)) {
-        @unlink($tmp);
-        return false;
-    }
+    if (@file_put_contents($tmp, $json, LOCK_EX) === false) return false;
+    if (!@rename($tmp, GUEST_LINKS_FILE)) { @unlink($tmp); return false; }
     return true;
 }
 
@@ -1947,39 +2322,122 @@ function verify_admin_password(string $password, array $config): bool {
     return hash_equals($expectedUser, $config['admin']['username'] ?? $expectedUser) && hash_equals($envPass, $password);
 }
 
-function set_admin_password(string $password, array &$config): void {
-    if ($password === '') {
-        return;
+function authenticate_user(string $username, string $password): ?array {
+    $username = trim($username);
+    if ($username === '' || $password === '') return null;
+    try {
+        init_database();
+        $tenant = current_tenant(false);
+        if (!is_array($tenant)) return null;
+        $db = tenant_database(true);
+        $stmt = $db->prepare('SELECT id, tenant_id, username, password_hash, role FROM users WHERE username = :username AND (tenant_id = :tenant_id OR tenant_id IS NULL) ORDER BY tenant_id IS NOT NULL DESC LIMIT 2');
+        $stmt->bindValue(':username', $username, SQLITE3_TEXT);
+        $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+        $result = $stmt->execute();
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            if (!password_verify($password, (string)($row['password_hash'] ?? ''))) continue;
+            if (($row['role'] ?? '') === 'tenant_admin' && (int)$row['tenant_id'] !== (int)$tenant['id']) continue;
+            $db->close();
+            return ['id' => (int)$row['id'], 'tenant_id' => $row['tenant_id'] === null ? null : (int)$row['tenant_id'], 'username' => (string)$row['username'], 'role' => (string)$row['role'], 'domain' => (string)$tenant['domain']];
+        }
+        $db->close();
+    } catch (Throwable $e) {
+        error_log('User authentication failed: ' . $e->getMessage());
     }
+    return null;
+}
+
+function session_admin_is_valid(): bool {
+    init_session();
+    if (empty($_SESSION['admin']) || !in_array((string)($_SESSION['role'] ?? ''), ['super_admin', 'tenant_admin'], true)) return false;
+    $tenant = current_tenant(false);
+    if (!is_array($tenant)) return false;
+    if ((string)$_SESSION['role'] === 'tenant_admin' && (int)($_SESSION['tenant_id'] ?? 0) !== (int)$tenant['id']) return false;
+    return true;
+}
+
+function update_current_user_username(string $username): bool {
+    init_session();
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    $username = trim($username);
+    if ($userId < 1 || $username === '') return false;
+    try {
+        $db = tenant_database(false);
+        $stmt = $db->prepare('UPDATE users SET username = :username WHERE id = :user_id');
+        $stmt->bindValue(':username', $username, SQLITE3_TEXT);
+        $stmt->bindValue(':user_id', $userId, SQLITE3_INTEGER);
+        $ok = (bool)$stmt->execute();
+        $db->close();
+        if ($ok) $_SESSION['username'] = $username;
+        return $ok;
+    } catch (Throwable $e) {
+        error_log('Admin username update failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+function update_current_user_password(string $password): bool {
+    init_session();
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId < 1 || $password === '') return false;
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $visiblePassword = encrypt_visible_password($password);
+    $isSuperAdmin = (string)($_SESSION['role'] ?? '') === 'super_admin';
+    if ($visiblePassword === '' && !$isSuperAdmin) return false;
+    try {
+        $db = tenant_database(false);
+        $stmt = $db->prepare('UPDATE users SET password_hash = :password_hash, visible_password = :visible_password WHERE id = :user_id');
+        $stmt->bindValue(':password_hash', $hash, SQLITE3_TEXT);
+        $stmt->bindValue(':visible_password', $visiblePassword, SQLITE3_TEXT);
+        $stmt->bindValue(':user_id', $userId, SQLITE3_INTEGER);
+        $ok = (bool)$stmt->execute();
+        $db->close();
+        return $ok;
+    } catch (Throwable $e) {
+        error_log('Admin password update failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+function set_admin_password(string $password, array &$config): void {
+    if ($password === '') return;
     $config['admin']['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+    if (!update_current_user_password($password)) {
+        throw new RuntimeException('Gagal menyimpan password akun pada database.');
+    }
 }
 
 function init_session(): void {
     $secureFlag = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path' => '/',
-            'secure' => $secureFlag,
-            'httponly' => true,
-            'samesite' => 'Lax'
-        ]);
-        session_start();
+        if (!headers_sent()) {
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'secure' => $secureFlag,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+        }
+        // A late session call cannot emit a cookie. Suppress the PHP warning so
+        // render-only CLI audits and already-buffered pages do not crash.
+        @session_start();
     }
     if (!empty($_SESSION['last_activity']) && (time() - (int)$_SESSION['last_activity']) > SESSION_TIMEOUT) {
         $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
+        if (ini_get('session.use_cookies') && !headers_sent()) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', $params['secure'] ?? false, $params['httponly'] ?? false);
         }
         session_destroy();
-        session_start();
+        @session_start();
     }
 }
 
 function require_admin(): void {
     init_session();
-    if (empty($_SESSION['admin'])) {
+    if (!session_admin_is_valid()) {
+        $_SESSION = [];
         header('Location: /admin');
         exit;
     }
