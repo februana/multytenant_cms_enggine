@@ -1,4 +1,4 @@
-/* Only protects original template typography from unusually long CMS data. */
+/* Keep CMS names readable at every width without changing the source layout. */
 #home h2,
 #welcome h2,
 #guest-name {
@@ -7,10 +7,209 @@
     word-break: normal;
 }
 
+:root {
+    --dewankl-ivory: #fffaf4;
+    --dewankl-cream: #f6eee5;
+    --dewankl-cream-deep: #eee1d5;
+    --dewankl-brown: #6d493c;
+    --dewankl-brown-soft: #a17b68;
+    --dewankl-wave: #d8c4b6;
+    --dewankl-shadow: 0 1rem 3rem rgba(92, 60, 45, 0.12);
+}
+
+/* The upstream light/dark primitives remain the section contract. These
+   warm surfaces only refine their light-mode appearance. */
+html:not([data-bs-theme="dark"]) body {
+    background-color: var(--dewankl-ivory);
+    color: #44332d;
+}
+
+html:not([data-bs-theme="dark"]) .bg-light-dark {
+    background-color: var(--dewankl-cream) !important;
+    background-image:
+        radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.72), transparent 27%),
+        radial-gradient(circle at 92% 86%, rgba(196, 155, 130, 0.12), transparent 31%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 48%);
+}
+
+html:not([data-bs-theme="dark"]) .bg-white-black {
+    background-color: var(--dewankl-ivory) !important;
+    background-image:
+        radial-gradient(circle at 84% 12%, rgba(219, 190, 168, 0.13), transparent 23%),
+        radial-gradient(circle at 12% 90%, rgba(255, 255, 255, 0.84), transparent 34%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.24), transparent 60%);
+}
+
+html:not([data-bs-theme="dark"]) .bg-theme-auto {
+    background-color: rgba(255, 251, 246, 0.86) !important;
+    border-color: rgba(109, 73, 60, 0.18) !important;
+}
+
+html:not([data-bs-theme="dark"]) #root {
+    background-color: var(--dewankl-cream-deep);
+}
+
+/* Welcome is an opening screen, not the original progress loader. The
+   existing JS controls its opacity/display and remains untouched. */
+html:not([data-bs-theme="dark"]) #welcome {
+    position: fixed;
+    isolation: isolate;
+    overflow: hidden;
+    color: var(--dewankl-brown);
+    background-color: var(--dewankl-ivory) !important;
+    background-image:
+        radial-gradient(circle at 16% 18%, rgba(180, 137, 110, 0.16) 0 0.18rem, transparent 0.2rem),
+        radial-gradient(circle at 84% 78%, rgba(180, 137, 110, 0.13) 0 0.16rem, transparent 0.18rem),
+        radial-gradient(ellipse at 28% 82%, rgba(208, 174, 151, 0.17), transparent 34%),
+        radial-gradient(ellipse at 76% 16%, rgba(255, 255, 255, 0.86), transparent 35%),
+        linear-gradient(135deg, #fffdf9 0%, var(--dewankl-ivory) 52%, #f3e8dc 100%);
+}
+
+html:not([data-bs-theme="dark"]) #welcome::before {
+    content: '';
+    position: absolute;
+    inset: 1.15rem;
+    z-index: -1;
+    border: 1px solid rgba(109, 73, 60, 0.14);
+    border-radius: 2.2rem;
+    box-shadow: inset 0 0 0 0.55rem rgba(255, 255, 255, 0.28);
+    pointer-events: none;
+}
+
+html:not([data-bs-theme="dark"]) #welcome::after {
+    content: '';
+    position: absolute;
+    right: -5.5rem;
+    bottom: -6rem;
+    z-index: -1;
+    width: 17rem;
+    height: 17rem;
+    border: 1px solid rgba(109, 73, 60, 0.16);
+    border-radius: 44% 56% 62% 38%;
+    transform: rotate(28deg);
+    box-shadow: -4rem -3rem 0 -3.8rem rgba(161, 123, 104, 0.22);
+    pointer-events: none;
+}
+
+html:not([data-bs-theme="dark"]) #welcome > .d-flex {
+    position: relative;
+    z-index: 1;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+html:not([data-bs-theme="dark"]) #welcome > .d-flex > .d-flex {
+    position: relative;
+    width: min(100%, 28rem);
+    padding: clamp(1.4rem, 4vw, 2.4rem) clamp(1.15rem, 5vw, 2.5rem);
+    border: 1px solid rgba(109, 73, 60, 0.18);
+    border-radius: 2rem;
+    background: rgba(255, 253, 249, 0.7);
+    box-shadow: var(--dewankl-shadow);
+    backdrop-filter: blur(0.35rem);
+}
+
+html:not([data-bs-theme="dark"]) #welcome > .d-flex > .d-flex::before {
+    content: '';
+    position: absolute;
+    top: 1.2rem;
+    left: 50%;
+    width: 3.5rem;
+    height: 1px;
+    background: var(--dewankl-brown-soft);
+    opacity: 0.6;
+    transform: translateX(-50%);
+}
+
+#welcome h2.font-esthetic {
+    color: var(--cms-dewana-accent, var(--dewankl-brown));
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+}
+
+html:not([data-bs-theme="dark"]) #welcome img.img-center-crop {
+    border-color: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 0.7rem 1.5rem rgba(92, 60, 45, 0.16) !important;
+}
+
+html:not([data-bs-theme="dark"]) #welcome #guest-name {
+    color: #765649;
+}
+
+html:not([data-bs-theme="dark"]) #welcome #guest-name h3 {
+    margin-bottom: 0;
+    font-size: clamp(0.92rem, 2.5vw, 1.08rem);
+    font-weight: 400;
+    letter-spacing: 0.04em;
+}
+
+html:not([data-bs-theme="dark"]) #welcome #openInvitationBtn {
+    color: #fffaf4;
+    background-color: var(--cms-dewana-accent, var(--dewankl-brown));
+    border-color: var(--cms-dewana-accent, var(--dewankl-brown));
+    box-shadow: 0 0.55rem 1.2rem rgba(92, 60, 45, 0.18) !important;
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+html:not([data-bs-theme="dark"]) #welcome #openInvitationBtn:hover,
+html:not([data-bs-theme="dark"]) #welcome #openInvitationBtn:focus-visible {
+    color: #fff;
+    background-color: #56392f;
+    border-color: #56392f;
+    box-shadow: 0 0.75rem 1.5rem rgba(92, 60, 45, 0.24) !important;
+    transform: translateY(-1px);
+}
+
+/* Preserve the original wave/cloud silhouette while giving it a warm
+   contrast against the refined light surfaces. */
+html:not([data-bs-theme="dark"]) .svg-wrapper {
+    background-color: var(--dewankl-cream);
+}
+
+html:not([data-bs-theme="dark"]) .color-theme-svg {
+    color: var(--dewankl-wave);
+    background-color: var(--dewankl-cream) !important;
+}
+
+html:not([data-bs-theme="dark"]) section .border.rounded-5.shadow,
+html:not([data-bs-theme="dark"]) section .border.rounded-5.shadow-sm {
+    border-color: rgba(109, 73, 60, 0.16) !important;
+    box-shadow: 0 0.75rem 2rem rgba(92, 60, 45, 0.09) !important;
+}
+
+html:not([data-bs-theme="dark"]) #navbar-menu {
+    background: rgba(255, 250, 244, 0.92) !important;
+    border-color: rgba(109, 73, 60, 0.16) !important;
+    box-shadow: 0 -0.45rem 1.2rem rgba(92, 60, 45, 0.08);
+    backdrop-filter: blur(0.5rem);
+}
+
+html:not([data-bs-theme="dark"]) #navbar-menu .nav-link {
+    color: rgba(68, 51, 45, 0.68);
+}
+
+html:not([data-bs-theme="dark"]) #navbar-menu .nav-link.active,
+html:not([data-bs-theme="dark"]) #navbar-menu .nav-link:hover {
+    color: var(--cms-dewana-accent, var(--dewankl-brown));
+}
+
+/* Do not alter the source dark mode or its original animation hooks. */
+html[data-bs-theme="dark"] #welcome {
+    background-color: #171311;
+}
+
 @media (max-width: 576px) {
     #home h2,
     #welcome h2 {
         font-size: clamp(1.75rem, 9vw, 2.25rem) !important;
         line-height: 1.1;
+    }
+
+    html:not([data-bs-theme="dark"]) #welcome::before {
+        inset: 0.7rem;
+        border-radius: 1.6rem;
+    }
+
+    html:not([data-bs-theme="dark"]) #welcome > .d-flex > .d-flex {
+        border-radius: 1.5rem;
     }
 }
