@@ -468,6 +468,11 @@ if (!empty($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset
                         reset_theme_visual_overrides($targetConfig, $visualPreset);
                         return;
                     }
+                    $resetVisualKey = trim((string)($_POST['reset_visual_key'] ?? ''));
+                    if ($resetVisualKey !== '' && array_key_exists($resetVisualKey, $schema)) {
+                        reset_theme_visual_override($targetConfig, $visualPreset, $resetVisualKey);
+                        return;
+                    }
                     $postedVisuals = isset($_POST['visuals']) && is_array($_POST['visuals']) ? $_POST['visuals'] : [];
                     foreach ($schema as $visualKey => $definition) {
                         $value = array_key_exists($visualKey, $postedVisuals) ? $postedVisuals[$visualKey] : null;
@@ -1242,6 +1247,10 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                         <?php endforeach; ?>
                                                         <?php if (!$visualMediaFound && (string)$visualValue !== ''): ?><option value="<?php echo escape_html((string)$visualValue); ?>" selected>Referensi tersimpan: <?php echo escape_html((string)$visualValue); ?></option><?php endif; ?>
                                                     </select>
+                                                    <div class="visual-media-preview" style="margin-top:0.65rem;<?php echo (string)$visualValue === '' ? 'display:none;' : ''; ?>">
+                                                        <img data-visual-preview src="<?php echo escape_html((string)$visualValue !== '' ? theme_visual_public_path((string)$visualValue) : ''); ?>" alt="Pratinjau <?php echo escape_html($visualDefinition['label'] ?? 'latar'); ?>" style="display:block;max-width:100%;width:min(100%,360px);max-height:180px;object-fit:cover;border-radius:10px;border:1px solid #eadccf;">
+                                                    </div>
+                                                    <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-top:0.55rem;"><button type="submit" name="reset_visual_key" value="<?php echo escape_html($visualKey); ?>" class="button small-button">Reset assignment</button><small>Reset hanya menghapus referensi CMS; file media tetap ada.</small></div>
                                                     <small>Pilih asset dari Pengelola Media. Untuk upload baru, gunakan bagian <a href="#file-manager">Kelola Media</a>, lalu pilih asset setelah halaman dimuat ulang.</small>
                                                 <?php else: ?>
                                                     <input id="visual-<?php echo escape_html($visualKey); ?>" type="text" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>">

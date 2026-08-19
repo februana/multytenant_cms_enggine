@@ -10,7 +10,7 @@ function visual_assert(bool $condition, string $message): void {
 
 $base = config_defaults();
 $expected = [
-    'dewankl' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay'],
+    'dewankl' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_bride', 'section_background_wedding_date', 'hero_overlay'],
     'elix' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'countdown_scale'],
     'rainier' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'glass_opacity'],
     'archak' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_title_scale'],
@@ -112,6 +112,13 @@ visual_assert(strpos($html, '#hero{display:flex;justify-content:center;align-ite
 visual_assert(strpos($html, '#hero>main{display:flex;flex-direction:column;align-items:center;width:min(100%,56rem);margin:0 auto;text-align:center}') !== false, 'Elix hero restores a centered column content relationship');
 visual_assert(strpos($html, '#hero>main>#countdown{width:100%;display:flex;justify-content:center;align-items:center;text-align:center}') !== false, 'Elix countdown remains in the centered hero flow');
 visual_assert(strpos($html, '#hero>main>a{display:inline-block;align-self:center;margin-right:auto;margin-left:auto}') !== false, 'Elix CTA is structurally centered below the countdown');
+visual_assert(!str_contains($html, 'id="home"'), 'Elix render omits the original Home section completely');
+visual_assert(!str_contains($html, 'class="home"'), 'Elix render omits Home-only presentation markup');
+visual_assert(!str_contains($html, 'href="#home"'), 'Elix render has no broken #home anchors');
+visual_assert(str_contains($html, 'href="#hero"'), 'Elix Beranda and CTA target the Hero');
+$elixNavPos = strpos($html, 'aria-label="Navigasi undangan"');
+$elixInfoPos = strpos($html, 'id="info"');
+visual_assert($elixNavPos !== false && $elixInfoPos !== false && $elixNavPos < $elixInfoPos, 'Elix navigation precedes the first real content section');
 visual_assert(is_file(dirname(__DIR__) . '/themes/elix/img/prewed1.jpg'), 'Elix source hero asset is bundled locally');
 visual_assert(is_file(dirname(__DIR__) . '/themes/elix/img/floraPattern1.png'), 'Elix source home pattern is bundled locally');
 visual_assert(strpos($html, '/themes/elix/img/prewed1.jpg') !== false || strpos($html, 'uploads/background/hero.jpg') !== false, 'Elix render has a valid local source or CMS hero background');
@@ -128,9 +135,27 @@ visual_assert(is_file(dirname(__DIR__) . '/themes/dewankl/assets/icon-192x192.pn
 visual_assert(strpos($dewanklHtml, '/themes/dewankl/assets/placeholder.webp') !== false, 'DewanaKL blank media uses the local placeholder fallback');
 visual_assert(strpos($dewanklHtml, '/themes/dewankl/assets/icon-192x192.png') !== false, 'DewanaKL loading/icon paths use the local source asset');
 $dewanklOverride = $dewanklSourceConfig;
-$dewanklOverride['theme_visuals']['dewankl']['body_font'] = 'Arial, sans-serif';
+$dewanklOverride['theme_visuals']['dewankl'] = [
+    'body_font' => 'Arial, sans-serif',
+    'welcome_background' => 'uploads/background/welcome.webp',
+    'section_background_home' => 'uploads/background/home.webp',
+    'section_background_bride' => 'uploads/background/bride.webp',
+    'section_background_wedding_date' => 'uploads/background/date.webp',
+];
 $dewanklOverrideHtml = render_theme_layout($dewanklOverride, array_replace($shared, ['presetKey' => 'dewankl']));
 visual_assert(strpos($dewanklOverrideHtml, '--cms-dewana-body:Arial, sans-serif') !== false, 'DewanaKL body font override persists independently');
+visual_assert(strpos($dewanklOverrideHtml, 'cms-dewana-welcome-custom-bg') !== false, 'DewanaKL welcome background override reaches the opening screen');
+visual_assert(strpos($dewanklOverrideHtml, 'data-cms-dewana-section-bg="1"') !== false, 'DewanaKL supported section background override reaches section markup');
+visual_assert(strpos($dewanklOverrideHtml, 'welcome.webp') !== false && strpos($dewanklOverrideHtml, 'home.webp') !== false, 'DewanaKL background references are rendered independently of Cover');
+$dewanklReset = $dewanklOverride;
+reset_theme_visual_overrides($dewanklReset, 'dewankl');
+$dewanklResetHtml = render_theme_layout($dewanklReset, array_replace($shared, ['presetKey' => 'dewankl']));
+visual_assert(!str_contains($dewanklResetHtml, 'cms-dewana-welcome-custom-bg'), 'DewanaKL visual reset restores default welcome background');
+visual_assert(!str_contains($dewanklResetHtml, 'data-cms-dewana-section-bg="1"'), 'DewanaKL visual reset removes section background assignments');
+$dewanklSingleReset = $dewanklOverride;
+reset_theme_visual_override($dewanklSingleReset, 'dewankl', 'welcome_background');
+visual_assert(!array_key_exists('welcome_background', $dewanklSingleReset['theme_visuals']['dewankl']), 'DewanaKL single background reset removes only the selected assignment');
+visual_assert(($dewanklSingleReset['theme_visuals']['dewankl']['section_background_home'] ?? '') === 'uploads/background/home.webp', 'DewanaKL single background reset preserves other assignments');
 
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
 $appSource = file_get_contents(dirname(__DIR__) . '/admin/app.js');
@@ -141,12 +166,16 @@ visual_assert(is_string($appSource) && str_contains($appSource, 'globalThemePres
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'class="visual-capability-panel"'), 'Admin renders the preset visual capability panel');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual-schemas='), 'Admin exposes dynamic visual schemas to the editor');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset_visuals"'), 'Admin exposes per-preset visual reset');
+visual_assert(is_string($adminSource) && str_contains($adminSource, 'name="reset_visual_key"'), 'Admin exposes per-image assignment reset');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-media-assets='), 'Admin exposes canonical image assets to visual editor');
+visual_assert(is_string($adminSource) && str_contains($adminSource, 'data-visual-preview'), 'Admin image capability renders a preview element');
 visual_assert(is_string($adminSource) && !str_contains($adminSource, 'name="visual_file_'), 'Admin visual editor does not create a duplicate uploader');
 visual_assert(is_string($appSource) && str_contains($appSource, 'mediaAssets'), 'Admin visual editor consumes canonical media assets');
 visual_assert(is_string($appSource) && str_contains($appSource, 'input.dataset.visualMediaSelect'), 'Admin image capability uses a media selector');
+visual_assert(is_string($appSource) && str_contains($appSource, 'visualMediaUrl'), 'Admin image capability updates the preview from the selected media reference');
 visual_assert(is_string($appSource) && str_contains($appSource, 'label.htmlFor = id'), 'Dynamic visual fields associate labels with controls');
 visual_assert(is_string($appSource) && !str_contains($appSource, 'innerHTML'), 'Dynamic visual editor avoids raw HTML injection');
+visual_assert(!str_contains(file_get_contents(dirname(__DIR__) . '/themes/elix/script.js'), '#home'), 'Elix JavaScript has no #home runtime dependency');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'title="Preview tema undangan"'), 'Theme preview iframe has an accessible title');
 visual_assert(is_string($adminSource) && str_contains($adminSource, 'aria-label="Ukuran preview"'), 'Preview viewport controls have an accessible group label');
 visual_assert(is_string($appSource) && str_contains($appSource, 'setPreviewViewport'), 'Admin editor exposes responsive preview viewport controls');

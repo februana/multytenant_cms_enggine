@@ -106,11 +106,27 @@ $enableConfetti = (function_exists('get_theme_option') ? get_theme_option($confi
 $enableMouseAnimation = function_exists('get_theme_option') ? (bool)get_theme_option($config, 'dewankl', 'enable_mouse_animation', true) : ($config['theme_options']['dewankl']['enable_mouse_animation'] ?? true);
 $visuals = function_exists('theme_visual_values_for_config') ? theme_visual_values_for_config($config, 'dewankl') : [];
 $dewanklHeroPath = (string)($visuals['hero_background'] ?? '') ?: $coverPath;
+$dewanklWelcomePath = trim((string)($visuals['welcome_background'] ?? ''));
+$dewanklSectionBackgrounds = [
+    'home' => trim((string)($visuals['section_background_home'] ?? '')),
+    'bride' => trim((string)($visuals['section_background_bride'] ?? '')),
+    'wedding-date' => trim((string)($visuals['section_background_wedding_date'] ?? '')),
+];
 $dewanklAccent = (string)($visuals['accent_color'] ?? '#7b4a3a');
 $dewanklHeadingFont = (string)($visuals['heading_font'] ?? 'Sacramento, cursive');
 $dewanklBodyFont = (string)($visuals['body_font'] ?? 'Josefin Sans, sans-serif');
 $dewanklOverlay = (float)($visuals['hero_overlay'] ?? '0.30');
-$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)!important}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}</style>';
+$dewanklSectionStyle = static function (string $sectionId) use ($dewanklSectionBackgrounds): string {
+    $path = trim((string)($dewanklSectionBackgrounds[$sectionId] ?? ''));
+    if ($path === '') return '';
+    return ' data-cms-dewana-section-bg="1" style="--cms-dewana-section-bg:' . escape_html(theme_visual_css_url($path)) . ';"';
+};
+$dewanklWelcomeClass = $dewanklWelcomePath !== '' ? ' cms-dewana-welcome-custom-bg' : '';
+$dewanklWelcomeStyle = 'opacity: 0;';
+if ($dewanklWelcomePath !== '') {
+    $dewanklWelcomeStyle .= '--cms-dewana-welcome-bg:' . theme_visual_css_url($dewanklWelcomePath) . ';';
+}
+$dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent:' . $dewanklAccent . ';--cms-dewana-heading:' . $dewanklHeadingFont . ';--cms-dewana-body:' . $dewanklBodyFont . ';--cms-dewana-overlay:' . $dewanklOverlay . '}body{font-family:var(--cms-dewana-body)!important}.font-esthetic{font-family:var(--cms-dewana-heading)!important}.btn-primary{background-color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}.btn-outline-auto{color:var(--cms-dewana-accent)!important;border-color:var(--cms-dewana-accent)!important}#home .bg-overlay-auto,#welcome .bg-overlay-auto{background-color:rgba(0,0,0,var(--cms-dewana-overlay))!important}#welcome.cms-dewana-welcome-custom-bg{background-image:linear-gradient(rgba(255,250,244,.72),rgba(246,238,229,.78)),var(--cms-dewana-welcome-bg)!important;background-size:cover;background-position:center;background-repeat:no-repeat}#home[data-cms-dewana-section-bg="1"],#bride[data-cms-dewana-section-bg="1"],#wedding-date[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(255,250,244,.76),rgba(246,238,229,.82)),var(--cms-dewana-section-bg)!important;background-size:cover;background-position:center;background-repeat:no-repeat}#home[data-cms-dewana-section-bg="1"]>img{opacity:0!important}html[data-bs-theme="dark"] #welcome.cms-dewana-welcome-custom-bg{background-image:linear-gradient(rgba(20,15,13,.64),rgba(23,19,17,.78)),var(--cms-dewana-welcome-bg)!important}html[data-bs-theme="dark"] #home[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #bride[data-cms-dewana-section-bg="1"],html[data-bs-theme="dark"] #wedding-date[data-cms-dewana-section-bg="1"]{background-image:linear-gradient(rgba(20,15,13,.68),rgba(23,19,17,.82)),var(--cms-dewana-section-bg)!important}</style>';
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="auto">
@@ -197,7 +213,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
             <main data-bs-spy="scroll" data-bs-target="#navbar-menu" data-bs-root-margin="25% 0% 0% 0%" data-bs-smooth-scroll="true" tabindex="0">
                 
                 <!-- Home Section -->
-                <section id="home" class="bg-light-dark position-relative overflow-hidden p-0 m-0">
+                <section id="home" class="bg-light-dark position-relative overflow-hidden p-0 m-0"<?php echo $dewanklSectionStyle('home'); ?>>
                     <img src="<?php echo escape_html(theme_visual_public_path($dewanklHeroPath)); ?>" alt="latar belakang" class="position-absolute opacity-25 top-50 start-50 translate-middle bg-cover-home">
                     
                     <div class="position-relative text-center bg-overlay-auto" style="background-color: unset;">
@@ -232,7 +248,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                 </div>
                 
                 <!-- Bride & Groom Section -->
-                <section class="bg-white-black text-center" id="bride">
+                <section class="bg-white-black text-center" id="bride"<?php echo $dewanklSectionStyle('bride'); ?>>
                     <?php if ($showBismillah): ?>
                     <h2 class="font-arabic py-4 m-0" style="font-size: 2rem;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</h2>
                     <?php endif; ?>
@@ -314,7 +330,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
 
                 <!-- Wedding Date / Countdown Section -->
                 <?php if (theme_section_enabled($config, 'dewankl', 'wedding_date')): ?>
-                <section class="bg-light-dark py-5" id="wedding-date">
+                <section class="bg-light-dark py-5" id="wedding-date"<?php echo $dewanklSectionStyle('wedding-date'); ?>>
                     <div class="container">
                         <div class="border rounded-5 shadow p-3">
                             <h2 class="font-esthetic text-center py-2 m-0" style="font-size: 2.25rem;">Kami Akan Menikah</h2>
@@ -576,7 +592,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
     <?php endif; ?>
     
     <!-- Welcome Page -->
-    <div class="loading-page bg-white-black" id="welcome" style="opacity: 0;">
+    <div class="loading-page bg-white-black<?php echo $dewanklWelcomeClass; ?>" id="welcome" style="<?php echo escape_html($dewanklWelcomeStyle); ?>">
         <div class="d-flex justify-content-center align-items-center vh-100 overflow-y-auto">
             <div class="d-flex flex-column text-center">
                 <h2 class="font-esthetic mb-4" style="font-size: 2.25rem;">Pernikahan Kami</h2>

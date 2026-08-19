@@ -95,7 +95,7 @@ $bodyFont = escape_html((string)($visuals['body_font'] ?? 'Raleway, sans-serif')
   <title><?php echo $siteTitle; ?></title>
 </head>
 <body id="home" data-pawiwahan-root="1" data-pawiwahan-countdown-target="<?php echo $countdownTarget; ?>">
-<header id="home">
+<header>
   <nav class="navbar navbar-expand-lg navbar-dark shadow-sm fixed-top">
     <div class="container">
       <a class="navbar-brand" href="#home">Pawiwahan</a>

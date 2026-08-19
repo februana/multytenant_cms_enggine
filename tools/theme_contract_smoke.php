@@ -14,6 +14,10 @@ foreach ($expected as $preset) {
         throw new RuntimeException("Built-in {$preset} leaked a CMS order");
     }
 }
+$elixSectionIds = array_map(static fn(array $section): string => (string)($section['id'] ?? ''), theme_contract_sections_for_config($config, 'elix'));
+if (in_array('home', $elixSectionIds, true) || ($elixSectionIds[0] ?? '') !== 'hero') {
+    throw new RuntimeException('Elix contract excludes Home and starts from Hero');
+}
 
 $config['theme']['mode'] = 'custom';
 $config['theme']['theme_preset'] = 'custom';

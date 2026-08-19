@@ -57,7 +57,6 @@ if (!function_exists('theme_contract_registry')) {
                 ],
                 'sections' => [
                     ['id' => 'hero', 'dom_id' => 'hero', 'label' => 'Hero', 'title' => 'Hero', 'embedded_capabilities' => ['guest_name', 'countdown']],
-                    ['id' => 'home', 'dom_id' => 'home', 'label' => 'Home', 'title' => 'Home', 'embedded_capabilities' => ['wedding', 'parents']],
                     ['id' => 'info', 'dom_id' => 'info', 'label' => 'Info', 'title' => 'Info', 'embedded_capabilities' => ['schedule', 'maps']],
                     ['id' => 'story', 'dom_id' => 'story', 'label' => 'Story', 'title' => 'Story', 'embedded_capabilities' => ['story']],
                     ['id' => 'gallery', 'dom_id' => 'gallery', 'label' => 'Gallery', 'title' => 'Gallery', 'embedded_capabilities' => ['gallery']],

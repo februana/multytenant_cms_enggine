@@ -149,6 +149,15 @@ function reset_theme_visual_overrides(array &$config, string $presetKey): void {
     $config['theme_visuals'][$presetKey] = [];
 }
 
+/** Clear only one visual override, preserving every other setting for the preset. */
+function reset_theme_visual_override(array &$config, string $presetKey, string $visualKey): void {
+    $presetKey = trim($presetKey);
+    $visualKey = trim($visualKey);
+    if ($presetKey === '' || $visualKey === '') return;
+    if (!isset($config['theme_visuals'][$presetKey]) || !is_array($config['theme_visuals'][$presetKey])) return;
+    unset($config['theme_visuals'][$presetKey][$visualKey]);
+}
+
 /** Build the CMS-native Custom adapter without changing its section markup. */
 function theme_custom_visual_style(array $config): string {
     $visuals = theme_visual_values_for_config($config, 'custom');
