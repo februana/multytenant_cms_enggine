@@ -15,4 +15,4 @@
 
 Built-in renderers never call the Custom ordering resolver. `order` in `theme_sections[preset]` exists only for stable admin display and migration compatibility; it never changes built-in DOM order. Legacy IDs are mapped per preset in `theme-contract.php` and are not reused as universal aliases by built-in layouts.
 
-Source and responsive evidence for the two new presets is recorded in [`new-presets-source-audit.md`](new-presets-source-audit.md), [`new-presets-cms-mapping.md`](new-presets-cms-mapping.md), and [`new-presets-responsive-evidence.md`](new-presets-responsive-evidence.md).
+Source provenance and the current preset contract are recorded in [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md), [`THEME_FIDELITY_MATRIX.md`](THEME_FIDELITY_MATRIX.md), and the implementation under `themes/` and `app/`.

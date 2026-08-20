@@ -1,328 +1,80 @@
 # Security Policy
 
-## Reporting a Vulnerability
+This project is a PHP/SQLite wedding-invitation CMS deployed as a **single shared-schema multi-tenant application**. Security depends on keeping tenant context server-derived, protecting the origin behind the intended Cloudflare Tunnel, and preserving the filesystem and database boundaries described below.
 
-If you discover a security vulnerability in this project, please report it responsibly:
+## Reporting a vulnerability
 
-1. **Do NOT** create a public GitHub issue
-2. **Email**: [Insert security contact email]
-3. **Include**: 
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if any)
+Do not disclose a suspected vulnerability in a public issue. Provide a private report to the project maintainer with a description, affected branch or commit, reproduction steps, impact, and any proposed mitigation. Do not include production credentials, database dumps, or tenant media in a report.
 
-We will respond within 48 hours and work with you to resolve the issue promptly.
+## Security boundaries
 
-## Security Architecture
+| Boundary | Required behavior |
+|---|---|
+| Public ingress | Cloudflare Tunnel is the only intended public ingress; Apache origin access must be restricted by network policy |
+| Tenant resolution | Normalize and validate `HTTP_HOST`, then resolve through `tenants.domain` |
+| Tenant identity | Never accept `tenant_id` from browser input for public or tenant-admin operations |
+| Session | Tenant Admin session tenant and domain must match the current host |
+| Cross-tenant administration | Limited to authenticated Super Admin operations |
+| Database | Shared SQLite schema with tenant-scoped rows and foreign-key relationships |
+| Runtime migration | `deploy/migrate.php` only; no runtime DDL |
+| Media | `uploads/tenant_<id>/` with path containment and `media.php` delivery authorization |
+| Secrets | `.env`, database, backups, and `UNDANGAN_PASSWORD_KEY` remain outside Git and are protected on disk |
 
-### Defense in Depth
+## Host and Cloudflare validation
 
-This application implements multiple layers of security:
+Known active tenants are selected from the normalized hostname. Suspended or invalid domains return `404`. An unknown hostname is not provisioned unless `UNDANGAN_AUTO_PROVISION=1` and all of the following are true:
 
-1. **Web Server Level**: Access controls block sensitive files
-2. **File System Level**: Restrictive permissions limit access
-3. **Application Level**: Input validation, CSRF protection, and password hashing
-4. **Network Level**: HTTPS/TLS encryption recommended
+- `REMOTE_ADDR` is `127.0.0.1` or `::1`.
+- `HTTP_CF_RAY` is present.
+- `HTTP_CF_CONNECTING_IP` contains a valid IP address.
 
-### Protected Resources
+Invalid direct-origin or missing-header requests return `403` and do not create database rows. These checks are defense-in-depth. They do not prove that a local process is trustworthy, so Apache must not be exposed directly to the Internet.
 
-The following are **blocked** from direct web access:
+## Database and authorization
 
-| Resource | Reason | Protection Method |
-|----------|--------|-------------------|
-| `/app/` | Source code | Web server deny rule |
-| `*.json` | Configuration data | Web server deny rule |
-| `*.sqlite` | Database | Web server deny rule |
-| `.env` | Environment variables | Web server deny rule |
-| `/backups/` | Backup archives | Web server deny rule |
-| `.*` | Hidden files | Web server deny rule |
+The application uses a shared SQLite database with tenant-aware `tenants`, `users`, `tenant_configs`, `guest_links`, and `tamu` tables. Public controllers derive the tenant ID from the current request context before executing reads or writes. Tenant Admin controllers additionally verify role, session tenant, and hostname. Super Admin has `tenant_id IS NULL` and is intentionally allowed to administer multiple tenants.
 
-### Upload Security
+Schema creation and upgrades happen through `database/migrations/001_multi_tenant.sql` and `deploy/migrate.php` during installation, update, or restore. Normal requests must not perform `CREATE TABLE`, `ALTER TABLE`, or legacy-file migration checks.
 
-To prevent Remote Code Execution (RCE) attacks:
+The runtime configuration source is `tenant_configs`. A global `config.json` or `guest-links.json` is not a supported runtime source. Legacy files are migration inputs only.
 
-- **PHP execution disabled** in `/uploads/` directory
-- Files served as static content only
-- Original filenames sanitized to prevent directory traversal
-- File types validated before acceptance
+## Media isolation
 
-## Authentication System
+All uploaded files belong to a tenant namespace:
 
-### Password Storage
+```text
+uploads/tenant_<id>/{cover,gallery,background,love-story,music,theme-assets}/
+```
 
-- Passwords are hashed using PHP's `password_hash()` with bcrypt algorithm
-- Verification uses `password_verify()` for timing-safe comparison
-- No plaintext passwords are stored
+The upload pipeline validates the file, performs WebP conversion and preset-specific resize where applicable, removes the original only after successful conversion, and saves the result below the current tenant root. Every upload, replacement, deletion, preview, and render-time reference must pass tenant-aware containment checks.
 
-### Authentication Priority
+Apache rewrites `/uploads/...` to `media.php`. The endpoint resolves the current host tenant again, rejects paths outside its approved roots, validates MIME type, and serves the file only when it belongs to that tenant. Do not add a static alias or alternate endpoint that bypasses this boundary.
 
-The authentication system follows this priority order:
+## Passwords and encryption
 
-1. **Priority 1**: `config.json` → `admin.password_hash`
-   - Takes precedence when set
-   - Used after administrator changes password via admin panel
+Login uses `users.password_hash` with `password_verify()`. The intentionally supported Super Admin password-recovery display uses `users.visible_password`, encrypted with AES-256-GCM in this format:
 
-2. **Priority 2**: `.env` → `ADMIN_USER` + `ADMIN_PASS`
-   - Used for initial installation login
-   - Ignored once password_hash is set in config.json
+```text
+gcm:base64(iv)::base64(tag)::base64(ciphertext)
+```
 
-3. **No Fallback**: Login rejected if neither credential source exists
-   - No hardcoded fallback passwords
-   - No silent defaults like "change-this-password"
+`UNDANGAN_PASSWORD_KEY` must remain in protected server configuration, never in Git or HTML. Do not rotate it without a controlled migration or reset plan. Treat the ability of Super Admin to view Tenant Admin recovery passwords as a deliberate business exception that requires strict administrative access control.
 
-### Password Migration
+## Filesystem and deployment safety
 
-When an administrator changes their password through the admin panel:
+The native installer is application-only and non-destructive. It does not run package-manager commands, enable or disable Apache sites or modules, restart services, or write `/etc/apache2` or `/etc/nginx`. Operators review and apply the catch-all Apache configuration separately.
 
-1. The new password is hashed with `password_hash()`
-2. The hash is stored in `config.json` under `admin.password_hash`
-3. Subsequent logins use the hash, ignoring `.env` credentials
-4. This provides secure migration from environment-based auth
+Protect `.env`, the SQLite database, backups, and WebDAV credentials with restrictive permissions. Do not use a blanket recursive `chmod -R 755`. Do not commit production uploads, database files, backup archives, or secrets.
 
-### First Installation
+## Validation
 
-During fresh installation:
-
-1. If `.env` doesn't exist, `.env.example` is copied to `.env`
-2. A cryptographically secure random password is generated using `openssl rand`
-3. The password is written to `ADMIN_PASS` in `.env`
-4. Credentials are displayed once at the end of installation
-5. **Important**: Save these credentials immediately - they won't be shown again
-
-## Configuration Guidelines
-
-### File Permissions
-
-Production servers should enforce these permissions:
+Before release or deployment, run:
 
 ```bash
-# Configuration and database (owner read/write only)
-chmod 600 config.json
-chmod 600 guest-links.json
-chmod 600 database.sqlite
-chmod 600 .env
-
-# Uploads directory (writable by web server)
-chmod 755 uploads/
-chown -R www-data:www-data uploads/
-
-# Source code (read-only)
-chmod 755 app/
-chmod 644 app/*.php
+php tools/validate.php
+php tools/repo_contract_audit.php
+php tools/dependency_graph_audit.php
+sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-### Web Server Hardening
-
-#### Nginx
-
-Use the provided `deploy/nginx-site.conf` which includes:
-- Deny rules for sensitive paths
-- PHP execution disabled in uploads
-- Hidden file blocking
-- Directory listing disabled
-
-#### Apache
-
-Ensure `.htaccess` is enabled with `AllowOverride All`. The included `.htaccess` file provides:
-- Access denial for JSON/SQLite/.env files
-- Upload directory protections
-- Hidden file blocking
-
-## Best Practices
-
-### 1. Use HTTPS Always
-
-Enable SSL/TLS for all traffic:
-
-```bash
-# Let's Encrypt installation
-sudo certbot --nginx -d your-domain.com
-```
-
-**Never** run this application over plain HTTP in production.
-
-### 2. Regular Updates
-
-Keep all components updated:
-
-```bash
-# System packages
-sudo apt update && sudo apt upgrade
-
-# PHP extensions
-sudo apt install php-gd php-sqlite3 php-pdo
-
-# Application code
-git pull origin main
-```
-
-### 3. Strong Admin Credentials
-
-- On fresh installation, a cryptographically secure password is auto-generated
-- For manual setup, use complex passwords (12+ characters, mixed case, numbers, symbols)
-- Change default credentials immediately after installation
-- Consider implementing two-factor authentication if available
-
-### 4. Limit File Uploads
-
-Configure PHP to restrict upload sizes:
-
-```ini
-; In php.ini
-upload_max_filesize = 10M
-post_max_size = 10M
-max_file_uploads = 5
-```
-
-### 5. Disable Error Display
-
-In production, hide error details from users:
-
-```ini
-; In php.ini
-display_errors = Off
-log_errors = On
-error_log = /var/log/php/error.log
-```
-
-### 6. Secure Backups
-
-- Encrypt backup files containing sensitive data
-- Store backups off-server
-- Restrict access to backup directories
-- Delete old backups securely
-
-### 7. Monitor Access Logs
-
-Regularly review logs for suspicious activity:
-
-```bash
-# Check for blocked access attempts
-grep "403" /var/log/nginx/access.log
-
-# Check for upload attempts
-grep "POST.*save.php" /var/log/nginx/access.log
-```
-
-### 8. Network Segmentation
-
-If possible:
-- Place application behind a firewall
-- Restrict database access to localhost
-- Use separate user accounts for different services
-
-## Known Limitations
-
-### Shared Hosting Risks
-
-On shared hosting environments:
-- Other users on the same server may have more access
-- `.htaccess` rules may not be fully enforced
-- PHP execution disabling in uploads may not work with PHP-FPM
-
-**Mitigation**: Use VPS or dedicated hosting for sensitive deployments.
-
-### SQLite Limitations
-
-SQLite does not provide:
-- User authentication at database level
-- Encrypted columns
-- Audit logging
-
-**Mitigation**: Rely on file system permissions and application-level security.
-
-## Incident Response
-
-### If You Suspect a Breach
-
-1. **Isolate**: Take the application offline temporarily
-2. **Assess**: Review logs for unauthorized access
-3. **Contain**: Change all passwords and API keys
-4. **Eradicate**: Remove any malicious files
-5. **Recover**: Restore from known-good backup
-6. **Learn**: Document lessons and update security measures
-
-### Log Locations
-
-| Log Type | Typical Location |
-|----------|------------------|
-| Web Server Access | `/var/log/nginx/access.log` |
-| Web Server Error | `/var/log/nginx/error.log` |
-| PHP Errors | `/var/log/php-fpm/error.log` |
-| Application Logs | `logs/` (if configured) |
-
-## Compliance Considerations
-
-### GDPR (European Union)
-
-If collecting EU citizen data:
-- Obtain explicit consent for RSVP data collection
-- Provide data export/deletion capabilities
-- Document data processing activities
-- Implement data retention policies
-
-### Data Minimization
-
-Only collect necessary information:
-- Guest name
-- Attendance status
-- Message (optional)
-- Contact info (optional)
-
-**Do not** collect sensitive personal information unless absolutely required.
-
-## Security Checklist
-
-Before going live, verify:
-
-- [ ] HTTPS enabled with valid certificate
-- [ ] File permissions set correctly
-- [ ] Web server config applied and tested
-- [ ] Admin password changed from initial/generated value
-- [ ] PHP error display disabled
-- [ ] Upload size limits configured
-- [ ] Backup system operational
-- [ ] Logs accessible for monitoring
-- [ ] Blocked paths verified (config.json, app/, .env, etc.)
-- [ ] Database file not directly downloadable
-- [ ] No hardcoded fallback passwords in codebase
-- [ ] `password_hash()` and `password_verify()` used correctly
-
-## Version-Specific Notes
-
-### Version 2.0+
-
-- Single-root architecture improves security isolation
-- Enhanced web server rules block more attack vectors
-- Removed insecure fallback passwords
-- Cryptographically secure password generation during installation
-- Password hashing with proper priority-based authentication
-
-### Upgrading from 1.x
-
-After upgrading:
-1. Verify new `.htaccess` rules are active
-2. Test that `/app/` directory is blocked
-3. Confirm `config.json` returns 403 when accessed directly
-4. Update admin password to use new hashing system
-5. Remove any hardcoded passwords from configuration
-
-## Additional Resources
-
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [PHP Security Best Practices](https://www.php.net/manual/en/security.php)
-- [Nginx Security Guide](https://www.nginx.com/resources/admin-guide/security-controls/)
-- [PHP password_hash() Documentation](https://www.php.net/manual/en/function.password-hash.php)
-- [PHP password_verify() Documentation](https://www.php.net/manual/en/function.password-verify.php)
-
-## Contact
-
-For security questions or concerns:
-- Email: [security@example.com]
-- Documentation: See `DEPLOYMENT.md` for setup guidance
-
----
-
-*Last Updated: January 2024*
-*Version: 2.0.0*
+The validators are repository contracts, not substitutes for network controls, operating-system permissions, or Cloudflare configuration review.

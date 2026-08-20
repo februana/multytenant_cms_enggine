@@ -1,10 +1,10 @@
 # Deployment Quick Reference
 
-The repository has two supported deployment paths: **Docker Compose** and **native Ubuntu/Linux** through `deploy/install.sh`. The complete operator guide, persistence model, health semantics, backup/restore flow, troubleshooting, and target limitations are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+The production architecture is one PHP/SQLite application served by one Apache catch-all VirtualHost behind a Cloudflare Tunnel. Tenant domains are resolved from `HTTP_HOST`; configuration and data are stored in a shared tenant-aware SQLite schema; media is stored below `uploads/tenant_<id>/` and delivered through `media.php`.
 
-## Native Ubuntu/Linux
+## Native Apache installation
 
-The native installer deploys the checkout to `/var/www/wedding`, configures Nginx or Apache with PHP-FPM, initializes the shared runtime contract, and preserves the source checkout for later updates. It requires root-capable Ubuntu/Linux plus `rsync`, `openssl`, and Composer:
+The installer is application-only and non-destructive. It checks PHP, SQLite3, and OpenSSL, copies application code without deleting runtime data, creates runtime directories, and runs `deploy/migrate.php`. It does not install packages, modify `/etc/apache2` or `/etc/nginx`, enable or disable sites/modules, or restart services.
 
 ```bash
 cd /path/to/webserver_undangan
@@ -12,40 +12,29 @@ sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-For normal operations, use the guarded update and archive scripts:
+Review and apply [`deploy/apache-catchall.conf.example`](deploy/apache-catchall.conf.example) separately. The origin must not be directly exposed to the Internet.
+
+## Routine operations
 
 ```bash
 sudo /var/www/wedding/deploy/update.sh
 sudo /var/www/wedding/deploy/backup.sh
 sudo /var/www/wedding/deploy/restore.sh /path/to/backup.tar.gz
+sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The updater preserves CMS state, `.env`, the full `uploads/` tree including `uploads/theme-assets/<preset>/`, `event.ics`, WebDAV data, backups, and legacy `storage/` data. The backup and restore scripts validate archives and reject unsafe paths or links.
+The updater and restore flow preserve the shared database, `.env`, all tenant media, backups, and optional WebDAV data. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) for the complete procedures.
 
-## Docker Compose
+## Tenant onboarding
 
-Create `.env` from the tracked example and set a strong administrator password:
+Set `UNDANGAN_MAIN_DOMAIN`, `UNDANGAN_DB_PATH`, `UNDANGAN_PASSWORD_KEY`, and `UNDANGAN_AUTO_PROVISION` in the protected `.env`. Unknown hosts are auto-provisioned only when auto-provisioning is enabled and the request is local Cloudflare Tunnel traffic with `CF-RAY` and a valid `CF-Connecting-IP`. Super Admin can also create tenants manually at `/admin/super-admin.php`.
+
+## Validation
 
 ```bash
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-cp .env.example .env
-chmod 600 .env
-# Edit .env and set ADMIN_PASS.
-docker compose build
-docker compose up -d
-docker compose ps
-docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
+php tools/validate.php
+php tools/repo_contract_audit.php
+php tools/dependency_graph_audit.php
 ```
 
-Docker persists CMS state in `wedding_data`, uploaded media in `wedding_uploads`, backup archives in `wedding_backups`, and optional WebDAV data in `wedding_webdav`. The image and Compose service both expose an HTTP healthcheck against `http://127.0.0.1/`. Do not run `docker compose down -v` unless intentionally resetting a disposable installation.
-
-## Presets and runtime contract
-
-The active built-in preset set is `dewankl`, `rainier`, `archak`, `parang`, `pawiwahan`, `shubh-vivah`, and `yami-buzzy`, with `custom` as the CMS-native builder. `deploy/runtime-directories.sh` is the shared source of truth for preset-scoped Theme Asset directories and required upload namespaces. The Admin panel provides localized visual customization, including supported section backgrounds, fonts, colors, Theme Assets, previews, and reset-to-default behavior.
-
-## Health and security
-
-The health check distinguishes required deployment failures from optional administrator media warnings. It verifies application files, all seven built-in theme adapters, runtime state, writable upload/Theme Asset directories, active preset support, WebP processing, ownership, HTTP reachability, and blocking of `.env`, `config.json`, SQLite, guest links, backups, and WebDAV data. Keep production credentials outside Git and use TLS for public native deployments.
-
-For full details, read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md), [`SECURITY.md`](SECURITY.md), and [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).
+Related references are [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md), [`docs/PASSWORD_MANAGEMENT.md`](docs/PASSWORD_MANAGEMENT.md), and [`SECURITY.md`](SECURITY.md).

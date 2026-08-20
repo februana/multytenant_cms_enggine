@@ -22,4 +22,4 @@ The page rendered a source-style full-bleed photographic hero with a centered we
 
 ## Evidence files
 
-Detailed observations and screenshot paths are recorded in [`new-presets-responsive-evidence.md`](new-presets-responsive-evidence.md). Source audit and CMS mapping are recorded in [`new-presets-source-audit.md`](new-presets-source-audit.md) and [`new-presets-cms-mapping.md`](new-presets-cms-mapping.md).
+Current preset behavior and source provenance are maintained in [`THEME_CONTRACT_MATRIX.md`](THEME_CONTRACT_MATRIX.md), [`THEME_FIDELITY_MATRIX.md`](THEME_FIDELITY_MATRIX.md), and [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md).

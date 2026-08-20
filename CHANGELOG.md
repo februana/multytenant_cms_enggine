@@ -1,43 +1,33 @@
 # Changelog
 
-## [Unreleased]
+## [Unreleased] — PR #89
 
-This unreleased change set is prepared for PR #84 and covers the multi-preset CMS, deployment, provenance, and default-content finalization.
+This change set finalizes the pure multi-tenant architecture for the Wedding Invitation CMS on branch `multy-tenant_februana`.
 
 ### Added
 
-- Added the `shubh-vivah` preset from `vinitshahdeo/wedding-website` and the `yami-buzzy` preset from `Tynab/Yami-Buzzy`, with source-compatible adapters, Indonesian UI localization, guest identity, calendar metadata, media fallbacks, and the existing RSVP backend bridge.
-- Added preset-aware visual customization for section backgrounds, Theme Assets, named color palettes, heading/body font catalogs, previews, reset-to-default behavior, and canonical Media Manager references.
-- Added Indonesian default wedding copy for FEBRUANA and ANDI MUHAMAD BASUKI, including Febru/Andi calls, Arabic Bismillah, Islamic opening and closing, and QS. Ar-Rum 21. Clearing Admin fields restores the corresponding defaults.
-- Added Docker image and Compose healthchecks, persistent named volumes for CMS state, uploads, backups, and optional WebDAV data, plus deployment smoke assertions for those contracts.
-- Added local provenance records for the Shubh Vivah MIT notice and the unresolved Yami Buzzy source-license status.
+- Added shared-schema tenant resolution from normalized `HTTP_HOST` through the `tenants` table.
+- Added Cloudflare-authenticated auto-provisioning guarded by `REMOTE_ADDR`, `CF-RAY`, and a valid `CF-Connecting-IP`.
+- Added transactional tenant initialization for `tenant_configs`, tenant-admin credentials, and tenant media directories.
+- Added tenant-authorized `media.php` delivery and Apache rewrite coverage for all `/uploads/...` requests.
+- Added the permanent `tools/dependency_graph_audit.php` build-time dependency, orphan, endpoint, asset, DOM, and tenant-isolation auditor.
 
 ### Changed
 
-- Updated the shared runtime directory contract and deployment documentation for seven built-in presets plus Custom.
-- Hardened the Docker entrypoint so initial environment substitution safely handles sed replacement characters and `.env` remains permission-restricted after recursive ownership normalization.
-- Expanded the Docker build ignore rules to exclude local runtime data while retaining `.env.example` for entrypoint bootstrap.
-- Reconciled README, architecture, deployment, attribution, backup/restore, and release records with the current CMS capability and persistence model.
-- Clarified that native Ubuntu/Linux deployment is the supported non-Docker target; no unimplemented Render Blueprint or managed-cloud manifest is claimed by the repository.
-- Removed redundant `pdo_sqlite` and `sqlite3` compilation from Docker. The official `php:8.3-apache` image already builds both extensions against system SQLite; recompiling them caused the Render build to fail with `Cannot find config.m4`.
+- Moved runtime configuration, custom CSS, calendar data, and guest links to tenant-scoped SQLite storage.
+- Moved schema creation and legacy migration into `deploy/migrate.php`; normal requests no longer perform runtime DDL.
+- Preserved and hardened the upload → WebP → preset resize → original cleanup → tenant namespace pipeline.
+- Made the native installer non-destructive and Apache-only: it does not install packages, modify `/etc/apache2` or `/etc/nginx`, enable or disable sites/modules, or restart services.
+- Documented AES-256-GCM storage for `visible_password` while retaining the intentional Super Admin recovery feature.
+- Updated README, architecture, deployment, backup/restore, security, contributor, and password-management documentation to match the final implementation.
 
 ### Fixed
 
-- Restored source-template fallback behavior when an Admin-selected background or Theme Asset reference is cleared without deleting the physical upload.
-- Removed stale references to a retired preset, outdated six-adapter counts, and incorrect attribution reference numbering.
-- Preserved optional-media semantics: missing cover, music, gallery, Open Graph, or love-story media remains a warning or suppressed behavior rather than a fabricated required asset.
+- Corrected the Pawiwahan fallback CSS asset path from `hero-source.jpg` to `assets/hero-source.jpg`.
+- Extended repository validation to require all public endpoint wrappers, including `event.ics.php` and `media.php`.
 
-### Removed
+### Validation
 
-- Removed the retired Elix preset license residue from `docs/licenses/`.
-- Removed the stale `docs/RENDER.md` guide that claimed missing `render.yaml`, `docker/render-entrypoint.sh`, and `docker/render.ini` files.
+The final audit passed 24 regression cases, 142 HTTP frontend matrix assertions, media end-to-end and traversal checks, RSVP/calendar/CSS isolation checks, and the dependency graph audit with zero failures and zero warnings.
 
-### Media Role Audit Follow-up
-
-- Added an explicit per-preset media-role contract so the Admin exposes only the cover, bride, groom, and couple-photo controls consumed by the active renderer.
-- Restored DewanaKL's reachable bride/groom upload and assignment flow, added couple-photo upload with cover/home fallback behavior, and prevented unsupported couple-photo actions from appearing in presets that do not render them.
-- Wired Yami Buzzy couple avatars to canonical bride/groom media, with `couple_photo` fallback and the original letter placeholders retained when no custom image is configured.
-- Added `docs/media-role-audit.md` and `tools/media_role_contract_smoke.php`; the full repository regression suite now covers role mapping, Admin gates, renderer output, and fallback behavior.
-- Added `docs/user-input-capability-audit.md` and `tools/user_input_capability_smoke.php` to cover user-configured dresscode, QRIS, video upload/assignment, renderer output, and media reference lifecycle.
-- Added canonical `media.love_story_video` upload and Media Manager assignment with MP4 validation, preview, replacement, cleanup, and backward-compatible Yami Buzzy fallback fields.
-- Replaced Yami Buzzy's hardcoded dresscode timeline with Admin-configured title, color, rule, and description fields; QRIS now renders conditionally in all gift-enabled preset renderers.
+See [`README.md`](README.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md), [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), and [`dependency_audit_final_report.md`](../dependency_audit_final_report.md) for the current operational and audit records.

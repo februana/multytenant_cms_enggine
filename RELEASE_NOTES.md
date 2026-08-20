@@ -1,28 +1,37 @@
-# Release Notes — Current Unreleased Change Set
+# Release Notes — PR #89
 
-**Scope:** PR #84 on `fix/elix-floral-transition-navigation`
-**Status:** Unreleased
-**Deployment impact:** Docker and native Ubuntu/Linux paths remain supported; runtime data must be backed up before updates.
+**Branch:** `multy-tenant_februana`
+**Final commit:** `01740bf`
+**Status:** Ready for review
+**Deployment target:** One Apache instance behind a Cloudflare Tunnel, with shared SQLite schema and tenant-prefixed media.
 
 ## Overview
 
-This change set completes the multi-preset wedding invitation CMS transition. The repository now supports seven active built-in presets—DewanaKL, Rainier, Archak, Parang, Pawiwahan, Shubh Vivah, and Yami Buzzy—plus the CMS-native Custom builder. Built-in presets remain source-template adapters rather than generic skins: each preserves its own DOM boundaries, navigation, animation lifecycle, dependencies, and section order.
+This release finalizes the transition from a single-tenant runtime to a pure multi-tenant wedding-invitation CMS. One application instance serves multiple domains. The tenant is resolved from the normalized `Host` header, configuration is stored in `tenant_configs`, tenant-owned rows carry `tenant_id`, and tenant media is stored below `uploads/tenant_<id>/`.
 
-The CMS now has a preset-aware visual capability layer. Admin can use localized controls for supported section backgrounds, Theme Assets, named colors, heading/body font catalogs, previews, and reset-to-default actions. A reset removes only the saved reference and restores the source fallback; it does not delete the physical media file or create a second media pipeline.
+The existing theme-adapter architecture is preserved. The seven built-in presets and the CMS-native Custom builder retain their source-compatible DOM, CSS, JavaScript, dependency, section, and capability boundaries.
 
-## Content defaults
+## Security and deployment changes
 
-A clean configuration now starts with Indonesian wedding copy for **FEBRUANA** and **ANDI MUHAMAD BASUKI**, including the calls **Febru** and **Andi**, Arabic Bismillah, localized greeting and opening quotation, **QS. Ar-Rum 21**, and an Islamic closing. Admin values override these defaults field by field, and clearing a field resolves back to its default. Calendar metadata is generated from the current title, opening, schedule, and location.
+The native installer is now explicitly non-destructive and application-only. It does not install operating-system packages, alter `/etc/apache2` or `/etc/nginx`, enable or disable sites/modules, or restart services. Apache catch-all configuration is reviewed and applied separately by the operator.
 
-## Deployment changes
+Unknown hostnames are auto-provisioned only for validated local Cloudflare Tunnel requests when `UNDANGAN_AUTO_PROVISION=1`, `REMOTE_ADDR` is localhost, `CF-RAY` is present, and `CF-Connecting-IP` is a valid IP address. Invalid direct-origin requests do not create tenants.
 
-Docker now declares an image-level HTTP healthcheck and a matching Compose service healthcheck against `http://127.0.0.1/`. Compose persists CMS state, uploads and preset Theme Assets, backup archives, and optional WebDAV data in separate named volumes. The entrypoint recreates the shared runtime directory contract, protects `.env` permissions after recursive normalization, and safely escapes environment substitutions when creating the initial file. `.dockerignore` excludes local runtime data while retaining `.env.example` for bootstrap.
+Schema creation and legacy-data migration are deployment operations performed by `deploy/migrate.php`. Normal web requests do not run database DDL or maintain global configuration files. Visible Tenant Admin passwords remain an intentional Super Admin recovery feature and are stored as AES-256-GCM ciphertext alongside a one-way login hash.
 
-Native deployment remains available through `deploy/install.sh` with Nginx or Apache, and `deploy/update.sh`, `deploy/backup.sh`, `deploy/restore.sh`, and `deploy/health-check.sh` remain the operational path. No Render Blueprint or other managed-cloud manifest is claimed because the repository does not contain or test one. The native installer is the supported non-Docker alternative.
+## Media isolation
+
+All uploads use the tenant namespace `uploads/tenant_<id>/`. The existing upload, WebP conversion, preset resize, original cleanup, and tenant persistence pipeline remains intact. Apache rewrites `/uploads/...` to `media.php`, where the current host tenant, path containment, and MIME type are checked before a file is served.
+
+## Confirmed fix and audit
+
+The confirmed Pawiwahan CSS fallback defect was fixed by changing the asset reference from `hero-source.jpg` to `assets/hero-source.jpg`. Repository validation now requires all public endpoint wrappers, including `event.ics.php` and `media.php`.
+
+The final audit passed 24 regression cases, 142 HTTP frontend matrix assertions, media end-to-end and traversal checks, RSVP/calendar/CSS isolation checks, and the dependency graph audit with zero failures and zero warnings.
 
 ## Upgrade procedure
 
-Before changing an existing native installation, run:
+Back up an existing installation before updating:
 
 ```bash
 sudo /var/www/wedding/deploy/backup.sh
@@ -30,31 +39,14 @@ sudo /var/www/wedding/deploy/update.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-For Docker, retain named volumes during rebuilds:
-
-```bash
-docker compose build
-docker compose up -d --force-recreate
-docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
-```
-
-Do not run `docker compose down -v` unless intentionally resetting a disposable installation. Read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) for the complete procedure.
-
-## Provenance and licensing
-
-Shubh Vivah is adapted from [vinitshahdeo/wedding-website](https://github.com/vinitshahdeo/wedding-website), audited at revision `f42fbe653b54ff38096c82fd63bb759885a3402b`, with the MIT notice retained in `docs/licenses/SHUBH-VIVAH-LICENSE.txt`. Yami Buzzy is adapted from [Tynab/Yami-Buzzy](https://github.com/Tynab/Yami-Buzzy), audited at revision `367f5a5fb33ce2f902d5fa2db5bb0508136eb2eb`; no SPDX license or license file was found at that revision, so `docs/licenses/YAMI-BUZZY-LICENSE.txt` records an unresolved status rather than granting or implying MIT rights. Elix is retired and its stale local license residue has been removed.
-
-See [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) for every source revision, author, license status, representative source files, and integration boundary.
-
-## Validation
-
-The repository maintains smoke coverage for configuration defaults, theme rendering and contracts, localization, content preservation, visual capabilities, media lifecycle, admin guest access, preset behavior, deployment bootstrap, backup/restore, and update safety. The final audit requires all smoke tests to pass, `git diff --check` to be clean, and no untracked runtime data or generated secrets.
+For Docker packaging, retain named volumes during rebuilds. Do not run `docker compose down -v` unless intentionally destroying a disposable test installation. Read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) for the complete procedures.
 
 ## Related documents
 
 - [`README.md`](README.md) — project overview and quick start.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — ownership and capability boundaries.
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — complete deployment operations.
-- [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) — archive and disaster recovery.
-- [`SECURITY.md`](SECURITY.md) — security expectations and reporting.
-- [`CHANGELOG.md`](CHANGELOG.md) — technical change summary.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture and ownership boundaries.
+- [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md) — tenant routing and isolation.
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — installation and operations.
+- [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) — backup and disaster recovery.
+- [`SECURITY.md`](SECURITY.md) — security policy and reporting.
+- [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) — source provenance and licensing.

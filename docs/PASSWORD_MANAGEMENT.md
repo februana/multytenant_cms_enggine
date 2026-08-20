@@ -1,49 +1,57 @@
-# Password Management and First-DNS Auto-Provisioning
+# Password Management and Tenant Provisioning
 
-Implementasi ini menambahkan tiga kemampuan pada aplikasi multi-tenant.
+## Initial Super Admin credentials
 
-## Super Admin installer
+`deploy/install.sh` does not ask the operator to enter a reusable production password. On a new installation it generates a random Super Admin password with OpenSSL and a random `UNDANGAN_PASSWORD_KEY`, writes the environment values with restrictive permissions, stores the login hash in `users.password_hash`, and prints the initial credentials once in the final installer summary.
 
-`deploy/install.sh` tidak lagi meminta password Super Admin. Setelah username dimasukkan, installer membuat:
+Save the password and key before closing the installation terminal. An existing `.env` is preserved by the non-destructive installer; it is not silently replaced with new credentials.
 
-- Password Super Admin acak dengan `openssl rand -hex 16`.
-- Kunci enkripsi acak dengan `openssl rand -hex 32`.
-- Hash password untuk login pada `users.password_hash`.
-- Ciphertext password pada `users.visible_password`.
+## Validated auto-provisioning
 
-Password plaintext dicetak satu kali pada ringkasan akhir instalasi. Simpan password tersebut sebelum terminal ditutup.
+When an unknown hostname reaches the tenant resolver, auto-provisioning is allowed only if `UNDANGAN_AUTO_PROVISION=1` and all Cloudflare ingress checks pass:
 
-## Auto-provisioning domain baru
+| Check | Required value |
+|---|---|
+| Local proxy source | `REMOTE_ADDR` is `127.0.0.1` or `::1` |
+| Cloudflare request marker | `CF-RAY` is present |
+| Original client address | `CF-Connecting-IP` contains a valid IP address |
 
-Ketika `HTTP_HOST` belum ditemukan pada `tenants`, middleware hanya dapat melakukan auto-provisioning apabila `UNDANGAN_AUTO_PROVISION` aktif, `REMOTE_ADDR` adalah `127.0.0.1` atau `::1`, dan request membawa header `CF-RAY` serta alamat IP valid pada `CF-Connecting-IP`. Kombinasi ini memastikan request berasal dari daemon Cloudflare Tunnel lokal, bukan akses langsung ke origin dengan Host header arbitrer. Request yang gagal pada validasi ingress menerima `403` dan tidak membuat row tenant.
+Requests that fail these checks receive `403` and do not create a tenant. Provisioning is transactional: it creates the tenant, initial `tenant_configs`, tenant-admin account, and `uploads/tenant_<id>/` namespace as one operation. The generated tenant-admin password is not returned to the public browser; Super Admin can manage it from `/admin/super-admin.php`.
 
-Setelah validasi berhasil, middleware membuat tenant aktif, menanam konfigurasi awal sepenuhnya ke `tenant_configs`, membuat akun `tenant_admin` dengan username berbasis domain dan password acak, menyimpan hash login serta ciphertext `visible_password`, lalu membuat namespace media `uploads/tenant_{id}/` beserta subdirektorinya. Password tidak dikirimkan ke browser publik; Super Admin dapat melihatnya melalui `/admin/super-admin.php`.
+Super Admin may create a tenant manually without auto-provisioning. The domain should be routed through the same Cloudflare Tunnel before activation.
+
+> **Security boundary:** localhost and Cloudflare headers are defense-in-depth signals. They are not proof that an untrusted local process is safe. Restrict Apache so the origin cannot be reached directly from the public Internet.
 
 ## Two-column password strategy
 
-| Kolom | Isi | Penggunaan |
+| Column | Representation | Use |
 |---|---|---|
-| `password_hash` | Hash one-way dari `password_hash()` | Login melalui `password_verify()` |
-| `visible_password` | Ciphertext AES-256-GCM dengan IV dan authentication tag | Didekripsi server-side untuk Super Admin |
+| `password_hash` | One-way `password_hash()` output | Login verification with `password_verify()` |
+| `visible_password` | AES-256-GCM ciphertext | Intentional Super Admin recovery display |
 
-Kunci berasal dari `UNDANGAN_PASSWORD_KEY`. Kunci tidak boleh disimpan di dalam database, repository, atau output HTML. Jangan mengganti key pada deployment aktif tanpa migrasi ciphertext karena password lama tidak dapat didekripsi setelah key berubah.
+The ciphertext format is:
 
-Password change pada CMS memperbarui kedua kolom secara atomik pada akun user yang sedang login. Dengan demikian, password terbaru tetap dapat dilihat Super Admin, sedangkan login tetap menggunakan hash one-way.
-
-## Deployment lama
-
-Tambahkan key pada `.env` dengan mode file `600`, lalu restart Apache:
-
-```bash
-sudo sh -c 'printf "UNDANGAN_PASSWORD_KEY=%s\n" "$(openssl rand -hex 32)" >> /var/www/wedding/.env'
-sudo chmod 600 /var/www/wedding/.env
-sudo systemctl restart apache2
+```text
+gcm:base64(iv)::base64(tag)::base64(ciphertext)
 ```
 
-Audit deployment memeriksa bahwa `users.visible_password` dan `UNDANGAN_PASSWORD_KEY` tersedia. Jika key hilang, jangan menghapus atau mengganti ciphertext secara manual; lakukan reset password melalui prosedur pemulihan yang menjaga key yang benar.
+`UNDANGAN_PASSWORD_KEY` is the server-side encryption key. It must not be committed, exposed in HTML, or stored in the database. Protect the deployed `.env` with mode `600`. Do not replace the key on an active installation without migrating or resetting the ciphertext that depends on it.
 
-## Manual reset dan profil Super Admin
+When a Tenant Admin changes its password, the application updates both representations for that user. The login path uses the one-way hash, while Super Admin recovery decrypts the ciphertext only on the server.
 
-Pada `/admin/super-admin.php`, setiap Tenant Admin memiliki action **Reset/Set**. Super Admin dapat memasukkan password custom atau mengosongkannya untuk membuat password acak baru. Action tersebut memverifikasi pasangan `tenant_id` dan `user_id`, membatasi target pada role `tenant_admin`, lalu memperbarui `password_hash` dan `visible_password`.
+## Reset operations
 
-Halaman `/admin/profile.php` hanya dapat dibuka oleh session dengan role `super_admin`. Halaman ini memungkinkan Super Admin mengganti username dan password sendiri. Password Super Admin tetap disimpan untuk login; nilainya tidak ditampilkan pada dashboard tenant.
+Super Admin can reset or set a Tenant Admin password from `/admin/super-admin.php`. The action verifies the target `tenant_id`, restricts the target role to `tenant_admin`, and updates the hash and ciphertext together. Tenant Admin cannot reset another tenant's password.
+
+Super Admin profile changes are managed from `/admin/profile.php`. Super Admin credentials are not exposed as tenant data.
+
+## Existing installations
+
+For an older installation, preserve the existing `UNDANGAN_PASSWORD_KEY` whenever possible. If the key is missing, do not invent a replacement and expect old ciphertext to remain readable. Restore the correct key from protected operator storage or perform a controlled password reset after confirming the impact on existing accounts.
+
+After changing environment values, use the deployment procedure for the Apache service rather than editing the SQLite rows by hand. Validate the result with:
+
+```bash
+sudo /var/www/wedding/deploy/health-check.sh
+php tools/repo_contract_audit.php
+```

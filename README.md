@@ -1,131 +1,129 @@
 # Wedding Invitation CMS
 
-This repository is a PHP/SQLite wedding-invitation CMS with a theme-adapter architecture. It incorporates and adapts seven independently authored or user-provided invitation templates; the built-in presets are not presented as original designs of this project.
+This repository contains a PHP 8.3 and SQLite wedding-invitation CMS with a preserved theme-adapter architecture. It runs as a **pure multi-tenant application**: one Apache instance, one application instance, one shared SQLite database, one shared schema, and multiple invitation domains resolved from the request `Host` header. The intended public ingress is a Cloudflare Tunnel.
 
 ## Current architecture
 
 ```text
-CMS ENGINE
-    ↓
-THEME ADAPTER
-    ↓
-BUILT-IN PRESET
+Cloudflare Tunnel
+        |
+        v
+Apache catch-all VirtualHost
+        |
+        v
+Tenant resolver: normalized HTTP_HOST -> tenants.domain
+        |
+        +--> tenant_configs.config_json
+        +--> tenant-scoped users, guest links, and RSVP rows
+        +--> uploads/tenant_<id>/...
+        |
+        v
+CMS engine -> theme adapter -> built-in preset or Custom renderer
 ```
 
-Custom mode follows a separate CMS-native path:
+The tenant context is established by the server. Public and tenant-admin requests do not accept a client-supplied `tenant_id`; they use the tenant resolved from `Host`, and tenant-admin sessions are checked against the current hostname. Super Admin operations are the deliberate cross-tenant exception and are restricted by role.
 
-```text
-CMS ENGINE
-    ↓
-CUSTOM CMS-NATIVE BUILDER
-```
+All mutable invitation configuration, custom CSS, calendar data, and guest links are stored in SQLite under the tenant's `tenant_configs` or related tenant-scoped tables. The runtime does **not** read or write a global `config.json`, `guest-links.json`, or global media namespace. Schema creation and legacy-data migration are deployment operations performed by `deploy/migrate.php`, not by normal web requests.
 
-The CMS provides data, persistence, backend services, security helpers, capability metadata, and a shared visual customization layer. Theme adapters connect those values to individual source templates. Built-in presets preserve their source DOM, CSS, JavaScript lifecycle, dependencies, section order, and UX. Presets intentionally have different capabilities: a CMS capability does not automatically become a section, and it does not have to appear in every preset. Custom is the full CMS-native builder for users who need maximum flexibility.
-
-The visual capability layer is preset-aware. Where the source template supports the boundary, Admin can select section backgrounds and Theme Assets, choose named heading/body colors, select from the shared font catalogs, preview the result, and reset a selection so the source fallback becomes active again. Uploaded files remain in the canonical Media Manager; visual controls store references rather than creating a competing media pipeline.
-
-The **Guest Link Generator** and **personalized Guest Name** are global CMS capabilities. A generated invitation uses the current URL contract, for example `?to=Andi`; each theme presents the resolved guest name in its own original-compatible location rather than receiving identical markup.
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for ownership boundaries and [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) for source provenance, licenses, authors, and attribution requirements.
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for ownership boundaries, [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md) for tenant routing and isolation, and [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) for source provenance and license information.
 
 ## Presets
 
 The seven built-in presets are:
 
-- **DewanaKL** — original welcome/loading, gallery, video, gift, comment, AOS, and confetti-oriented invitation flow.
-- **Rainier** — original event-oriented `#app` flow with timezone-aware event data, calendar, optional schedule/quotes, RSVP, and footer branding. Rainier does not use AOS.
-- **Archak** — compact original navigation, home, timeline, story, gallery, stay, registry, parting message, footer, parallax, and reveal flow.
-- **Parang** — Javanese-inspired source-adapter flow with preserved ornaments, side navigation, couple, event, story, gallery, gift, maps, RSVP, and music boundaries.
+- **DewanaKL** — welcome/loading, gallery, video, gift, comment, AOS, and confetti-oriented invitation flow.
+- **Rainier** — event-oriented `#app` flow with timezone-aware event data, calendar, optional schedule/quotes, RSVP, and footer branding. Rainier does not use AOS.
+- **Archak** — navigation, home, timeline, story, gallery, stay, registry, parting message, footer, parallax, and reveal flow.
+- **Parang** — Javanese-inspired source-adapter flow with ornaments, side navigation, couple, event, story, gallery, gift, maps, RSVP, and music boundaries.
 - **Pawiwahan** — preserved static source flow with Bootstrap carousel, welcome modal, guest resolver, couple, event/countdown, gallery, gift, maps, messages/RSVP, and audio boundaries.
 - **Shubh Vivah** — centered invitation-card flow with floral ornaments, script typography, countdown, gallery, RSVP, and localized Indonesian UI.
 - **Yami Buzzy** — welcome-modal/editorial flow with hero, couple, events, dress code, story, gallery, video, gift, invitation, RSVP, and localized Indonesian UI.
 
-Missing generic CMS functionality in a simple preset is intentional when the original template has no equivalent presentation boundary. Use Custom mode for the complete CMS-native section builder.
+Custom mode remains the CMS-native builder for users who need a configurable section structure. A capability that is absent from a simple built-in preset is intentional when the source template has no equivalent presentation boundary.
 
-## Indonesian default copy
+## Public and administrative endpoints
 
-A new clean configuration uses Indonesian wedding copy with the official names **FEBRUANA** and **ANDI MUHAMAD BASUKI**, the familiar calls **Febru** and **Andi**, an Arabic Bismillah opening, a localized greeting and opening quotation, **QS. Ar-Rum 21**, and an Islamic closing. These values are defaults rather than locked content: Admin input replaces them, and clearing a field restores the corresponding default. Calendar metadata is generated from the current title, opening, schedule, and location instead of remaining tied to the default couple.
+| Endpoint | Responsibility |
+|---|---|
+| `/` or `index.php` | Resolve the current tenant, load its configuration, and render the invitation. |
+| `/save.php` | Save public RSVP data with the server-resolved tenant ID. |
+| `/messages.php` | Read tenant-scoped visible messages. |
+| `/gallery.php` | Return tenant-scoped gallery data. |
+| `/event.ics.php` | Serve the current tenant's calendar data. |
+| `/media.php` | Authorize and deliver tenant media after path and MIME checks. |
+| `/admin/` | Tenant Admin CMS, restricted to the matching tenant session. |
+| `/admin/super-admin.php` | Super Admin tenant management and cross-tenant administration. |
+
+Requests for `/uploads/...` are rewritten to `media.php`. A media path belonging to Tenant A is not readable through Tenant B's hostname, even when the filename is known.
 
 ## Repository layout
 
 ```text
 /
 ├── index.php                 # public invitation controller
-├── admin.php                 # admin redirect wrapper
-├── save.php                  # RSVP backend wrapper
-├── messages.php              # message API wrapper
-├── gallery.php               # gallery API wrapper
-├── config.php                # defaults, persistence, helpers, security
-├── config.json               # current CMS configuration
-├── database.sqlite           # native runtime database placeholder
-├── uploads/                  # user-provided media directories
-├── admin/                    # CMS admin UI and services
-├── app/                      # shared renderer/helpers/contracts
-├── themes/                   # built-in adapters and retained source files
-├── deploy/                   # native installer/update/backup/health scripts
-├── docker/                   # Docker entrypoint and Apache config
+├── admin.php                 # legacy admin redirect wrapper
+├── save.php                  # public RSVP wrapper
+├── messages.php              # public message wrapper
+├── gallery.php               # public gallery wrapper
+├── event.ics.php             # tenant-scoped calendar endpoint
+├── media.php                 # tenant-authorized media delivery
+├── config.php                # tenant context, DB, security, and media helpers
+├── database/migrations/      # deployment-time schema contract
+├── admin/                    # tenant CMS and Super Admin UI
+├── app/                      # shared renderer, helpers, and theme contracts
+├── themes/                   # built-in adapters and retained source assets
+├── uploads/                  # runtime tenant media root; do not commit production data
+├── deploy/                   # install, migrate, update, backup, restore, and audit scripts
+├── tools/                    # repository validators and dependency audits
+├── docker/                   # optional Docker/Apache packaging
 ├── Dockerfile
 ├── docker-compose.yml
-└── docs/
+└── docs/                     # current architecture, deployment, security, and theme records
 ```
 
-## Deployment
+## Native Apache deployment
 
-### Docker
+The supported hardware deployment is a single Apache instance behind a Cloudflare Tunnel. The installer is intentionally **non-destructive**. It checks for PHP, OpenSSL, and SQLite3, copies application code without deleting existing runtime data, creates the shared runtime directories, and runs the standalone migration. It does not install OS packages, enable or disable Apache modules or sites, restart services, or write to `/etc/apache2` or `/etc/nginx`.
 
-```bash
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
-cp .env.example .env
-chmod 600 .env
-# Set ADMIN_PASS in .env before starting.
-docker compose build
-docker compose up -d
-docker compose exec wedding-cms /var/www/wedding/deploy/health-check.sh
-```
-
-Docker uses PHP 8.3 Apache. Named volumes persist CMS state in `wedding_data`, uploaded media and preset-scoped `uploads/theme-assets/<preset>/` directories in `wedding_uploads`, backup archives in `wedding_backups`, and optional WebDAV data in `wedding_webdav`. The image and Compose service both declare an HTTP healthcheck. The entrypoint sources `deploy/runtime-directories.sh`, recreates missing directories without replacing user media, safely bootstraps `.env`, and protects its permissions. Compose refuses to use a shared hardcoded administrator password.
-
-### Native/server deployment
-
-Prerequisites are `rsync`, `openssl`, and Composer on a root-capable Ubuntu host. The installer installs the selected Nginx/Apache and required PHP packages:
+Prepare Apache manually with the reviewed example at [`deploy/apache-catchall.conf.example`](deploy/apache-catchall.conf.example). The catch-all VirtualHost must use the application directory as its document root, permit `.htaccess` overrides, and be reachable only through the intended ingress boundary. Do not expose the origin directly to the Internet.
 
 ```bash
 cd /path/to/webserver_undangan
+git checkout multy-tenant_februana
 sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The installer creates `/var/www/wedding`, initializes runtime directories/files through the shared `deploy/runtime-directories.sh` contract, creates preset-scoped Theme Assets directories, configures the selected web server, optionally configures TLS/WebDAV, and leaves the Git checkout intact. `deploy/update.sh` preserves the complete `uploads/` tree, WebDAV data, backups, legacy storage, and recreates missing runtime asset directories. Use the existing scripts for operations:
+The installer requires a valid `UNDANGAN_MAIN_DOMAIN` or prompts for it. It creates the initial Super Admin and runs `deploy/migrate.php`. For existing installations, use the guarded update and backup/restore procedures described in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md).
+
+## Cloudflare and tenant onboarding
+
+Set `UNDANGAN_AUTO_PROVISION=1` only when the origin is correctly restricted to the local Cloudflare Tunnel daemon. An unknown hostname is auto-provisioned only when all ingress checks pass: `REMOTE_ADDR` is `127.0.0.1` or `::1`, `CF-RAY` is present, and `CF-Connecting-IP` contains a valid address. Invalid direct-origin or missing-header requests do not create tenants and return `403`; invalid or suspended tenant domains return `404`.
+
+Super Admin can also create or activate a tenant manually from `/admin/super-admin.php`. Every custom domain must first be routed to the same Cloudflare Tunnel. New tenant provisioning creates its database configuration, tenant-admin credentials, and `uploads/tenant_<id>/` media namespace transactionally.
+
+## Tenant media lifecycle
+
+Uploads are scoped below `uploads/tenant_<id>/` using the logical media categories `cover`, `gallery`, `background`, `love-story`, `music`, and `theme-assets`. The existing pipeline is preserved: upload, convert to WebP where applicable, resize according to the selected preset, delete the original when conversion succeeds, and save only inside the current tenant's namespace. Render-time path containment and the `media.php` delivery boundary prevent cross-tenant read, write, replace, delete, and preview operations.
+
+A clean checkout contains no production cover, gallery, music, video, or Open Graph media. Administrators must upload or provision optional media through the tenant CMS. Do not copy production media into Git and do not use a global path as a substitute for a tenant namespace.
+
+## Validation
+
+Run the repository contract and dependency checks before deployment or a pull request:
 
 ```bash
-sudo /var/www/wedding/deploy/update.sh
-sudo /var/www/wedding/deploy/backup.sh
-sudo /var/www/wedding/deploy/restore.sh /path/to/backup.zip
+php tools/validate.php
+php tools/repo_contract_audit.php
+php tools/dependency_graph_audit.php
 ```
 
-Full prerequisites, prompts, storage behavior, health statuses, troubleshooting, and media provisioning are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+The complete audit evidence for the current branch is maintained outside the runtime data directories. Operational procedures, backup semantics, and security boundaries are documented in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md), [`docs/PASSWORD_MANAGEMENT.md`](docs/PASSWORD_MANAGEMENT.md), and [`SECURITY.md`](SECURITY.md).
 
-## Optional media lifecycle
+## Indonesian default copy
 
-A clean checkout contains no sample cover, music, or Open Graph image. The shipped defaults leave those fields empty because these are optional administrator-provided deployment data, not required application assets. The installer creates the upload directories but does not invent copyrighted or arbitrary media. The health check reports missing optional media as `WARNING` while failing only required application/storage/security checks.
-
-Upload or provision media through the Admin UI, then configure the corresponding `config.json` field. Music requires both a valid configured file and the relevant preset's explicit music option/section. DewanaKL video requires a valid supported file in `media.love_story_video`.
-
-## Runtime data and security
-
-Native mode stores mutable files in the document root by default. Docker sets `UNDANGAN_DATA_DIR=/var/data` and `UNDANGAN_DB_PATH=/var/data/database.sqlite`, with separate named volumes for uploads, backups, and WebDAV. Both deployment paths create `uploads/cover`, `music`, `gallery`, `background`, `love-story`, `theme-assets`, and preset-scoped Theme Assets directories. The application blocks direct public access to sensitive config, guest-link, environment, SQLite, backup, and WebDAV files. Do not commit `.env` or production runtime data.
+A new tenant configuration uses Indonesian wedding copy with the official names **FEBRUANA** and **ANDI MUHAMAD BASUKI**, the familiar calls **Febru** and **Andi**, an Arabic Bismillah opening, a localized greeting and opening quotation, **QS. Ar-Rum 21**, and an Islamic closing. These are defaults rather than locked content: Tenant Admin input replaces them, and clearing a field restores its corresponding default.
 
 ## License and attribution
 
-The CMS integration code is project-specific. The built-in presentation templates are adaptations of the following source repositories:
-
-- [DewanaKL — dewanakl/undangan](https://github.com/dewanakl/undangan)
-- [Shubh Vivah — vinitshahdeo/wedding-website](https://github.com/vinitshahdeo/wedding-website)
-- [Yami Buzzy — Tynab/Yami-Buzzy](https://github.com/Tynab/Yami-Buzzy)
-- [Rainier — Rainier-PS/Invitation-Template](https://github.com/Rainier-PS/Invitation-Template)
-- [Archak — archakNath/wedding-invitation-website](https://github.com/archakNath/wedding-invitation-website)
-- [Pawiwahan — parta99/pawiwahan](https://github.com/parta99/pawiwahan)
-- Parang — user-provided HTML design reference recorded in `docs/ATTRIBUTIONS.md`
-
-Shubh Vivah is recorded with the MIT notice from Vinit Shahdeo. Yami Buzzy has no detected SPDX license or license file at the audited source revision, so it is documented as an unresolved permission status rather than being labeled MIT. License status, exact revisions, original source files, current integration paths, and attribution requirements are maintained in [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).
+The CMS integration code is project-specific. The built-in presentation templates are adaptations of the sources recorded in [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md), including DewanaKL, Shubh Vivah, Yami Buzzy, Rainier, Archak, Pawiwahan, and the user-provided Parang reference. Review that document before redistributing a preset or its source assets.
