@@ -8,8 +8,9 @@ function delete_fallback_assert(bool $condition, string $message): void {
     echo 'PASS: ' . $message . PHP_EOL;
 }
 
-$probePath = 'uploads/background/delete-fallback-probe-' . getmypid() . '.webp';
-$probeAbsolute = ROOT_DIR . '/' . $probePath;
+ensure_upload_dirs();
+$probeAbsolute = tenant_upload_dir('background') . '/delete-fallback-probe-' . getmypid() . '.webp';
+$probePath = relative_path($probeAbsolute);
 copy(ROOT_DIR . '/themes/parang/assets/parang-pattern.webp', $probeAbsolute);
 $config = config_defaults();
 $config['media']['cover'] = $probePath;

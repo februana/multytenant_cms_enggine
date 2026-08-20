@@ -88,17 +88,32 @@ function password_encryption_key(): string {
 function encrypt_visible_password(string $password): string {
     $key = password_encryption_key();
     if ($key === '') return '';
-    $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+    $cipher = 'aes-256-gcm';
+    $ivLength = openssl_cipher_iv_length($cipher);
     $iv = random_bytes($ivLength);
-    $ciphertext = openssl_encrypt($password, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
-    if ($ciphertext === false) return '';
-    return base64_encode($iv . $ciphertext);
+    $tag = '';
+    $ciphertext = openssl_encrypt($password, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+    if ($ciphertext === false || $tag === '') return '';
+    // Versioned, parseable format: gcm:base64(iv)::base64(tag)::base64(ciphertext).
+    return 'gcm:' . base64_encode($iv) . '::' . base64_encode($tag) . '::' . base64_encode($ciphertext);
 }
 
 function decrypt_visible_password(?string $encoded): string {
     $encoded = trim((string)$encoded);
     $key = password_encryption_key();
     if ($encoded === '' || $key === '') return '';
+    if (str_starts_with($encoded, 'gcm:')) {
+        $parts = explode('::', substr($encoded, 4), 3);
+        if (count($parts) !== 3) return '';
+        [$ivEncoded, $tagEncoded, $ciphertextEncoded] = $parts;
+        $iv = base64_decode($ivEncoded, true);
+        $tag = base64_decode($tagEncoded, true);
+        $ciphertext = base64_decode($ciphertextEncoded, true);
+        if ($iv === false || $tag === false || $ciphertext === false || $tag === '') return '';
+        $password = openssl_decrypt($ciphertext, 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '');
+        return $password === false ? '' : $password;
+    }
+    // Legacy CBC records remain readable long enough for deploy/migrate.php to re-encrypt them.
     $raw = base64_decode($encoded, true);
     $ivLength = openssl_cipher_iv_length('aes-256-cbc');
     if ($raw === false || strlen($raw) <= $ivLength) return '';
@@ -1947,6 +1962,10 @@ function media_path_is_safe_storage(string $relativePath): bool {
     return false;
 }
 
+function tenant_media_reference_is_safe(string $relativePath): bool {
+    return media_path_is_safe_storage($relativePath);
+}
+
 function verify_webp_output(string $path, array $requirement = []): bool {
     if (!is_file($path) || filesize($path) <= 0) return false;
     $mime = safe_image_mime($path);
@@ -2229,7 +2248,24 @@ function safe_image_mime(string $path): ?string {
     return $mime ?? null;
 }
 
+function tenant_destination_is_safe(string $destinationDir): bool {
+    $tenantRoot = tenant_upload_root();
+    if ($tenantRoot === '') return false;
+    $tenantRootReal = realpath($tenantRoot);
+    if ($tenantRootReal === false) $tenantRootReal = rtrim($tenantRoot, '/\\\\');
+    $destinationReal = realpath($destinationDir);
+    if ($destinationReal === false) {
+        $parentReal = realpath(dirname($destinationDir));
+        if ($parentReal === false) return false;
+        $destinationReal = rtrim($parentReal, '/\\\\') . '/' . basename($destinationDir);
+    }
+    return $destinationReal === $tenantRootReal || str_starts_with($destinationReal, $tenantRootReal . DIRECTORY_SEPARATOR);
+}
+
 function upload_file(array $file, string $destinationDir, array $allowedExtensions, int $maxSize, string $role = 'generic', ?string $preset = null): array {
+    if (!tenant_destination_is_safe($destinationDir)) {
+        return ['success' => false, 'error' => 'Direktori upload bukan milik tenant aktif.'];
+    }
     if (!isset($file['error']) || (int)$file['error'] !== UPLOAD_ERR_OK) {
         return ['success' => false, 'error' => 'Gagal mengunggah file.'];
     }
@@ -2264,6 +2300,9 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
     }
     if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) {
         return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan.'];
+    }
+    if (!tenant_destination_is_safe($destinationDir)) {
+        return ['success' => false, 'error' => 'Direktori upload bukan milik tenant aktif.'];
     }
 
     if ($isImage) {

@@ -27,11 +27,11 @@ function media_pipeline_upload(string $source, string $name, string $destination
 $created = [];
 $fixtures = [];
 $token = 'media-pipeline-' . bin2hex(random_bytes(5));
-$coverDir = UPLOADS_COVER_DIR;
-$backgroundDir = UPLOADS_BACKGROUND_DIR;
-$galleryDir = UPLOADS_GALLERY_DIR;
-$storyDir = UPLOADS_LOVE_STORY_DIR;
-$themeDir = UPLOADS_THEME_ASSETS_DIR . '/parang';
+$coverDir = tenant_upload_dir('cover');
+$backgroundDir = tenant_upload_dir('background');
+$galleryDir = tenant_upload_dir('gallery');
+$storyDir = tenant_upload_dir('love_story');
+$themeDir = tenant_upload_dir('theme_assets') . '/parang';
 ensure_upload_dirs();
 
 try {
@@ -85,7 +85,7 @@ try {
     $fixtures[] = $themeSource;
     $themeAsset = media_pipeline_upload($themeSource, 'parang-gunungan.jpg', $themeDir, 'theme_asset', 'parang');
     media_pipeline_assert(!empty($themeAsset['success']), 'Parang theme asset processes through the shared pipeline');
-    media_pipeline_assert(str_starts_with(relative_path($themeAsset['path']), 'uploads/theme-assets/parang/'), 'Parang theme asset uses the preset-scoped theme-assets directory');
+    media_pipeline_assert(str_contains(relative_path($themeAsset['path']), '/theme-assets/parang/'), 'Parang theme asset uses the preset-scoped theme-assets directory');
     media_pipeline_assert(str_ends_with($themeAsset['path'], '.webp') && !is_file($themeSource), 'Parang theme asset leaves only the final WebP');
     $themeOnlyConfig = config_defaults();
     $themeOnlyConfig['gallery']['items'] = [];

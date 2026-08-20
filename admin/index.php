@@ -118,6 +118,10 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                     $error = 'Pilih asset media yang akan dipakai.';
                     break;
                 }
+                if (!tenant_media_reference_is_safe($path)) {
+                    $error = 'Asset media bukan milik tenant aktif.';
+                    break;
+                }
                 switch ($target) {
                     case 'cover':
                         $config['media']['cover'] = $path;
@@ -202,6 +206,10 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 $mediaValue = trim((string)($_POST['media_value'] ?? ''));
                 if ($mediaKey === '' || $mediaValue === '') {
                     $error = 'Tentukan media yang ingin dipasang sebagai default.';
+                    break;
+                }
+                if (!tenant_media_reference_is_safe($mediaValue)) {
+                    $error = 'Asset media bukan milik tenant aktif.';
                     break;
                 }
                 switch ($mediaKey) {
@@ -865,6 +873,10 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
             case 'delete_gallery_item':
                 $filename = trim((string)($_POST['gallery_filename'] ?? ''));
                 if ($filename !== '') {
+                    if (!tenant_media_reference_is_safe($filename)) {
+                        $error = 'File media bukan milik tenant aktif.';
+                        break;
+                    }
                     $path = ROOT_DIR . '/' . ltrim($filename, '/');
                     if (is_file($path) && media_path_is_safe_storage($filename)) {
                         $queueMediaCleanup($filename, '');
@@ -883,6 +895,10 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
             case 'set_gallery_cover':
                 $filename = trim((string)($_POST['gallery_filename'] ?? ''));
                 if ($filename !== '') {
+                    if (!tenant_media_reference_is_safe($filename)) {
+                        $error = 'File cover bukan milik tenant aktif.';
+                        break;
+                    }
                     $config['gallery']['cover'] = $filename;
                 }
                 break;
@@ -898,6 +914,10 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 }
                 $selectedCover = trim((string)($_POST['gallery_cover'] ?? ''));
                 if ($selectedCover !== '') {
+                    if (!tenant_media_reference_is_safe($selectedCover)) {
+                        $error = 'File cover bukan milik tenant aktif.';
+                        break;
+                    }
                     $config['gallery']['cover'] = $selectedCover;
                 }
                 break;

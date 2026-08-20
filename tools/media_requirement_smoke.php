@@ -55,7 +55,7 @@ try {
             $source = sys_get_temp_dir() . '/' . $token . '-' . $preset . '-' . $label . '.jpg';
             media_requirement_fixture($source, $sourceWidth, $sourceHeight);
             $fixtures[] = $source;
-            $result = media_requirement_upload($source, $preset . '-' . $label . '.jpg', 'gallery', $preset, UPLOADS_GALLERY_DIR);
+            $result = media_requirement_upload($source, $preset . '-' . $label . '.jpg', 'gallery', $preset, tenant_upload_dir('gallery'));
             media_requirement_assert(!empty($result['success']), "$preset gallery $label upload succeeds");
             media_requirement_assert(str_ends_with((string)$result['path'], '.webp'), "$preset gallery $label is canonical WebP");
             media_requirement_assert(!is_file($source), "$preset gallery $label original is removed after verification");
@@ -73,12 +73,12 @@ try {
     }
 
     $roleDestinations = [
-        'cover' => UPLOADS_COVER_DIR,
-        'bride_photo' => UPLOADS_COVER_DIR,
-        'groom_photo' => UPLOADS_COVER_DIR,
-        'couple_photo' => UPLOADS_COVER_DIR,
-        'story' => UPLOADS_LOVE_STORY_DIR,
-        'qris_image' => UPLOADS_COVER_DIR,
+        'cover' => tenant_upload_dir('cover'),
+        'bride_photo' => tenant_upload_dir('cover'),
+        'groom_photo' => tenant_upload_dir('cover'),
+        'couple_photo' => tenant_upload_dir('cover'),
+        'story' => tenant_upload_dir('love_story'),
+        'qris_image' => tenant_upload_dir('cover'),
     ];
     foreach ($presets as $preset) {
         foreach ($roleDestinations as $role => $destination) {
@@ -100,7 +100,7 @@ try {
         media_requirement_fixture($source, 5000, 3000);
         $fixtures[] = $source;
         $requirement = media_requirement('background', $preset);
-        $result = media_requirement_upload($source, $preset . '-background.jpg', 'background', $preset, UPLOADS_BACKGROUND_DIR);
+        $result = media_requirement_upload($source, $preset . '-background.jpg', 'background', $preset, tenant_upload_dir('background'));
         media_requirement_assert(!empty($result['success']), "$preset background upload succeeds");
         media_requirement_assert(!is_file($source), "$preset background original is removed after verification");
         media_requirement_assert(verify_webp_output($result['path'], $requirement), "$preset background satisfies resolved requirement");
@@ -117,7 +117,7 @@ try {
     $ogSource = sys_get_temp_dir() . '/' . $token . '-og.jpg';
     media_requirement_fixture($ogSource, 2400, 1600);
     $fixtures[] = $ogSource;
-    $og = media_requirement_upload($ogSource, 'og-image.jpg', 'og_image', 'custom', UPLOADS_COVER_DIR);
+    $og = media_requirement_upload($ogSource, 'og-image.jpg', 'og_image', 'custom', tenant_upload_dir('cover'));
     media_requirement_assert(!empty($og['success']), 'global OG image upload succeeds');
     media_requirement_assert(($og['width'] ?? 0) === 1200 && ($og['height'] ?? 0) === 630, 'global OG image uses exact 1200x630 canvas');
     media_requirement_assert(!is_file($ogSource), 'global OG original is removed after verified output');
@@ -126,7 +126,7 @@ try {
     $smallBackgroundSource = sys_get_temp_dir() . '/' . $token . '-small-background.jpg';
     media_requirement_fixture($smallBackgroundSource, 1000, 700);
     $fixtures[] = $smallBackgroundSource;
-    $smallBackground = media_requirement_upload($smallBackgroundSource, 'small-background.jpg', 'background', 'pawiwahan', UPLOADS_BACKGROUND_DIR);
+    $smallBackground = media_requirement_upload($smallBackgroundSource, 'small-background.jpg', 'background', 'pawiwahan', tenant_upload_dir('background'));
     media_requirement_assert(!empty($smallBackground['success']), 'Pawiwahan small background upload succeeds');
     [$smallWidth, $smallHeight] = media_requirement_info($smallBackground['path']);
     media_requirement_assert($smallWidth === 1000 && $smallHeight === 700, 'Pawiwahan preserve policy does not upscale a small background');
@@ -135,7 +135,7 @@ try {
     $transparentSource = sys_get_temp_dir() . '/' . $token . '-parang-theme.png';
     media_requirement_fixture($transparentSource, 800, 400, 'png', true);
     $fixtures[] = $transparentSource;
-    $themeDir = UPLOADS_THEME_ASSETS_DIR . '/parang';
+    $themeDir = tenant_upload_dir('theme_assets') . '/parang';
     if (!is_dir($themeDir)) mkdir($themeDir, 0755, true);
     $theme = media_requirement_upload($transparentSource, 'parang-transparent.png', 'theme_asset', 'parang', $themeDir);
     media_requirement_assert(!empty($theme['success']), 'Parang transparent Theme Asset uses shared pipeline');
@@ -149,7 +149,7 @@ try {
 } finally {
     foreach ($fixtures as $fixture) if (is_file($fixture)) @unlink($fixture);
     foreach ($created as $path) if (is_file($path)) @unlink($path);
-    $themeDir = UPLOADS_THEME_ASSETS_DIR . '/parang';
+    $themeDir = tenant_upload_dir('theme_assets') . '/parang';
     if (is_dir($themeDir)) @rmdir($themeDir);
     ob_end_flush();
 }

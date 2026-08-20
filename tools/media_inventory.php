@@ -4,12 +4,12 @@ require_once dirname(__DIR__) . '/config.php';
 $cleanup = in_array('--cleanup', $argv ?? [], true);
 $config = load_config();
 $groups = [
-    'cover' => UPLOADS_COVER_DIR,
-    'background' => UPLOADS_BACKGROUND_DIR,
-    'gallery' => UPLOADS_GALLERY_DIR,
-    'love_story' => UPLOADS_LOVE_STORY_DIR,
-    'video' => UPLOADS_LOVE_STORY_DIR,
-    'theme_assets' => UPLOADS_THEME_ASSETS_DIR,
+    'cover' => tenant_upload_dir('cover'),
+    'background' => tenant_upload_dir('background'),
+    'gallery' => tenant_upload_dir('gallery'),
+    'love_story' => tenant_upload_dir('love_story'),
+    'video' => tenant_upload_dir('video'),
+    'theme_assets' => tenant_upload_dir('theme_assets'),
 ];
 
 $rows = [];

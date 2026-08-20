@@ -50,7 +50,7 @@ normalize_archive_entry() {
 archive_entry_allowed() {
     local entry="$1"
     case "$entry" in
-        ''|.|database.sqlite|.env|uploads|uploads/*|webdav|webdav/*|.webdav|.webdav/davpasswd|_temp_backup|_temp_backup/davpasswd)
+        ''|.|database.sqlite|.env|config.json|custom.css|guest-links.json|event.ics|uploads|uploads/*|webdav|webdav/*|.webdav|.webdav/davpasswd|_temp_backup|_temp_backup/davpasswd)
             return 0
             ;;
         *)
@@ -150,7 +150,23 @@ if id -u www-data >/dev/null 2>&1 && getent group www-data >/dev/null 2>&1; then
         [ -f "$DATA_ROOT/$file" ] && chown www-data:www-data "$DATA_ROOT/$file" 2>/dev/null || true
         [ -f "$DATA_ROOT/$file" ] && chmod 600 "$DATA_ROOT/$file"
     done
-    (cd "$ROOT_DIR" && php deploy/migrate.php) || restore_error "database migration after restore failed"
+    if [ -f "$DATA_ROOT/database.sqlite" ]; then
+        env_file_value() {
+            local key="$1"
+            sed -n "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*//p" "$DATA_ROOT/.env" | head -n 1 | sed "s/[[:space:]]*$//; s/^['\"]//; s/['\"]$//"
+        }
+        MIGRATION_MAIN_DOMAIN="${UNDANGAN_MAIN_DOMAIN:-}"
+        [ -n "$MIGRATION_MAIN_DOMAIN" ] || MIGRATION_MAIN_DOMAIN="$(env_file_value UNDANGAN_MAIN_DOMAIN)"
+        MIGRATION_PASSWORD_KEY="${UNDANGAN_PASSWORD_KEY:-}"
+        [ -n "$MIGRATION_PASSWORD_KEY" ] || MIGRATION_PASSWORD_KEY="$(env_file_value UNDANGAN_PASSWORD_KEY)"
+        MIGRATION_ADMIN_USER="${ADMIN_USER:-}"
+        [ -n "$MIGRATION_ADMIN_USER" ] || MIGRATION_ADMIN_USER="$(env_file_value ADMIN_USER)"
+        MIGRATION_ADMIN_PASS="${ADMIN_PASS:-}"
+        [ -n "$MIGRATION_ADMIN_PASS" ] || MIGRATION_ADMIN_PASS="$(env_file_value ADMIN_PASS)"
+        [ -n "$MIGRATION_MAIN_DOMAIN" ] || restore_error "UNDANGAN_MAIN_DOMAIN is required for database migration after restore"
+        [ -r "$SCRIPT_DIR/migrate.php" ] || restore_error "missing standalone migration script: $SCRIPT_DIR/migrate.php"
+        (cd "$SCRIPT_DIR/.." && UNDANGAN_DB_PATH="$DATA_ROOT/database.sqlite" UNDANGAN_MAIN_DOMAIN="$MIGRATION_MAIN_DOMAIN" UNDANGAN_PASSWORD_KEY="$MIGRATION_PASSWORD_KEY" ADMIN_USER="$MIGRATION_ADMIN_USER" ADMIN_PASS="$MIGRATION_ADMIN_PASS" php "$SCRIPT_DIR/migrate.php") || restore_error "database migration after restore failed"
+    fi
     for directory in uploads webdav backups; do
         [ -d "$ROOT_DIR/$directory" ] && chown -R www-data:www-data "$ROOT_DIR/$directory" 2>/dev/null || true
         [ -d "$ROOT_DIR/$directory" ] && find "$ROOT_DIR/$directory" -type d -exec chmod 755 {} \;

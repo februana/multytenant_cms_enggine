@@ -46,6 +46,26 @@ function migration_read_legacy_text(string $path): string {
     return is_readable($path) ? (string)file_get_contents($path) : '';
 }
 
+function migration_upgrade_visible_passwords(SQLite3 $db): void {
+    $result = $db->query("SELECT id, visible_password FROM users WHERE visible_password <> ''");
+    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+        $encoded = trim((string)($row['visible_password'] ?? ''));
+        if ($encoded === '' || str_starts_with($encoded, 'gcm:')) continue;
+        $plain = decrypt_visible_password($encoded);
+        if ($plain === '') {
+            throw new RuntimeException('Unable to decrypt a legacy visible password; verify UNDANGAN_PASSWORD_KEY before migrating.');
+        }
+        $upgraded = encrypt_visible_password($plain);
+        if ($upgraded === '' || !str_starts_with($upgraded, 'gcm:')) {
+            throw new RuntimeException('Unable to upgrade a legacy visible password to AES-256-GCM.');
+        }
+        $update = $db->prepare('UPDATE users SET visible_password = :visible_password WHERE id = :id');
+        $update->bindValue(':visible_password', $upgraded, SQLITE3_TEXT);
+        $update->bindValue(':id', (int)$row['id'], SQLITE3_INTEGER);
+        if (!$update->execute()) throw new RuntimeException('Unable to persist upgraded visible password.');
+    }
+}
+
 try {
     $db = new SQLite3(DB_PATH, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
     $db->busyTimeout(10000);
@@ -64,13 +84,17 @@ try {
     if (!$hasTamu) $db->exec('CREATE TABLE tamu (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, nama TEXT NOT NULL, status TEXT NOT NULL, ucapan TEXT, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)');
 
     $mainDomain = normalize_tenant_domain((string)(getenv('UNDANGAN_MAIN_DOMAIN') ?: getenv('MAIN_DOMAIN') ?: ''));
-    if ($mainDomain !== '') {
-        $stmt = $db->prepare("INSERT OR IGNORE INTO tenants (domain, status) VALUES (:domain, 'active')");
-        $stmt->bindValue(':domain', $mainDomain, SQLITE3_TEXT);
-        $stmt->execute();
+    if (!is_valid_tenant_domain($mainDomain)) {
+        throw new RuntimeException('UNDANGAN_MAIN_DOMAIN must be a valid FQDN before migrating legacy data.');
     }
-    $defaultTenantId = (int)$db->querySingle('SELECT id FROM tenants ORDER BY id LIMIT 1');
-    if ($defaultTenantId < 1) throw new RuntimeException('No tenant exists; set UNDANGAN_MAIN_DOMAIN before migrating.');
+    $mainTenantStmt = $db->prepare('INSERT OR IGNORE INTO tenants (domain, status) VALUES (:domain, \'active\')');
+    $mainTenantStmt->bindValue(':domain', $mainDomain, SQLITE3_TEXT);
+    $mainTenantStmt->execute();
+    $mainTenantLookup = $db->prepare('SELECT id FROM tenants WHERE domain = :domain LIMIT 1');
+    $mainTenantLookup->bindValue(':domain', $mainDomain, SQLITE3_TEXT);
+    $mainTenantRow = $mainTenantLookup->execute()->fetchArray(SQLITE3_ASSOC);
+    $defaultTenantId = (int)($mainTenantRow['id'] ?? 0);
+    if ($defaultTenantId < 1) throw new RuntimeException('Main Domain tenant could not be resolved.');
     if ($hasTamu) migration_rebuild_tamu($db, $defaultTenantId);
     else $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
 
@@ -114,10 +138,13 @@ try {
         $user = $db->prepare("INSERT INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (NULL, :username, :hash, :visible, 'super_admin')");
         $user->bindValue(':username', $username, SQLITE3_TEXT);
         $user->bindValue(':hash', $hash, SQLITE3_TEXT);
-        $user->bindValue(':visible', $plain !== '' ? encrypt_visible_password($plain) : '', SQLITE3_TEXT);
+        $visiblePassword = $plain !== '' ? encrypt_visible_password($plain) : '';
+        if ($plain !== '' && ($visiblePassword === '' || !str_starts_with($visiblePassword, 'gcm:'))) throw new RuntimeException('Unable to encrypt Super Admin password with AES-256-GCM.');
+        $user->bindValue(':visible', $visiblePassword, SQLITE3_TEXT);
         if (!$user->execute()) throw new RuntimeException('Unable to seed Super Admin.');
     }
 
+    migration_upgrade_visible_passwords($db);
     $db->exec('COMMIT');
     $db->close();
     echo "Database migration completed.\n";

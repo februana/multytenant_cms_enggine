@@ -1,0 +1,20 @@
+# Review this sample before installing it.
+# This file is intentionally not copied into /etc/apache2 by install.sh.
+# Replace /var/www/wedding if CANONICAL_TARGET differs.
+
+<VirtualHost *:80>
+    DocumentRoot /var/www/wedding
+
+    <Directory /var/www/wedding>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <FilesMatch "\.php$">
+        SetHandler application/x-httpd-php
+    </FilesMatch>
+
+    ErrorLog ${APACHE_LOG_DIR}/wedding-error.log
+    CustomLog ${APACHE_LOG_DIR}/wedding-access.log combined
+</VirtualHost>
