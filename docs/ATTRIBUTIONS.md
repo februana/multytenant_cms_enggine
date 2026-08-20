@@ -1,6 +1,6 @@
 # Third-Party Templates and Source Attribution
 
-This project incorporates and adapts multiple independent invitation templates and user-provided design references. The built-in presets are **not presented as original designs of this project**. The CMS contributes configuration, services, backend integration, capability filtering, and theme adapters; the original template repositories remain the provenance source for the corresponding presentation, selectors, CSS, JavaScript lifecycle, and dependency choices.
+The Multi-Tenant CMS Engine in [`multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine) incorporates and adapts multiple independent invitation templates and user-provided design references. The built-in presets are **not presented as original designs of this project**. The CMS contributes configuration, services, backend integration, capability filtering, and theme adapters; the original template repositories remain the provenance source for the corresponding presentation, selectors, CSS, JavaScript lifecycle, and dependency choices.
 
 ## Attribution policy
 

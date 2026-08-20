@@ -1,52 +1,46 @@
-# Release Notes — PR #89
+# Release Notes — Multi-Tenant CMS Engine
 
-**Branch:** `multy-tenant_februana`
-**Final commit:** `01740bf`
-**Status:** Ready for review
-**Deployment target:** One Apache instance behind a Cloudflare Tunnel, with shared SQLite schema and tenant-prefixed media.
+## Repository identity
 
-## Overview
+This repository is [`februana/multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine), a complete Multi-Tenant CMS Engine derived from the Wedding Invitation CMS. It retains the complete wedding application, including RSVP, guest links, admin functionality, built-in wedding themes, theme assets, APIs, and deployment scripts. The engine and application are intentionally kept together in this repository.
 
-This release finalizes the transition from a single-tenant runtime to a pure multi-tenant wedding-invitation CMS. One application instance serves multiple domains. The tenant is resolved from the normalized `Host` header, configuration is stored in `tenant_configs`, tenant-owned rows carry `tenant_id`, and tenant media is stored below `uploads/tenant_<id>/`.
+The copied source baseline is commit `320eb837963b4df89c2757488b7371b29c31ce9d` from the source project's `multy-tenant_februana` branch. That provenance identifies the starting source state; it is not the target repository identity or an instruction to use the source repository for new checkouts.
 
-The existing theme-adapter architecture is preserved. The seven built-in presets and the CMS-native Custom builder retain their source-compatible DOM, CSS, JavaScript, dependency, section, and capability boundaries.
+## Architecture
 
-## Security and deployment changes
+The current architecture is one Apache/PHP application instance, one shared SQLite database and schema, Host-based tenant resolution, tenant-scoped configuration, and tenant-isolated media below `uploads/tenant_<id>/`. Cloudflare Tunnel is the intended public ingress. Unknown and suspended tenants fail closed, while validated unknown-host provisioning is guarded by localhost and Cloudflare request conditions that are explicitly defense-in-depth rather than cryptographic provenance proof.
 
-The native installer is now explicitly non-destructive and application-only. It does not install operating-system packages, alter `/etc/apache2` or `/etc/nginx`, enable or disable sites/modules, or restart services. Apache catch-all configuration is reviewed and applied separately by the operator.
+Schema creation and legacy migration are deployment-time operations handled by `database/migrations/001_multi_tenant.sql` and `deploy/migrate.php`. Normal HTTP requests do not perform DDL or migration checks. `/uploads/...` requests pass through `media.php` for current-tenant path containment and MIME authorization.
 
-Unknown hostnames are auto-provisioned only for validated local Cloudflare Tunnel requests when `UNDANGAN_AUTO_PROVISION=1`, `REMOTE_ADDR` is localhost, `CF-RAY` is present, and `CF-Connecting-IP` is a valid IP address. Invalid direct-origin requests do not create tenants.
+## Theme system
 
-Schema creation and legacy-data migration are deployment operations performed by `deploy/migrate.php`. Normal web requests do not run database DDL or maintain global configuration files. Visible Tenant Admin passwords remain an intentional Super Admin recovery feature and are stored as AES-256-GCM ciphertext alongside a one-way login hash.
+The active registry contains `dewankl`, `shubh-vivah`, `yami-buzzy`, `rainier`, `parang`, `pawiwahan`, and `archak`, plus `custom`. Built-in presets retain distinct source-compatible DOM, CSS, JavaScript lifecycle, dependencies, section order, asset structure, and capability boundaries. Custom is the CMS-native full-capability renderer.
 
-## Media isolation
+## Deployment and upgrade
 
-All uploads use the tenant namespace `uploads/tenant_<id>/`. The existing upload, WebP conversion, preset resize, original cleanup, and tenant persistence pipeline remains intact. Apache rewrites `/uploads/...` to `media.php`, where the current host tenant, path containment, and MIME type are checked before a file is served.
+The production path is Cloudflare Tunnel → Apache → PHP application → SQLite → tenant CMS. The native installer is non-destructive and does not modify `/etc/apache2` automatically, install packages, configure Nginx, or restart services. Operators review and apply the sample Apache catch-all separately.
 
-## Confirmed fix and audit
-
-The confirmed Pawiwahan CSS fallback defect was fixed by changing the asset reference from `hero-source.jpg` to `assets/hero-source.jpg`. Repository validation now requires all public endpoint wrappers, including `event.ics.php` and `media.php`.
-
-The final audit passed 24 regression cases, 142 HTTP frontend matrix assertions, media end-to-end and traversal checks, RSVP/calendar/CSS isolation checks, and the dependency graph audit with zero failures and zero warnings.
-
-## Upgrade procedure
-
-Back up an existing installation before updating:
+For a normal deployment or upgrade:
 
 ```bash
-sudo /var/www/wedding/deploy/backup.sh
-sudo /var/www/wedding/deploy/update.sh
+git clone https://github.com/februana/multytenant_cms_enggine.git
+cd multytenant_cms_enggine
+sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-For Docker packaging, retain named volumes during rebuilds. Do not run `docker compose down -v` unless intentionally destroying a disposable test installation. Read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) for the complete procedures.
+Read [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md), and [`SECURITY.md`](SECURITY.md) before operating a production installation.
 
-## Related documents
+## Validation
 
-- [`README.md`](README.md) — project overview and quick start.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture and ownership boundaries.
-- [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md) — tenant routing and isolation.
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — installation and operations.
-- [`BACKUP_RESTORE.md`](BACKUP_RESTORE.md) — backup and disaster recovery.
-- [`SECURITY.md`](SECURITY.md) — security policy and reporting.
-- [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) — source provenance and licensing.
+The repository includes validators for PHP contracts, endpoint contracts, dependencies, tenant boundaries, theme rendering, media lifecycle, visual capabilities, deployment, and backup/restore. At minimum, run:
+
+```bash
+php tools/validate.php
+php tools/repo_contract_audit.php
+php tools/dependency_graph_audit.php
+```
+
+## Attribution
+
+The CMS engine and integration code are distinguished from independently authored or user-provided theme sources. [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) is the source of truth for active preset provenance, revisions, licenses, original assets, and integration paths.

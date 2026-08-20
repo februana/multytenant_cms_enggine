@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This branch targets a **single Apache instance behind a Cloudflare Tunnel**. The application uses one PHP runtime, one shared SQLite database, one shared schema, and tenant-specific configuration and media namespaces. Docker Compose is retained as an optional packaging and test path for the same Apache/PHP application; it is not a per-tenant architecture.
+[`multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine) is a Multi-Tenant CMS Engine targeting a **single Apache instance behind a Cloudflare Tunnel**. The application uses one PHP runtime, one shared SQLite database, one shared schema, and tenant-specific configuration and media namespaces. Docker Compose is retained as an optional packaging and test path for the same Apache/PHP application; it is not a per-tenant architecture.
 
 ## Runtime model
 
@@ -36,7 +36,7 @@ The installer does not install packages or modify the operating system. It check
 Run the installer from a trusted repository checkout:
 
 ```bash
-cd /path/to/webserver_undangan
+cd /path/to/multytenant_cms_enggine
 sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
@@ -110,8 +110,8 @@ Apache rewrites `/uploads/<path>` to [`media.php`](../media.php). The endpoint r
 Docker Compose provides a repeatable Apache/PHP packaging path with persistent named volumes:
 
 ```bash
-git clone https://github.com/februana/webserver_undangan.git
-cd webserver_undangan
+git clone https://github.com/februana/multytenant_cms_enggine.git
+cd multytenant_cms_enggine
 cp .env.example .env
 chmod 600 .env
 # Set ADMIN_PASS, UNDANGAN_MAIN_DOMAIN, and UNDANGAN_PASSWORD_KEY as appropriate.

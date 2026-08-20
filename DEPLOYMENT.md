@@ -7,7 +7,7 @@ The production architecture is one PHP/SQLite application served by one Apache c
 The installer is application-only and non-destructive. It checks PHP, SQLite3, and OpenSSL, copies application code without deleting runtime data, creates runtime directories, and runs `deploy/migrate.php`. It does not install packages, modify `/etc/apache2` or `/etc/nginx`, enable or disable sites/modules, or restart services.
 
 ```bash
-cd /path/to/webserver_undangan
+cd /path/to/multytenant_cms_enggine
 sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```

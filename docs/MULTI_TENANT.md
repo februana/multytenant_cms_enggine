@@ -1,6 +1,6 @@
 # Pure Multi-Tenant Deployment
 
-This document defines the current architecture: **one Apache instance, one PHP application instance, one shared SQLite database, one shared schema, and multiple invitation tenants**. Public traffic is expected to enter through a Cloudflare Tunnel. Tenants are resolved from the HTTP `Host` header rather than from URL parameters or browser input.
+This document defines the current architecture of [`multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine): a Multi-Tenant CMS Engine with the complete Wedding Invitation CMS application, running as **one Apache instance, one PHP application instance, one shared SQLite database, one shared schema, and multiple invitation tenants**. Public traffic is expected to enter through a Cloudflare Tunnel. Tenants are resolved from the HTTP `Host` header rather than from URL parameters or browser input.
 
 ## Architecture contract
 

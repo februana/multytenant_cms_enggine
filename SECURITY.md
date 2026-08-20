@@ -1,6 +1,6 @@
 # Security Policy
 
-This project is a PHP/SQLite wedding-invitation CMS deployed as a **single shared-schema multi-tenant application**. Security depends on keeping tenant context server-derived, protecting the origin behind the intended Cloudflare Tunnel, and preserving the filesystem and database boundaries described below.
+[`multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine) is a Multi-Tenant CMS Engine containing the complete PHP/SQLite wedding-invitation application, deployed as a **single shared-schema multi-tenant application**. Security depends on keeping tenant context server-derived, protecting the origin behind the intended Cloudflare Tunnel, and preserving the filesystem and database boundaries described below.
 
 ## Reporting a vulnerability
 

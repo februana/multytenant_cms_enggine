@@ -1,14 +1,9 @@
-# Architecture Documentation
+# Multi-Tenant CMS Engine Architecture
 
-The authoritative architecture description for this branch is maintained in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+[`multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine) is the complete Multi-Tenant CMS Engine and Wedding Invitation CMS application. The repository contains the engine, wedding-specific workflows, built-in theme presets, admin interfaces, APIs, deployment scripts, and multi-tenant implementation together.
 
-The application is a pure multi-tenant PHP/SQLite CMS served by one Apache instance. It uses a shared schema, resolves tenants from the normalized `Host` header, stores configuration in `tenant_configs`, scopes media below `uploads/tenant_<id>/`, and routes media delivery through `media.php`.
+The authoritative architecture record is [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Read it with [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md), [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), and [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md).
 
-Read the following documents together:
+At a high level, Internet traffic reaches the Cloudflare Tunnel, then Apache, then the PHP application. The application derives tenant identity from the normalized `HTTP_HOST`, loads tenant-scoped SQLite configuration, renders the selected built-in theme or Custom mode, and delivers tenant media through `media.php`.
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — CMS ownership, tenant context, rendering, and security boundaries.
-- [`docs/MULTI_TENANT.md`](docs/MULTI_TENANT.md) — shared schema, ingress validation, tenant isolation, and media structure.
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Apache, Cloudflare Tunnel, installation, update, and health procedures.
-- [`docs/ATTRIBUTIONS.md`](docs/ATTRIBUTIONS.md) — source provenance and license status for built-in presets.
-
-This file intentionally contains no independent architecture contract, so it cannot drift from the detailed documentation under `docs/`.
+This file is a navigation entry point rather than a second architecture contract, so future changes should be made in `docs/ARCHITECTURE.md` first.
