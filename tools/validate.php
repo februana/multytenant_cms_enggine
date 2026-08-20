@@ -21,6 +21,11 @@ $requiredFiles = [
     $root . '/admin/qr.php',
     $root . '/app/gallery.php',
     $root . '/app/love-story.php',
+    $root . '/save.php',
+    $root . '/messages.php',
+    $root . '/gallery.php',
+    $root . '/event.ics.php',
+    $root . '/media.php',
     $root . '/style.css',
     $root . '/script.js',
 ];
