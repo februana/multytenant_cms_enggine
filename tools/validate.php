@@ -41,6 +41,40 @@ $defaults = config_defaults();
 // Runtime settings are tenant-scoped in SQLite; defaults provide the source contract for static validation.
 $config = $defaults;
 
+$authSource = (string)@file_get_contents($root . '/config.php');
+$adminSource = (string)@file_get_contents($root . '/admin/index.php');
+$saveSource = (string)@file_get_contents($root . '/app/save.php');
+$superAdminSource = (string)@file_get_contents($root . '/admin/super-admin.php');
+$profileSource = (string)@file_get_contents($root . '/admin/profile.php');
+$migrationSource = (string)@file_get_contents($root . '/database/migrations/001_multi_tenant.sql');
+foreach ([
+    'current_admin_user_record' => $authSource,
+    'admin_action_is_authorized' => $authSource,
+    'session user revalidation' => $authSource,
+    'admin session result gate' => $adminSource,
+    'AJAX action gate' => $saveSource,
+    'Super Admin current password gate' => $superAdminSource,
+    'profile current password gate' => $profileSource,
+    'audit log migration' => $migrationSource,
+] as $label => $source) {
+    $needle = match ($label) {
+        'current_admin_user_record' => 'function current_admin_user_record',
+        'admin_action_is_authorized' => 'function admin_action_is_authorized',
+        'session user revalidation' => 'current_admin_user_record();',
+        'admin session result gate' => 'if (!$adminSessionValid):',
+        'AJAX action gate' => 'admin_action_is_authorized($action',
+        'Super Admin current password gate' => 'verify_current_admin_password',
+        'profile current password gate' => 'name="current_password"',
+        'audit log migration' => 'CREATE TABLE IF NOT EXISTS audit_logs',
+    };
+    if ($source === '' || !str_contains($source, $needle)) add_error("Auth regression: {$label} is missing.");
+}
+foreach ([$adminSource, $superAdminSource, $profileSource] as $source) {
+    if (str_contains($source, 'logout=1')) add_error('Auth regression: state-changing GET logout remains in an admin page.');
+}
+if (!str_contains($adminSource, "is_super_admin() && \$globalAdminCapabilityEnabled('backup')")) add_error('Auth regression: backup menu is not Super Admin-only.');
+if (str_contains($superAdminSource, 'decrypt_visible_password')) add_error('Auth regression: Super Admin page renders stored tenant passwords.');
+
 $requiredRootKeys = ['site', 'wedding', 'parents', 'schedule', 'location', 'media', 'gallery', 'gift', 'whatsapp', 'admin', 'theme', 'sections', 'love_story'];
 if (isset($config) && is_array($config)) {
     foreach ($requiredRootKeys as $key) {

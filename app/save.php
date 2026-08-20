@@ -20,10 +20,11 @@ if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_PO
 // Handle admin photo upload actions if posted to save.php
 $action = trim((string)($_POST['action'] ?? ''));
 if ($action !== '') {
-    if (!session_admin_is_valid()) {
-        respond(false, 'Akses ditolak atau sesi tidak berlaku untuk domain ini.');
-    }
     $config = load_config();
+    $presetKeyForPolicy = trim((string)($_POST['preset_key'] ?? '')) ?: trim((string)($config['theme']['theme_preset'] ?? ''));
+    if (!admin_action_is_authorized($action, $presetKeyForPolicy)) {
+        respond(false, 'Aksi tidak diizinkan untuk akun atau preset aktif.');
+    }
     $pendingMediaCleanup = [];
     $queueMediaCleanup = static function (string $oldPath, string $newPath) use (&$pendingMediaCleanup): void {
         if (trim($oldPath) !== '' && trim($oldPath) !== trim($newPath)) $pendingMediaCleanup[] = [$oldPath, $newPath];
@@ -38,6 +39,7 @@ if ($action !== '') {
         if (!save_config($config)) respond(false, 'Gagal menyimpan konfigurasi media.');
         $config = load_config();
         foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
+        audit_log('media_groom_photo_updated', (int)($tenant['id'] ?? 0));
         respond(true, 'Foto Mempelai Pria (Groom) berhasil diunggah.', ['path' => $config['media']['groom_photo']]);
     } elseif ($action === 'upload_bride_photo') {
         if (empty($_FILES['bride_photo']['name'])) respond(false, 'File foto Mempelai Wanita (bride) tidak ditemukan.');
@@ -49,6 +51,7 @@ if ($action !== '') {
         if (!save_config($config)) respond(false, 'Gagal menyimpan konfigurasi media.');
         $config = load_config();
         foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
+        audit_log('media_bride_photo_updated', (int)($tenant['id'] ?? 0));
         respond(true, 'Foto Mempelai Wanita (Bride) berhasil diunggah.', ['path' => $config['media']['bride_photo']]);
     } elseif ($action === 'upload_couple_photo') {
         if (empty($_FILES['couple_photo']['name'])) respond(false, 'File foto Pasangan (couple) tidak ditemukan.');
@@ -60,6 +63,7 @@ if ($action !== '') {
         if (!save_config($config)) respond(false, 'Gagal menyimpan konfigurasi media.');
         $config = load_config();
         foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
+        audit_log('media_couple_photo_updated', (int)($tenant['id'] ?? 0));
         respond(true, 'Foto Pasangan berhasil diunggah.', ['path' => $config['media']['couple_photo']]);
     } elseif ($action === 'save_theme_options') {
         $presetKey = trim((string)($_POST['preset_key'] ?? ($config['theme']['theme_preset'] ?? 'dewankl')));
@@ -116,6 +120,7 @@ if ($action !== '') {
             if (!save_config($config)) respond(false, 'Gagal menyimpan opsi preset.');
             $config = load_config();
             foreach ($pendingMediaCleanup as [$oldMediaPath, $newMediaPath]) cleanup_replaced_media($oldMediaPath, $config);
+            audit_log('theme_options_updated', (int)($tenant['id'] ?? 0), ['preset' => $presetKey]);
             respond(true, 'Opsi preset berhasil disimpan.', ['theme_options' => $config['theme_options'][$presetKey]]);
         }
         respond(false, 'Preset key tidak valid.');

@@ -19,6 +19,8 @@ input[type=text], input[type=password], input[type=date], input[type=time], inpu
 textarea { min-height:100px; resize:vertical; }
 button, .button { background:#9a7b43; color:#fff; border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:700; transition:transform .15s ease, background .15s ease; }
 button:hover, .button:hover { background:#7d5f39; transform:translateY(-1px); }
+.link-button { background:transparent; color:#9a7b43; border:0; padding:0; font:inherit; font-weight:700; text-decoration:underline; border-radius:0; }
+.link-button:hover { background:transparent; color:#7d5f39; transform:none; }
 .small-button { background:#fff; color:#333; border:1px solid #ddd; }
 .small-button:hover { background:#f8f5f0; }
 .notice { border-left:4px solid #9a7b43; background:#f7f1e4; padding:14px 16px; margin-bottom:8px; color:#5c4c32; }

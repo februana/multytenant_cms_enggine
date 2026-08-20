@@ -41,6 +41,7 @@ foreach ($dirs as $dir) {
 }
 
 $zip->close();
+audit_log('system_backup_downloaded', null, ['archive' => $filename]);
 
 header('Content-Type: application/zip');
 header('Content-Disposition: attachment; filename="' . basename($filename) . '"');

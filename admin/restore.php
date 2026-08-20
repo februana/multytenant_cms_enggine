@@ -117,5 +117,6 @@ function rrmdir($dir) {
     @rmdir($dir);
 }
 rrmdir($tmpDir);
+audit_log('system_backup_restored', null, ['entries' => count($extracted)]);
 header('Location: /admin?tab=backup');
 exit;
