@@ -6,17 +6,8 @@ WEDDING_BUILTIN_PRESETS="dewankl rainier archak parang pawiwahan shubh-vivah yam
 
 runtime_upload_directories() {
     runtime_root="$1"
-    printf '%s\n' \
-        "$runtime_root/uploads" \
-        "$runtime_root/uploads/cover" \
-        "$runtime_root/uploads/music" \
-        "$runtime_root/uploads/gallery" \
-        "$runtime_root/uploads/background" \
-        "$runtime_root/uploads/love-story" \
-        "$runtime_root/uploads/theme-assets"
-    for preset in $WEDDING_BUILTIN_PRESETS; do
-        printf '%s\n' "$runtime_root/uploads/theme-assets/$preset"
-    done
+    # Tenant-specific subdirectories are created by tenant_upload_dir() on demand.
+    printf '%s\n' "$runtime_root/uploads"
 }
 
 runtime_required_directories() {

@@ -30,7 +30,7 @@ if ($action !== '') {
     };
     if ($action === 'upload_groom_photo') {
         if (empty($_FILES['groom_photo']['name'])) respond(false, 'File foto Mempelai Pria (groom) tidak ditemukan.');
-        $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'groom_photo', $config['theme']['theme_preset'] ?? null);
+        $result = upload_file($_FILES['groom_photo'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'groom_photo', $config['theme']['theme_preset'] ?? null);
         if (!empty($result['error'])) respond(false, $result['error']);
         $newPath = relative_path($result['path']);
         $queueMediaCleanup((string)($config['media']['groom_photo'] ?? ''), $newPath);
@@ -41,7 +41,7 @@ if ($action !== '') {
         respond(true, 'Foto Mempelai Pria (Groom) berhasil diunggah.', ['path' => $config['media']['groom_photo']]);
     } elseif ($action === 'upload_bride_photo') {
         if (empty($_FILES['bride_photo']['name'])) respond(false, 'File foto Mempelai Wanita (bride) tidak ditemukan.');
-        $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'bride_photo', $config['theme']['theme_preset'] ?? null);
+        $result = upload_file($_FILES['bride_photo'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'bride_photo', $config['theme']['theme_preset'] ?? null);
         if (!empty($result['error'])) respond(false, $result['error']);
         $newPath = relative_path($result['path']);
         $queueMediaCleanup((string)($config['media']['bride_photo'] ?? ''), $newPath);
@@ -52,7 +52,7 @@ if ($action !== '') {
         respond(true, 'Foto Mempelai Wanita (Bride) berhasil diunggah.', ['path' => $config['media']['bride_photo']]);
     } elseif ($action === 'upload_couple_photo') {
         if (empty($_FILES['couple_photo']['name'])) respond(false, 'File foto Pasangan (couple) tidak ditemukan.');
-        $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'couple_photo', $config['theme']['theme_preset'] ?? null);
+        $result = upload_file($_FILES['couple_photo'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'couple_photo', $config['theme']['theme_preset'] ?? null);
         if (!empty($result['error'])) respond(false, $result['error']);
         $newPath = relative_path($result['path']);
         $queueMediaCleanup((string)($config['media']['couple_photo'] ?? ''), $newPath);
@@ -76,7 +76,7 @@ if ($action !== '') {
                     $fileKey = 'theme_opts_file_' . $schemaKey;
                     if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
                         $themeAssetPreset = preg_replace('/[^a-z0-9_-]/i', '', $presetKey) ?: 'custom';
-                        $themeAssetDir = UPLOADS_THEME_ASSETS_DIR . '/' . $themeAssetPreset;
+                        $themeAssetDir = tenant_upload_dir('theme_assets') . '/' . $themeAssetPreset;
                         $previousThemeAsset = (string)($config['theme_options'][$presetKey][$schemaKey] ?? '');
                         $uploadRes = upload_file($_FILES[$fileKey], $themeAssetDir, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'theme_asset', $presetKey);
                         if (empty($uploadRes['error'])) {
@@ -141,7 +141,6 @@ if (mb_strlen($ucapan) > 500) respond(false, 'Ucapan terlalu panjang (maks 500 k
 if (!in_array($status, ['Hadir','Tidak Hadir'], true)) respond(false, 'Status tidak valid.');
 
 try {
-    init_database();
     $db = tenant_database(false);
     $stmt = $db->prepare('INSERT INTO tamu (tenant_id,nama,status,ucapan,visible) VALUES (:tenant_id,:nama,:status,:ucapan,1)');
     $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);

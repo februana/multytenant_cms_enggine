@@ -50,8 +50,7 @@ normalize_archive_entry() {
 archive_entry_allowed() {
     local entry="$1"
     case "$entry" in
-        ''|.|config.json|custom.css|guest-links.json|database.sqlite|.env|event.ics \
-        |uploads|uploads/*|webdav|webdav/*|.webdav|.webdav/davpasswd|_temp_backup|_temp_backup/davpasswd)
+        ''|.|database.sqlite|.env|uploads|uploads/*|webdav|webdav/*|.webdav|.webdav/davpasswd|_temp_backup|_temp_backup/davpasswd)
             return 0
             ;;
         *)
@@ -107,12 +106,12 @@ if ! tar --no-same-owner --no-same-permissions -xzf "$BACKUP_FILE" -C "$RESTORE_
 fi
 
 # Extracted structure is checked again after tar normalization.
-for entry in config.json custom.css guest-links.json database.sqlite .env event.ics; do
+for entry in database.sqlite .env; do
     [ -e "$RESTORE_TEMP/$entry" ] || continue
     [ -L "$RESTORE_TEMP/$entry" ] && restore_error "extracted root entry is a symlink: $entry"
 done
 
-for name in config.json custom.css guest-links.json database.sqlite .env event.ics; do
+for name in database.sqlite .env; do
     copy_root_file_if_present "$name"
 done
 sync_directory_if_present uploads
@@ -147,14 +146,11 @@ ensure_runtime_directories "$ROOT_DIR" || restore_error "could not create canoni
 
 # Apply the existing security model without making every file world-readable.
 if id -u www-data >/dev/null 2>&1 && getent group www-data >/dev/null 2>&1; then
-    for file in config.json guest-links.json database.sqlite .env; do
+    for file in database.sqlite .env; do
         [ -f "$DATA_ROOT/$file" ] && chown www-data:www-data "$DATA_ROOT/$file" 2>/dev/null || true
         [ -f "$DATA_ROOT/$file" ] && chmod 600 "$DATA_ROOT/$file"
     done
-    [ -f "$DATA_ROOT/custom.css" ] && chown www-data:www-data "$DATA_ROOT/custom.css" 2>/dev/null || true
-    [ -f "$DATA_ROOT/custom.css" ] && chmod 644 "$DATA_ROOT/custom.css"
-    [ -f "$DATA_ROOT/event.ics" ] && chown www-data:www-data "$DATA_ROOT/event.ics" 2>/dev/null || true
-    [ -f "$DATA_ROOT/event.ics" ] && chmod 644 "$DATA_ROOT/event.ics"
+    (cd "$ROOT_DIR" && php deploy/migrate.php) || restore_error "database migration after restore failed"
     for directory in uploads webdav backups; do
         [ -d "$ROOT_DIR/$directory" ] && chown -R www-data:www-data "$ROOT_DIR/$directory" 2>/dev/null || true
         [ -d "$ROOT_DIR/$directory" ] && find "$ROOT_DIR/$directory" -type d -exec chmod 755 {} \;

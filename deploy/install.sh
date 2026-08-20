@@ -19,6 +19,20 @@ if [[ "$EUID" -ne 0 ]]; then
   exit 2
 fi
 
+CONFIG_BACKUP_DIR="/var/backups/wedding-installer/$(date -u +%Y%m%dT%H%M%SZ)"
+backup_existing_server_configs() {
+  mkdir -p "$CONFIG_BACKUP_DIR"
+  local source target
+  for source in "$APACHE_SITE" /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default; do
+    if [[ -e "$source" || -L "$source" ]]; then
+      target="$CONFIG_BACKUP_DIR/$(echo "$source" | sed 's#^/##; s#/#__#g')"
+      cp -a "$source" "$target"
+      echo "Backup konfigurasi dibuat: $target"
+    fi
+  done
+}
+backup_existing_server_configs
+
 normalize_domain() {
   local value="$1"
   value="${value#http://}"
@@ -80,7 +94,7 @@ ADMIN_PASS=$ADMIN_PASSWORD
 UNDANGAN_MAIN_DOMAIN=$MAIN_DOMAIN
 UNDANGAN_DB_PATH=$CANONICAL_TARGET/database.sqlite
 UNDANGAN_PASSWORD_KEY=$PASSWORD_KEY
-UNDANGAN_AUTO_PROVISION=1
+UNDANGAN_AUTO_PROVISION=0
 SESSION_TIMEOUT=3600
 EOF
 chmod 600 "$CANONICAL_TARGET/.env"
@@ -130,31 +144,11 @@ find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;
 find "$CANONICAL_TARGET" -type f -name '*.php' -exec chmod 644 {} \;
 chmod 600 "$CANONICAL_TARGET/.env" "$CANONICAL_TARGET/database.sqlite"
 
-# Initialize the shared schema and migrate the legacy single-tenant config into the
-# main tenant. The command is deliberately idempotent.
+# Schema creation and legacy data migration run once through the standalone deploy script.
 (
   cd "$CANONICAL_TARGET"
-  php -r 'require "config.php"; if (!init_database()) { fwrite(STDERR, "Database initialization failed\n"); exit(1); } $config = load_config(); if (!save_config($config)) { fwrite(STDERR, "Tenant config seed failed\n"); exit(1); }'
+  php deploy/migrate.php
 )
-
-# Explicit SQL execution command required by the deployment contract. Values are
-# still bound parameters; no domain or password is interpolated into SQL.
-cat > "$CANONICAL_TARGET/deploy/.seed-multitenant.php" <<'PHP'
-<?php
-require __DIR__ . '/../config.php';
-$db = tenant_database(false);
-$tenantStmt = $db->prepare("INSERT OR IGNORE INTO tenants (domain, status) VALUES (:domain, 'active')");
-$tenantStmt->bindValue(':domain', getenv('MAIN_DOMAIN'), SQLITE3_TEXT);
-$tenantStmt->execute();
-$userStmt = $db->prepare("INSERT OR IGNORE INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (NULL, :username, :password_hash, :visible_password, 'super_admin')");
-$userStmt->bindValue(':username', getenv('ADMIN_USERNAME'), SQLITE3_TEXT);
-$userStmt->bindValue(':password_hash', password_hash((string)getenv('ADMIN_PASSWORD'), PASSWORD_DEFAULT), SQLITE3_TEXT);
-$userStmt->bindValue(':visible_password', encrypt_visible_password((string)getenv('ADMIN_PASSWORD')), SQLITE3_TEXT);
-if (!$userStmt->execute()) exit(1);
-$db->close();
-PHP
-MAIN_DOMAIN="$MAIN_DOMAIN" ADMIN_USERNAME="$ADMIN_USERNAME" ADMIN_PASSWORD="$ADMIN_PASSWORD" php "$CANONICAL_TARGET/deploy/.seed-multitenant.php"
-rm -f "$CANONICAL_TARGET/deploy/.seed-multitenant.php"
 
 systemctl restart apache2
 
@@ -163,6 +157,7 @@ cat <<EOF
 Instalasi multi-tenant selesai.
 
 Catch-all Apache : $APACHE_SITE
+Config backup    : $CONFIG_BACKUP_DIR
 Document root    : $CANONICAL_TARGET
 Main domain      : $MAIN_DOMAIN
 Database         : $CANONICAL_TARGET/database.sqlite

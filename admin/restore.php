@@ -43,7 +43,7 @@ if ($zip->open($tmpFile) !== true) {
     exit;
 }
 
-$allowedTopFiles = ['config.json', 'custom.css', 'event.ics', 'guest-links.json', basename(DB_PATH)];
+$allowedTopFiles = [basename(DB_PATH)];
 $allowedFolders = ['uploads/'];
 $tmpDir = sys_get_temp_dir() . '/restore_' . bin2hex(random_bytes(6));
 @mkdir($tmpDir, 0755, true);
@@ -81,9 +81,9 @@ for ($i = 0; $i < $zip->numFiles; $i++) {
 $zip->close();
 @unlink($tmpFile);
 
-if (!in_array('config.json', $extracted, true) && !in_array(basename(DB_PATH), $extracted, true)) {
+if (!in_array(basename(DB_PATH), $extracted, true)) {
     http_response_code(400);
-    echo 'Backup tidak berisi file konfigurasi atau database yang valid.';
+    echo 'Backup tidak berisi database SQLite yang valid.';
     exit;
 }
 
@@ -92,13 +92,7 @@ foreach ($extracted as $entry) {
     if ($entry === basename(DB_PATH)) {
         $destination = DB_PATH;
     } else {
-        $destination = match ($entry) {
-            'config.json' => CONFIG_FILE,
-            'custom.css' => CUSTOM_CSS_FILE,
-            'event.ics' => EVENT_ICS_FILE,
-            'guest-links.json' => GUEST_LINKS_FILE,
-            default => ROOT_DIR . '/' . ltrim($entry, '/'),
-        };
+        $destination = ROOT_DIR . '/' . ltrim($entry, '/');
     }
     if (is_dir($source)) {
         continue;

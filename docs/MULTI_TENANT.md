@@ -4,7 +4,7 @@ Dokumen ini menjelaskan refaktor aplikasi menjadi **pure multi-tenant** dengan s
 
 ## Stack yang ditemukan
 
-Repository ini adalah aplikasi **PHP tanpa framework aplikasi besar** dengan ekstensi SQLite3 dan penyimpanan konfigurasi lama berbasis JSON. Tabel database lama hanya `tamu`, sedangkan konfigurasi undangan, CSS, event ICS, dan guest links sebelumnya berada di berkas runtime. Refaktor ini mempertahankan kompatibilitas berkas tersebut sebagai mirror migrasi, tetapi sumber tenant-aware utamanya sekarang berada di SQLite.
+Repository ini adalah aplikasi **PHP tanpa framework aplikasi besar** dengan ekstensi SQLite3. Tabel database lama hanya `tamu`, sedangkan konfigurasi undangan, CSS, event ICS, dan guest links sebelumnya berada di berkas runtime. Setelah migrasi, seluruh settings tersebut menjadi data tenant di SQLite; berkas legacy hanya dibaca oleh migrator satu kali dan tidak pernah ditulis oleh runtime.
 
 | Area | Implementasi | Status setelah refaktor |
 |---|---|---|
@@ -19,7 +19,7 @@ Repository ini adalah aplikasi **PHP tanpa framework aplikasi besar** dengan eks
 
 ## Skema database
 
-Migrasi eksplisit tersedia di [`database/migrations/001_multi_tenant.sql`](../database/migrations/001_multi_tenant.sql). Runtime bootstrap di `config.php` bersifat idempoten dan juga menangani kasus SQLite lama yang memerlukan table rebuild untuk menambahkan foreign key.
+Kontrak SQL terdokumentasi di [`database/migrations/001_multi_tenant.sql`](../database/migrations/001_multi_tenant.sql). DDL dan migrasi legacy dijalankan hanya oleh [`deploy/migrate.php`](../deploy/migrate.php), yang dipanggil installer/update/restore. `config.php` tidak lagi membuat atau mengubah tabel pada request runtime.
 
 ```sql
 PRAGMA foreign_keys = ON;
@@ -69,11 +69,11 @@ CREATE TABLE IF NOT EXISTS tamu (
 );
 ```
 
-Untuk instalasi normal, jangan menjalankan potongan SQL secara manual terhadap database produksi apabila `database.sqlite` sudah berisi data lama. Gunakan `deploy/install.sh`, karena bootstrap PHP akan membuat tenant utama, mengisi `tenant_id` pada RSVP lama, membangun ulang tabel `tamu` bila diperlukan, dan menyalin konfigurasi lama ke `tenant_configs`.
+Untuk instalasi normal, jangan menjalankan potongan SQL secara manual terhadap database produksi apabila `database.sqlite` sudah berisi data lama. Gunakan `deploy/install.sh`; installer menjalankan `deploy/migrate.php`, yang membuat schema, mengisi `tenant_id` pada RSVP lama, membangun ulang tabel `tamu` bila diperlukan, dan membaca data legacy ke `tenant_configs` satu kali.
 
 ## Alur routing dan isolasi
 
-Setiap request publik melewati `current_tenant(true)`. Fungsi tersebut menormalisasi `HTTP_HOST`, menghapus port, menurunkan huruf hostname, kemudian mencari domain aktif pada tabel `tenants`. Nilai `tenant_id` yang dihasilkan server dipakai untuk membaca konfigurasi dan RSVP. Tidak ada endpoint publik yang menerima `tenant_id` dari client.
+Setiap request publik melewati `current_tenant(true)`. Fungsi tersebut menormalisasi `HTTP_HOST`, menghapus port, menurunkan huruf hostname, kemudian mencari domain aktif pada tabel `tenants`. Domain tidak terdaftar atau suspended langsung menerima 404 dan tidak membuat record apa pun. Nilai `tenant_id` yang dihasilkan server dipakai untuk membaca konfigurasi, RSVP, dan filesystem media. Tidak ada endpoint publik yang menerima `tenant_id` dari client.
 
 > **Invariant keamanan:** `tenant_id` untuk operasi tenant admin selalu berasal dari session yang telah diverifikasi dan dibandingkan dengan `Host` header pada request yang sedang berjalan.
 
@@ -96,7 +96,7 @@ Jalankan installer dari checkout repository:
 sudo bash deploy/install.sh
 ```
 
-Installer meminta **Main Domain** untuk tenant Super Admin, username, dan password. Installer tidak membuat VirtualHost per tenant, tidak membuat `ServerName`, dan tidak menjalankan banyak instance. File Apache yang dibuat adalah `/etc/apache2/sites-available/000-default.conf` dengan bentuk inti berikut:
+Installer meminta **Main Domain** dan username Super Admin, lalu membuat password acak serta mencetaknya sekali pada ringkasan instalasi. Sebelum menulis konfigurasi, installer membuat backup timestamped untuk konfigurasi Apache/Nginx yang sudah ada. Installer tidak membuat VirtualHost per tenant, tidak membuat `ServerName`, dan tidak menjalankan banyak instance. File Apache yang dibuat adalah `/etc/apache2/sites-available/000-default.conf` dengan bentuk inti berikut:
 
 ```apache
 <VirtualHost *:80>
@@ -143,13 +143,13 @@ Audit memeriksa konfigurasi Apache, port 80, keberadaan `AllowOverride All`, ket
 
 Backup database berisi seluruh tenant dan karena itu dibatasi untuk Super Admin. Tenant admin tidak boleh diberi akses ke endpoint backup/restore. Database SQLite sebaiknya disimpan di lokasi yang tidak dapat diunduh publik dan `.env` harus memiliki mode `600`.
 
-Arsitektur ini sengaja tidak memakai Docker per tenant, PM2 cluster, atau banyak proses aplikasi. Apache tetap menjadi satu entry point, SQLite tetap shared, dan pemisahan dilakukan melalui foreign key, session authorization, serta query scope di server.
+Arsitektur ini sengaja tidak memakai Docker per tenant, PM2 cluster, atau banyak proses aplikasi. Apache tetap menjadi satu entry point, SQLite tetap shared, dan pemisahan dilakukan melalui foreign key, session authorization, query scope di server, serta namespace filesystem `uploads/tenant_<id>/` untuk cover, gallery, background, audio, video, dan theme assets.
 
 ## Password management dan auto-provisioning
 
 Installer tidak lagi meminta password Super Admin. Setelah domain utama dan username ditentukan, installer membuat password acak menggunakan `openssl rand -hex 16`, membuat `UNDANGAN_PASSWORD_KEY` acak menggunakan `openssl rand -hex 32`, menyimpan hash password ke database, dan mencetak password plaintext tepat pada ringkasan akhir instalasi. Password tersebut harus disimpan oleh operator sebelum terminal ditutup.
 
-Saat hostname FQDN baru mencapai aplikasi melalui Apache catch-all, `current_tenant()` memvalidasi hostname dan membuat tenant aktif beserta `tenant_configs` dan akun `tenant_admin` default `admin`. Password Tenant Admin dibuat acak sepanjang delapan karakter dan tidak pernah dikirimkan sebagai respons publik. Password tersedia untuk Super Admin melalui dashboard.
+Hostname baru **tidak** diprovision otomatis saat menerima request publik. Super Admin harus membuka Dashboard dan menambahkan domain secara manual; dashboard membuat tenant, `tenant_configs`, dan akun `tenant_admin`. Password Tenant Admin dibuat acak atau dapat ditentukan manual melalui dashboard, lalu hanya dapat dilihat/reset oleh Super Admin.
 
 Kolom password menggunakan dua representasi dengan tujuan berbeda:
 

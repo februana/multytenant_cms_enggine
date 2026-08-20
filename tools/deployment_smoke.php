@@ -10,7 +10,6 @@ register_shutdown_function(static function () use ($runtime): void {
     }
 });
 
-putenv('UNDANGAN_DATA_DIR=' . $runtime);
 putenv('UNDANGAN_DB_PATH=' . $runtime . '/database.sqlite');
 require_once $root . '/config.php';
 
@@ -23,11 +22,8 @@ assert_true(($defaults['media']['cover'] ?? null) === '', 'cover default must be
 assert_true(($defaults['media']['music'] ?? null) === '', 'music default must be empty');
 assert_true(($defaults['site']['open_graph_image'] ?? null) === '', 'Open Graph default must be empty');
 assert_true(public_path('') === 'data:,', 'empty public path must be request-free');
-assert_true(CONFIG_FILE === $runtime . '/config.json', 'config path must follow runtime data directory');
-assert_true(GUEST_LINKS_FILE === $runtime . '/guest-links.json', 'guest-link path must follow runtime data directory');
-assert_true(EVENT_ICS_FILE === $runtime . '/event.ics', 'ICS path must follow runtime data directory');
-
-file_put_contents(CONFIG_FILE, json_encode($defaults, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+assert_true(!defined('CONFIG_FILE') && !defined('GUEST_LINKS_FILE') && !defined('EVENT_ICS_FILE'), 'global runtime file constants are removed');
+assert_true(is_file($root . '/deploy/migrate.php'), 'standalone database migration exists');
 $loaded = load_config();
 assert_true(($loaded['media']['cover'] ?? null) === '', 'loaded cover default must remain empty');
 assert_true(($loaded['media']['music'] ?? null) === '', 'loaded music default must remain empty');
@@ -39,12 +35,7 @@ $bootstrapRoot = $runtime . '/app';
 $command = 'sh -c ' . escapeshellarg('. ' . escapeshellarg($contract) . '; ensure_runtime_directories ' . escapeshellarg($bootstrapRoot));
 exec($command, $output, $exitCode);
 assert_true($exitCode === 0, 'shared runtime directory contract executes successfully');
-foreach (['cover', 'music', 'gallery', 'background', 'love-story', 'theme-assets'] as $directory) {
-    assert_true(is_dir($bootstrapRoot . '/uploads/' . $directory), 'runtime directory created: uploads/' . $directory);
-}
-foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 'yami-buzzy', 'custom'] as $preset) {
-    assert_true(is_dir($bootstrapRoot . '/uploads/theme-assets/' . $preset), 'preset Theme Assets directory created: ' . $preset);
-}
+assert_true(is_dir($bootstrapRoot . '/uploads'), 'shared uploads root created');
 $requiredBootstrapReferences = [
     $root . '/deploy/install.sh',
     $root . '/deploy/update.sh',
@@ -73,9 +64,6 @@ $dockerignore = (string) file_get_contents($root . '/.dockerignore');
 assert_true(str_contains($dockerignore, '!.env.example'), 'Docker build keeps the environment template for bootstrap');
 assert_true(str_contains($dockerignore, '*.sqlite'), 'Docker build excludes local SQLite runtime data');
 
-foreach (glob($bootstrapRoot . '/uploads/theme-assets/*') ?: [] as $path) {
-    if (is_dir($path)) @rmdir($path);
-}
 foreach (glob($bootstrapRoot . '/uploads/*') ?: [] as $path) {
     if (is_dir($path)) @rmdir($path);
 }

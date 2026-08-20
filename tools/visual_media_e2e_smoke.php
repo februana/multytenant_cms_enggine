@@ -9,8 +9,15 @@ function media_e2e_assert(bool $condition, string $message): void {
     echo 'PASS: ' . $message . PHP_EOL;
 }
 
-$probePath = 'uploads/background/visual-media-e2e-probe.webp';
-$probeAbsolute = ROOT_DIR . '/' . $probePath;
+$tenant = current_tenant(false);
+if (!is_array($tenant)) {
+    echo "SKIP: visual media E2E requires a migrated active tenant\n";
+    ob_end_flush();
+    exit(0);
+}
+$probeAbsolute = tenant_upload_dir('background') . '/visual-media-e2e-probe.webp';
+$probePath = relative_path($probeAbsolute);
+@mkdir(dirname($probeAbsolute), 0755, true);
 copy(ROOT_DIR . '/themes/parang/assets/parang-pattern.webp', $probeAbsolute);
 media_e2e_assert(theme_visual_image_reference_is_canonical($probePath), 'E2E probe is accepted by canonical media validation');
 
@@ -63,7 +70,7 @@ foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 
     if ($preset === 'shubh-vivah') media_e2e_assert(($reloaded['theme_visuals']['shubh-vivah']['section_background_event'] ?? '') === $probePath, 'Shubh Vivah section background survives reload');
     if ($preset === 'yami-buzzy') media_e2e_assert(($reloaded['theme_visuals']['yami-buzzy']['section_background_story'] ?? '') === $probePath, 'Yami Buzzy section background survives reload');
     if ($preset === 'custom') {
-        media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), '/uploads/background/visual-media-e2e-probe.webp'), 'Custom production adapter includes persisted media URL');
+        media_e2e_assert(str_contains(theme_custom_visual_style($reloaded), 'visual-media-e2e-probe.webp'), 'Custom production adapter includes persisted media URL');
         continue;
     }
     $probeConfig = $reloaded;
@@ -107,7 +114,5 @@ $pawiwahanFinalHtml = render_theme_layout(array_replace_recursive($final, ['them
 media_e2e_assert(str_contains($pawiwahanFinalHtml, '/themes/pawiwahan/assets/hero-source.jpg'), 'Pawiwahan reset returns to local source background');
 
 @unlink($probeAbsolute);
-@unlink(CONFIG_FILE);
-@unlink(EVENT_ICS_FILE);
 echo "PASS: visual media E2E smoke test\n";
 ob_end_flush();

@@ -262,7 +262,7 @@ function render_dewankl_hero(array $config, array $shared): string {
         <div class="hero-actions">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
           <a class="calendar-btn" href="' . escape_html($shared['calendarLink']) . '" target="_blank" rel="noreferrer noopener">Tambah ke Kalender</a>
-          <a class="calendar-btn" href="event.ics" download="' . escape_html($shared['calendarDownloadName']) . '.ics" title="Unduh file kalender (.ics)">Unduh Kalender</a>
+          <a class="calendar-btn" href="event.ics.php" download="' . escape_html($shared['calendarDownloadName']) . '.ics" title="Unduh file kalender (.ics)">Unduh Kalender</a>
           <a class="whatsapp-btn" href="' . escape_html($shared['whatsappLink']) . '" target="_blank" rel="noopener noreferrer">Hubungi WA</a>
         </div>
         ' . $musicButton . '

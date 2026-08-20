@@ -186,9 +186,9 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
     <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url('dewankl', 'fidelity-adapter.css')); ?>">
     <?php echo $dewanklVisualStyle; ?>
     
-    <!-- Custom CSS Override -->
-    <?php if (trim(load_custom_css()) !== ''): ?>
-    <link rel="stylesheet" href="custom.css">
+    <!-- Tenant-scoped Custom CSS Override -->
+    <?php $tenantCustomCss = load_custom_css(); if (trim($tenantCustomCss) !== ''): ?>
+    <style id="tenant-custom-css"><?php echo escape_html($tenantCustomCss); ?></style>
     <?php endif; ?>
 
     <!-- Global Config Injection -->

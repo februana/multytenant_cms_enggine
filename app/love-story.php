@@ -30,7 +30,7 @@ foreach ($enabledItems as $item) {
         if (strpos($imagePath, 'http') === 0) {
             $imageUrl = $imagePath;
         } else {
-            $imageUrl = 'uploads/love-story/' . basename($imagePath);
+            $imageUrl = public_path($imagePath);
         }
     }
     

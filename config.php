@@ -32,12 +32,6 @@ if (!defined('UPLOADS_GALLERY_DIR')) define('UPLOADS_GALLERY_DIR', UPLOADS_DIR .
 if (!defined('UPLOADS_BACKGROUND_DIR')) define('UPLOADS_BACKGROUND_DIR', UPLOADS_DIR . '/background');
 if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS_DIR . '/love-story');
 if (!defined('UPLOADS_THEME_ASSETS_DIR')) define('UPLOADS_THEME_ASSETS_DIR', UPLOADS_DIR . '/theme-assets');
-$runtimeDataDir = trim((string)(getenv('UNDANGAN_DATA_DIR') ?: ''));
-if ($runtimeDataDir === '') $runtimeDataDir = ROOT_DIR;
-if (!defined('RUNTIME_DATA_DIR')) define('RUNTIME_DATA_DIR', rtrim($runtimeDataDir, '/'));
-if (!defined('CONFIG_FILE')) define('CONFIG_FILE', RUNTIME_DATA_DIR . '/config.json');
-if (!defined('CUSTOM_CSS_FILE')) define('CUSTOM_CSS_FILE', RUNTIME_DATA_DIR . '/custom.css');
-if (!defined('EVENT_ICS_FILE')) define('EVENT_ICS_FILE', RUNTIME_DATA_DIR . '/event.ics');
 
 // Security defaults
 if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
@@ -55,10 +49,9 @@ if (getenv('UNDANGAN_DB_PATH')) {
 } elseif (is_readable('/var/www/private/database.sqlite')) {
     $dbPath = '/var/www/private/database.sqlite';
 } else {
-    $dbPath = RUNTIME_DATA_DIR . '/database.sqlite';
+    $dbPath = ROOT_DIR . '/database.sqlite';
 }
 if (!defined('DB_PATH')) define('DB_PATH', $dbPath);
-if (!defined('GUEST_LINKS_FILE')) define('GUEST_LINKS_FILE', RUNTIME_DATA_DIR . '/guest-links.json');
 
 /**
  * Multi-tenant runtime helpers. All tenant selection is server-side and is
@@ -136,26 +129,21 @@ function tenant_admin_username_for_domain(string $domain): string {
 
 function tenant_database(bool $readOnly = false): SQLite3 {
     $flags = $readOnly ? SQLITE3_OPEN_READONLY : (SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-    $db = new SQLite3(DB_PATH, $flags);
+    $db = @new SQLite3(DB_PATH, $flags);
     $db->busyTimeout(5000);
     if (!$readOnly) $db->exec('PRAGMA foreign_keys = ON');
     return $db;
-}
-
-function table_has_column(SQLite3 $db, string $table, string $column): bool {
-    $stmt = $db->prepare("SELECT 1 FROM pragma_table_info(:table) WHERE name = :column LIMIT 1");
-    $stmt->bindValue(':table', $table, SQLITE3_TEXT);
-    $stmt->bindValue(':column', $column, SQLITE3_TEXT);
-    return (bool)$stmt->execute()->fetchArray(SQLITE3_NUM);
 }
 
 function tenant_from_domain(SQLite3 $db, string $domain, bool $activeOnly = true): ?array {
     $sql = 'SELECT id, domain, status, created_at FROM tenants WHERE domain = :domain';
     if ($activeOnly) $sql .= " AND status = 'active'";
     $sql .= ' LIMIT 1';
-    $stmt = $db->prepare($sql);
+    $stmt = @$db->prepare($sql);
+    if (!$stmt) return null;
     $stmt->bindValue(':domain', normalize_tenant_domain($domain), SQLITE3_TEXT);
-    $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+    $result = @$stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : false;
     return is_array($row) ? $row : null;
 }
 
@@ -168,20 +156,12 @@ function current_tenant(bool $required = true): ?array {
     }
     $resolved = true;
     try {
-        init_database();
-        $db = tenant_database(false);
+        $db = tenant_database(true);
         $domain = request_host();
         $tenant = tenant_from_domain($db, $domain, true);
-        if ($tenant === null && (getenv('UNDANGAN_AUTO_PROVISION') !== '0')) {
-            $tenant = auto_provision_tenant($db, $domain);
-        }
-        if (is_array($tenant)) {
-            recreate_tamu_with_tenant_fk($db, (int)$tenant['id']);
-            ensure_tenant_seed($db, (int)$tenant['id']);
-        }
         $db->close();
     } catch (Throwable $e) {
-        error_log('Tenant resolution failed: ' . $e->getMessage());
+        if (is_file(DB_PATH)) error_log('Tenant resolution failed: ' . $e->getMessage());
         $tenant = null;
     }
     if ($required && $tenant === null) tenant_http_error(404, 'Domain tidak terdaftar atau sedang ditangguhkan.');
@@ -202,6 +182,23 @@ function current_tenant_id(): int {
     return (int)$tenant['id'];
 }
 
+function tenant_upload_root(?array $tenant = null): string {
+    $tenant = $tenant ?? current_tenant(false);
+    if (!is_array($tenant) || (int)($tenant['id'] ?? 0) < 1) return '';
+    return ROOT_DIR . '/uploads/tenant_' . (int)$tenant['id'];
+}
+
+function tenant_upload_dir(string $kind, ?array $tenant = null): string {
+    $root = tenant_upload_root($tenant);
+    if ($root === '') return '';
+    $folders = [
+        'cover' => 'cover', 'music' => 'music', 'gallery' => 'gallery',
+        'background' => 'background', 'love_story' => 'love-story',
+        'video' => 'love-story', 'theme_assets' => 'theme-assets'
+    ];
+    return $root . '/' . ($folders[$kind] ?? 'misc');
+}
+
 function current_user_role(): string {
     init_session();
     return (string)($_SESSION['role'] ?? '');
@@ -217,125 +214,22 @@ function tenant_query_scope(string $column = 'tenant_id'): array {
 }
 
 function tenant_default_config_from_legacy(): array {
-    $defaults = function_exists('config_defaults') ? config_defaults() : [];
-    if (!is_readable(CONFIG_FILE)) return $defaults;
-    $raw = @file_get_contents(CONFIG_FILE);
-    $legacy = is_string($raw) ? json_decode($raw, true) : null;
-    return is_array($legacy) ? array_replace_recursive($defaults, $legacy) : $defaults;
-}
-
-function ensure_tenant_user_seed(SQLite3 $db, int $defaultTenantId): void {
-    $count = (int)$db->querySingle("SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND tenant_id IS NULL");
-    if ($count > 0) return;
-    $legacy = tenant_default_config_from_legacy();
-    $username = trim((string)(getenv('ADMIN_USER') ?: ($legacy['admin']['username'] ?? 'admin'))) ?: 'admin';
-    $passwordHash = trim((string)($legacy['admin']['password_hash'] ?? ''));
-    $envPassword = getenv('ADMIN_PASS');
-    $plainPassword = is_string($envPassword) && $envPassword !== '' ? $envPassword : '';
-    if ($passwordHash === '' && $plainPassword !== '') $passwordHash = password_hash($plainPassword, PASSWORD_DEFAULT);
-    if ($passwordHash === '') return;
-    $stmt = $db->prepare("INSERT OR IGNORE INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (NULL, :username, :hash, :visible_password, 'super_admin')");
-    $stmt->bindValue(':username', $username, SQLITE3_TEXT);
-    $stmt->bindValue(':hash', $passwordHash, SQLITE3_TEXT);
-    $stmt->bindValue(':visible_password', encrypt_visible_password($plainPassword), SQLITE3_TEXT);
-    $stmt->execute();
+    return function_exists('config_defaults') ? config_defaults() : [];
 }
 
 function ensure_tenant_seed(SQLite3 $db, int $tenantId): void {
     $stmt = $db->prepare('SELECT 1 FROM tenant_configs WHERE tenant_id = :tenant_id LIMIT 1');
     $stmt->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
     if ($stmt->execute()->fetchArray(SQLITE3_NUM)) return;
-    $config = tenant_default_config_from_legacy();
+    $config = config_defaults();
     $json = json_encode($config, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) $json = '{}';
-    $customCss = is_readable(CUSTOM_CSS_FILE) ? (string)@file_get_contents(CUSTOM_CSS_FILE) : '';
-    $eventIcs = is_readable(EVENT_ICS_FILE) ? (string)@file_get_contents(EVENT_ICS_FILE) : '';
     $insert = $db->prepare('INSERT OR IGNORE INTO tenant_configs (tenant_id, config_json, custom_css, event_ics) VALUES (:tenant_id, :config_json, :custom_css, :event_ics)');
     $insert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
     $insert->bindValue(':config_json', $json, SQLITE3_TEXT);
-    $insert->bindValue(':custom_css', $customCss, SQLITE3_TEXT);
-    $insert->bindValue(':event_ics', $eventIcs, SQLITE3_TEXT);
+    $insert->bindValue(':custom_css', '', SQLITE3_TEXT);
+    $insert->bindValue(':event_ics', build_event_ics($config), SQLITE3_TEXT);
     $insert->execute();
-    if ((int)$db->querySingle('SELECT COUNT(*) FROM guest_links WHERE tenant_id = ' . $tenantId) === 0 && is_readable(GUEST_LINKS_FILE)) {
-        $links = json_decode((string)@file_get_contents(GUEST_LINKS_FILE), true);
-        if (is_array($links)) {
-            foreach ($links as $link) {
-                if (!is_array($link)) continue;
-                $linkInsert = $db->prepare('INSERT INTO guest_links (tenant_id, guest_name, invitation_url, created_at) VALUES (:tenant_id, :guest_name, :invitation_url, :created_at)');
-                $linkInsert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
-                $linkInsert->bindValue(':guest_name', trim((string)($link['guest_name'] ?? '')), SQLITE3_TEXT);
-                $linkInsert->bindValue(':invitation_url', trim((string)($link['invitation_url'] ?? '')), SQLITE3_TEXT);
-                $linkInsert->bindValue(':created_at', trim((string)($link['created_at'] ?? gmdate('c'))), SQLITE3_TEXT);
-                $linkInsert->execute();
-            }
-        }
-    }
-}
-
-function auto_provision_tenant(SQLite3 $db, string $domain): ?array {
-    $domain = normalize_tenant_domain($domain);
-    if (!is_valid_tenant_domain($domain) || password_encryption_key() === '') return null;
-    $existing = tenant_from_domain($db, $domain, false);
-    if (is_array($existing)) return ($existing['status'] ?? '') === 'active' ? $existing : null;
-    $db->exec('BEGIN IMMEDIATE');
-    try {
-        $tenantInsert = $db->prepare("INSERT INTO tenants (domain, status) VALUES (:domain, 'active')");
-        $tenantInsert->bindValue(':domain', $domain, SQLITE3_TEXT);
-        if (!$tenantInsert->execute()) throw new RuntimeException('Tenant insert failed.');
-        $tenantId = (int)$db->lastInsertRowID();
-        ensure_tenant_seed($db, $tenantId);
-        $username = tenant_admin_username_for_domain($domain);
-        $password = generate_random_password(8);
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $visiblePassword = encrypt_visible_password($password);
-        if ($visiblePassword === '') throw new RuntimeException('Tenant password encryption failed.');
-        $userInsert = $db->prepare("INSERT INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (:tenant_id, :username, :password_hash, :visible_password, 'tenant_admin')");
-        $userInsert->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
-        $userInsert->bindValue(':username', $username, SQLITE3_TEXT);
-        $userInsert->bindValue(':password_hash', $passwordHash, SQLITE3_TEXT);
-        $userInsert->bindValue(':visible_password', $visiblePassword, SQLITE3_TEXT);
-        if (!$userInsert->execute()) throw new RuntimeException('Tenant admin insert failed.');
-        $db->exec('COMMIT');
-    } catch (Throwable $e) {
-        $db->exec('ROLLBACK');
-        $existingAfterRace = tenant_from_domain($db, $domain, true);
-        if (is_array($existingAfterRace)) return $existingAfterRace;
-        error_log('Tenant auto-provisioning failed for ' . $domain . ': ' . $e->getMessage());
-        return null;
-    }
-    error_log('Auto-provisioned tenant ' . $domain . ' with Tenant Admin username ' . $username . '. Password is available only in the Super Admin Dashboard.');
-    $tenant = tenant_from_domain($db, $domain, true);
-    return is_array($tenant) ? $tenant : null;
-}
-
-function recreate_tamu_with_tenant_fk(SQLite3 $db, int $defaultTenantId): void {
-    if (!table_has_column($db, 'tamu', 'tenant_id')) {
-        $db->exec('ALTER TABLE tamu ADD COLUMN tenant_id INTEGER');
-    }
-    $foreignKeys = [];
-    $result = $db->query('PRAGMA foreign_key_list(tamu)');
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) $foreignKeys[] = $row;
-    $hasTenantForeignKey = false;
-    foreach ($foreignKeys as $row) {
-        if (($row['from'] ?? '') === 'tenant_id' && ($row['table'] ?? '') === 'tenants') $hasTenantForeignKey = true;
-    }
-    $db->exec('UPDATE tamu SET tenant_id = ' . (int)$defaultTenantId . ' WHERE tenant_id IS NULL');
-    if ($hasTenantForeignKey) {
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
-        return;
-    }
-    $db->exec('BEGIN IMMEDIATE');
-    try {
-        $db->exec('CREATE TABLE tamu_new (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, nama TEXT NOT NULL, status TEXT NOT NULL, ucapan TEXT, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)');
-        $db->exec('INSERT INTO tamu_new (id, tenant_id, nama, status, ucapan, visible, created_at) SELECT id, COALESCE(tenant_id, ' . (int)$defaultTenantId . '), nama, status, ucapan, COALESCE(visible, 1), COALESCE(created_at, CURRENT_TIMESTAMP) FROM tamu');
-        $db->exec('DROP TABLE tamu');
-        $db->exec('ALTER TABLE tamu_new RENAME TO tamu');
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
-        $db->exec('COMMIT');
-    } catch (Throwable $e) {
-        $db->exec('ROLLBACK');
-        throw $e;
-    }
 }
 
 // Security headers
@@ -1466,84 +1360,15 @@ function theme_custom_config(array $config): array {
 }
 
 function ensure_upload_dirs(): void {
-    foreach ([UPLOADS_DIR, UPLOADS_COVER_DIR, UPLOADS_MUSIC_DIR, UPLOADS_GALLERY_DIR, UPLOADS_BACKGROUND_DIR, UPLOADS_LOVE_STORY_DIR, UPLOADS_THEME_ASSETS_DIR] as $dir) {
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
-        }
-    }
-}
-
-function init_database(string $dbPath = DB_PATH): bool {
-    try {
-        $db = new SQLite3($dbPath, SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-        $db->busyTimeout(5000);
-        $db->exec('PRAGMA foreign_keys = ON');
-        $db->exec("CREATE TABLE IF NOT EXISTS tenants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            domain TEXT NOT NULL UNIQUE COLLATE NOCASE,
-            status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )");
-        $db->exec("CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tenant_id INTEGER NULL REFERENCES tenants(id) ON DELETE CASCADE,
-            username TEXT NOT NULL,
-            password_hash TEXT NOT NULL,
-            visible_password TEXT NOT NULL DEFAULT '',
-            role TEXT NOT NULL CHECK (role IN ('super_admin', 'tenant_admin')),
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (tenant_id, username)
-        )");
-        if (!table_has_column($db, 'users', 'visible_password')) {
-            @$db->exec("ALTER TABLE users ADD COLUMN visible_password TEXT NOT NULL DEFAULT ''");
-        }
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id)');
-        $db->exec("CREATE TABLE IF NOT EXISTS tenant_configs (
-            tenant_id INTEGER PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
-            config_json TEXT NOT NULL,
-            custom_css TEXT NOT NULL DEFAULT '',
-            event_ics TEXT NOT NULL DEFAULT '',
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )");
-        $db->exec("CREATE TABLE IF NOT EXISTS guest_links (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-            guest_name TEXT NOT NULL,
-            invitation_url TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )");
-        $db->exec('CREATE INDEX IF NOT EXISTS idx_guest_links_tenant_id ON guest_links(tenant_id)');
-
-        $hasTamu = (bool)$db->querySingle("SELECT 1 FROM sqlite_master WHERE type='table' AND name='tamu'");
-        if (!$hasTamu) {
-            $db->exec('CREATE TABLE tamu (id INTEGER PRIMARY KEY AUTOINCREMENT, tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE, nama TEXT NOT NULL, status TEXT NOT NULL, ucapan TEXT, visible INTEGER DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)');
-            $db->exec('CREATE INDEX IF NOT EXISTS idx_tamu_tenant_id ON tamu(tenant_id)');
-        } else {
-            if (!table_has_column($db, 'tamu', 'visible')) @$db->exec('ALTER TABLE tamu ADD COLUMN visible INTEGER DEFAULT 1');
-        }
-
-        $domain = normalize_tenant_domain((string)(getenv('UNDANGAN_MAIN_DOMAIN') ?: getenv('MAIN_DOMAIN') ?: (PHP_SAPI === 'cli' ? 'localhost' : '')));
-        if ($domain !== '') {
-            $stmt = $db->prepare("INSERT OR IGNORE INTO tenants (domain, status) VALUES (:domain, 'active')");
-            $stmt->bindValue(':domain', $domain, SQLITE3_TEXT);
-            $stmt->execute();
-        }
-        $defaultTenantId = (int)$db->querySingle('SELECT id FROM tenants ORDER BY id LIMIT 1');
-        if ($defaultTenantId > 0) {
-            recreate_tamu_with_tenant_fk($db, $defaultTenantId);
-            ensure_tenant_seed($db, $defaultTenantId);
-            ensure_tenant_user_seed($db, $defaultTenantId);
-        }
-        $db->close();
-        return true;
-    } catch (Throwable $e) {
-        error_log('Database initialization failed: ' . $e->getMessage());
-        return false;
+    $tenantRoot = tenant_upload_root();
+    if ($tenantRoot === '') return;
+    foreach (['cover', 'music', 'gallery', 'background', 'love_story', 'theme_assets'] as $kind) {
+        $dir = tenant_upload_dir($kind);
+        if ($dir !== '' && !is_dir($dir)) @mkdir($dir, 0755, true);
     }
 }
 
 function load_config(): array {
-    ensure_upload_dirs();
     $defaults = config_defaults();
     $tenantConfigRaw = null;
     $tenant = current_tenant(false);
@@ -1559,20 +1384,16 @@ function load_config(): array {
             error_log('Tenant config read failed: ' . $e->getMessage());
         }
     }
-    if ($tenantConfigRaw === null && !is_readable(CONFIG_FILE)) {
+    if ($tenantConfigRaw === null) {
         if (function_exists('theme_contract_registry')) {
             $defaults['theme_sections'] = [];
             foreach (array_keys(theme_contract_registry()) as $presetKey) {
                 $defaults['theme_sections'][$presetKey] = theme_contract_default_sections($presetKey);
             }
         }
-        save_config($defaults);
         return $defaults;
     }
-    $raw = $tenantConfigRaw ?? @file_get_contents(CONFIG_FILE);
-    if ($raw === false) {
-        return $defaults;
-    }
+    $raw = $tenantConfigRaw;
     $config = json_decode($raw, true);
     if (!is_array($config)) {
         return $defaults;
@@ -1673,9 +1494,6 @@ function load_config(): array {
     if (empty($config['schedule']['countdown_target'])) {
         $config['schedule']['countdown_target'] = compute_countdown_target($config['schedule']);
     }
-    if (!is_file(EVENT_ICS_FILE)) {
-        write_event_ics($config);
-    }
     if (empty($config['story']) && !empty($config['love_story']['items'])) {
         $config['story'] = array_map(function($item) {
             return [
@@ -1704,33 +1522,25 @@ function compute_countdown_target(array $schedule): string {
 }
 
 function save_config(array $config): bool {
-    ensure_upload_dirs();
     $config = array_replace_recursive(config_defaults(), $config);
     $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($json === false) return false;
     $tenant = current_tenant(false);
-    if (is_array($tenant)) {
-        try {
-            init_database();
-            $db = tenant_database(false);
-            $stmt = $db->prepare("INSERT INTO tenant_configs (tenant_id, config_json, custom_css, event_ics, updated_at) VALUES (:tenant_id, :config_json, :custom_css, :event_ics, CURRENT_TIMESTAMP) ON CONFLICT(tenant_id) DO UPDATE SET config_json = excluded.config_json, event_ics = excluded.event_ics, updated_at = CURRENT_TIMESTAMP");
-            $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
-            $stmt->bindValue(':config_json', $json, SQLITE3_TEXT);
-            $stmt->bindValue(':custom_css', (string)($config['custom_css'] ?? ''), SQLITE3_TEXT);
-            $stmt->bindValue(':event_ics', '', SQLITE3_TEXT);
-            if (!$stmt->execute()) return false;
-            $db->close();
-        } catch (Throwable $e) {
-            error_log('Tenant config save failed: ' . $e->getMessage());
-            return false;
-        }
+    if (!is_array($tenant)) return false;
+    try {
+        $db = tenant_database(false);
+        $stmt = $db->prepare("INSERT INTO tenant_configs (tenant_id, config_json, custom_css, event_ics, updated_at) VALUES (:tenant_id, :config_json, :custom_css, :event_ics, CURRENT_TIMESTAMP) ON CONFLICT(tenant_id) DO UPDATE SET config_json = excluded.config_json, custom_css = excluded.custom_css, event_ics = excluded.event_ics, updated_at = CURRENT_TIMESTAMP");
+        $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+        $stmt->bindValue(':config_json', $json, SQLITE3_TEXT);
+        $stmt->bindValue(':custom_css', (string)($config['custom_css'] ?? ''), SQLITE3_TEXT);
+        $stmt->bindValue(':event_ics', build_event_ics($config), SQLITE3_TEXT);
+        $ok = (bool)$stmt->execute();
+        $db->close();
+        return $ok;
+    } catch (Throwable $e) {
+        error_log('Tenant config save failed: ' . $e->getMessage());
+        return false;
     }
-    // Keep the legacy files as a safe migration/export mirror for existing tools.
-    $tmp = CONFIG_FILE . '.tmp';
-    if (@file_put_contents($tmp, $json, LOCK_EX) === false) return false;
-    if (!@rename($tmp, CONFIG_FILE)) { @unlink($tmp); return false; }
-    write_event_ics($config);
-    return true;
 }
 
 function load_guest_links(): array {
@@ -1749,14 +1559,7 @@ function load_guest_links(): array {
             error_log('Tenant guest-link read failed: ' . $e->getMessage());
         }
     }
-    if (!is_readable(GUEST_LINKS_FILE)) return [];
-    $raw = @file_get_contents(GUEST_LINKS_FILE);
-    $data = $raw === false ? null : json_decode($raw, true);
-    if (!is_array($data)) return [];
-    return array_values(array_filter(array_map(static function ($item) {
-        if (!is_array($item) || !isset($item['guest_name'], $item['invitation_url'], $item['created_at'])) return null;
-        return ['guest_name' => trim((string)$item['guest_name']), 'invitation_url' => trim((string)$item['invitation_url']), 'created_at' => trim((string)$item['created_at'])];
-    }, $data)));
+    return [];
 }
 
 function load_custom_css(): string {
@@ -1771,9 +1574,7 @@ function load_custom_css(): string {
             if (is_array($row)) return (string)($row['custom_css'] ?? '');
         } catch (Throwable $e) { error_log('Tenant CSS read failed: ' . $e->getMessage()); }
     }
-    if (!is_readable(CUSTOM_CSS_FILE)) return (string)(load_config()['custom_css'] ?? '');
-    $css = @file_get_contents(CUSTOM_CSS_FILE);
-    return $css === false ? '' : $css;
+    return '';
 }
 
 function validate_custom_css(string $css): array {
@@ -1825,9 +1626,9 @@ function validate_custom_css(string $css): array {
 
 function save_custom_css(string $css): bool {
     $tenant = current_tenant(false);
+    if (!is_array($tenant)) return false;
     if (is_array($tenant)) {
         try {
-            init_database();
             $db = tenant_database(false);
             $stmt = $db->prepare('UPDATE tenant_configs SET custom_css = :custom_css, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = :tenant_id');
             $stmt->bindValue(':custom_css', $css, SQLITE3_TEXT);
@@ -1836,19 +1637,15 @@ function save_custom_css(string $css): bool {
             $db->close();
         } catch (Throwable $e) { error_log('Tenant CSS save failed: ' . $e->getMessage()); return false; }
     }
-    $tmp = CUSTOM_CSS_FILE . '.tmp';
-    if (@file_put_contents($tmp, $css, LOCK_EX) === false) return false;
-    if (!@rename($tmp, CUSTOM_CSS_FILE)) { @unlink($tmp); return false; }
-    @chmod(CUSTOM_CSS_FILE, 0644);
     return true;
 }
 
 function save_guest_links(array $links): bool {
     $data = array_values($links);
     $tenant = current_tenant(false);
+    if (!is_array($tenant)) return false;
     if (is_array($tenant)) {
         try {
-            init_database();
             $db = tenant_database(false);
             $tenantId = (int)$tenant['id'];
             $delete = $db->prepare('DELETE FROM guest_links WHERE tenant_id = :tenant_id');
@@ -1866,11 +1663,6 @@ function save_guest_links(array $links): bool {
             $db->close();
         } catch (Throwable $e) { error_log('Tenant guest-link save failed: ' . $e->getMessage()); return false; }
     }
-    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($json === false) return false;
-    $tmp = GUEST_LINKS_FILE . '.tmp';
-    if (@file_put_contents($tmp, $json, LOCK_EX) === false) return false;
-    if (!@rename($tmp, GUEST_LINKS_FILE)) { @unlink($tmp); return false; }
     return true;
 }
 
@@ -2136,14 +1928,10 @@ function media_requirement(string $role, ?string $preset = null): array {
 
 
 function media_storage_roots(): array {
-    return [
-        UPLOADS_COVER_DIR,
-        UPLOADS_BACKGROUND_DIR,
-        UPLOADS_GALLERY_DIR,
-        UPLOADS_LOVE_STORY_DIR,
-        UPLOADS_MUSIC_DIR,
-        UPLOADS_THEME_ASSETS_DIR,
-    ];
+    return array_values(array_filter([
+        tenant_upload_dir('cover'), tenant_upload_dir('background'), tenant_upload_dir('gallery'),
+        tenant_upload_dir('love_story'), tenant_upload_dir('music'), tenant_upload_dir('theme_assets')
+    ]));
 }
 
 function media_path_is_safe_storage(string $relativePath): bool {
@@ -2297,36 +2085,10 @@ function process_uploaded_image(string $sourcePath): bool {
     return true;
 }
 
-function verify_admin_password(string $password, array $config): bool {
-    $password = trim($password);
-    if ($password === '') {
-        return false;
-    }
-    
-    // Priority 1: Check config.json password_hash
-    $hash = $config['admin']['password_hash'] ?? '';
-    if ($hash !== '') {
-        return password_verify($password, $hash);
-    }
-    
-    // Priority 2: Check .env credentials (ADMIN_USER + ADMIN_PASS)
-    $envUser = getenv('ADMIN_USER');
-    $envPass = getenv('ADMIN_PASS');
-    
-    // Reject login if no credentials configured
-    if ($envPass === '' || $envPass === false) {
-        return false;
-    }
-    
-    $expectedUser = $envUser ?: 'admin';
-    return hash_equals($expectedUser, $config['admin']['username'] ?? $expectedUser) && hash_equals($envPass, $password);
-}
-
 function authenticate_user(string $username, string $password): ?array {
     $username = trim($username);
     if ($username === '' || $password === '') return null;
     try {
-        init_database();
         $tenant = current_tenant(false);
         if (!is_array($tenant)) return null;
         $db = tenant_database(true);
@@ -2553,7 +2315,7 @@ function get_gallery_items(array $config): array {
         ];
     }
     $files = [];
-    foreach (glob(UPLOADS_GALLERY_DIR . '/*') ?: [] as $filePath) {
+    foreach (glob(tenant_upload_dir('gallery') . '/*') ?: [] as $filePath) {
         if (!is_file($filePath)) {
             continue;
         }
@@ -2676,13 +2438,13 @@ function list_media_library(array $options = []): array {
     $groupFilter = strtolower(trim((string)($options['group'] ?? 'all')));
     $config = load_config();
     $groups = [
-        'cover' => ['dir' => UPLOADS_COVER_DIR, 'label' => 'Cover', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'background' => ['dir' => UPLOADS_BACKGROUND_DIR, 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'gallery' => ['dir' => UPLOADS_GALLERY_DIR, 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'love_story' => ['dir' => UPLOADS_LOVE_STORY_DIR, 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'video' => ['dir' => UPLOADS_LOVE_STORY_DIR, 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
-        'theme_assets' => ['dir' => UPLOADS_THEME_ASSETS_DIR, 'label' => 'Theme Assets', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'music' => ['dir' => UPLOADS_MUSIC_DIR, 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
+        'cover' => ['dir' => tenant_upload_dir('cover'), 'label' => 'Cover', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'background' => ['dir' => tenant_upload_dir('background'), 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'gallery' => ['dir' => tenant_upload_dir('gallery'), 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'love_story' => ['dir' => tenant_upload_dir('love_story'), 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'video' => ['dir' => tenant_upload_dir('video'), 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
+        'theme_assets' => ['dir' => tenant_upload_dir('theme_assets'), 'label' => 'Theme Assets', 'allowed' => ALLOWED_IMAGE_TYPES],
+        'music' => ['dir' => tenant_upload_dir('music'), 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
     ];
 
     $items = [];
@@ -2791,19 +2553,22 @@ function replace_uploaded_asset(string $relativePath, array $file, ?string $role
 
     $directory = dirname($fullPath);
     $basename = str_replace('\\', '/', $normalized);
+    $parts = explode('/', $basename);
+    $uploadsIndex = array_search('uploads', $parts, true);
+    $folder = $uploadsIndex === false ? '' : (string)($parts[$uploadsIndex + 2] ?? '');
     if ($role === null) {
-        if (str_contains($basename, 'uploads/gallery/')) $role = 'gallery';
-        elseif (str_contains($basename, 'uploads/background/')) $role = 'background';
-        elseif (str_contains($basename, 'uploads/love-story/') && in_array(strtolower(pathinfo($basename, PATHINFO_EXTENSION)), ALLOWED_VIDEO_TYPES, true)) $role = 'love_story_video';
-        elseif (str_contains($basename, 'uploads/love-story/')) $role = 'story';
-        elseif (str_contains($basename, 'uploads/theme-assets/')) $role = 'theme_asset';
-        elseif (str_contains($basename, 'uploads/music/')) $role = 'music';
-        elseif (str_contains($basename, 'uploads/cover/')) $role = 'cover';
-        else $role = 'generic';
+        $role = match ($folder) {
+            'gallery' => 'gallery',
+            'background' => 'background',
+            'love-story' => in_array(strtolower(pathinfo($basename, PATHINFO_EXTENSION)), ALLOWED_VIDEO_TYPES, true) ? 'love_story_video' : 'story',
+            'theme-assets' => 'theme_asset',
+            'music' => 'music',
+            'cover' => 'cover',
+            default => 'generic',
+        };
     }
-    if ($preset === null && str_contains($basename, 'uploads/theme-assets/')) {
-        $parts = explode('/', $basename);
-        $preset = $parts[2] ?? null;
+    if ($preset === null && $folder === 'theme-assets' && $uploadsIndex !== false) {
+        $preset = $parts[$uploadsIndex + 3] ?? null;
     }
     $canonicalRole = media_role_alias($role);
     $isMusic = $canonicalRole === 'music';
@@ -2899,39 +2664,44 @@ function cleanup_replaced_media(string $oldPath, array $config): bool {
     return delete_uploaded_asset($normalized);
 }
 
-function write_event_ics(array $config): void {
-    $schedule = $config['schedule'];
-    $location = $config['location'];
-    $title = $config['wedding']['title'] ?: ($config['wedding']['bride_name'] . ' & ' . $config['wedding']['groom_name']);
-    $description = $config['wedding']['opening_text'] ?: $config['site']['description'];
-    $start = date_create_from_format('Y-m-d H:i', $schedule['akad_date'] . ' ' . $schedule['akad_time'], new DateTimeZone($schedule['timezone']));
-    $end = clone $start;
-    if ($end) {
-        $end->modify('+2 hours');
+function build_event_ics(array $config): string {
+    $schedule = (array)($config['schedule'] ?? []);
+    $location = (array)($config['location'] ?? []);
+    $wedding = (array)($config['wedding'] ?? []);
+    $site = (array)($config['site'] ?? []);
+    $title = (string)($wedding['title'] ?? '') ?: ((string)($wedding['bride_name'] ?? '') . ' & ' . (string)($wedding['groom_name'] ?? ''));
+    $description = (string)($wedding['opening_text'] ?? '') ?: (string)($site['description'] ?? '');
+    $timezone = trim((string)($schedule['timezone'] ?? 'Asia/Jakarta')) ?: 'Asia/Jakarta';
+    try {
+        $zone = new DateTimeZone($timezone);
+    } catch (Throwable $e) {
+        $timezone = 'Asia/Jakarta';
+        $zone = new DateTimeZone($timezone);
     }
-    $dtstart = $start ? $start->format('Ymd\THis') : '20261229T090000';
-    $dtend = $end ? $end->format('Ymd\THis') : '20261229T110000';
-    $tz = $schedule['timezone'] ?: 'Asia/Jakarta';
-    $organizer = 'MAILTO:no-reply@example.com';
-    $locationText = $location['venue'] ?: $location['address'];
-    $ics = implode("\r\n", [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Undangan CMS//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-        'BEGIN:VEVENT',
-        'DTSTAMP:' . gmdate('Ymd\THis') . 'Z',
-        'DTSTART;TZID=' . $tz . ':' . $dtstart,
-        'DTEND;TZID=' . $tz . ':' . $dtend,
-        'SUMMARY:' . escape_ics_value($title),
-        'DESCRIPTION:' . escape_ics_value($description),
-        'LOCATION:' . escape_ics_value($locationText),
-        'ORGANIZER:' . $organizer,
-        'END:VEVENT',
-        'END:VCALENDAR'
+    $start = date_create_from_format('Y-m-d H:i', (string)($schedule['akad_date'] ?? '') . ' ' . (string)($schedule['akad_time'] ?? ''), $zone);
+    $end = $start ? (clone $start)->modify('+2 hours') : null;
+    $dtstart = $start ? $start->format('Ymd\\THis') : '20261229T090000';
+    $dtend = $end ? $end->format('Ymd\\THis') : '20261229T110000';
+    $locationText = (string)($location['venue'] ?? '') ?: (string)($location['address'] ?? '');
+    return implode("\\r\\n", [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Undangan CMS//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+        'BEGIN:VEVENT', 'DTSTAMP:' . gmdate('Ymd\\THis') . 'Z', 'DTSTART;TZID=' . $timezone . ':' . $dtstart,
+        'DTEND;TZID=' . $timezone . ':' . $dtend, 'SUMMARY:' . escape_ics_value($title),
+        'DESCRIPTION:' . escape_ics_value($description), 'LOCATION:' . escape_ics_value($locationText),
+        'ORGANIZER:MAILTO:no-reply@example.com', 'END:VEVENT', 'END:VCALENDAR'
     ]);
-    @file_put_contents(EVENT_ICS_FILE, $ics, LOCK_EX);
+}
+
+function write_event_ics(array $config): void {
+    // Legacy API retained for deployment tooling; runtime persistence is tenant_configs.
+    $tenant = current_tenant(false);
+    if (!is_array($tenant)) return;
+    $db = tenant_database(false);
+    $stmt = $db->prepare('UPDATE tenant_configs SET event_ics = :event_ics, updated_at = CURRENT_TIMESTAMP WHERE tenant_id = :tenant_id');
+    $stmt->bindValue(':event_ics', build_event_ics($config), SQLITE3_TEXT);
+    $stmt->bindValue(':tenant_id', (int)$tenant['id'], SQLITE3_INTEGER);
+    $stmt->execute();
+    $db->close();
 }
 
 function escape_ics_value(string $value): string {

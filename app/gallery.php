@@ -10,8 +10,7 @@ foreach ($items as $item) {
     if ($relativePath === '') {
         continue;
     }
-    $name = basename($relativePath);
-    $srcUrl = 'uploads/gallery/' . rawurlencode($name);
+    $srcUrl = public_path($relativePath);
     // The canonical asset is already bounded and optimized by the upload
     // pipeline; no persistent thumb derivative is generated here.
     $out[] = [

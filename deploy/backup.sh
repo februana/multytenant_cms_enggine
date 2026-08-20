@@ -57,13 +57,9 @@ printf '%s\n' 'Starting backup...'
 mkdir -p -- "$BACKUP_DIR" || fail_backup "Cannot create backup directory: $BACKUP_DIR"
 STAGE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/webserver_undangan_backup.XXXXXX")" || fail_backup "Cannot create secure staging directory"
 
-# Root/runtime files. Environment overrides are honored for Docker/native parity.
-copy_file_if_present "${UNDANGAN_CONFIG_PATH:-$DATA_ROOT/config.json}" "config.json"
-copy_file_if_present "${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_ROOT/custom.css}" "custom.css"
-copy_file_if_present "${UNDANGAN_GUEST_LINKS_PATH:-$DATA_ROOT/guest-links.json}" "guest-links.json"
+# Shared runtime state. All tenant settings, guest links, CSS, and calendar data live in SQLite.
 copy_file_if_present "${UNDANGAN_DB_PATH:-$DATA_ROOT/database.sqlite}" "database.sqlite"
 copy_file_if_present "${UNDANGAN_ENV_PATH:-$DATA_ROOT/.env}" ".env"
-copy_file_if_present "${UNDANGAN_EVENT_ICS_PATH:-$DATA_ROOT/event.ics}" "event.ics"
 
 # Preserve the complete canonical user-media namespaces without scanning or pruning.
 copy_directory_if_present "$ROOT_DIR/uploads" "uploads"
@@ -90,16 +86,12 @@ if ! tar -tzf "$BACKUP_FILE" >/dev/null 2>&1; then
     fail_backup "archive validation failed"
 fi
 
-# Verify entries for every object that existed before staging.
-for entry in config.json custom.css guest-links.json database.sqlite .env event.ics; do
+# Verify entries for every shared runtime object that existed before staging.
+for entry in database.sqlite .env; do
     source_path="$DATA_ROOT/$entry"
     case "$entry" in
-        config.json) source_path="${UNDANGAN_CONFIG_PATH:-$DATA_ROOT/config.json}" ;;
-        custom.css) source_path="${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_ROOT/custom.css}" ;;
-        guest-links.json) source_path="${UNDANGAN_GUEST_LINKS_PATH:-$DATA_ROOT/guest-links.json}" ;;
         database.sqlite) source_path="${UNDANGAN_DB_PATH:-$DATA_ROOT/database.sqlite}" ;;
         .env) source_path="${UNDANGAN_ENV_PATH:-$DATA_ROOT/.env}" ;;
-        event.ics) source_path="${UNDANGAN_EVENT_ICS_PATH:-$DATA_ROOT/event.ics}" ;;
     esac
     if [ -f "$source_path" ] && ! archive_has_entry "$entry"; then
         fail_backup "validated archive is missing $entry"

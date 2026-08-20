@@ -15,7 +15,6 @@ function add_warning(string $message): void {
 
 $requiredFiles = [
     $root . '/config.php',
-    $root . '/config.json',
     $root . '/index.php',
     $root . '/admin/index.php',
     $root . '/admin/app.js',
@@ -32,23 +31,10 @@ foreach ($requiredFiles as $file) {
     }
 }
 
-if (!file_exists($root . '/config.json')) {
-    exit(1);
-}
-
-$config = null;
-$configText = @file_get_contents($root . '/config.json');
-if ($configText === false) {
-    add_error('config.json is not readable.');
-} else {
-    $config = json_decode($configText, true);
-    if (!is_array($config)) {
-        add_error('config.json is not valid JSON.');
-    }
-}
-
 require_once $root . '/config.php';
 $defaults = config_defaults();
+// Runtime settings are tenant-scoped in SQLite; defaults provide the source contract for static validation.
+$config = $defaults;
 
 $requiredRootKeys = ['site', 'wedding', 'parents', 'schedule', 'location', 'media', 'gallery', 'gift', 'whatsapp', 'admin', 'theme', 'sections', 'love_story'];
 if (isset($config) && is_array($config)) {
@@ -62,7 +48,7 @@ if (isset($config) && is_array($config)) {
 if (isset($config['sections']) && is_array($config['sections'])) {
     foreach ($config['sections'] as $section) {
         if (!is_array($section)) {
-            add_warning('A section entry in config.json is not an object.');
+            add_warning('A default section entry is not an object.');
             continue;
         }
         $id = trim((string)($section['id'] ?? ''));

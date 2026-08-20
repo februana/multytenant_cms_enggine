@@ -217,7 +217,7 @@ function theme_visual_image_reference_is_canonical(string $value): bool {
         return in_array($scheme, ['http', 'https'], true);
     }
     $normalized = normalize_media_relative_path($value);
-    if ($normalized === null || !str_starts_with($normalized, 'uploads/')) return false;
+    if ($normalized === null || !media_path_is_safe_storage($normalized)) return false;
     $absolute = ROOT_DIR . '/' . $normalized;
     if (!is_file($absolute)) return false;
     $extension = strtolower((string)pathinfo($absolute, PATHINFO_EXTENSION));

@@ -7,11 +7,7 @@ set -euo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/var/www/wedding}"
 DATA_DIR="${UNDANGAN_DATA_DIR:-$DEPLOY_DIR}"
-CONFIG_FILE_PATH="${UNDANGAN_CONFIG_PATH:-$DATA_DIR/config.json}"
 DB_FILE_PATH="${UNDANGAN_DB_PATH:-$DATA_DIR/database.sqlite}"
-GUEST_LINKS_FILE_PATH="${UNDANGAN_GUEST_LINKS_PATH:-$DATA_DIR/guest-links.json}"
-EVENT_ICS_FILE_PATH="${UNDANGAN_EVENT_ICS_PATH:-$DATA_DIR/event.ics}"
-CUSTOM_CSS_FILE_PATH="${UNDANGAN_CUSTOM_CSS_PATH:-$DATA_DIR/custom.css}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
 WEDDING_BUILTIN_PRESETS="dewankl rainier archak parang pawiwahan shubh-vivah yami-buzzy custom"
@@ -60,18 +56,16 @@ for file in index.php admin.php save.php messages.php gallery.php config.php; do
   fi
 done
 
-# Runtime state may live in /var/data (Docker) or the document root (native).
-for runtime_file in "$CONFIG_FILE_PATH" "$DB_FILE_PATH" "$GUEST_LINKS_FILE_PATH" "$EVENT_ICS_FILE_PATH"; do
-  if [ -f "$runtime_file" ]; then
-    pass "Runtime file exists: $runtime_file"
-  else
-    fail "Missing required runtime file: $runtime_file"
-  fi
-done
-if [ -f "$CUSTOM_CSS_FILE_PATH" ]; then
-  pass "Custom CSS runtime file exists: $CUSTOM_CSS_FILE_PATH"
+# Runtime state is the shared SQLite database; settings and media are tenant-scoped within it/tree.
+if [ -f "$DB_FILE_PATH" ]; then
+  pass "SQLite database exists: $DB_FILE_PATH"
 else
-  warning "Custom CSS runtime file is not provisioned: $CUSTOM_CSS_FILE_PATH"
+  fail "Missing SQLite database: $DB_FILE_PATH"
+fi
+if [ -d "$DEPLOY_DIR/uploads" ]; then
+  pass "Tenant uploads root exists: $DEPLOY_DIR/uploads"
+else
+  warning "Tenant uploads root is not provisioned yet: $DEPLOY_DIR/uploads"
 fi
 
 # Check 3: Themes directory and required themes exist

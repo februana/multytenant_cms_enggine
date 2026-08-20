@@ -36,10 +36,10 @@ foreach (['bride_name', 'groom_name', 'title', 'opening_text', 'closing_text', '
 }
 $adminSource = (string)file_get_contents(dirname(__DIR__) . '/admin/index.php');
 $assert(str_contains($adminSource, '$defaultWedding = config_defaults()[\'wedding\'];'), 'admin save_wedding uses config default fallback');
-$active = json_decode((string)file_get_contents(CONFIG_FILE), true);
-$assert(is_array($active) && ($active['wedding']['bride_name'] ?? '') === 'FEBRUANA', 'active config uses default bride name');
-$assert(is_array($active) && ($active['wedding']['groom_name'] ?? '') === 'ANDI MUHAMAD BASUKI', 'active config uses default groom name');
-$assert(is_array($active) && str_contains((string)($active['wedding']['quote'] ?? ''), 'وَمِنْ اٰيٰتِهٖٓ'), 'active config stores Arabic quote');
+$assert(!defined('CONFIG_FILE'), 'runtime has no global config.json constant');
+$assert(($defaults['wedding']['bride_name'] ?? '') === 'FEBRUANA', 'tenant config defaults use official bride name');
+$assert(($defaults['wedding']['groom_name'] ?? '') === 'ANDI MUHAMAD BASUKI', 'tenant config defaults use official groom name');
+$assert(str_contains((string)($defaults['wedding']['quote'] ?? ''), 'وَمِنْ اٰيٰتِهٖٓ'), 'tenant config defaults store Arabic quote');
 foreach (theme_builtin_preset_keys() as $preset) {
     $config = $defaults;
     $config['theme']['mode'] = 'preset';

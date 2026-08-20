@@ -199,7 +199,7 @@ update_application() (
     local source_dir=""
     local ws=""
     local php_ver=""
-    local -a preserve_files=("config.json" "custom.css" "guest-links.json" "database.sqlite" ".env" "event.ics")
+    local -a preserve_files=("database.sqlite" ".env")
     local -a preserve_dirs=("uploads" "webdav" "backups" "storage")
 
     cleanup_update_staging() {
@@ -261,8 +261,7 @@ update_application() (
         rsync -a --delete \
             --exclude='.git/' --exclude='*.md' \
             --exclude='uploads/' --exclude='webdav/' --exclude='backups/' --exclude='storage/' \
-            --exclude='config.json' --exclude='custom.css' --exclude='guest-links.json' \
-            --exclude='database.sqlite' --exclude='.env' --exclude='event.ics' \
+            --exclude='database.sqlite' --exclude='.env' \
             "$source_dir/" "$CANONICAL_TARGET/" || { log_error "Application source synchronization failed; verified backup retained."; return 1; }
     else
         log_error "rsync is required for a safe update; application was not modified."
@@ -282,16 +281,12 @@ update_application() (
     done
 
     ensure_runtime_directories "$CANONICAL_TARGET" || { log_error "Runtime directory bootstrap failed"; return 1; }
-    if [ ! -f "$CANONICAL_TARGET/custom.css" ]; then
-        : > "$CANONICAL_TARGET/custom.css"
-    fi
+    (cd "$CANONICAL_TARGET" && php deploy/migrate.php) || { log_error "Database migration failed after source replacement"; return 1; }
 
     chown -R www-data:www-data "$CANONICAL_TARGET"
     find "$CANONICAL_TARGET" -type d -exec chmod 755 {} \;
     find "$CANONICAL_TARGET" -type f -name '*.php' -exec chmod 644 {} \;
-    find "$CANONICAL_TARGET" -type f \( -name 'config.json' -o -name 'guest-links.json' -o -name 'database.sqlite' -o -name '.env' \) -exec chmod 600 {} \;
-    chmod 644 "$CANONICAL_TARGET/custom.css" 2>/dev/null || true
-    chmod 644 "$CANONICAL_TARGET/event.ics" 2>/dev/null || true
+    find "$CANONICAL_TARGET" -type f \( -name 'database.sqlite' -o -name '.env' \) -exec chmod 600 {} \;
 
     php_ver="$(get_php_fpm_socket | grep -oP 'php\d\.\d' | head -1 || true)"
     if [ -n "$php_ver" ]; then

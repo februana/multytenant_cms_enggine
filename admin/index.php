@@ -83,13 +83,13 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                     'music' => ALLOWED_AUDIO_TYPES,
                 ];
                 $folderMap = [
-                    'cover' => UPLOADS_COVER_DIR,
-                    'background' => UPLOADS_BACKGROUND_DIR,
-                    'gallery' => UPLOADS_GALLERY_DIR,
-                    'love_story' => UPLOADS_LOVE_STORY_DIR,
-                    'video' => UPLOADS_LOVE_STORY_DIR,
-                    'theme_assets' => UPLOADS_THEME_ASSETS_DIR . '/' . (preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['theme_preset'] ?? 'custom')) ?: 'custom'),
-                    'music' => UPLOADS_MUSIC_DIR,
+                    'cover' => tenant_upload_dir('cover'),
+                    'background' => tenant_upload_dir('background'),
+                    'gallery' => tenant_upload_dir('gallery'),
+                    'love_story' => tenant_upload_dir('love_story'),
+                    'video' => tenant_upload_dir('love_story'),
+                    'theme_assets' => tenant_upload_dir('theme_assets') . '/' . (preg_replace('/[^a-z0-9_-]/i', '', (string)($config['theme']['theme_preset'] ?? 'custom')) ?: 'custom'),
+                    'music' => tenant_upload_dir('music'),
                 ];
                 $destination = $folderMap[$targetFolder] ?? '';
                 $allowed = $allowedByFolder[$targetFolder] ?? [];
@@ -345,7 +345,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                             $fileKey = 'theme_opts_file_' . $schemaKey;
                             if (isset($_FILES[$fileKey]) && !empty($_FILES[$fileKey]['name'])) {
                                 $themeAssetPreset = preg_replace('/[^a-z0-9_-]/i', '', $presetKey) ?: 'custom';
-                                $themeAssetDir = UPLOADS_THEME_ASSETS_DIR . '/' . $themeAssetPreset;
+                                $themeAssetDir = tenant_upload_dir('theme_assets') . '/' . $themeAssetPreset;
                                 $previousThemeAsset = (string)($config['theme_options'][$presetKey][$schemaKey] ?? '');
                                 $uploadRes = upload_file($_FILES[$fileKey], $themeAssetDir, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'theme_asset', $presetKey);
                                 if (empty($uploadRes['error'])) {
@@ -639,7 +639,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 }
                 // Handle image upload
                 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                    $uploadResult = upload_file($_FILES['image'], UPLOADS_LOVE_STORY_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'story', $config['theme']['theme_preset'] ?? null);
+                    $uploadResult = upload_file($_FILES['image'], tenant_upload_dir('love_story'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'story', $config['theme']['theme_preset'] ?? null);
                     if ($uploadResult['success']) {
                         $uploadedPath = $uploadResult['path'];
                         $storyId = $_POST['story_id'] ?? ($_POST['new_story_temp_id'] ?? '');
@@ -662,7 +662,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_bride_photo':
                 if (!empty($_FILES['bride_photo']['name'])) {
-                    $result = upload_file($_FILES['bride_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'bride_photo', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['bride_photo'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'bride_photo', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -674,7 +674,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_groom_photo':
                 if (!empty($_FILES['groom_photo']['name'])) {
-                    $result = upload_file($_FILES['groom_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'groom_photo', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['groom_photo'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'groom_photo', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -686,7 +686,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_couple_photo':
                 if (!empty($_FILES['couple_photo']['name'])) {
-                    $result = upload_file($_FILES['couple_photo'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'couple_photo', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['couple_photo'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'couple_photo', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -769,7 +769,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_cover':
                 if (!empty($_FILES['cover_image']['name'])) {
-                    $result = upload_file($_FILES['cover_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'cover', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['cover_image'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'cover', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -781,7 +781,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_music':
                 if (!empty($_FILES['music_file']['name'])) {
-                    $result = upload_file($_FILES['music_file'], UPLOADS_MUSIC_DIR, ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE, 'music', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['music_file'], tenant_upload_dir('music'), ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE, 'music', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -793,7 +793,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_background':
                 if (!empty($_FILES['background_hero']['name'])) {
-                    $result = upload_file($_FILES['background_hero'], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'background', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['background_hero'], tenant_upload_dir('background'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'background', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -805,7 +805,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 for ($i = 1; $i <= 3; $i++) {
                     $field = 'background_section_' . $i;
                     if (!empty($_FILES[$field]['name'])) {
-                        $result = upload_file($_FILES[$field], UPLOADS_BACKGROUND_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'background', $config['theme']['theme_preset'] ?? null);
+                        $result = upload_file($_FILES[$field], tenant_upload_dir('background'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'background', $config['theme']['theme_preset'] ?? null);
                         if (!empty($result['error'])) {
                             $error = $result['error'];
                             break;
@@ -818,7 +818,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_qris':
                 if (!empty($_FILES['qris_image']['name'])) {
-                    $result = upload_file($_FILES['qris_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'qris_image', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['qris_image'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'qris_image', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -830,7 +830,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 break;
             case 'upload_og_image':
                 if (!empty($_FILES['og_image']['name'])) {
-                    $result = upload_file($_FILES['og_image'], UPLOADS_COVER_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'og_image', $config['theme']['theme_preset'] ?? null);
+                    $result = upload_file($_FILES['og_image'], tenant_upload_dir('cover'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'og_image', $config['theme']['theme_preset'] ?? null);
                     if (!empty($result['error'])) {
                         $error = $result['error'];
                     } else {
@@ -853,7 +853,7 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                             'error' => $files['error'][$index],
                             'size' => $files['size'][$index]
                         ];
-                        $result = upload_file($file, UPLOADS_GALLERY_DIR, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'gallery', $config['theme']['theme_preset'] ?? null);
+                        $result = upload_file($file, tenant_upload_dir('gallery'), ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, 'gallery', $config['theme']['theme_preset'] ?? null);
                         if (!empty($result['error'])) {
                             $error = $result['error'];
                             break;
@@ -1871,7 +1871,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                         <span style="color:var(--muted); margin-left:10px;"><?php echo escape_html($item['event_date']); ?></span>
                                                     <?php endif; ?>
                                                     <?php if (!empty($item['image'])): ?>
-                                                        <img src="uploads/love-story/<?php echo escape_html(basename($item['image'])); ?>" alt="Preview" style="width:60px; height:40px; object-fit:cover; border-radius:4px; margin-left:10px; vertical-align:middle;">
+                                                        <img src="<?php echo escape_html(public_path((string)$item['image'])); ?>" alt="Preview" style="width:60px; height:40px; object-fit:cover; border-radius:4px; margin-left:10px; vertical-align:middle;">
                                                     <?php endif; ?>
                                                     <span style="margin-left:10px; color:<?php echo !empty($item['enabled']) ? 'green' : 'red'; ?>;">
                                                         <?php echo !empty($item['enabled']) ? '✓ Aktif' : '✗ Nonaktif'; ?>
@@ -2535,7 +2535,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
             document.getElementById('cancelEditBtn').style.display = 'inline-block';
 
             if (image) {
-                document.getElementById('storyImagePreview').src = 'uploads/love-story/' + image;
+                document.getElementById('storyImagePreview').src = image ? ('/' + image.replace(/^\/+/, '')) : 'data:,';
                 document.getElementById('storyImagePreviewContainer').style.display = 'block';
             }
 

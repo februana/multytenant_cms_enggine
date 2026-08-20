@@ -16,7 +16,7 @@ if ($zip->open($tmpFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
     exit;
 }
 
-$files = [CONFIG_FILE, CUSTOM_CSS_FILE, EVENT_ICS_FILE, GUEST_LINKS_FILE];
+$files = [];
 if (is_readable(DB_PATH)) {
     $files[] = DB_PATH;
 }
@@ -26,7 +26,7 @@ foreach ($files as $file) {
     }
 }
 
-$dirs = [UPLOADS_DIR];
+$dirs = [ROOT_DIR . '/uploads'];
 foreach ($dirs as $dir) {
     if (!is_dir($dir)) {
         continue;

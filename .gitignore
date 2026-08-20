@@ -29,10 +29,16 @@ target/
 *.swp
 *.swo
 
-# Environment
+# Environment and runtime state
 .env
 .env.local
 *.env.*
+/database.sqlite
+/config.json
+/guest-links.json
+/custom.css
+/event.ics
+/uploads/
 
 # Editors
 .vscode/
