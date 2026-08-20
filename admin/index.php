@@ -19,15 +19,14 @@ if (isset($_GET['tab'])) {
     $activeTab = preg_replace('/[^a-z0-9_-]/i', '', $_GET['tab']);
 }
 
-if (isset($_GET['logout'])) {
-    $_SESSION = [];
-    if (ini_get('session.use_cookies')) {
-        $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', $params['secure'] ?? false, $params['httponly'] ?? false);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['logout'])) {
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error = 'Token CSRF tidak valid.';
+    } else {
+        destroy_admin_session();
+        header('Location: /admin');
+        exit;
     }
-    session_destroy();
-    header('Location: /admin');
-    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
@@ -53,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     }
 }
 
-if (session_admin_is_valid()) {
+$adminSessionValid = session_admin_is_valid();
+if ($adminSessionValid) {
     $_SESSION['last_activity'] = time();
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -65,9 +65,11 @@ function build_invitation_preview_url(array $config): string {
     return build_guest_invitation_url($siteUrl, 'Bapak Ahmad');
 }
 
-if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
         $error = 'Token CSRF tidak valid.';
+    } elseif (!admin_action_is_authorized((string)$_POST['action'], (string)($_POST['preset_key'] ?? ''))) {
+        $error = 'Aksi tidak diizinkan untuk akun atau preset aktif.';
     } else {
         $saveConfig = true;
         switch ($_POST['action']) {
@@ -762,18 +764,33 @@ if (session_admin_is_valid() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($
                 $config['site']['schema'] = trim((string)($_POST['schema_json'] ?? '')) ?: $config['site']['schema'];
                 break;
             case 'save_settings':
-                $config['site']['url'] = trim((string)($_POST['site_url'] ?? '')) ?: $config['site']['url'];
-                $requestedUsername = trim((string)($_POST['admin_username'] ?? '')) ?: $config['admin']['username'];
-                $config['admin']['username'] = $requestedUsername;
-                if ($requestedUsername !== (string)($_SESSION['username'] ?? '')) {
-                    if (!update_current_user_username($requestedUsername)) {
+                $requestedUsername = trim((string)($_POST['admin_username'] ?? '')) ?: (string)($_SESSION['username'] ?? '');
+                $newPassword = (string)($_POST['admin_password'] ?? '');
+                $credentialChange = $requestedUsername !== (string)($_SESSION['username'] ?? '') || $newPassword !== '';
+                if ($credentialChange && !verify_current_admin_password((string)($_POST['current_password'] ?? ''))) {
+                    $error = 'Masukkan password saat ini untuk mengubah credential admin.';
+                    break;
+                }
+                if ($credentialChange) {
+                    $usernameChanged = $requestedUsername !== (string)($_SESSION['username'] ?? '');
+                    if ($usernameChanged && !update_current_user_username($requestedUsername)) {
                         $error = 'Gagal memperbarui username akun.';
+                        break;
+                    }
+                    if ($newPassword !== '') {
+                        $passwordError = admin_password_policy_error($newPassword);
+                        if ($passwordError !== null) {
+                            $error = $passwordError;
+                            break;
+                        }
+                        set_admin_password($newPassword, $config);
+                        audit_log('admin_password_changed', (int)($_SESSION['tenant_id'] ?? 0), ['username_changed' => $usernameChanged]);
+                    } elseif ($usernameChanged) {
+                        audit_log('admin_username_changed', (int)($_SESSION['tenant_id'] ?? 0));
                     }
                 }
-                $newPassword = (string)($_POST['admin_password'] ?? '');
-                if ($newPassword !== '') {
-                    set_admin_password($newPassword, $config);
-                }
+                $config['site']['url'] = trim((string)($_POST['site_url'] ?? '')) ?: $config['site']['url'];
+                $config['admin']['username'] = (string)($_SESSION['username'] ?? $requestedUsername);
                 break;
             case 'upload_cover':
                 if (!empty($_FILES['cover_image']['name'])) {
@@ -1044,7 +1061,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 </head>
 <body>
     <div class="container">
-        <?php if (empty($_SESSION['admin'])): ?>
+        <?php if (!$adminSessionValid): ?>
             <div class="card" style="max-width:420px;margin:80px auto;">
                 <h2>Login Admin</h2>
                 <?php if ($error): ?><div class="error"><?php echo escape_html($error); ?></div><?php endif; ?>
@@ -1061,8 +1078,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                     <p style="margin:4px 0;color:#6b5b45;">Kelola undangan tanpa mengedit kode.</p>
                 </div>
                 <span><?= escape_html((string)($_SESSION['role'] ?? '')) ?> · <?= escape_html(request_host()) ?></span>
-                <?php if (is_super_admin()): ?><a href="/admin/super-admin.php">Super Admin</a><?php endif; ?>
-                <a href="?logout=1">Keluar</a>
+                <?php if (is_super_admin()): ?><a href="/admin/super-admin.php">Kelola Semua Tenant</a><?php endif; ?>
+                <form method="post" style="display:inline"><input type="hidden" name="csrf_token" value="<?= escape_html(get_csrf_token()) ?>"><button type="submit" name="logout" value="1" class="link-button">Keluar</button></form>
             </div>
             <?php if ($success): ?><div class="notice"><?php echo escape_html($success); ?></div><?php endif; ?>
             <?php if ($error): ?><div class="error"><?php echo escape_html($error); ?></div><?php endif; ?>
@@ -1092,7 +1109,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <?php if ($adminCapabilityEnabled('whatsapp')): ?><a href="#whatsapp">Kontak WhatsApp</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('guest_links')): ?><a href="#guest-links">Daftar Tamu</a><?php endif; ?>
                         <?php if ($adminCapabilityEnabled('rsvp')): ?><a href="#rsvp">Konfirmasi Kehadiran</a><?php endif; ?>
-                        <?php if ($globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan Data</a><?php endif; ?>
+                        <?php if (is_super_admin() && $globalAdminCapabilityEnabled('backup')): ?><a href="#backup">Cadangan Data</a><?php endif; ?>
                         <?php if ($globalAdminCapabilityEnabled('settings')): ?><a href="#settings">Pengaturan</a><?php endif; ?>
                     </nav>
                 </aside>
@@ -2466,7 +2483,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
 
                     <?php endif; ?>
 
-                    <?php if ($globalAdminCapabilityEnabled('backup')): ?>
+                    <?php if (is_super_admin() && $globalAdminCapabilityEnabled('backup')): ?>
 
                     <section id="backup" class="card panel-section">
                         <h2>Cadangan</h2>
@@ -2494,8 +2511,9 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                             <input type="hidden" name="action" value="save_settings">
                             <div class="form-grid">
                                 <div class="form-row"><label>URL Situs / Origin</label><input type="url" name="site_url" value="<?php echo escape_html($siteUrl); ?>"></div>
-                                <div class="form-row"><label>Nama Pengguna Admin</label><input type="text" name="admin_username" value="<?php echo escape_html($config['admin']['username']); ?>"></div>
-                                <div class="form-row"><label>Kata Sandi Admin</label><input type="password" name="admin_password" placeholder="Kosongkan jika tidak ingin mengganti"></div>
+                                <div class="form-row"><label>Nama Pengguna Admin</label><input type="text" name="admin_username" minlength="3" maxlength="64" value="<?php echo escape_html($config['admin']['username']); ?>"></div>
+                                <div class="form-row"><label>Password Saat Ini <small>(wajib jika credential diubah)</small></label><input type="password" name="current_password" autocomplete="current-password"></div>
+                                <div class="form-row"><label>Password Admin Baru <small>(minimal 12 karakter)</small></label><input type="password" name="admin_password" minlength="12" maxlength="128" autocomplete="new-password" placeholder="Kosongkan jika tidak ingin mengganti"></div>
                             </div>
                             <button type="submit">Simpan Pengaturan</button>
                         </form>

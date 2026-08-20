@@ -310,6 +310,102 @@ function is_super_admin(): bool {
     return current_user_role() === 'super_admin';
 }
 
+function current_admin_user_record(): ?array {
+    init_session();
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId < 1) return null;
+    try {
+        $db = tenant_database(true);
+        $stmt = $db->prepare('SELECT id, tenant_id, username, password_hash, role FROM users WHERE id = :user_id LIMIT 1');
+        if (!$stmt) { $db->close(); return null; }
+        $stmt->bindValue(':user_id', $userId, SQLITE3_INTEGER);
+        $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+        $db->close();
+        return is_array($row) ? $row : null;
+    } catch (Throwable $e) {
+        error_log('Current admin lookup failed: ' . $e->getMessage());
+        return null;
+    }
+}
+
+function verify_current_admin_password(string $password): bool {
+    if ($password === '') return false;
+    $user = current_admin_user_record();
+    return is_array($user) && password_verify($password, (string)($user['password_hash'] ?? ''));
+}
+
+function admin_password_policy_error(string $password): ?string {
+    if (strlen($password) < 12) return 'Password minimal 12 karakter.';
+    if (strlen($password) > 128) return 'Password maksimal 128 karakter.';
+    return null;
+}
+
+function rotate_admin_session(): void {
+    init_session();
+    session_regenerate_id(true);
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    $_SESSION['last_activity'] = time();
+}
+
+function destroy_admin_session(): void {
+    init_session();
+    $_SESSION = [];
+    if (ini_get('session.use_cookies') && !headers_sent()) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', $params['secure'] ?? false, $params['httponly'] ?? false);
+    }
+    session_destroy();
+}
+
+function admin_action_is_authorized(string $action, ?string $presetKey = null): bool {
+    if (!session_admin_is_valid()) return false;
+    $allowedActions = [
+        'upload_media_library', 'use_media_library_asset', 'rename_media_file',
+        'replace_media_file', 'set_media_default', 'delete_media_file',
+        'save_wedding', 'save_parents', 'save_schedule', 'save_location',
+        'save_gift', 'save_dresscode', 'save_whatsapp', 'save_theme_options',
+        'save_sections', 'save_custom_css', 'save_preset', 'save_theme',
+        'save_love_story', 'upload_bride_photo', 'upload_groom_photo',
+        'upload_couple_photo', 'save_guest_link', 'delete_guest_link',
+        'save_seo', 'save_settings', 'upload_cover', 'upload_music',
+        'upload_background', 'upload_qris', 'upload_og_image', 'upload_gallery',
+        'delete_gallery_item', 'set_gallery_cover', 'save_gallery_order'
+    ];
+    if (!in_array($action, $allowedActions, true)) return false;
+    if ($action === 'save_theme_options') {
+        $presetKey = trim((string)$presetKey);
+        if ($presetKey === 'custom') return true;
+        if ($presetKey === '' || !function_exists('theme_registry')) return false;
+        return array_key_exists($presetKey, theme_registry());
+    }
+    return true;
+}
+
+function audit_log(string $action, ?int $targetTenantId = null, array $metadata = []): void {
+    init_session();
+    $actorUserId = (int)($_SESSION['user_id'] ?? 0);
+    if ($actorUserId < 1 || $action === '') return;
+    $metadataJson = json_encode($metadata, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($metadataJson === false) $metadataJson = '{}';
+    try {
+        $db = tenant_database(false);
+        $stmt = $db->prepare('INSERT INTO audit_logs (actor_user_id, actor_role, actor_tenant_id, target_tenant_id, action, metadata_json, ip_address, created_at) VALUES (:actor_user_id, :actor_role, :actor_tenant_id, :target_tenant_id, :action, :metadata_json, :ip_address, CURRENT_TIMESTAMP)');
+        if (!$stmt) { $db->close(); return; }
+        $actorTenantId = (string)($_SESSION['role'] ?? '') === 'tenant_admin' ? (int)($_SESSION['tenant_id'] ?? 0) : null;
+        $stmt->bindValue(':actor_user_id', $actorUserId, SQLITE3_INTEGER);
+        $stmt->bindValue(':actor_role', (string)($_SESSION['role'] ?? ''), SQLITE3_TEXT);
+        if ($actorTenantId === null) $stmt->bindValue(':actor_tenant_id', null, SQLITE3_NULL); else $stmt->bindValue(':actor_tenant_id', $actorTenantId, SQLITE3_INTEGER);
+        if ($targetTenantId === null) $stmt->bindValue(':target_tenant_id', null, SQLITE3_NULL); else $stmt->bindValue(':target_tenant_id', $targetTenantId, SQLITE3_INTEGER);
+        $stmt->bindValue(':action', $action, SQLITE3_TEXT);
+        $stmt->bindValue(':metadata_json', $metadataJson, SQLITE3_TEXT);
+        $stmt->bindValue(':ip_address', substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64), SQLITE3_TEXT);
+        $stmt->execute();
+        $db->close();
+    } catch (Throwable $e) {
+        error_log('Audit log write failed: ' . $e->getMessage());
+    }
+}
+
 function tenant_query_scope(string $column = 'tenant_id'): array {
     if (is_super_admin()) return ['', []];
     return [" AND {$column} = :current_tenant_id", [':current_tenant_id' => current_tenant_id()]];
@@ -2205,6 +2301,7 @@ function authenticate_user(string $username, string $password): ?array {
         while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
             if (!password_verify($password, (string)($row['password_hash'] ?? ''))) continue;
             if (($row['role'] ?? '') === 'tenant_admin' && (int)$row['tenant_id'] !== (int)$tenant['id']) continue;
+            if (($row['role'] ?? '') === 'super_admin' && $row['tenant_id'] !== null) continue;
             $db->close();
             return ['id' => (int)$row['id'], 'tenant_id' => $row['tenant_id'] === null ? null : (int)$row['tenant_id'], 'username' => (string)$row['username'], 'role' => (string)$row['role'], 'domain' => (string)$tenant['domain']];
         }
@@ -2217,10 +2314,18 @@ function authenticate_user(string $username, string $password): ?array {
 
 function session_admin_is_valid(): bool {
     init_session();
-    if (empty($_SESSION['admin']) || !in_array((string)($_SESSION['role'] ?? ''), ['super_admin', 'tenant_admin'], true)) return false;
+    $sessionRole = (string)($_SESSION['role'] ?? '');
+    if (empty($_SESSION['admin']) || !in_array($sessionRole, ['super_admin', 'tenant_admin'], true)) return false;
     $tenant = current_tenant(false);
     if (!is_array($tenant)) return false;
-    if ((string)$_SESSION['role'] === 'tenant_admin' && (int)($_SESSION['tenant_id'] ?? 0) !== (int)$tenant['id']) return false;
+    $user = current_admin_user_record();
+    if (!is_array($user) || (int)($user['id'] ?? 0) !== (int)($_SESSION['user_id'] ?? 0)) return false;
+    if ((string)($user['role'] ?? '') !== $sessionRole || (string)($user['username'] ?? '') !== (string)($_SESSION['username'] ?? '')) return false;
+    if ($sessionRole === 'tenant_admin') {
+        if ((int)($user['tenant_id'] ?? 0) !== (int)$tenant['id'] || (int)($_SESSION['tenant_id'] ?? 0) !== (int)$tenant['id']) return false;
+    } elseif ($user['tenant_id'] !== null) {
+        return false;
+    }
     return true;
 }
 
@@ -2228,9 +2333,18 @@ function update_current_user_username(string $username): bool {
     init_session();
     $userId = (int)($_SESSION['user_id'] ?? 0);
     $username = trim($username);
-    if ($userId < 1 || $username === '') return false;
+    if ($userId < 1 || $username === '' || !preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{2,63}$/', $username)) return false;
+    $currentUser = current_admin_user_record();
+    if (!is_array($currentUser)) return false;
     try {
         $db = tenant_database(false);
+        $conflict = $db->prepare('SELECT 1 FROM users WHERE username = :username AND id <> :user_id AND ((tenant_id IS NULL AND :tenant_is_null = 1) OR tenant_id = :tenant_id) LIMIT 1');
+        $tenantId = $currentUser['tenant_id'] === null ? 0 : (int)$currentUser['tenant_id'];
+        $conflict->bindValue(':username', $username, SQLITE3_TEXT);
+        $conflict->bindValue(':user_id', $userId, SQLITE3_INTEGER);
+        $conflict->bindValue(':tenant_is_null', $currentUser['tenant_id'] === null ? 1 : 0, SQLITE3_INTEGER);
+        $conflict->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+        if ($conflict->execute()->fetchArray(SQLITE3_NUM)) { $db->close(); return false; }
         $stmt = $db->prepare('UPDATE users SET username = :username WHERE id = :user_id');
         $stmt->bindValue(':username', $username, SQLITE3_TEXT);
         $stmt->bindValue(':user_id', $userId, SQLITE3_INTEGER);
@@ -2247,11 +2361,10 @@ function update_current_user_username(string $username): bool {
 function update_current_user_password(string $password): bool {
     init_session();
     $userId = (int)($_SESSION['user_id'] ?? 0);
-    if ($userId < 1 || $password === '') return false;
+    if ($userId < 1 || $password === '' || admin_password_policy_error($password) !== null) return false;
     $hash = password_hash($password, PASSWORD_DEFAULT);
     $visiblePassword = encrypt_visible_password($password);
-    $isSuperAdmin = (string)($_SESSION['role'] ?? '') === 'super_admin';
-    if ($visiblePassword === '' && !$isSuperAdmin) return false;
+    if ($visiblePassword === '') return false;
     try {
         $db = tenant_database(false);
         $stmt = $db->prepare('UPDATE users SET password_hash = :password_hash, visible_password = :visible_password WHERE id = :user_id');
@@ -2260,6 +2373,7 @@ function update_current_user_password(string $password): bool {
         $stmt->bindValue(':user_id', $userId, SQLITE3_INTEGER);
         $ok = (bool)$stmt->execute();
         $db->close();
+        if ($ok) rotate_admin_session();
         return $ok;
     } catch (Throwable $e) {
         error_log('Admin password update failed: ' . $e->getMessage());

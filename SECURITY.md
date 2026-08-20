@@ -13,9 +13,11 @@ Do not disclose a suspected vulnerability in a public issue. Provide a private r
 | Public ingress | Cloudflare Tunnel is the only intended public ingress; Apache origin access must be restricted by network policy |
 | Tenant resolution | Normalize and validate `HTTP_HOST`, then resolve through `tenants.domain` |
 | Tenant identity | Never accept `tenant_id` from browser input for public or tenant-admin operations |
-| Session | Tenant Admin session tenant and domain must match the current host |
-| Cross-tenant administration | Limited to authenticated Super Admin operations |
-| Database | Shared SQLite schema with tenant-scoped rows and foreign-key relationships |
+| Session | Every admin request revalidates user ID, username, role, tenant scope, active hostname, and timeout against the database |
+| Credential changes | Current password plus CSRF is required; new passwords are 12–128 characters and session IDs rotate after change |
+| Cross-tenant administration | Limited to authenticated Super Admin operations with explicit current-password re-authentication |
+| Privileged menu | Backup/restore and security logs are rendered only for Super Admin; hidden UI is backed by endpoint authorization |
+| Database | Shared SQLite schema with tenant-scoped rows, foreign-key relationships, and `audit_logs` for privileged operations |
 | Runtime migration | `deploy/migrate.php` only; no runtime DDL |
 | Media | `uploads/tenant_<id>/` with path containment and `media.php` delivery authorization |
 | Secrets | `.env`, database, backups, and `UNDANGAN_PASSWORD_KEY` remain outside Git and are protected on disk |
@@ -32,7 +34,7 @@ Invalid direct-origin or missing-header requests return `403` and do not create 
 
 ## Database and authorization
 
-The application uses a shared SQLite database with tenant-aware `tenants`, `users`, `tenant_configs`, `guest_links`, and `tamu` tables. Public controllers derive the tenant ID from the current request context before executing reads or writes. Tenant Admin controllers additionally verify role, session tenant, and hostname. Super Admin has `tenant_id IS NULL` and is intentionally allowed to administer multiple tenants.
+The application uses a shared SQLite database with tenant-aware `tenants`, `users`, `tenant_configs`, `guest_links`, `tamu`, and `audit_logs` tables. Public controllers derive the tenant ID from the current request context before executing reads or writes. Tenant Admin controllers additionally verify role, session tenant, hostname, and the current database user record on every request. Super Admin has `tenant_id IS NULL` and is intentionally allowed to administer multiple tenants through the control-plane page. Admin mutations pass an explicit action allowlist; preset option mutations also validate the requested preset against the registry.
 
 Schema creation and upgrades happen through `database/migrations/001_multi_tenant.sql` and `deploy/migrate.php` during installation, update, or restore. Normal requests must not perform `CREATE TABLE`, `ALTER TABLE`, or legacy-file migration checks.
 
@@ -58,7 +60,7 @@ Login uses `users.password_hash` with `password_verify()`. The intentionally sup
 gcm:base64(iv)::base64(tag)::base64(ciphertext)
 ```
 
-`UNDANGAN_PASSWORD_KEY` must remain in protected server configuration, never in Git or HTML. Do not rotate it without a controlled migration or reset plan. Treat the ability of Super Admin to view Tenant Admin recovery passwords as a deliberate business exception that requires strict administrative access control.
+`UNDANGAN_PASSWORD_KEY` must remain in protected server configuration, never in Git or HTML. Do not rotate it without a controlled migration or reset plan. Tenant Admin recovery passwords are no longer rendered in the Super Admin tenant list. A newly generated tenant credential is shown only in the one-time success response; subsequent resets require the current Super Admin password and are recorded in `audit_logs`.
 
 ## Filesystem and deployment safety
 
@@ -74,6 +76,8 @@ Before release or deployment, run:
 php tools/validate.php
 php tools/repo_contract_audit.php
 php tools/dependency_graph_audit.php
+php tools/multitenant_auth_smoke.php
+bash -n deploy/audit.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 

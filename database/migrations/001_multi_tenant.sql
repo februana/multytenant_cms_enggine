@@ -25,6 +25,20 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users(tenant_id);
 
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    actor_role TEXT NOT NULL,
+    actor_tenant_id INTEGER NULL REFERENCES tenants(id) ON DELETE SET NULL,
+    target_tenant_id INTEGER NULL REFERENCES tenants(id) ON DELETE SET NULL,
+    action TEXT NOT NULL,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    ip_address TEXT NOT NULL DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_target_tenant ON audit_logs(target_tenant_id);
+
 CREATE TABLE IF NOT EXISTS tenant_configs (
     tenant_id INTEGER PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
     config_json TEXT NOT NULL,

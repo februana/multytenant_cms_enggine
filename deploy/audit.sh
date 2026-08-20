@@ -54,7 +54,7 @@ import os, sqlite3, sys
 path = os.environ['DB_PATH']
 con = sqlite3.connect(path)
 con.execute('PRAGMA foreign_keys = ON')
-required = {'tenants', 'users', 'tenant_configs', 'guest_links', 'tamu'}
+required = {'tenants', 'users', 'tenant_configs', 'guest_links', 'tamu', 'audit_logs'}
 actual = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
 missing = sorted(required - actual)
 if missing:
@@ -69,7 +69,14 @@ for table in ('users', 'tenant_configs', 'guest_links', 'tamu'):
     fk = {(row[3], row[2]) for row in con.execute(f'PRAGMA foreign_key_list("{table}")')}
     if ('tenant_id', 'tenants') not in fk:
         print(f'FAIL: {table}.tenant_id tidak memiliki FK ke tenants(id)'); sys.exit(12)
-print('PASS: foreign key tenant_id terpasang pada seluruh tabel tenant')
+audit_cols = {row[1] for row in con.execute('PRAGMA table_info("audit_logs")')}
+for col in ('actor_user_id', 'actor_role', 'target_tenant_id', 'action', 'metadata_json'):
+    if col not in audit_cols:
+        print(f'FAIL: audit_logs.{col} tidak ada'); sys.exit(14)
+audit_fks = {(row[3], row[2]) for row in con.execute('PRAGMA foreign_key_list("audit_logs")')}
+if ('actor_user_id', 'users') not in audit_fks or ('target_tenant_id', 'tenants') not in audit_fks:
+    print('FAIL: foreign key audit_logs tidak lengkap'); sys.exit(15)
+print('PASS: foreign key tenant_id dan audit log terpasang')
 if con.execute("SELECT COUNT(*) FROM tenants WHERE domain = ? AND status = 'active'", (os.environ.get('HOST_NAME', ''),)).fetchone()[0] == 0:
     print('WARN: host audit belum terdaftar sebagai tenant aktif')
 else:
