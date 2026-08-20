@@ -10,6 +10,21 @@ function input_capability_assert(bool $condition, string $message): void {
 }
 
 $base = config_defaults();
+$currentTenant = current_tenant(true);
+$tenantCoverDir = tenant_upload_dir('cover');
+$tenantLoveStoryDir = tenant_upload_dir('love_story');
+@mkdir($tenantCoverDir, 0755, true);
+@mkdir($tenantLoveStoryDir, 0755, true);
+$tenantQrisPath = static function (string $name) use ($tenantCoverDir): string {
+    $absolute = $tenantCoverDir . '/' . $name;
+    if (!is_file($absolute)) @touch($absolute);
+    return relative_path($absolute);
+};
+$tenantVideoPath = static function (string $name) use ($tenantLoveStoryDir): string {
+    $absolute = $tenantLoveStoryDir . '/' . $name;
+    if (!is_file($absolute)) @touch($absolute);
+    return relative_path($absolute);
+};
 $expectedRoles = [
     'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
     'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
@@ -61,18 +76,18 @@ $shared = [
 ];
 
 $renderProbes = [
-    'dewankl' => ['qris' => 'uploads/cover/dewana-qris.webp'],
-    'yami-buzzy' => ['qris' => 'uploads/cover/yami-qris.webp'],
-    'archak' => ['qris' => 'uploads/cover/archak-qris.webp'],
-    'parang' => ['qris' => 'uploads/cover/parang-qris.webp'],
-    'pawiwahan' => ['qris' => 'uploads/cover/pawiwahan-qris.webp'],
+    'dewankl' => ['qris' => $tenantQrisPath('dewana-qris.webp')],
+    'yami-buzzy' => ['qris' => $tenantQrisPath('yami-qris.webp')],
+    'archak' => ['qris' => $tenantQrisPath('archak-qris.webp')],
+    'parang' => ['qris' => $tenantQrisPath('parang-qris.webp')],
+    'pawiwahan' => ['qris' => $tenantQrisPath('pawiwahan-qris.webp')],
 ];
 foreach ($renderProbes as $preset => $probeData) {
     $config = $base;
     $config['theme']['mode'] = 'preset';
     $config['theme']['theme_preset'] = $preset;
     $config['gift']['qris_image'] = $probeData['qris'];
-    $config['media']['love_story_video'] = 'uploads/love-story/input-probe.mp4';
+    $config['media']['love_story_video'] = $tenantVideoPath('input-probe.mp4');
     if ($preset === 'yami-buzzy') {
         $config['dresscode'] = [
             'enabled' => true,
@@ -95,14 +110,15 @@ foreach ($renderProbes as $preset => $probeData) {
     if ($preset === 'dewankl') input_capability_assert(strpos($html, 'input-probe.mp4') !== false, 'DewanaKL video probe did not render');
 }
 
-$videoPath = 'uploads/love-story/reference-video.mp4';
+$videoPath = $tenantVideoPath('reference-video.mp4');
 $usageConfig = $base;
 $usageConfig['media']['love_story_video'] = $videoPath;
 input_capability_assert(in_array('Love Story Video', detect_media_usage($usageConfig, $videoPath), true), 'Video usage is not detected');
 $replaced = $usageConfig;
-replace_media_references($replaced, $videoPath, 'uploads/love-story/replaced-video.mp4');
-input_capability_assert(($replaced['media']['love_story_video'] ?? '') === 'uploads/love-story/replaced-video.mp4', 'Video reference replacement failed');
-clear_media_references($replaced, 'uploads/love-story/replaced-video.mp4');
+$replacedVideoPath = $tenantVideoPath('replaced-video.mp4');
+replace_media_references($replaced, $videoPath, $replacedVideoPath);
+input_capability_assert(($replaced['media']['love_story_video'] ?? '') === $replacedVideoPath, 'Video reference replacement failed');
+clear_media_references($replaced, $replacedVideoPath);
 input_capability_assert(($replaced['media']['love_story_video'] ?? '') === '', 'Video reference clearing failed');
 
 echo "PASS: user input capability contract, Admin paths, dresscode, QRIS, video renderer, and media lifecycle\n";

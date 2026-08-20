@@ -8,6 +8,14 @@ $assert = static function (bool $condition, string $message) use (&$failures): v
     if (!$condition) $failures++;
 };
 $base = config_defaults();
+current_tenant(true);
+$tenantBackgroundDir = tenant_upload_dir('background');
+@mkdir($tenantBackgroundDir, 0755, true);
+$tenantSectionPath = static function (string $preset) use ($tenantBackgroundDir): string {
+    $absolute = $tenantBackgroundDir . '/' . $preset . '-section.webp';
+    if (!is_file($absolute)) @touch($absolute);
+    return relative_path($absolute);
+};
 $bridge = [
     'dewankl' => ['heading_color' => '--cms-dewana-heading-color', 'text_color' => '--cms-dewana-text', 'muted_color' => '--cms-dewana-muted', 'link_color' => '--cms-dewana-link'],
     'rainier' => ['heading_color' => '--rainier-heading-color', 'text_color' => '--text', 'muted_color' => '--muted', 'link_color' => '--rainier-link'],
@@ -29,7 +37,7 @@ foreach (theme_builtin_preset_keys() as $preset) {
     $visuals['body_font'] = 'DM Sans, sans-serif';
     foreach ($schema as $key => $definition) {
         if (str_starts_with((string)$key, 'section_background_')) {
-            $visuals[$key] = 'uploads/background/' . $preset . '-section.webp';
+            $visuals[$key] = $tenantSectionPath($preset);
             break;
         }
     }

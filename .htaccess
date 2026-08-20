@@ -9,7 +9,12 @@ Options -Indexes
   Require all denied
 </FilesMatch>
 
-# Rewrite the homepage and index.html to the PHP-powered front page
+# Never serve tenant uploads as static files. Route them through media.php,
+# which resolves the current Host tenant and checks the requested path against
+# that tenant's media roots before reading the file.
 RewriteEngine On
+RewriteRule ^uploads/(.+)$ /media.php?path=uploads/$1 [END,NE]
+
+# Rewrite the homepage and index.html to the PHP-powered front page
 RewriteCond %{REQUEST_URI} ^/(|index\.html)$
 RewriteRule ^(index\.html)?$ /index.php [L]

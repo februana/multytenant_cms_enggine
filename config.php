@@ -2419,7 +2419,11 @@ function public_path(string $path): string {
     $path = trim($path);
     // Empty optional media must not become `/`, which would request the page itself.
     if ($path === '') return 'data:,';
-    return '/' . ltrim(str_replace('\\', '/', $path), '/');
+    $normalized = ltrim(str_replace('\\', '/', $path), '/');
+    // Every upload URL is tenant media. Do not let stale legacy paths or a
+    // malformed cross-tenant reference reach the rendered HTML.
+    if (str_starts_with($normalized, 'uploads/') && !media_path_is_safe_storage($normalized)) return 'data:,';
+    return '/' . $normalized;
 }
 
 function relative_path(string $path): string {

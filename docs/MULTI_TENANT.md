@@ -75,7 +75,9 @@ Untuk instalasi normal, jangan menjalankan potongan SQL secara manual terhadap d
 
 Setiap request publik melewati `current_tenant(true)`. Fungsi tersebut menormalisasi `HTTP_HOST`, menghapus port, menurunkan huruf hostname, kemudian mencari domain aktif pada tabel `tenants`. Jika domain belum terdaftar, auto-provisioning hanya berjalan ketika flag aktif dan request lolos validasi `REMOTE_ADDR` localhost serta header Cloudflare yang diperlukan; akses langsung atau header yang hilang menerima `403` tanpa membuat record. Domain suspended atau hostname invalid menerima `404`. Nilai `tenant_id` yang dihasilkan server dipakai untuk membaca konfigurasi, RSVP, dan filesystem media. Tidak ada endpoint publik yang menerima `tenant_id` dari client.
 
-> **Invariant keamanan:** `tenant_id` untuk operasi tenant admin selalu berasal dari session yang telah diverifikasi dan dibandingkan dengan `Host` header pada request yang sedang berjalan.
+URL upload `/uploads/...` tidak boleh dilayani sebagai file statis. `.htaccess` mengarahkannya ke [`media.php`](../media.php), yang kembali melakukan resolusi `Host`, memeriksa bahwa path berada di namespace media tenant aktif, memverifikasi MIME image/audio/video, lalu mengirim file. Dengan demikian URL media Tenant A menghasilkan `404` ketika diminta pada Host Tenant B, sekalipun nama file diketahui.
+
+> **Invariant keamanan:** `tenant_id` untuk operasi tenant admin selalu berasal dari session yang telah diverifikasi dan dibandingkan dengan `Host` header pada request yang sedang berjalan. Header Cloudflare bukan bukti tunnel yang berdiri sendiri; origin Apache harus dibatasi pada akses lokal daemon `cloudflared` melalui firewall, host policy, atau jaringan private.
 
 | Request | Pemeriksaan | Operasi data |
 |---|---|---|
@@ -143,7 +145,7 @@ Audit memeriksa konfigurasi Apache, port 80, keberadaan `AllowOverride All`, ket
 
 Backup database berisi seluruh tenant dan karena itu dibatasi untuk Super Admin. Tenant admin tidak boleh diberi akses ke endpoint backup/restore. Database SQLite sebaiknya disimpan di lokasi yang tidak dapat diunduh publik dan `.env` harus memiliki mode `600`.
 
-Arsitektur ini sengaja tidak memakai Docker per tenant, PM2 cluster, atau banyak proses aplikasi. Apache tetap menjadi satu entry point, SQLite tetap shared, dan pemisahan dilakukan melalui foreign key, session authorization, query scope di server, serta namespace filesystem `uploads/tenant_<id>/` untuk cover, gallery, background, audio, video, dan theme assets.
+Arsitektur ini sengaja tidak memakai Docker per tenant, PM2 cluster, atau banyak proses aplikasi. Apache tetap menjadi satu entry point, SQLite tetap shared, dan pemisahan dilakukan melalui foreign key, session authorization, query scope di server, tenant-authorized media delivery, serta namespace filesystem `uploads/tenant_<id>/` untuk cover, gallery, background, audio, video, dan theme assets. Karena request yang berasal dari localhost dapat memalsukan header pada level proses lokal, operator wajib memastikan Apache tidak menerima koneksi origin langsung dari internet; validasi `REMOTE_ADDR` dan header Cloudflare hanya merupakan defense-in-depth terhadap konfigurasi ingress yang salah.
 
 ## Password management dan auto-provisioning
 

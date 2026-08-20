@@ -43,4 +43,15 @@ preg_match_all('/\bid=["\']([^"\']+)["\']/', $auditCustom, $customIds);
 $customCounts = array_count_values($customIds[1] ?? []);
 foreach ($customCounts as $id => $count) if ($count > 1) { audit_message('FAIL', "custom duplicate DOM id={$id} count={$count}"); $failed = 1; }
 audit_message('PASS', 'custom renderer duplicate ID check completed');
+$htaccess = (string)@file_get_contents(dirname(__DIR__) . '/.htaccess');
+$mediaEndpoint = (string)@file_get_contents(dirname(__DIR__) . '/media.php');
+if (!preg_match('/RewriteRule\\s+\\^uploads\/\\(\.\+\\).*media\\.php\\?path=uploads\/\\$1/', $htaccess)) {
+    audit_message('FAIL', 'Apache uploads requests are not routed through the tenant media endpoint');
+    $failed = 1;
+}
+if (!str_contains($mediaEndpoint, 'current_tenant(true)') || !str_contains($mediaEndpoint, 'media_path_is_safe_storage')) {
+    audit_message('FAIL', 'Tenant media endpoint is missing Host resolution or storage containment validation');
+    $failed = 1;
+}
+if ($failed === 0) audit_message('PASS', 'tenant-authorized media delivery contract checked');
 exit($failed);
