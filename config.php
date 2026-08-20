@@ -162,6 +162,80 @@ function tenant_from_domain(SQLite3 $db, string $domain, bool $activeOnly = true
     return is_array($row) ? $row : null;
 }
 
+function tenant_auto_provision_enabled(): bool {
+    $configured = getenv('UNDANGAN_AUTO_PROVISION');
+    return $configured === false || trim((string)$configured) !== '0';
+}
+
+function cloudflare_tunnel_ingress_is_validated(): bool {
+    $remoteAddress = trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    if (!in_array($remoteAddress, ['127.0.0.1', '::1'], true)) return false;
+    $cfRay = trim((string)($_SERVER['HTTP_CF_RAY'] ?? ''));
+    $cfConnectingIp = trim((string)($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+    return $cfRay !== '' && filter_var($cfConnectingIp, FILTER_VALIDATE_IP) !== false;
+}
+
+function provision_tenant_from_validated_ingress(string $domain): ?array {
+    $domain = normalize_tenant_domain($domain);
+    if (!is_valid_tenant_domain($domain) || !cloudflare_tunnel_ingress_is_validated()) return null;
+    $db = null;
+    $createdDirectories = [];
+    try {
+        $db = tenant_database(false);
+        $db->exec('BEGIN IMMEDIATE');
+        $existing = tenant_from_domain($db, $domain, false);
+        if (is_array($existing)) {
+            $db->exec('ROLLBACK');
+            return ($existing['status'] ?? '') === 'active' ? $existing : null;
+        }
+        $insertTenant = $db->prepare("INSERT INTO tenants (domain, status) VALUES (:domain, 'active')");
+        if (!$insertTenant) throw new RuntimeException('Tenant provisioning prepare failed.');
+        $insertTenant->bindValue(':domain', $domain, SQLITE3_TEXT);
+        if (!$insertTenant->execute()) throw new RuntimeException('Tenant provisioning insert failed.');
+        $tenantId = (int)$db->lastInsertRowID();
+        if ($tenantId < 1) throw new RuntimeException('Tenant provisioning returned an invalid tenant ID.');
+        ensure_tenant_seed($db, $tenantId);
+        $tenantPassword = generate_random_password(12);
+        $visiblePassword = encrypt_visible_password($tenantPassword);
+        if ($visiblePassword === '') throw new RuntimeException('UNDANGAN_PASSWORD_KEY is required for tenant provisioning.');
+        $tenantAdmin = $db->prepare("INSERT INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (:tenant_id, :username, :password_hash, :visible_password, 'tenant_admin')");
+        if (!$tenantAdmin) throw new RuntimeException('Tenant Admin provisioning prepare failed.');
+        $tenantAdmin->bindValue(':tenant_id', $tenantId, SQLITE3_INTEGER);
+        $tenantAdmin->bindValue(':username', tenant_admin_username_for_domain($domain), SQLITE3_TEXT);
+        $tenantAdmin->bindValue(':password_hash', password_hash($tenantPassword, PASSWORD_DEFAULT), SQLITE3_TEXT);
+        $tenantAdmin->bindValue(':visible_password', $visiblePassword, SQLITE3_TEXT);
+        if (!$tenantAdmin->execute()) throw new RuntimeException('Tenant Admin provisioning insert failed.');
+        $tenant = ['id' => $tenantId, 'domain' => $domain, 'status' => 'active', 'created_at' => gmdate('Y-m-d H:i:s')];
+        $tenantRoot = tenant_upload_root($tenant);
+        if ($tenantRoot === '') throw new RuntimeException('Tenant upload root initialization returned an empty path.');
+        if (!is_dir($tenantRoot)) $createdDirectories[] = $tenantRoot;
+        foreach (['cover', 'music', 'gallery', 'background', 'love_story', 'theme_assets'] as $kind) {
+            $directory = tenant_upload_dir($kind, $tenant);
+            if ($directory === '') throw new RuntimeException('Tenant media directory initialization returned an empty path.');
+            if (!is_dir($directory)) {
+                if (!@mkdir($directory, 0755, true) && !is_dir($directory)) {
+                    throw new RuntimeException('Tenant media directory initialization failed: ' . $directory);
+                }
+                $createdDirectories[] = $directory;
+            }
+        }
+        if (!is_dir($tenantRoot)) throw new RuntimeException('Tenant upload root initialization failed for tenant ' . $tenantId);
+        if (!$db->exec('COMMIT')) throw new RuntimeException('Tenant provisioning commit failed.');
+        $db->close();
+        $db = null;
+        error_log('Auto-provisioned tenant ' . $domain . ' with Tenant Admin ' . tenant_admin_username_for_domain($domain) . '.');
+        return $tenant;
+    } catch (Throwable $e) {
+        if ($db instanceof SQLite3) @$db->exec('ROLLBACK');
+        if ($db instanceof SQLite3) @$db->close();
+        foreach (array_reverse($createdDirectories) as $directory) {
+            if (is_dir($directory)) @rmdir($directory);
+        }
+        error_log('Tenant auto-provisioning failed: ' . $e->getMessage());
+        return null;
+    }
+}
+
 function current_tenant(bool $required = true): ?array {
     static $resolved = false;
     static $tenant = null;
@@ -170,11 +244,24 @@ function current_tenant(bool $required = true): ?array {
         return $tenant;
     }
     $resolved = true;
+    $domain = request_host();
     try {
         $db = tenant_database(true);
-        $domain = request_host();
         $tenant = tenant_from_domain($db, $domain, true);
-        $db->close();
+        if ($tenant === null && tenant_auto_provision_enabled()) {
+            $knownTenant = tenant_from_domain($db, $domain, false);
+            if ($knownTenant === null) {
+                if (!cloudflare_tunnel_ingress_is_validated()) {
+                    $db->close();
+                    $db = null;
+                    tenant_http_error(403, 'Auto-provisioning hanya diizinkan melalui Cloudflare Tunnel lokal.');
+                }
+                $db->close();
+                $db = null;
+                $tenant = is_valid_tenant_domain($domain) ? provision_tenant_from_validated_ingress($domain) : null;
+            }
+        }
+        if ($db instanceof SQLite3) $db->close();
     } catch (Throwable $e) {
         if (is_file(DB_PATH)) error_log('Tenant resolution failed: ' . $e->getMessage());
         $tenant = null;

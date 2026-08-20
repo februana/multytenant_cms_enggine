@@ -9,7 +9,7 @@ Repository ini adalah aplikasi **PHP tanpa framework aplikasi besar** dengan eks
 | Area | Implementasi | Status setelah refaktor |
 |---|---|---|
 | Web runtime | Apache + PHP module, satu site catch-all | Semua hostname masuk ke satu DocumentRoot |
-| Tenant resolution | Normalisasi `HTTP_HOST` lalu lookup `tenants.domain` | Domain tidak terdaftar atau `suspended` menerima 404 |
+| Tenant resolution | Normalisasi `HTTP_HOST`, lookup `tenants.domain`, validated auto-provisioning | Unknown direct-origin or non-Cloudflare ingress receives 403; suspended/invalid domains receive 404 |
 | Database | SQLite shared database/shared schema | Semua tabel bisnis tenant-aware memiliki `tenant_id` |
 | Konfigurasi | `tenant_configs.config_json` | Setiap tenant memiliki konfigurasi terpisah |
 | Guest links | `guest_links` | Diisolasi dengan `tenant_id` |
@@ -73,7 +73,7 @@ Untuk instalasi normal, jangan menjalankan potongan SQL secara manual terhadap d
 
 ## Alur routing dan isolasi
 
-Setiap request publik melewati `current_tenant(true)`. Fungsi tersebut menormalisasi `HTTP_HOST`, menghapus port, menurunkan huruf hostname, kemudian mencari domain aktif pada tabel `tenants`. Domain tidak terdaftar atau suspended langsung menerima 404 dan tidak membuat record apa pun. Nilai `tenant_id` yang dihasilkan server dipakai untuk membaca konfigurasi, RSVP, dan filesystem media. Tidak ada endpoint publik yang menerima `tenant_id` dari client.
+Setiap request publik melewati `current_tenant(true)`. Fungsi tersebut menormalisasi `HTTP_HOST`, menghapus port, menurunkan huruf hostname, kemudian mencari domain aktif pada tabel `tenants`. Jika domain belum terdaftar, auto-provisioning hanya berjalan ketika flag aktif dan request lolos validasi `REMOTE_ADDR` localhost serta header Cloudflare yang diperlukan; akses langsung atau header yang hilang menerima `403` tanpa membuat record. Domain suspended atau hostname invalid menerima `404`. Nilai `tenant_id` yang dihasilkan server dipakai untuk membaca konfigurasi, RSVP, dan filesystem media. Tidak ada endpoint publik yang menerima `tenant_id` dari client.
 
 > **Invariant keamanan:** `tenant_id` untuk operasi tenant admin selalu berasal dari session yang telah diverifikasi dan dibandingkan dengan `Host` header pada request yang sedang berjalan.
 
@@ -137,7 +137,7 @@ Audit memeriksa konfigurasi Apache, port 80, keberadaan `AllowOverride All`, ket
 | Rewrite | `AllowOverride All` dan `mod_rewrite` aktif |
 | Schema | `tenants`, `users`, `tenant_configs`, `guest_links`, `tamu` tersedia |
 | Foreign keys | `tenant_id` pada tabel bisnis mengarah ke `tenants(id)` |
-| Host routing | Host aktif menghasilkan HTTP 200/301/302, host tidak terdaftar menghasilkan 404 |
+| Host routing | Host aktif menghasilkan HTTP 200/301/302; unknown validated Tunnel host may auto-provision; invalid ingress returns 403/404 |
 
 ## Catatan operasional
 
@@ -149,14 +149,14 @@ Arsitektur ini sengaja tidak memakai Docker per tenant, PM2 cluster, atau banyak
 
 Installer tidak lagi meminta password Super Admin. Setelah domain utama dan username ditentukan, installer membuat password acak menggunakan `openssl rand -hex 16`, membuat `UNDANGAN_PASSWORD_KEY` acak menggunakan `openssl rand -hex 32`, menyimpan hash password ke database, dan mencetak password plaintext tepat pada ringkasan akhir instalasi. Password tersebut harus disimpan oleh operator sebelum terminal ditutup.
 
-Hostname baru **tidak** diprovision otomatis saat menerima request publik. Super Admin harus membuka Dashboard dan menambahkan domain secara manual; dashboard membuat tenant, `tenant_configs`, dan akun `tenant_admin`. Password Tenant Admin dibuat acak atau dapat ditentukan manual melalui dashboard, lalu hanya dapat dilihat/reset oleh Super Admin.
+Hostname baru hanya dapat diprovision otomatis melalui request yang lolos validasi ingress Cloudflare Tunnel: `REMOTE_ADDR` harus `127.0.0.1` atau `::1`, dan header `CF-RAY` serta `CF-Connecting-IP` harus tersedia dengan alamat IP Cloudflare yang valid. Request langsung ke origin atau request tanpa header Cloudflare menerima `403` dan tidak menambah tenant. Auto-provisioning dikendalikan oleh `UNDANGAN_AUTO_PROVISION` dan aktif secara default pada environment baru; operator dapat menonaktifkannya dengan nilai `0`. Provisioning membuat tenant, `tenant_configs`, akun `tenant_admin`, dan namespace `uploads/tenant_<id>/`. Super Admin tetap dapat menambahkan domain secara manual melalui Dashboard dan melihat/reset password tenant.
 
 Kolom password menggunakan dua representasi dengan tujuan berbeda:
 
 | Kolom | Fungsi |
 |---|---|
 | `password_hash` | Verifikasi login dengan `password_verify()`; bersifat one-way |
-| `visible_password` | Ciphertext AES-256-CBC yang dapat didekripsi hanya dengan `UNDANGAN_PASSWORD_KEY` pada server |
+| `visible_password` | Ciphertext AES-256-GCM yang dapat didekripsi hanya dengan `UNDANGAN_PASSWORD_KEY` pada server |
 
 Ketika akun yang sedang login mengganti password melalui **Pengaturan CMS**, controller memperbarui kedua kolom tersebut. Dashboard Super Admin mengambil ciphertext Tenant Admin dan mendekripsinya hanya pada server-side rendering. Plaintext tidak disimpan langsung pada database.
 

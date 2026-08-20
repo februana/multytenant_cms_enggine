@@ -15,16 +15,16 @@ Password plaintext dicetak satu kali pada ringkasan akhir instalasi. Simpan pass
 
 ## Auto-provisioning domain baru
 
-Ketika `HTTP_HOST` belum ditemukan pada `tenants`, middleware memvalidasi FQDN dan, jika `UNDANGAN_AUTO_PROVISION` bukan `0`, membuat tenant aktif. Middleware kemudian membuat konfigurasi tenant dan satu akun `tenant_admin` berusername `admin` dengan password acak delapan karakter. Password tersebut tidak dikirimkan ke browser publik; Super Admin dapat melihatnya melalui `/admin/super-admin.php`.
+Ketika `HTTP_HOST` belum ditemukan pada `tenants`, middleware hanya dapat melakukan auto-provisioning apabila `UNDANGAN_AUTO_PROVISION` aktif, `REMOTE_ADDR` adalah `127.0.0.1` atau `::1`, dan request membawa header `CF-RAY` serta alamat IP valid pada `CF-Connecting-IP`. Kombinasi ini memastikan request berasal dari daemon Cloudflare Tunnel lokal, bukan akses langsung ke origin dengan Host header arbitrer. Request yang gagal pada validasi ingress menerima `403` dan tidak membuat row tenant.
 
-Auto-provisioning hanya aman jika origin server tidak dapat diakses langsung dengan Host header arbitrer. Batasi origin melalui Cloudflare Tunnel/firewall dan pertahankan `UNDANGAN_AUTO_PROVISION=1` hanya pada deployment yang memang menggunakan jalur tersebut.
+Setelah validasi berhasil, middleware membuat tenant aktif, menanam konfigurasi awal sepenuhnya ke `tenant_configs`, membuat akun `tenant_admin` dengan username berbasis domain dan password acak, menyimpan hash login serta ciphertext `visible_password`, lalu membuat namespace media `uploads/tenant_{id}/` beserta subdirektorinya. Password tidak dikirimkan ke browser publik; Super Admin dapat melihatnya melalui `/admin/super-admin.php`.
 
 ## Two-column password strategy
 
 | Kolom | Isi | Penggunaan |
 |---|---|---|
 | `password_hash` | Hash one-way dari `password_hash()` | Login melalui `password_verify()` |
-| `visible_password` | Ciphertext AES-256-CBC dengan IV acak | Didekripsi server-side untuk Super Admin |
+| `visible_password` | Ciphertext AES-256-GCM dengan IV dan authentication tag | Didekripsi server-side untuk Super Admin |
 
 Kunci berasal dari `UNDANGAN_PASSWORD_KEY`. Kunci tidak boleh disimpan di dalam database, repository, atau output HTML. Jangan mengganti key pada deployment aktif tanpa migrasi ciphertext karena password lama tidak dapat didekripsi setelah key berubah.
 
