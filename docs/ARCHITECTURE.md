@@ -30,6 +30,8 @@ tenant media namespace → media.php
 
 One application instance serves multiple tenants through one shared SQLite database and one shared schema. The server derives tenant identity from the normalized `Host` header. Public and Tenant Admin controllers do not trust a browser-supplied `tenant_id`.
 
+The `UNDANGAN_MAIN_DOMAIN` entered during installation is inserted as the initial normal tenant and is resolved through the same `tenants.domain` mechanism as every other tenant. It renders a normal public wedding invitation, owns tenant-scoped configuration/media/data, and supports its own Tenant Admin. Super Admin is not a hostname-based application: the initial Super Admin is stored as a role-based user with `role = super_admin` and `tenant_id IS NULL`, and its authorization permits cross-tenant management from an authenticated session. Access to the primary hostname alone never grants Super Admin privileges.
+
 ## Tenant and request ownership
 
 | Concern | Current source of truth | Enforcement boundary |

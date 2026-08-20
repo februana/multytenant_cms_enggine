@@ -2,6 +2,8 @@
 
 This document defines the current architecture of [`multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine): a Multi-Tenant CMS Engine with the complete Wedding Invitation CMS application, running as **one Apache instance, one PHP application instance, one shared SQLite database, one shared schema, and multiple invitation tenants**. Public traffic is expected to enter through a Cloudflare Tunnel. Tenants are resolved from the HTTP `Host` header rather than from URL parameters or browser input.
 
+The `UNDANGAN_MAIN_DOMAIN` collected during installation is the initial normal tenant domain. It has its own public invitation, tenant-scoped configuration/media/data, and Tenant Admin. The Super Admin account is a separate role-based user (`role = super_admin`, `tenant_id IS NULL`) whose authenticated authorization allows cross-tenant management. The primary hostname is never used as proof of Super Admin privileges, and no second Super Admin frontend or control-plane tenant is created.
+
 ## Architecture contract
 
 | Area | Current implementation |

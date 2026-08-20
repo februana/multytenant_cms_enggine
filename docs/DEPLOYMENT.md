@@ -43,7 +43,7 @@ sudo /var/www/wedding/deploy/health-check.sh
 
 The installer copies application code without `--delete`, preserves an existing `.env`, initializes the runtime directory contract, creates the database file when needed, and runs [`deploy/migrate.php`](../deploy/migrate.php). The migration is the only schema bootstrap path; normal requests do not execute `CREATE TABLE` or `ALTER TABLE` operations.
 
-The first installation requires `UNDANGAN_MAIN_DOMAIN` or prompts for a valid FQDN. It creates a Super Admin password and `UNDANGAN_PASSWORD_KEY`, prints them once, and stores only the password hash plus AES-256-GCM ciphertext in the database. Save the credentials before closing the terminal.
+The first installation requires `UNDANGAN_MAIN_DOMAIN` or prompts for a valid FQDN. This primary domain is inserted as the initial **normal tenant**: it has its own public invitation, tenant-scoped configuration/media/data, and Tenant Admin behavior. The installer also creates the separate Super Admin account with `role = super_admin` and `tenant_id IS NULL`; that role, not the hostname, authorizes cross-tenant management. It creates a Super Admin password and `UNDANGAN_PASSWORD_KEY`, prints them once, and stores only the password hash plus AES-256-GCM ciphertext in the database. Save the credentials before closing the terminal.
 
 The installer is deliberately non-destructive. It does **not** run `apt-get`, `a2dissite`, `a2ensite`, `a2enmod`, `systemctl`, or equivalent commands, and it never writes to `/etc/apache2` or `/etc/nginx`. It prints the path to [`deploy/apache-catchall.conf.example`](../deploy/apache-catchall.conf.example); review and apply that Apache configuration through the operator's own change procedure, then reload Apache separately.
 

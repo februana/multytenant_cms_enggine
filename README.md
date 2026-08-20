@@ -32,6 +32,8 @@ Tenant-authorized media.php delivery
 
 One application instance serves multiple tenants through one shared SQLite database and one shared schema. Tenant identity comes from the normalized request hostname, never from a client-supplied `tenant_id`. Tenant configuration is stored in tenant-scoped database rows, media is stored below `uploads/tenant_<id>/`, and public media delivery passes through `media.php`.
 
+The `UNDANGAN_MAIN_DOMAIN` entered during installation identifies the initial normal tenant. That tenant has its own public wedding invitation, tenant-scoped configuration, media, data, and Tenant Admin behavior exactly like any other tenant. The separately stored Super Admin account is identified by its database role (`role = super_admin`, `tenant_id IS NULL`) and may manage all tenants; the primary hostname is not proof of Super Admin authorization.
+
 Known active tenants continue to the renderer. Unknown hosts fail closed unless validated Cloudflare defense-in-depth conditions allow transactional auto-provisioning. Suspended or invalid tenants return `404`; invalid direct-origin or missing-header provisioning attempts return `403` without creating a tenant. Tenant Admin operates only within its resolved tenant context, while Super Admin is the explicit cross-tenant administrative role.
 
 ## Configuration and persistence
