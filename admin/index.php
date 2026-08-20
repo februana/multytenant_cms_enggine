@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         $_SESSION['tenant_domain'] = $identity['domain'];
         $_SESSION['last_activity'] = time();
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        header('Location: /admin');
+        header('Location: ' . ($identity['role'] === 'super_admin' ? '/admin/super-admin.php' : '/admin'));
         exit;
     }
 }
