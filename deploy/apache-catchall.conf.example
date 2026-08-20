@@ -1,20 +1,40 @@
 # Review this sample before installing it.
-# This file is intentionally not copied into /etc/apache2 by install.sh.
-# Replace /var/www/wedding if CANONICAL_TARGET differs.
+# Reference only. deploy/install.sh renders the authoritative template with the
+# detected PHP-FPM socket and configured main domain. Replace example.com and
+# /var/www/wedding when applying manually.
 
 <VirtualHost *:80>
+    ServerName example.com
+    ServerAlias *.example.com
     DocumentRoot /var/www/wedding
+    DirectoryIndex index.php
 
     <Directory /var/www/wedding>
-        Options FollowSymLinks
+        Options -Indexes +FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
 
-    <FilesMatch "\.php$">
-        SetHandler application/x-httpd-php
+    <DirectoryMatch "/var/www/wedding/(?:app|deploy|backups|webdav|\\.git)/">
+        Require all denied
+    </DirectoryMatch>
+
+    <Directory /var/www/wedding/uploads>
+        Options -Indexes +FollowSymLinks
+        Require all granted
+        <FilesMatch "\.php$">
+            Require all denied
+        </FilesMatch>
+    </Directory>
+
+    <FilesMatch "^(?:\\.env(?:\\.example)?|database\\.sqlite|config\\.json|guest-links\\.json)$">
+        Require all denied
     </FilesMatch>
 
-    ErrorLog ${APACHE_LOG_DIR}/wedding-error.log
-    CustomLog ${APACHE_LOG_DIR}/wedding-access.log combined
+    <FilesMatch "\.php$">
+        SetHandler "proxy:unix:/run/php/php8.3-fpm.sock|fcgi://localhost/"
+    </FilesMatch>
+
+    ErrorLog ${APACHE_LOG_DIR}/multytenant-error.log
+    CustomLog ${APACHE_LOG_DIR}/multytenant-access.log combined
 </VirtualHost>

@@ -2,7 +2,8 @@
 declare(strict_types=1);
 ob_start();
 
-require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/tools/tenant_smoke_fixture.php';
+$tenantSmoke = tenant_smoke_bootstrap('pawiwahan');
 require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 
@@ -25,7 +26,10 @@ $config['parents']['bride_mother'] = 'Ibu Sari';
 $config['parents']['groom_father'] = 'Bapak Wayan';
 $config['parents']['groom_mother'] = 'Ibu Made';
 $config['schedule']['countdown_target'] = '2030-09-09T10:00:00+07:00';
-$config['theme_visuals']['pawiwahan']['hero_background'] = 'uploads/background/pawiwahan-hero.webp';
+$heroPath = 'uploads/tenant_' . $tenantSmoke['tenant_id'] . '/background/pawiwahan-hero.webp';
+@mkdir(dirname(__DIR__) . '/uploads/tenant_' . $tenantSmoke['tenant_id'] . '/background', 0755, true);
+@touch(dirname(__DIR__) . '/' . $heroPath);
+$config['theme_visuals']['pawiwahan']['hero_background'] = $heroPath;
 
 $contract = theme_contract_for('pawiwahan');
 pawiwahan_assert(($contract['source_revision'] ?? '') === '957b3f3', 'contract records the audited Pawiwahan source revision');
@@ -62,7 +66,7 @@ pawiwahan_assert(str_contains($html, 'English opening') && str_contains($html, '
 pawiwahan_assert(str_contains($html, 'OM Swastiastu') && str_contains($html, 'Salam Pawiwahan'), 'admin-configured Pawiwahan greeting preserves Unicode and line breaks');
 pawiwahan_assert(str_contains($html, 'id="pawiwahan-gift-trigger"') && str_contains($html, 'id="pawiwahanGiftModal"'), 'Pawiwahan Angpau trigger and modal use stable CMS IDs');
 pawiwahan_assert(str_contains($html, 'data-copy=') && str_contains($html, 'id="pawiwahanGiftCopyStatus"'), 'Pawiwahan account copy control remains connected to status feedback');
-pawiwahan_assert(str_contains($html, 'uploads/background/pawiwahan-hero.webp'), 'CMS visual hero override wins over source fallback');
+pawiwahan_assert(str_contains($html, $heroPath), 'CMS visual hero override wins over source fallback');
 pawiwahan_assert(str_contains($html, 'id="carouselExampleCaptions"') && str_contains($html, 'id="welcomeModal"'), 'source carousel and welcome modal boundaries remain intact');
 pawiwahan_assert(str_contains($html, 'id="hitungmundur"') && str_contains($html, 'data-pawiwahan-countdown-target'), 'countdown data bridge reaches the source lifecycle');
 $adapterScript = file_get_contents($root . '/themes/pawiwahan/script.js');

@@ -18,18 +18,18 @@ The installer and Docker entrypoint create shared runtime roots, while tenant-sp
 
 ### Prerequisites
 
-Install or provision the following outside this repository before running the installer:
+Run the installer from a trusted checkout as root. It follows the Apache + PHP-FPM flow from the foundation repository and can install the required native packages through Debian/Ubuntu `apt-get`. The package set includes Apache, Apache utilities, PHP-FPM, PHP CLI, SQLite3, GD, mbstring, zip, Composer, ImageMagick, rsync, OpenSSL, CA certificates, curl, and unzip. `SKIP_APACHE_PACKAGE_INSTALL=1` is available only when the operator has already provisioned and verified those requirements.
 
 | Requirement | Purpose |
 |---|---|
-| PHP with `SQLite3` and `openssl` extensions | Application runtime and database/encryption support |
-| `php` CLI | Standalone migration and validation |
-| `openssl` | Initial credential and encryption-key generation |
-| `rsync` | Preferred non-destructive synchronization; `cp` fallback is available |
-| Apache with `mod_rewrite` and `AllowOverride All` | Catch-all HTTP serving and `/uploads/` media rewrite |
+| Debian/Ubuntu `apt-get` and `systemd` | Native package and service lifecycle used by the source installer |
+| Apache with `mod_rewrite`, `headers`, `expires`, and `proxy_fcgi` | Catch-all HTTP serving, security headers, caching, and PHP-FPM |
+| PHP-FPM socket under `/run/php` | FastCGI application execution without mod_php |
+| Composer | Installation of the locked `chillerlan/php-qrcode` dependency graph |
+| ImageMagick CLI and PHP GD | Foundation media conversion with GD fallback |
 | Cloudflare Tunnel (`cloudflared`) | Intended public ingress |
 
-The installer does not install packages or modify the operating system. It checks required dependencies and stops with an actionable error when PHP, SQLite3, or OpenSSL is missing.
+The installer does not use `rsync --delete`, does not delete `.env`, the database, tenant media, backups, or WebDAV data, and does not create a per-tenant VirtualHost. It renders one catch-all vhost and leaves tenant resolution to the application.
 
 ### Install the application
 
@@ -41,22 +41,29 @@ sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The installer copies application code without `--delete`, preserves an existing `.env`, initializes the runtime directory contract, creates the database file when needed, and runs [`deploy/migrate.php`](../deploy/migrate.php). The migration is the only schema bootstrap path; normal requests do not execute `CREATE TABLE` or `ALTER TABLE` operations. Use `PRIMARY_TENANT_ADMIN_PASS` only as an optional protected process environment override; otherwise a secure random password is generated and printed once when the primary admin is first created.
+The installer copies application code without `--delete`, preserves an existing `.env`, initializes the runtime directory contract, runs `composer install --no-dev --prefer-dist --optimize-autoloader`, creates the database file when needed, and runs [`deploy/migrate.php`](../deploy/migrate.php). The migration is the only schema bootstrap path; normal requests do not execute `CREATE TABLE` or `ALTER TABLE` operations. Use `PRIMARY_TENANT_ADMIN_PASS` only as an optional protected process environment override; otherwise a secure random password is generated and printed once when the primary admin is first created.
 
 The first installation requires `UNDANGAN_MAIN_DOMAIN` or prompts for a valid FQDN. This primary domain is inserted as the initial **normal tenant**: it has its own public invitation, tenant-scoped configuration/media/data, and Tenant Admin behavior. The migration then creates a separate Primary Tenant Admin with `role = tenant_admin` and that tenant ID, followed by the global Super Admin account with `role = super_admin` and `tenant_id IS NULL`. The Super Admin role, not the hostname, authorizes cross-tenant management. Newly generated Primary Tenant Admin credentials and Super Admin credentials are printed once; repeat migrations preserve existing accounts and passwords.
 
-The installer is deliberately non-destructive. It does **not** run `apt-get`, `a2dissite`, `a2ensite`, `a2enmod`, `systemctl`, or equivalent commands, and it never writes to `/etc/apache2` or `/etc/nginx`. It prints the path to [`deploy/apache-catchall.conf.example`](../deploy/apache-catchall.conf.example); review and apply that Apache configuration through the operator's own change procedure, then reload Apache separately.
+The installer is deliberately non-destructive toward application data, but it does configure the native Apache service as part of the foundation deployment contract. It enables `rewrite`, `headers`, `expires`, `proxy_fcgi`, and `setenvif`, starts the detected PHP-FPM service, renders `/etc/apache2/sites-available/wedding.conf` from [`deploy/templates/apache/apache-http.conf.template`](../deploy/templates/apache/apache-http.conf.template), runs `apache2ctl configtest`, enables the site, disables `000-default.conf`, and only then starts or reloads Apache. Set `APACHE_ENABLE_SSL=1` to use the existing SSL template with an already-provisioned certificate. Set `APACHE_WEBDAV_ENABLE=1` to provision `/etc/apache2/.davpasswd` and the optional source WebDAV modules. The installer does not introduce Nginx or create per-tenant VirtualHosts.
 
-A suitable catch-all must use the deployed application as its document root and permit overrides:
+The generated catch-all uses the deployed application as its document root and permits overrides. Its PHP handler is the source foundation's PHP-FPM Unix-socket handler, and its `/uploads/` boundary remains application-owned through `media.php`:
 
 ```apache
 <VirtualHost *:80>
+    ServerName example.com
+    ServerAlias *.example.com
     DocumentRoot /var/www/wedding
 
     <Directory /var/www/wedding>
+        Options -Indexes +FollowSymLinks
         AllowOverride All
         Require all granted
     </Directory>
+
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/run/php/php8.3-fpm.sock|fcgi://localhost/"
+    </FilesMatch>
 </VirtualHost>
 ```
 

@@ -1,4 +1,6 @@
 <?php
+require_once dirname(__DIR__) . '/tools/tenant_smoke_fixture.php';
+$tenantSmoke = tenant_smoke_bootstrap('visual-contract');
 require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 ob_start();
@@ -9,6 +11,7 @@ function visual_assert(bool $condition, string $message): void {
 }
 
 $base = config_defaults();
+$visualBackgroundPrefix = 'uploads/tenant_' . $tenantSmoke['tenant_id'] . '/background/';
 $expected = [
     'custom' => ['accent_color', 'background_color', 'paper_color', 'text_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'hero_title_scale', 'section_background_home', 'section_background_event', 'section_background_story', 'section_background_gallery', 'section_background_location', 'section_background_gift', 'section_background_rsvp'],
     'dewankl' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_bride', 'section_background_wedding_date', 'section_background_gallery', 'section_background_love_gift', 'section_background_comment', 'hero_overlay'],
@@ -41,16 +44,21 @@ $stored = $base;
 $stored['theme']['mode'] = 'preset';
 $stored['theme']['theme_preset'] = 'shubh-vivah';
 $stored['theme_visuals'] = array_replace($base['theme_visuals'] ?? [], [
-    'shubh-vivah' => ['accent_color' => '#123456', 'hero_background' => 'uploads/background/hero.jpg', 'ornament_left' => 'uploads/background/left.webp'],
-    'yami-buzzy' => ['accent_color' => '#654321', 'hero_background' => 'uploads/background/yami.jpg', 'welcome_background' => 'uploads/background/welcome.webp'],
+    'shubh-vivah' => ['accent_color' => '#123456', 'hero_background' => $visualBackgroundPrefix . 'hero.webp', 'ornament_left' => $visualBackgroundPrefix . 'left.webp'],
+    'yami-buzzy' => ['accent_color' => '#654321', 'hero_background' => $visualBackgroundPrefix . 'yami.webp', 'welcome_background' => $visualBackgroundPrefix . 'welcome.webp'],
     'rainier' => ['accent_color' => '#abcdef'],
 ]);
+foreach (['hero.webp', 'left.webp', 'yami.webp', 'welcome.webp', 'in-use.webp', 'custom-gallery.webp', 'gallery-bg.webp'] as $visualAsset) {
+    $visualAbsolute = ROOT_DIR . '/' . $visualBackgroundPrefix . $visualAsset;
+    @mkdir(dirname($visualAbsolute), 0755, true);
+    @copy(dirname(__DIR__) . '/themes/parang/assets/parang-pattern.webp', $visualAbsolute);
+}
 $shubhValues = theme_visual_values_for_config($stored, 'shubh-vivah');
 $yamiValues = theme_visual_values_for_config($stored, 'yami-buzzy');
 visual_assert($shubhValues['accent_color'] === '#123456', 'Shubh Vivah visual override persists');
-visual_assert($shubhValues['hero_background'] === 'uploads/background/hero.jpg', 'Shubh Vivah hero media path persists unchanged');
+visual_assert($shubhValues['hero_background'] === $visualBackgroundPrefix . 'hero.webp', 'Shubh Vivah hero media path persists unchanged');
 visual_assert($yamiValues['accent_color'] === '#654321', 'Yami Buzzy visual override persists independently');
-visual_assert($yamiValues['welcome_background'] === 'uploads/background/welcome.webp', 'Yami Buzzy welcome media path persists independently');
+visual_assert($yamiValues['welcome_background'] === $visualBackgroundPrefix . 'welcome.webp', 'Yami Buzzy welcome media path persists independently');
 visual_assert($shubhValues['accent_color'] !== $yamiValues['accent_color'], 'New preset visual overrides do not leak across presets');
 
 $switchBase = $stored;
@@ -64,8 +72,8 @@ foreach (['custom', 'dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shub
     $switchBase = $switched;
 }
 $usageProbe = $switchBase;
-$usageProbe['theme_visuals']['shubh-vivah']['hero_background'] = 'uploads/background/in-use.png';
-visual_assert(in_array('Visual Shubh-vivah / hero background', detect_media_usage($usageProbe, 'uploads/background/in-use.png'), true), 'Media usage detects Shubh Vivah visual references');
+$usageProbe['theme_visuals']['shubh-vivah']['hero_background'] = $visualBackgroundPrefix . 'in-use.webp';
+visual_assert(in_array('Visual Shubh-vivah / hero background', detect_media_usage($usageProbe, $visualBackgroundPrefix . 'in-use.webp'), true), 'Media usage detects Shubh Vivah visual references');
 $resetProbe = $switchBase;
 reset_theme_visual_overrides($resetProbe, 'shubh-vivah');
 visual_assert(($resetProbe['theme_visuals']['shubh-vivah'] ?? null) === [], 'Reset clears only Shubh Vivah overrides');
@@ -84,14 +92,14 @@ $shared = [
 ];
 $shubhHtml = render_theme_layout($stored, $shared);
 visual_assert(str_contains($shubhHtml, '--shubh-accent:#123456'), 'Shubh Vivah render includes stored accent bridge');
-visual_assert(str_contains($shubhHtml, 'uploads/background/hero.jpg'), 'Shubh Vivah render includes stored hero media bridge');
+visual_assert(str_contains($shubhHtml, $visualBackgroundPrefix . 'hero.webp'), 'Shubh Vivah render includes stored hero media bridge');
 visual_assert(str_contains($shubhHtml, 'Buka Undangan'), 'Shubh Vivah render includes localized CTA');
 visual_assert(str_contains($shubhHtml, 'id="shubh-home"') && str_contains($shubhHtml, 'id="shubh-event"'), 'Shubh Vivah render preserves source card and event flow');
 $yamiConfig = $stored;
 $yamiConfig['theme']['theme_preset'] = 'yami-buzzy';
 $yamiHtml = render_theme_layout($yamiConfig, array_replace($shared, ['presetKey' => 'yami-buzzy']));
 visual_assert(str_contains($yamiHtml, '--yami-accent:#654321'), 'Yami Buzzy render includes stored accent bridge');
-visual_assert(str_contains($yamiHtml, 'uploads/background/welcome.webp'), 'Yami Buzzy render includes stored welcome media bridge');
+visual_assert(str_contains($yamiHtml, $visualBackgroundPrefix . 'welcome.webp'), 'Yami Buzzy render includes stored welcome media bridge');
 visual_assert(str_contains($yamiHtml, 'id="yami-welcome-modal"') && str_contains($yamiHtml, 'id="yami-story"'), 'Yami Buzzy render preserves modal and story flow');
 visual_assert(str_contains($yamiHtml, '--yami-story-bg') && str_contains($yamiHtml, '--yami-closing-bg'), 'Yami Buzzy render exposes section background variables');
 
@@ -99,22 +107,22 @@ foreach (['dewankl', 'rainier', 'archak', 'parang', 'pawiwahan', 'shubh-vivah', 
     $probe = $base;
     $probe['theme']['mode'] = 'preset';
     $probe['theme']['theme_preset'] = $preset;
-    $probe['theme_visuals'][$preset] = array_replace(theme_visual_values_for_config($probe, $preset), ['accent_color' => '#123456', 'hero_background' => 'uploads/background/hero.jpg']);
+    $probe['theme_visuals'][$preset] = array_replace(theme_visual_values_for_config($probe, $preset), ['accent_color' => '#123456', 'hero_background' => $visualBackgroundPrefix . 'hero.webp']);
     $presetShared = array_replace($shared, ['presetKey' => $preset]);
     $presetHtml = render_theme_layout($probe, $presetShared);
     visual_assert(strpos($presetHtml, '#123456') !== false, ucfirst($preset) . ' render includes the stored accent bridge');
-    visual_assert(strpos($presetHtml, 'uploads/background/hero.jpg') !== false, ucfirst($preset) . ' render includes the stored hero media bridge');
+    visual_assert(strpos($presetHtml, $visualBackgroundPrefix . 'hero.webp') !== false, ucfirst($preset) . ' render includes the stored hero media bridge');
 }
 
 $customRenderConfig = $base;
 $customRenderConfig['theme']['mode'] = 'custom';
 $customRenderConfig['theme']['theme_preset'] = 'custom';
-$customRenderConfig['theme_visuals']['custom']['section_background_gallery'] = 'uploads/background/custom-gallery.webp';
+$customRenderConfig['theme_visuals']['custom']['section_background_gallery'] = $visualBackgroundPrefix . 'custom-gallery.webp';
 $customRenderHtml = render_theme_layout($customRenderConfig, $shared);
 visual_assert(str_contains($customRenderHtml, 'custom-gallery.webp') && str_contains($customRenderHtml, 'id="galeri"'), 'Custom renderer exposes gallery background capability');
 $dewanaConfig = $stored;
 $dewanaConfig['theme']['theme_preset'] = 'dewankl';
-$dewanaConfig['theme_visuals']['dewankl']['section_background_gallery'] = 'uploads/background/gallery-bg.webp';
+$dewanaConfig['theme_visuals']['dewankl']['section_background_gallery'] = $visualBackgroundPrefix . 'gallery-bg.webp';
 $dewanaHtml = render_theme_layout($dewanaConfig, array_replace($shared, ['presetKey' => 'dewankl']));
 visual_assert(str_contains($dewanaHtml, 'id="gallery"') && str_contains($dewanaHtml, 'section_background_gallery'), 'DewanaKL render exposes gallery background capability');
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
@@ -139,9 +147,11 @@ foreach (['shubh-vivah', 'yami-buzzy', 'rainier', 'archak', 'dewankl'] as $switc
     visual_assert(($customState['site']['url'] ?? '') === 'https://global.example.test', "global site URL survives Custom -> {$switchPreset}");
 }
 
-$customProbe = ROOT_DIR . '/uploads/background/visual-contract-probe-' . getmypid() . '.webp';
+$customProbeRelative = $visualBackgroundPrefix . 'visual-contract-probe-' . getmypid() . '.webp';
+$customProbe = ROOT_DIR . '/' . $customProbeRelative;
+@mkdir(dirname($customProbe), 0755, true);
 copy(dirname(__DIR__) . '/themes/parang/assets/parang-pattern.webp', $customProbe);
-visual_assert(theme_visual_image_reference_is_canonical('uploads/background/visual-contract-probe-' . getmypid() . '.webp'), 'Canonical existing WebP is accepted for visual image reference');
+visual_assert(theme_visual_image_reference_is_canonical($customProbeRelative), 'Canonical existing WebP is accepted for visual image reference');
 unlink($customProbe);
 
 echo "PASS: visual contract smoke test\n";

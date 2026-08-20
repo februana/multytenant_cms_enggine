@@ -1,4 +1,6 @@
 <?php
+require_once dirname(__DIR__) . '/tools/tenant_smoke_fixture.php';
+tenant_smoke_bootstrap('visual-color-font');
 require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 
