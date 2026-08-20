@@ -89,6 +89,8 @@ sudo bash deploy/install.sh
 
 The installer is non-destructive and application-only. It does not run `apt-get`, `a2dissite`, `a2ensite`, `a2enmod`, `systemctl`, or equivalent commands, and it does not write `/etc/apache2` or `/etc/nginx`. Operators review and apply [`deploy/apache-catchall.conf.example`](../deploy/apache-catchall.conf.example) separately.
 
+On a fresh installation, `deploy/migrate.php` creates the primary normal tenant, provisions one `tenant_admin` for that tenant, and provisions the separate global `super_admin`. It creates the primary Tenant Admin only when one does not already exist, prints newly generated credentials once, and preserves existing usernames, password hashes, and encrypted recovery values on repeat runs. Other tenants keep their existing manual or validated auto-provisioning behavior.
+
 The Apache catch-all must resemble:
 
 ```apache

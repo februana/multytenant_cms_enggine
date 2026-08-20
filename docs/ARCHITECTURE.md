@@ -77,7 +77,7 @@ The resolver normalizes the request hostname, removes a port, validates the host
 
 These headers are **not cryptographic proof of Cloudflare provenance**. A local process can forge request metadata, so the origin must still be protected from direct Internet access through firewall, private-network, or equivalent network controls. A failed unknown-host validation returns `403` without creating a tenant. A suspended or invalid tenant returns `404`.
 
-Validated provisioning creates the tenant, its initial `tenant_configs`, tenant-admin credentials, and `uploads/tenant_<id>/` directories transactionally. Super Admin can also create or activate tenants manually through `/admin/super-admin.php`.
+Validated provisioning creates a tenant, its initial `tenant_configs`, tenant-admin credentials, and `uploads/tenant_<id>/` directories transactionally. The deployment migration additionally ensures that a fresh installation has one Primary Tenant Admin attached to the primary tenant and one separate Super Admin with `role = super_admin` and `tenant_id IS NULL`; repeat migrations do not regenerate an existing Primary Tenant Admin password. Super Admin can also create or activate other tenants manually through `/admin/super-admin.php`.
 
 ## Media isolation and delivery
 

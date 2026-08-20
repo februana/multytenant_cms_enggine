@@ -4,7 +4,7 @@
 
 `deploy/install.sh` does not ask the operator to enter a reusable production password. On a new installation it generates a random Super Admin password with OpenSSL and a random `UNDANGAN_PASSWORD_KEY`, writes the environment values with restrictive permissions, stores the login hash in `users.password_hash`, and prints the initial credentials once in the final installer summary.
 
-Save the password and key before closing the installation terminal. An existing `.env` is preserved by the non-destructive installer; it is not silently replaced with new credentials.
+Save the Super Admin password and key before closing the installation terminal. A fresh installation also creates a separate Primary Tenant Admin for the tenant identified by `UNDANGAN_MAIN_DOMAIN`. Its username and password are printed once by `deploy/migrate.php` when that account is first created; the account has `role = tenant_admin` and the primary tenant ID. A repeat migration preserves the existing account and does not print or regenerate its password. An existing `.env` is preserved by the non-destructive installer; it is not silently replaced with new credentials.
 
 ## Validated auto-provisioning
 
@@ -37,7 +37,7 @@ gcm:base64(iv)::base64(tag)::base64(ciphertext)
 
 `UNDANGAN_PASSWORD_KEY` is the server-side encryption key. It must not be committed, exposed in HTML, or stored in the database. Protect the deployed `.env` with mode `600`. Do not replace the key on an active installation without migrating or resetting the ciphertext that depends on it.
 
-When a Tenant Admin changes its password, the application updates both representations for that user. The login path uses the one-way hash, while Super Admin recovery decrypts the ciphertext only on the server.
+When a Tenant Admin changes its password, the application updates both representations for that user. This includes the Primary Tenant Admin. The login path uses the one-way hash, while Super Admin recovery decrypts the ciphertext only on the server.
 
 ## Reset operations
 

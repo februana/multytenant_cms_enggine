@@ -127,10 +127,12 @@ try {
         }
     }
 
+    $primaryTenantAdminCredentials = null;
+    $legacy = $config['admin'] ?? [];
+    $superAdminUsername = trim((string)(getenv('ADMIN_USER') ?: ($legacy['username'] ?? 'admin'))) ?: 'admin';
     $superCount = (int)$db->querySingle("SELECT COUNT(*) FROM users WHERE role = 'super_admin' AND tenant_id IS NULL");
     if ($superCount === 0) {
-        $legacy = $config['admin'] ?? [];
-        $username = trim((string)(getenv('ADMIN_USER') ?: ($legacy['username'] ?? 'admin'))) ?: 'admin';
+        $username = $superAdminUsername;
         $plain = (string)(getenv('ADMIN_PASS') ?: '');
         $hash = trim((string)($legacy['password_hash'] ?? ''));
         if ($hash === '' && $plain !== '') $hash = password_hash($plain, PASSWORD_DEFAULT);
@@ -144,10 +146,35 @@ try {
         if (!$user->execute()) throw new RuntimeException('Unable to seed Super Admin.');
     }
 
+    $primaryAdminLookup = $db->prepare("SELECT id FROM users WHERE tenant_id = :tenant_id AND role = 'tenant_admin' ORDER BY id LIMIT 1");
+    $primaryAdminLookup->bindValue(':tenant_id', $defaultTenantId, SQLITE3_INTEGER);
+    $primaryAdminExists = $primaryAdminLookup->execute()->fetchArray(SQLITE3_ASSOC);
+    if (!is_array($primaryAdminExists)) {
+        $primaryAdminUsername = tenant_admin_username_for_domain($mainDomain);
+        if ($primaryAdminUsername === $superAdminUsername) $primaryAdminUsername = substr($primaryAdminUsername . '-tenant', 0, 64);
+        $primaryAdminPassword = trim((string)(getenv('PRIMARY_TENANT_ADMIN_PASS') ?: ''));
+        if ($primaryAdminPassword === '') $primaryAdminPassword = generate_random_password(12);
+        $primaryAdminHash = password_hash($primaryAdminPassword, PASSWORD_DEFAULT);
+        $primaryAdminVisiblePassword = encrypt_visible_password($primaryAdminPassword);
+        if ($primaryAdminVisiblePassword === '' || !str_starts_with($primaryAdminVisiblePassword, 'gcm:')) throw new RuntimeException('Unable to encrypt Primary Tenant Admin password with AES-256-GCM.');
+        $primaryAdminInsert = $db->prepare("INSERT INTO users (tenant_id, username, password_hash, visible_password, role) VALUES (:tenant_id, :username, :hash, :visible, 'tenant_admin')");
+        $primaryAdminInsert->bindValue(':tenant_id', $defaultTenantId, SQLITE3_INTEGER);
+        $primaryAdminInsert->bindValue(':username', $primaryAdminUsername, SQLITE3_TEXT);
+        $primaryAdminInsert->bindValue(':hash', $primaryAdminHash, SQLITE3_TEXT);
+        $primaryAdminInsert->bindValue(':visible', $primaryAdminVisiblePassword, SQLITE3_TEXT);
+        if (!$primaryAdminInsert->execute()) throw new RuntimeException('Unable to seed Primary Tenant Admin.');
+        $primaryTenantAdminCredentials = ['username' => $primaryAdminUsername, 'password' => $primaryAdminPassword];
+    }
+
     migration_upgrade_visible_passwords($db);
     $db->exec('COMMIT');
     $db->close();
     echo "Database migration completed.\n";
+    if (is_array($primaryTenantAdminCredentials)) {
+        echo "Primary Tenant Admin username : {$primaryTenantAdminCredentials['username']}\n";
+        echo "Primary Tenant Admin password : {$primaryTenantAdminCredentials['password']}\n";
+        echo "Simpan credential Primary Tenant Admin sebelum terminal ditutup.\n";
+    }
 } catch (Throwable $e) {
     if (isset($db) && $db instanceof SQLite3) @$db->exec('ROLLBACK');
     fwrite(STDERR, 'Database migration failed: ' . $e->getMessage() . "\n");

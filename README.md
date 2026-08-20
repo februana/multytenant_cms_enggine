@@ -159,7 +159,7 @@ sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for installation, update, backup, restore, Cloudflare onboarding, Docker packaging, and health-check procedures.
+On a fresh installation, the migration provisions three distinct outcomes: the primary normal tenant, its tenant-scoped Primary Tenant Admin, and the global role-based Super Admin. The installer/migration output prints newly generated credentials once; repeat installations preserve existing credentials. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`docs/PASSWORD_MANAGEMENT.md`](docs/PASSWORD_MANAGEMENT.md) for the credential flow.
 
 ## Cloudflare auto-provisioning
 
