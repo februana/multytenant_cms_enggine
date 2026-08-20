@@ -32,7 +32,7 @@ check_dependencies() {
     printf '%s\n' 'Installer tidak mengubah package manager. Install dependency tersebut melalui prosedur server Anda, lalu jalankan ulang.' >&2
     exit 2
   fi
-  php -m 2>/dev/null | grep -Fxq 'SQLite3' || { echo 'ERROR: PHP extension SQLite3 tidak tersedia.' >&2; exit 2; }
+  php -r 'exit(extension_loaded("sqlite3") && extension_loaded("pdo_sqlite") ? 0 : 1);' || { echo 'ERROR: PHP extensions sqlite3 dan pdo_sqlite tidak tersedia.' >&2; exit 2; }
   php -m 2>/dev/null | grep -Fxq 'openssl' || { echo 'ERROR: PHP extension openssl tidak tersedia.' >&2; exit 2; }
   if ! command -v rsync >/dev/null 2>&1; then
     echo 'WARNING: rsync tidak tersedia; installer menggunakan cp tanpa menghapus file existing.' >&2
