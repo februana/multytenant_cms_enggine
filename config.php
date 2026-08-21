@@ -863,6 +863,30 @@ function theme_font_catalog(string $type = 'all'): array {
     };
 }
 
+function theme_font_weight_catalog(): array {
+    return [
+        '300' => 'Ringan (300)',
+        '400' => 'Normal (400)',
+        '500' => 'Sedang (500)',
+        '600' => 'Semi Tebal (600)',
+        '700' => 'Tebal (700)',
+        '800' => 'Ekstra Tebal (800)',
+        '900' => 'Hitam (900)',
+    ];
+}
+
+function theme_font_size_catalog(): array {
+    return [
+        '14px' => '14px — Ringkas',
+        '15px' => '15px — Kecil',
+        '16px' => '16px — Normal',
+        '17px' => '17px — Nyaman',
+        '18px' => '18px — Besar',
+        '19px' => '19px — Ekstra besar',
+        '20px' => '20px — Sangat besar',
+    ];
+}
+
 function theme_google_font_stylesheet_url(): string {
     return 'https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&family=Beau+Rivage&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600;6..96,700&family=Caveat:wght@400;600;700&family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Josefin+Sans:wght@400;500;600;700&family=Lato:wght@400;700&family=Libre+Baskerville:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Lora:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Merriweather+Sans:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;700&family=Nunito+Sans:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Playfair+Display:opsz,wght@5..120,400;5..120,500;5..120,600;5..120,700&family=Quicksand:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Sacramento&family=Tangerine:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap';
 }
@@ -885,8 +909,14 @@ function theme_common_visual_capabilities(array $values, array $existing = []): 
         'text_color' => ['type' => 'color', 'label' => 'Warna Teks', 'description' => 'Warna teks utama, isi undangan, dan detail acara.', 'default' => $text, 'palette' => $palette],
         'muted_color' => ['type' => 'color', 'label' => 'Warna Teks Sekunder', 'description' => 'Warna teks kecil, label, keterangan, dan metadata.', 'default' => $muted, 'palette' => $palette],
         'link_color' => ['type' => 'color', 'label' => 'Warna Tautan', 'description' => 'Warna tautan, navigasi, dan aksi sekunder.', 'default' => $link, 'palette' => $palette],
+        'palette_secondary_color' => ['type' => 'color', 'label' => 'Warna Kedua Palet', 'description' => 'Warna kedua untuk perpaduan gradient dan aksen berkilau.', 'default' => $default('secondary_color', '#f0c2a1'), 'palette' => $palette],
+        'palette_mix' => ['type' => 'range', 'label' => 'Perbandingan Campuran Warna', 'description' => 'Atur dominasi warna kedua dalam perpaduan gradient.', 'default' => '50', 'min' => '20', 'max' => '80', 'step' => '5'],
+        'palette_saturation' => ['type' => 'range', 'label' => 'Saturasi Warna', 'description' => 'Naikkan saturasi untuk warna yang lebih hidup dan berkilau.', 'default' => '1.10', 'min' => '0.75', 'max' => '1.60', 'step' => '0.05'],
         'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font untuk nama pasangan, heading, dan judul section.', 'default' => $default('heading_font', 'Playfair Display, serif'), 'options' => theme_font_catalog('heading')],
-        'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font mudah dibaca untuk isi undangan, jadwal, navigasi, dan form.', 'default' => $default('body_font', 'Lato, sans-serif'), 'options' => theme_font_catalog('body')]
+        'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font mudah dibaca untuk isi undangan, jadwal, navigasi, dan form.', 'default' => $default('body_font', 'Lato, sans-serif'), 'options' => theme_font_catalog('body')],
+        'heading_font_weight' => ['type' => 'select', 'label' => 'Ketebalan Font Judul', 'description' => 'Atur seberapa tebal nama pasangan dan heading.', 'default' => $default('heading_font_weight', '600'), 'options' => theme_font_weight_catalog()],
+        'body_font_weight' => ['type' => 'select', 'label' => 'Ketebalan Font Isi', 'description' => 'Atur ketebalan teks isi, detail acara, navigasi, dan form.', 'default' => $default('body_font_weight', '400'), 'options' => theme_font_weight_catalog()],
+        'font_size_base' => ['type' => 'select', 'label' => 'Ukuran Font Dasar', 'description' => 'Mengatur skala dasar teks agar nyaman di desktop dan mobile.', 'default' => $default('font_size_base', '16px'), 'options' => theme_font_size_catalog()]
     ];
 }
 

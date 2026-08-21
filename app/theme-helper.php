@@ -95,16 +95,10 @@ function theme_visual_capabilities_for_config(array $config, ?string $presetKey 
     $mode = function_exists('get_theme_mode') ? get_theme_mode($config) : 'custom';
     $presetKey = $presetKey ?: ($mode === 'custom' ? 'custom' : resolve_theme_preset_key($config));
     if ($presetKey === 'custom') {
-        return [
-            'accent_color' => ['type' => 'color', 'label' => 'Warna Aksen', 'description' => 'Warna utama untuk tombol, tautan, dan detail aksen.', 'default' => '#c84c47', 'palette' => theme_color_palette()],
-            'background_color' => ['type' => 'color', 'label' => 'Warna Latar', 'description' => 'Warna dasar halaman ketika tidak ada gambar latar.', 'default' => '#fff8f2', 'palette' => theme_color_palette()],
-            'paper_color' => ['type' => 'color', 'label' => 'Warna Permukaan', 'description' => 'Warna kartu dan permukaan konten.', 'default' => '#ffffff', 'palette' => theme_color_palette()],
-            'text_color' => ['type' => 'color', 'label' => 'Warna Teks', 'description' => 'Warna teks utama.', 'default' => '#2f2424', 'palette' => theme_color_palette()],
-            'heading_color' => ['type' => 'color', 'label' => 'Warna Judul', 'description' => 'Warna nama pasangan dan judul section.', 'default' => '#2f2424', 'palette' => theme_color_palette()],
-            'muted_color' => ['type' => 'color', 'label' => 'Warna Teks Sekunder', 'description' => 'Warna label, keterangan, dan metadata.', 'default' => '#806f66', 'palette' => theme_color_palette()],
-            'link_color' => ['type' => 'color', 'label' => 'Warna Tautan', 'description' => 'Warna tautan dan aksi sekunder.', 'default' => '#c84c47', 'palette' => theme_color_palette()],
-            'heading_font' => ['type' => 'font', 'label' => 'Font Judul', 'description' => 'Font untuk judul dan heading.', 'default' => 'Playfair Display, serif', 'options' => theme_font_catalog('heading')],
-            'body_font' => ['type' => 'font', 'label' => 'Font Isi', 'description' => 'Font yang mudah dibaca untuk isi, jadwal, dan form.', 'default' => 'Lato, sans-serif', 'options' => theme_font_catalog('body')],
+        $schema = theme_common_visual_capabilities((array)($config['theme'] ?? []));
+        return array_merge($schema, [
+            'background_color' => ['type' => 'color', 'label' => 'Warna Latar', 'description' => 'Warna dasar halaman ketika tidak ada gambar latar.', 'default' => (string)($config['theme']['background_color'] ?? '#fff8f2'), 'palette' => theme_color_palette()],
+            'paper_color' => ['type' => 'color', 'label' => 'Warna Permukaan', 'description' => 'Warna kartu dan permukaan konten.', 'default' => (string)($config['theme']['paper_color'] ?? '#ffffff'), 'palette' => theme_color_palette()],
             'hero_background' => ['type' => 'image', 'label' => 'Latar Hero', 'description' => 'Path media atau URL gambar hero. Kosongkan untuk memakai fallback cover.', 'default' => ''],
             'hero_overlay' => ['type' => 'range', 'label' => 'Overlay Hero', 'description' => 'Kekuatan overlay gelap di atas gambar hero.', 'default' => '0.45', 'min' => '0', 'max' => '0.85', 'step' => '0.05'],
             'hero_title_scale' => ['type' => 'range', 'label' => 'Skala Judul Hero', 'description' => 'Skala relatif judul utama hero.', 'default' => '1', 'min' => '0.85', 'max' => '1.2', 'step' => '0.05'],
@@ -115,7 +109,7 @@ function theme_visual_capabilities_for_config(array $config, ?string $presetKey 
             'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar untuk alamat dan peta acara.', 'default' => ''],
             'section_background_gift' => ['type' => 'image', 'label' => 'Latar Hadiah', 'description' => 'Gambar latar untuk amplop digital atau hadiah.', 'default' => ''],
             'section_background_rsvp' => ['type' => 'image', 'label' => 'Latar Konfirmasi Kehadiran', 'description' => 'Gambar latar untuk formulir konfirmasi kehadiran.', 'default' => ''],
-        ];
+        ]);
     }
     $registry = function_exists('theme_registry') ? theme_registry() : [];
     return (array)($registry[$presetKey]['visual_capabilities'] ?? []);
@@ -169,6 +163,39 @@ function reset_theme_visual_override(array &$config, string $presetKey, string $
     unset($config['theme_visuals'][$presetKey][$visualKey]);
 }
 
+/** Build one safe typography/palette bridge for the active preset. */
+function theme_typography_palette_bridge_style(array $config, string $presetKey): string {
+    $visuals = theme_visual_values_for_config($config, $presetKey);
+    $fontHeading = (string)($visuals['heading_font'] ?? 'Playfair Display, serif');
+    $fontBody = (string)($visuals['body_font'] ?? 'Lato, sans-serif');
+    $headingWeight = (string)($visuals['heading_font_weight'] ?? '600');
+    $bodyWeight = (string)($visuals['body_font_weight'] ?? '400');
+    $fontSize = (string)($visuals['font_size_base'] ?? '16px');
+    $primary = (string)($visuals['accent_color'] ?? '#c84c47');
+    $secondary = (string)($visuals['palette_secondary_color'] ?? '#f0c2a1');
+    $mix = max(20, min(80, (int)($visuals['palette_mix'] ?? 50)));
+    $saturation = max(0.75, min(1.60, (float)($visuals['palette_saturation'] ?? 1.10)));
+    $mixed = 'color-mix(in srgb, var(--palette-primary) ' . $mix . '%, var(--palette-secondary))';
+    $gradient = 'linear-gradient(135deg, var(--palette-primary), ' . $mixed . ', var(--palette-secondary))';
+    $css = ':root{--font-heading:' . $fontHeading . ';--font-body:' . $fontBody . ';--font-heading-weight:' . $headingWeight . ';--font-body-weight:' . $bodyWeight . ';--font-size-base:' . $fontSize . ';--palette-primary:' . $primary . ';--palette-secondary:' . $secondary . ';--palette-mix:' . $mix . '%;--palette-saturation:' . $saturation . ';--palette-mixed:' . $mixed . ';--palette-gradient:' . $gradient . ';--primary:var(--palette-mixed);--secondary:var(--palette-secondary);--accent:var(--palette-mixed);}' .
+        'body{font-size:var(--font-size-base);font-weight:var(--font-body-weight);}' .
+        'body h1,body h2,body h3,body h4,body h5,body h6{font-weight:var(--font-heading-weight);}' .
+        'body p,body li,body label,body input,body select,body textarea,body button{font-weight:var(--font-body-weight);}' .
+        '';
+    $aliases = [
+        'shubh-vivah' => 'body.shubh-vivah{--shubh-heading:var(--font-heading);--shubh-body:var(--font-body);--shubh-accent:var(--palette-mixed);--shubh-link:var(--palette-primary);--shubh-soft:var(--palette-secondary);}',
+        'yami-buzzy' => 'body.yami-buzzy{--yami-heading:var(--font-heading);--yami-body:var(--font-body);--yami-accent:var(--palette-mixed);--yami-link:var(--palette-primary);--yami-soft:var(--palette-secondary);}',
+        'rainier' => 'body{--rainier-primary:var(--palette-primary);--rainier-secondary:var(--palette-secondary);--rainier-accent:var(--palette-mixed);}',
+        'archak' => 'body{--cms-archak-heading:var(--font-heading);--cms-archak-body:var(--font-body);--cms-archak-accent:var(--palette-mixed);}',
+        'parang' => '#cms-parang-root{--parang-heading:var(--font-heading);--parang-body:var(--font-body);--parang-gold:var(--palette-mixed);--parang-link:var(--palette-primary);}',
+        'pawiwahan' => 'body[data-pawiwahan-root="1"]{--pawiwahan-heading:var(--font-heading);--pawiwahan-body:var(--font-body);--pawiwahan-accent:var(--palette-mixed);--pawiwahan-link:var(--palette-primary);}',
+        'dewankl' => 'body{--cms-dewana-heading:var(--font-heading);--cms-dewana-body:var(--font-body);--cms-dewana-accent:var(--palette-mixed);}',
+        'custom' => 'body{background-image:linear-gradient(135deg,color-mix(in srgb,var(--palette-primary) 18%,transparent),color-mix(in srgb,var(--palette-secondary) 28%,transparent));}body .hero,body .hero-section{--hero-palette-gradient:var(--palette-gradient);}'
+    ];
+    $css .= $aliases[$presetKey] ?? $aliases['custom'];
+    return '<style id="cms-typography-palette-bridge">' . $css . '</style>';
+}
+
 /** Build the CMS-native Custom adapter without changing its section markup. */
 function theme_custom_visual_style(array $config): string {
     $visuals = theme_visual_values_for_config($config, 'custom');
@@ -188,7 +215,7 @@ function theme_custom_visual_style(array $config): string {
     $overlayStart = 'rgba(22,12,10,' . $overlay . ')';
     $overlayMid = 'rgba(40,20,18,' . min(0.95, $overlay + 0.10) . ')';
     $overlayEnd = 'rgba(55,28,24,' . min(1.0, $overlay + 0.25) . ')';
-    return '<style id="cms-custom-visual">:root{--primary:' . $accent . ';--accent:' . $accent . ';--link:' . $link . ';--heading-color:' . $headingColor . ';--muted:' . $muted . ';--bg:' . $background . ';--paper:' . $paper . ';--paper-solid:' . $paper . ';--text:' . $text . ';--font-heading:' . $heading . ';--font-body:' . $body . ';--hero-title-scale:' . $titleScale . ';--hero-overlay-start:' . $overlayStart . ';--hero-overlay-mid:' . $overlayMid . ';--hero-overlay-end:' . $overlayEnd . ';}' . $heroRule . '</style>';
+    return theme_typography_palette_bridge_style($config, 'custom') . '<style id="cms-custom-visual">:root{--primary:var(--palette-mixed);--accent:var(--palette-mixed);--link:' . $link . ';--heading-color:' . $headingColor . ';--muted:' . $muted . ';--bg:' . $background . ';--paper:' . $paper . ';--paper-solid:' . $paper . ';--text:' . $text . ';--font-heading:' . $heading . ';--font-body:' . $body . ';--hero-title-scale:' . $titleScale . ';--hero-overlay-start:' . $overlayStart . ';--hero-overlay-mid:' . $overlayMid . ';--hero-overlay-end:' . $overlayEnd . ';}' . $heroRule . '</style>';
 }
 
 /** Validate one visual value against its preset-declared schema. */
@@ -371,6 +398,7 @@ function validate_theme_visual_value($value, array $definition) {
         return rtrim(rtrim(number_format($number, 4, '.', ''), '0'), '.') ?: '0';
     }
     if (!empty($definition['options']) && !array_key_exists($value, (array)$definition['options'])) return null;
+    if ($type === 'select' && empty($definition['options'])) return null;
     if ($type === 'image' && $value !== '') {
         if (filter_var($value, FILTER_VALIDATE_URL)) {
             $scheme = strtolower((string)(parse_url($value, PHP_URL_SCHEME) ?? ''));
@@ -470,6 +498,12 @@ function finalize_theme_output(string $html, array $config): string {
         $html = preg_replace('/<\/head>/i', $schemaBlock . '</head>', $html, 1) ?? $html;
     }
 
+    $activePresetKey = resolve_theme_preset_key($config);
+    if (stripos($html, 'id="cms-typography-palette-bridge"') === false) {
+        $bridge = theme_typography_palette_bridge_style($config, $activePresetKey);
+        $html = preg_replace('/<\\/head>/i', $bridge . '</head>', $html, 1) ?? $html;
+    }
+
     $previewScript = <<<'HTML'
 <script>
 (function () {
@@ -511,6 +545,17 @@ function finalize_theme_output(string $html, array $config): string {
       if (imageKeys.indexOf(key) !== -1) value = 'url("' + value.replace(/"/g, '\\\\"') + '")';
       document.documentElement.style.setProperty(mapping[key], value);
     });
+    if (values.heading_font_weight !== undefined) document.documentElement.style.setProperty('--font-heading-weight', values.heading_font_weight);
+    if (values.body_font_weight !== undefined) document.documentElement.style.setProperty('--font-body-weight', values.body_font_weight);
+    if (values.font_size_base !== undefined) document.documentElement.style.setProperty('--font-size-base', values.font_size_base);
+    if (values.accent_color !== undefined) document.documentElement.style.setProperty('--palette-primary', values.accent_color);
+    if (values.palette_secondary_color !== undefined) document.documentElement.style.setProperty('--palette-secondary', values.palette_secondary_color);
+    if (values.palette_mix !== undefined) {
+      const mix = Math.min(80, Math.max(20, Number(values.palette_mix) || 50));
+      document.documentElement.style.setProperty('--palette-mix', mix + '%');
+      document.documentElement.style.setProperty('--palette-mixed', 'color-mix(in srgb, var(--palette-primary) ' + mix + '%, var(--palette-secondary))');
+    }
+    if (values.palette_saturation !== undefined) document.documentElement.style.setProperty('--palette-saturation', Math.min(1.6, Math.max(0.75, Number(values.palette_saturation) || 1.1)));
     if (preset === 'rainier' && values.glass_opacity !== undefined) {
       const opacity = Math.min(0.9, Math.max(0.2, Number(values.glass_opacity) || 0.4));
       document.documentElement.style.setProperty('--glass-bg', 'rgba(0, 0, 0, ' + opacity + ')');

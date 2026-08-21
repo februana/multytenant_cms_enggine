@@ -22,7 +22,7 @@ $expected = [
     'shubh-vivah' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'hero_overlay', 'section_background_event', 'section_background_gallery', 'section_background_rsvp', 'ornament_left', 'ornament_right'],
     'yami-buzzy' => ['accent_color', 'heading_font', 'body_font', 'hero_background', 'welcome_background', 'section_background_home', 'section_background_couple', 'section_background_event', 'section_background_story', 'section_background_gallery', 'section_background_video', 'section_background_gift', 'section_background_invitation', 'section_background_rsvp', 'section_background_closing', 'hero_overlay'],
 ];
-$commonVisualKeys = ['heading_color', 'text_color', 'muted_color', 'link_color'];
+$commonVisualKeys = ['heading_color', 'text_color', 'muted_color', 'link_color', 'palette_secondary_color', 'palette_mix', 'palette_saturation', 'heading_font_weight', 'body_font_weight', 'font_size_base'];
 foreach ($expected as $preset => &$keys) $keys = array_values(array_unique(array_merge($keys, $commonVisualKeys)));
 unset($keys);
 $expected['shubh-vivah'][] = 'section_background_home';
@@ -83,6 +83,23 @@ visual_assert(theme_visual_public_path('https://cdn.example.test/hero.jpg') === 
 visual_assert(validate_theme_visual_value('#abcdef', ['type' => 'color']) === '#abcdef', 'Color validation accepts valid hex');
 visual_assert(validate_theme_visual_value('#not-a-color', ['type' => 'color']) === null, 'Color validation rejects invalid values');
 visual_assert(validate_theme_visual_value('1.50', ['type' => 'range', 'min' => '0', 'max' => '1']) === null, 'Range validation rejects out-of-range values');
+visual_assert(validate_theme_visual_value('700', ['type' => 'select', 'options' => theme_font_weight_catalog()]) === '700', 'Font weight select accepts catalog value');
+visual_assert(validate_theme_visual_value('999', ['type' => 'select', 'options' => theme_font_weight_catalog()]) === null, 'Font weight select rejects unknown value');
+visual_assert(validate_theme_visual_value('18px', ['type' => 'select', 'options' => theme_font_size_catalog()]) === '18px', 'Font size select accepts catalog value');
+
+$typographyProbe = $base;
+$typographyProbe['theme']['mode'] = 'custom';
+$typographyProbe['theme']['theme_preset'] = 'custom';
+$typographyProbe['theme_visuals']['custom'] = [
+    'accent_color' => '#123456', 'palette_secondary_color' => '#f0c2a1', 'palette_mix' => '65', 'palette_saturation' => '1.35',
+    'heading_font_weight' => '700', 'body_font_weight' => '500', 'font_size_base' => '18px'
+];
+$customVisualCss = theme_custom_visual_style($typographyProbe);
+visual_assert(str_contains($customVisualCss, '--font-heading-weight:700'), 'Custom typography weight reaches frontend bridge');
+visual_assert(str_contains($customVisualCss, '--font-size-base:18px'), 'Custom font size reaches frontend bridge');
+visual_assert(str_contains($customVisualCss, '--palette-secondary:#f0c2a1'), 'Custom secondary palette reaches frontend bridge');
+visual_assert(str_contains($customVisualCss, '--palette-mix:65%'), 'Custom palette mix reaches frontend bridge');
+visual_assert(str_contains($customVisualCss, '--palette-saturation:1.35'), 'Custom palette saturation reaches frontend bridge');
 
 $shared = [
     'presetKey' => 'shubh-vivah', 'heroText' => $stored['wedding']['opening_text'], 'guestFallback' => 'Bapak/Ibu/Saudara/i',

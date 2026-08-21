@@ -71,6 +71,8 @@ $preserved['theme_sections']['rainier'][0]['enabled'] = false;
 $preserved['theme_sections']['rainier'][0]['custom_title'] = 'Stored Rainier title';
 $preserved['media']['music'] = 'music/keep.mp3';
 $preserved['wedding']['bride_name'] = 'Stored Bride';
+// The switch helper lazily materializes the canonical Custom mirror; seed it so the isolation assertion compares persistent data, not cache initialization.
+$preserved['theme_custom'] = theme_custom_config($preserved);
 $before = $preserved;
 foreach (['mode', 'theme_preset'] as $key) unset($before['theme'][$key]);
 $before = json_encode($before, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

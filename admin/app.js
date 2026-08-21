@@ -374,13 +374,30 @@ if (themeSettingsForm && themePreviewFrame) {
     return /^https?:\/\//i.test(path) ? path : `/${path.replace(/^\/+/, '')}`;
   }
 
+  function updatePalettePreview() {
+    const preview = document.querySelector('[data-palette-preview]');
+    if (!preview) return;
+    const valueFor = (key, fallback) => themeSettingsForm.querySelector(`[name="visuals[${key}]"]`)?.value || fallback;
+    const primary = valueFor('accent_color', '#c84c47');
+    const secondary = valueFor('palette_secondary_color', '#f0c2a1');
+    const mix = valueFor('palette_mix', '50');
+    const saturation = valueFor('palette_saturation', '1.10');
+    preview.style.background = `linear-gradient(135deg, ${primary}, color-mix(in srgb, ${primary} ${mix}%, ${secondary}), ${secondary})`;
+    preview.style.filter = `saturate(${saturation})`;
+  }
+
   function updateVisualDecorations(input) {
     if (!input) return;
     if (input.dataset.fontPreview) input.style.fontFamily = input.value;
     const output = document.querySelector(`[data-range-output="${input.id}"]`);
     if (output) output.value = input.value;
     const sample = document.querySelector(`[data-for="${input.id}"]`);
-    if (sample) sample.style.fontFamily = input.value;
+    if (sample) {
+      sample.style.fontFamily = input.value;
+      if (input.id.includes('heading_font_weight') || input.id.includes('body_font_weight')) sample.style.fontWeight = input.value;
+      if (input.id.includes('font_size_base')) sample.style.fontSize = input.value;
+    }
+    updatePalettePreview();
     if (input.dataset.visualMediaSelect) {
       const preview = input.closest('.visual-field')?.querySelector('[data-visual-preview]');
       const wrap = preview?.closest('.visual-media-preview');
@@ -629,6 +646,7 @@ if (themeSettingsForm && themePreviewFrame) {
   }
 
   function selectPreset(preset, shouldPreview = true) {
+    updatePalettePreview();
     const nextPreset = visualSchemas[preset] ? preset : 'custom';
     const previousPreset = getCurrentPreset();
     if (previousPreset !== nextPreset) {
@@ -638,6 +656,7 @@ if (themeSettingsForm && themePreviewFrame) {
     if (globalThemePreset && globalThemePreset.value !== nextPreset) globalThemePreset.value = nextPreset;
     applyPresetToForm(nextPreset);
     renderVisualPanel(nextPreset);
+    updatePalettePreview();
     if (shouldPreview) schedulePreview(0);
   }
 

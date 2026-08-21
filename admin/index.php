@@ -1338,6 +1338,11 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                         <?php foreach (($visualDefinition['options'] ?? []) as $fontValue => $fontLabel): ?><option value="<?php echo escape_html((string)$fontValue); ?>" style="font-family:<?php echo escape_html((string)$fontValue); ?>;" <?php echo (string)$visualValue === (string)$fontValue ? 'selected' : ''; ?>><?php echo escape_html((string)$fontLabel); ?></option><?php endforeach; ?>
                                                     </select>
                                                     <span class="font-preview-sample" data-for="visual-<?php echo escape_html($visualKey); ?>" style="display:block;margin-top:6px;font-family:<?php echo escape_html((string)$visualValue); ?>;font-size:1.35rem;">Aa Bb Cc — Februana &amp; Andi</span>
+                                                <?php elseif ($visualType === 'select'): ?>
+                                                    <select id="visual-<?php echo escape_html($visualKey); ?>" name="visuals[<?php echo escape_html($visualKey); ?>]" data-visual-select>
+                                                        <?php foreach (($visualDefinition['options'] ?? []) as $optionValue => $optionLabel): ?><option value="<?php echo escape_html((string)$optionValue); ?>" <?php echo (string)$visualValue === (string)$optionValue ? 'selected' : ''; ?>><?php echo escape_html((string)$optionLabel); ?></option><?php endforeach; ?>
+                                                    </select>
+                                                    <span class="font-preview-sample" data-for="visual-<?php echo escape_html($visualKey); ?>" style="display:block;margin-top:6px;font-size:1.05rem;font-weight:<?php echo escape_html((string)$visualValue); ?>;">Contoh tulisan — Februana &amp; Andi</span>
                                                 <?php elseif ($visualType === 'range'): ?>
                                                     <div style="display:flex;align-items:center;gap:0.65rem;"><input id="visual-<?php echo escape_html($visualKey); ?>" type="range" name="visuals[<?php echo escape_html($visualKey); ?>]" value="<?php echo escape_html((string)$visualValue); ?>" min="<?php echo escape_html((string)($visualDefinition['min'] ?? '0')); ?>" max="<?php echo escape_html((string)($visualDefinition['max'] ?? '1')); ?>" step="<?php echo escape_html((string)($visualDefinition['step'] ?? '0.05')); ?>" style="flex:1;"><output data-range-output="visual-<?php echo escape_html($visualKey); ?>"><?php echo escape_html((string)$visualValue); ?></output></div>
                                                 <?php elseif ($visualType === 'image'): ?>
@@ -1361,28 +1366,15 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
+                                    <?php if (isset($activeThemeVisualSchema['palette_secondary_color'], $activeThemeVisualSchema['palette_mix'], $activeThemeVisualSchema['palette_saturation'])): ?>
+                                        <?php $palettePrimaryPreview = (string)($activeThemeVisualValues['accent_color'] ?? '#c84c47'); $paletteSecondaryPreview = (string)($activeThemeVisualValues['palette_secondary_color'] ?? '#f0c2a1'); $paletteMixPreview = (string)($activeThemeVisualValues['palette_mix'] ?? '50'); $paletteSaturationPreview = (string)($activeThemeVisualValues['palette_saturation'] ?? '1.10'); ?>
+                                        <div id="paletteCombinationPreview" class="palette-combination-preview" data-palette-preview style="margin-top:1rem;padding:1rem;border:1px solid #eadccf;border-radius:12px;background:linear-gradient(135deg,<?php echo escape_html($palettePrimaryPreview); ?>,color-mix(in srgb,<?php echo escape_html($palettePrimaryPreview); ?> <?php echo escape_html($paletteMixPreview); ?>%,<?php echo escape_html($paletteSecondaryPreview); ?>),<?php echo escape_html($paletteSecondaryPreview); ?>);filter:saturate(<?php echo escape_html($paletteSaturationPreview); ?>);color:#fff;">
+                                            <strong>Pratinjau campuran warna</strong><span style="display:block;margin-top:.25rem;font-size:.9rem;">Warna utama + warna kedua dengan saturasi yang dapat diatur.</span>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
 
                             <div class="custom-theme-editor" data-custom-theme-editor>
-
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Warna</h3>
-                            <div class="form-grid">
-                                <div class="form-row"><label>Warna Utama</label><input type="color" name="primary_color" value="<?php echo escape_html($config['theme']['primary_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Sekunder</label><input type="color" name="secondary_color" value="<?php echo escape_html($config['theme']['secondary_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Aksen</label><input type="color" name="accent_color" value="<?php echo escape_html($config['theme']['accent_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Latar Belakang</label><input type="color" name="background_color" value="<?php echo escape_html($config['theme']['background_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Kertas</label><input type="color" name="paper_color" value="<?php echo escape_html($config['theme']['paper_color'] ?? '#ffffff'); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Redup</label><input type="color" name="muted_color" value="<?php echo escape_html($config['theme']['muted_color'] ?? '#806f66'); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Teks</label><input type="color" name="text_color" value="<?php echo escape_html($config['theme']['text_color']); ?>" style="width:100%;height:40px;"></div>
-                                <div class="form-row"><label>Warna Tautan</label><input type="color" name="link_color" value="<?php echo escape_html($config['theme']['link_color']); ?>" style="width:100%;height:40px;"></div>
-                            </div>
-
-                            <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Tipografi</h3>
-                            <div class="form-grid">
-                                <div class="form-row"><label>Font Judul</label><input type="text" name="heading_font" value="<?php echo escape_html($config['theme']['heading_font']); ?>" placeholder="e.g., Playfair Display, serif"></div>
-                                <div class="form-row"><label>Font Isi</label><input type="text" name="body_font" value="<?php echo escape_html($config['theme']['body_font']); ?>" placeholder="e.g., Lato, sans-serif"></div>
-                                <div class="form-row"><label>Ukuran Font Dasar</label><input type="text" name="font_size_base" value="<?php echo escape_html($config['theme']['font_size_base']); ?>" placeholder="e.g., 16px"></div>
-                            </div>
 
                             <h3 style="margin:1.5rem 0 1rem;color:#c84c47;">Jarak & Tata Letak</h3>
                             <div class="form-grid">
