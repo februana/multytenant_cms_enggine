@@ -1303,8 +1303,13 @@ function theme_registry(): array {
                 'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Gambar latar tambahan untuk bagian pembuka.', 'default' => ''],
                 'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar tambahan untuk bagian galeri.', 'default' => ''],
                 'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar tambahan untuk bagian lokasi acara.', 'default' => ''],
-                'ornament_left' => ['type' => 'image', 'label' => 'Ornamen Kiri', 'description' => 'Gambar ornamen kiri dari Media Library. Kosongkan untuk memakai ornamen bawaan.', 'default' => ''],
-                'ornament_right' => ['type' => 'image', 'label' => 'Ornamen Kanan', 'description' => 'Gambar ornamen kanan dari Media Library. Kosongkan untuk memakai ornamen bawaan.', 'default' => '']
+                'ornament_left' => ['type' => 'image', 'label' => 'Ornamen Wayang Kiri', 'description' => 'Gambar wayang kiri dari Media Library. Kosongkan untuk memakai wayang bawaan.', 'default' => ''],
+                'ornament_right' => ['type' => 'image', 'label' => 'Ornamen Wayang Kanan', 'description' => 'Gambar wayang kanan dari Media Library. Kosongkan untuk memakai wayang bawaan.', 'default' => ''],
+                'ornament_top' => ['type' => 'image', 'label' => 'Ornamen Gunungan Hero', 'description' => 'Gambar Gunungan di atas Hero card. Kosongkan untuk memakai Gunungan bawaan.', 'default' => 'themes/parang/assets/gunungan.webp'],
+                'ornament_top_offset_y' => ['type' => 'range', 'label' => 'Posisi Vertikal Gunungan Hero', 'description' => 'Geser Gunungan Hero ke atas atau bawah dalam piksel.', 'default' => '-128', 'min' => '-240', 'max' => '40', 'step' => '1'],
+                'ornament_side_offset_x' => ['type' => 'range', 'label' => 'Posisi Horizontal Wayang', 'description' => 'Geser kedua ornamen Wayang ke kiri atau kanan dalam piksel.', 'default' => '-128', 'min' => '-240', 'max' => '40', 'step' => '1'],
+                'ornament_side_offset_y' => ['type' => 'range', 'label' => 'Posisi Vertikal Wayang', 'description' => 'Atur posisi vertikal kedua ornamen Wayang dalam persen.', 'default' => '50', 'min' => '0', 'max' => '100', 'step' => '1'],
+                'ornament_side_size' => ['type' => 'range', 'label' => 'Ukuran Wayang', 'description' => 'Atur ukuran kedua ornamen Wayang dalam piksel.', 'default' => '256', 'min' => '96', 'max' => '480', 'step' => '1']
             ]
         ],
         'pawiwahan' => [

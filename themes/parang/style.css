@@ -215,10 +215,10 @@
     pointer-events: none;
 }
 
-.parang-ornament-top { top: -8rem; width: 12rem; height: 12rem; }
-.parang-ornament-side { top: 50%; width: 16rem; height: auto; opacity: .8; transform: translateY(-50%); mix-blend-mode: multiply; }
-.parang-ornament-left { left: -8rem; }
-.parang-ornament-right { right: -8rem; transform: translateY(-50%) scaleX(-1); }
+.parang-ornament-top { top: var(--cms-parang-top-offset-y, -8rem); width: 12rem; height: 12rem; content: var(--cms-parang-top); }
+.parang-ornament-side { top: var(--cms-parang-side-offset-y, 50%); width: var(--cms-parang-side-size, 16rem); height: auto; opacity: .8; transform: translateY(-50%); mix-blend-mode: multiply; }
+.parang-ornament-left { left: var(--cms-parang-side-offset-x, -8rem); }
+.parang-ornament-right { right: var(--cms-parang-side-offset-x, -8rem); transform: translateY(-50%) scaleX(-1); }
 
 .parang-label {
     margin: 0 0 .75rem;
@@ -365,7 +365,7 @@
 @media (max-width: 700px) {
     .parang-hero { min-height: auto; padding: 6rem .75rem 2rem; }
     .parang-hero-card { min-height: 36rem; padding: 4.5rem 1rem 2.5rem; border-width: 3px; border-radius: 7rem 7rem .6rem .6rem; }
-    .parang-ornament-top { top: -6rem; width: 9rem; height: 9rem; }
+    .parang-ornament-top { top: calc(var(--cms-parang-top-offset-y, -8rem) * .75); width: 9rem; height: 9rem; }
     .parang-hero-title { font-size: clamp(2.5rem, 13vw, 4rem); }
     .parang-hero-amp { font-size: 2.5rem; }
     .parang-hero-date { margin-bottom: 2rem; font-size: 1rem; letter-spacing: .1em; }
