@@ -77,6 +77,11 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                 $targetFolder = trim((string)($_POST['media_dir'] ?? ''));
                 $allowedByFolder = [
                     'cover' => ALLOWED_IMAGE_TYPES,
+                    'bride_photo' => ALLOWED_IMAGE_TYPES,
+                    'groom_photo' => ALLOWED_IMAGE_TYPES,
+                    'couple_photo' => ALLOWED_IMAGE_TYPES,
+                    'qris' => ALLOWED_IMAGE_TYPES,
+                    'open_graph' => ALLOWED_IMAGE_TYPES,
                     'background' => ALLOWED_IMAGE_TYPES,
                     'gallery' => ALLOWED_IMAGE_TYPES,
                     'love_story' => ALLOWED_IMAGE_TYPES,
@@ -86,6 +91,11 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                 ];
                 $folderMap = [
                     'cover' => tenant_upload_dir('cover'),
+                    'bride_photo' => tenant_upload_dir('cover'),
+                    'groom_photo' => tenant_upload_dir('cover'),
+                    'couple_photo' => tenant_upload_dir('cover'),
+                    'qris' => tenant_upload_dir('cover'),
+                    'open_graph' => tenant_upload_dir('cover'),
                     'background' => tenant_upload_dir('background'),
                     'gallery' => tenant_upload_dir('gallery'),
                     'love_story' => tenant_upload_dir('love_story'),
@@ -100,17 +110,34 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                     break;
                 }
                 $uploadRole = $targetFolder === 'love_story' ? 'story' : ($targetFolder === 'video' ? 'love_story_video' : $targetFolder);
+                $uploadRole = match ($targetFolder) {
+                    'bride_photo' => 'bride_photo',
+                    'groom_photo' => 'groom_photo',
+                    'couple_photo' => 'couple_photo',
+                    'qris' => 'qris_image',
+                    'open_graph' => 'og_image',
+                    default => $uploadRole,
+                };
                 $uploadLimit = $targetFolder === 'music' ? MAX_MUSIC_UPLOAD_SIZE : ($targetFolder === 'video' ? MAX_VIDEO_UPLOAD_SIZE : MAX_UPLOAD_SIZE);
                 $result = upload_file($_FILES['media_file'], $destination, $allowed, $uploadLimit, $uploadRole, $config['theme']['theme_preset'] ?? null);
                 if (!empty($result['error'])) {
                     $error = $result['error'];
                 } else {
+                    $newPath = relative_path($result['path']);
                     if ($targetFolder === 'video') {
-                        $newPath = relative_path($result['path']);
                         $queueMediaCleanup((string)($config['media']['love_story_video'] ?? ''), $newPath);
                         $config['media']['love_story_video'] = $newPath;
+                    } elseif (in_array($targetFolder, ['bride_photo', 'groom_photo', 'couple_photo'], true)) {
+                        $queueMediaCleanup((string)($config['media'][$targetFolder] ?? ''), $newPath);
+                        $config['media'][$targetFolder] = $newPath;
+                    } elseif ($targetFolder === 'qris') {
+                        $queueMediaCleanup((string)($config['gift']['qris_image'] ?? ''), $newPath);
+                        $config['gift']['qris_image'] = $newPath;
+                    } elseif ($targetFolder === 'open_graph') {
+                        $queueMediaCleanup((string)($config['site']['open_graph_image'] ?? ''), $newPath);
+                        $config['site']['open_graph_image'] = $newPath;
                     }
-                    $success = 'File media berhasil diunggah.';
+                    $success = 'File media berhasil diunggah dan dipasang pada target yang dipilih.';
                 }
                 break;
             case 'use_media_library_asset':
@@ -122,6 +149,19 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                 }
                 if (!tenant_media_reference_is_safe($path)) {
                     $error = 'Asset media bukan milik tenant aktif.';
+                    break;
+                }
+                $dynamicTargets = media_manager_visible_target_definitions($config, resolve_theme_preset_key($config));
+                if (isset($dynamicTargets[$target])) {
+                    if (($dynamicTargets[$target]['type'] ?? 'image') === 'image' && !theme_visual_image_reference_is_canonical($path)) {
+                        $error = 'Asset gambar belum valid atau belum diproses menjadi WebP.';
+                        break;
+                    }
+                    if (!media_manager_set_target($config, $target, $path)) {
+                        $error = 'Target media tidak dapat disimpan.';
+                    } else {
+                        $success = 'Asset media berhasil dipasang ke ' . ($dynamicTargets[$target]['label'] ?? 'target preset') . '.';
+                    }
                     break;
                 }
                 switch ($target) {
@@ -158,6 +198,21 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                 }
                 $success = 'Asset media berhasil dipakai dari Pengelola File.';
                 break;
+            case 'clear_media_target':
+                $target = trim((string)($_POST['media_target'] ?? ''));
+                $dynamicTargets = media_manager_visible_target_definitions($config, resolve_theme_preset_key($config));
+                if (!isset($dynamicTargets[$target])) {
+                    $error = 'Target media tidak valid untuk preset aktif.';
+                    break;
+                }
+                $previousValue = media_manager_target_value($config, $target);
+                if ($previousValue !== '' && !media_reference_matches($previousValue, (string)($_POST['media_value'] ?? $previousValue))) {
+                    $error = 'Referensi media tidak cocok dengan target aktif.';
+                    break;
+                }
+                media_manager_clear_target($config, $target);
+                $success = 'Referensi ' . ($dynamicTargets[$target]['label'] ?? 'media') . ' dikembalikan ke bawaan. File fisik tetap tersimpan di Media Manager.';
+                break;
             case 'rename_media_file':
                 $mediaPath = trim((string)($_POST['media_path'] ?? ''));
                 $newName = trim((string)($_POST['new_name'] ?? ''));
@@ -166,25 +221,7 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                     $error = $response['error'];
                     break;
                 }
-                $config['media']['cover'] = $config['media']['cover'] === $mediaPath ? $response['path'] : $config['media']['cover'];
-                $config['media']['background_hero'] = $config['media']['background_hero'] === $mediaPath ? $response['path'] : $config['media']['background_hero'];
-                foreach (range(0, 2) as $index) {
-                    if (($config['media']['background_sections'][$index] ?? '') === $mediaPath) {
-                        $config['media']['background_sections'][$index] = $response['path'];
-                    }
-                }
-                foreach (($config['gallery']['items'] ?? []) as $index => $item) {
-                    if (($item['filename'] ?? '') === $mediaPath) {
-                        $config['gallery']['items'][$index]['filename'] = $response['path'];
-                    }
-                }
-                foreach (($config['theme_visuals'] ?? []) as $presetKey => $visualOverrides) {
-                    foreach ((array)$visualOverrides as $visualKey => $visualValue) {
-                        if ((string)$visualValue === $mediaPath) {
-                            $config['theme_visuals'][$presetKey][$visualKey] = $response['path'];
-                        }
-                    }
-                }
+                replace_media_references($config, $mediaPath, $response['path']);
                 $success = 'Nama file media berhasil diubah.';
                 break;
             case 'replace_media_file':
@@ -1011,6 +1048,9 @@ $themePreviewConfig = $config['theme'] ?? [];
 $activeVisualPresetKey = $themeMode === 'custom' ? 'custom' : $activePresetKey;
 $activeThemeVisualSchema = $themeVisualSchemas[$activeVisualPresetKey] ?? [];
 $activeThemeVisualValues = $themeVisualValues[$activeVisualPresetKey] ?? [];
+$mediaManagerTargets = function_exists('media_manager_visible_target_definitions')
+    ? media_manager_visible_target_definitions($config, $activePresetKey)
+    : [];
 // Ensure hero settings are included in preview config for backward compatibility
 if (!isset($themePreviewConfig['hero_height'])) {
     $themePreviewConfig['hero_height'] = '100vh';
@@ -1650,7 +1690,12 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="form-row">
                                     <label>Unggah ke folder</label>
                                     <select name="media_dir">
-                                        <option value="cover">Cover</option>
+                                        <?php if (in_array('cover', $themeMediaRoles, true)): ?><option value="cover">Cover / Foto Utama</option><?php endif; ?>
+                                        <?php if (in_array('bride_photo', $themeMediaRoles, true)): ?><option value="bride_photo">Foto Mempelai Wanita</option><?php endif; ?>
+                                        <?php if (in_array('groom_photo', $themeMediaRoles, true)): ?><option value="groom_photo">Foto Mempelai Pria</option><?php endif; ?>
+                                        <?php if (in_array('couple_photo', $themeMediaRoles, true)): ?><option value="couple_photo">Foto Pasangan</option><?php endif; ?>
+                                        <?php if ($adminCapabilityEnabled('gift')): ?><option value="qris">QRIS / Hadiah Digital</option><?php endif; ?>
+                                        <?php if ($adminCapabilityEnabled('seo')): ?><option value="open_graph">Gambar Open Graph</option><?php endif; ?>
                                         <option value="background">Latar Belakang</option>
                                         <option value="gallery">Galeri</option>
                                         <option value="love_story">Cerita Cinta (gambar)</option>
@@ -1662,6 +1707,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                 <div class="form-row">
                                     <label>Pilih file</label>
                                     <input type="file" name="media_file" accept="image/*,audio/*,video/mp4">
+                                    <small>Foto mempelai dan pasangan otomatis dipasang ke konfigurasi tenant aktif. Asset visual preset tetap dapat diarahkan dari bagian “Atur penggunaan di preset aktif” pada setiap kartu file.</small>
                                 </div>
                             </div>
                             <button type="submit">Unggah File</button>
@@ -1801,6 +1847,44 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                                 <input type="hidden" name="media_path" value="<?php echo escape_html($item['path']); ?>">
                                                 <?php if ($item['is_used']): ?><button type="submit" name="force_delete" value="1" class="small-button" style="background:#a14a45;color:white;" onclick="return confirm('File ini sedang dipakai di beberapa bagian. Lepaskan semua pemakaian lalu hapus file?');">Lepaskan &amp; Hapus</button><?php else: ?><button type="submit" class="small-button" style="background:#a14a45;color:white;" onclick="return confirm('Hapus file ini secara permanen?');">Hapus</button><?php endif; ?>
                                             </form>
+                                            <?php
+                                            $itemTargetOptions = [];
+                                            $itemActiveTargets = [];
+                                            foreach ($mediaManagerTargets as $targetKey => $targetDefinition) {
+                                                if (($targetDefinition['type'] ?? 'image') !== $item['type']) continue;
+                                                $itemTargetOptions[$targetKey] = $targetDefinition;
+                                                if (media_reference_matches(media_manager_target_value($config, $targetKey), $item['path'])) {
+                                                    $itemActiveTargets[] = $targetDefinition['label'] ?? $targetKey;
+                                                }
+                                            }
+                                            ?>
+                                            <?php if (!empty($itemTargetOptions)): ?>
+                                            <details class="media-target-details" style="flex-basis:100%;margin-top:4px;padding:10px;border:1px solid #eadccf;border-radius:10px;background:#fffdf9;">
+                                                <summary style="cursor:pointer;font-weight:600;color:#6d5148;">Atur penggunaan di preset aktif</summary>
+                                                <?php if (!empty($itemActiveTargets)): ?><small style="display:block;margin:8px 0;color:#28734a;">Sedang dipakai pada: <?php echo escape_html(implode(', ', $itemActiveTargets)); ?></small><?php endif; ?>
+                                                <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:8px;">
+                                                    <form method="post" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+                                                        <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                                        <input type="hidden" name="action" value="use_media_library_asset">
+                                                        <input type="hidden" name="media_path" value="<?php echo escape_html($item['path']); ?>">
+                                                        <div class="form-row" style="min-width:260px;margin:0;"><label>Gunakan sebagai</label><select name="media_target">
+                                                            <?php foreach ($itemTargetOptions as $targetKey => $targetDefinition): ?><option value="<?php echo escape_html($targetKey); ?>"><?php echo escape_html($targetDefinition['label'] ?? $targetKey); ?></option><?php endforeach; ?>
+                                                        </select></div>
+                                                        <button type="submit" class="small-button">Terapkan Asset</button>
+                                                    </form>
+                                                    <form method="post" style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+                                                        <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
+                                                        <input type="hidden" name="action" value="clear_media_target">
+                                                        <input type="hidden" name="media_value" value="<?php echo escape_html($item['path']); ?>">
+                                                        <div class="form-row" style="min-width:260px;margin:0;"><label>Kembalikan target ke bawaan</label><select name="media_target">
+                                                            <?php foreach ($itemTargetOptions as $targetKey => $targetDefinition): ?><option value="<?php echo escape_html($targetKey); ?>"><?php echo escape_html($targetDefinition['label'] ?? $targetKey); ?></option><?php endforeach; ?>
+                                                        </select></div>
+                                                        <button type="submit" class="small-button">Lepaskan Referensi</button>
+                                                    </form>
+                                                </div>
+                                                <small style="display:block;margin-top:8px;color:#806f66;">Mengembalikan target hanya menghapus referensi dari konfigurasi tenant. File tetap tersedia untuk dipakai kembali atau dihapus melalui tombol Hapus.</small>
+                                            </details>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>

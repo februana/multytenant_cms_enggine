@@ -360,7 +360,7 @@ function destroy_admin_session(): void {
 function admin_action_is_authorized(string $action, ?string $presetKey = null): bool {
     if (!session_admin_is_valid()) return false;
     $allowedActions = [
-        'upload_media_library', 'use_media_library_asset', 'rename_media_file',
+        'upload_media_library', 'use_media_library_asset', 'clear_media_target', 'rename_media_file',
         'replace_media_file', 'set_media_default', 'delete_media_file',
         'save_wedding', 'save_parents', 'save_schedule', 'save_location',
         'save_gift', 'save_dresscode', 'save_whatsapp', 'save_theme_options',
@@ -2696,7 +2696,18 @@ function list_media_library(array $options = []): array {
         if (!is_dir($group['dir']) || ($groupFilter !== 'all' && $groupKey !== $groupFilter)) {
             continue;
         }
-        $files = glob($group['dir'] . '/*') ?: [];
+        $files = [];
+        try {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($group['dir'], FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::LEAVES_ONLY
+            );
+            foreach ($iterator as $fileInfo) {
+                if ($fileInfo->isFile()) $files[] = $fileInfo->getPathname();
+            }
+        } catch (Throwable $e) {
+            $files = [];
+        }
         sort($files, SORT_NATURAL | SORT_FLAG_CASE);
         foreach ($files as $filePath) {
             if (!is_file($filePath)) {
@@ -2854,16 +2865,22 @@ function replace_media_references(array &$config, string $oldPath, string $newPa
         if (isset($item['image'])) $replace($item['image']);
     }
     unset($item);
-    foreach (($config['theme_visuals'] ?? []) as &$visuals) {
-        foreach ((array)$visuals as &$value) $replace($value);
-        unset($value);
+    if (isset($config['theme_visuals']) && is_array($config['theme_visuals'])) {
+        foreach ($config['theme_visuals'] as &$visuals) {
+            if (!is_array($visuals)) continue;
+            foreach ($visuals as &$value) $replace($value);
+            unset($value);
+        }
+        unset($visuals);
     }
-    unset($visuals);
-    foreach (($config['theme_options'] ?? []) as &$options) {
-        foreach ((array)$options as &$value) $replace($value);
-        unset($value);
+    if (isset($config['theme_options']) && is_array($config['theme_options'])) {
+        foreach ($config['theme_options'] as &$options) {
+            if (!is_array($options)) continue;
+            foreach ($options as &$value) $replace($value);
+            unset($value);
+        }
+        unset($options);
     }
-    unset($options);
 }
 
 function clear_media_references(array &$config, string $oldPath): void {

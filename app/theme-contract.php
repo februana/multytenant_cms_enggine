@@ -57,7 +57,8 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Penutup', 'title' => 'Penutup', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'schedule', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'media', 'seo', 'whatsapp'],
-                'media_roles' => [],
+                // The adapted renderer uses media.cover as its hero/footer fallback.
+                'media_roles' => ['cover'],
                 'assets' => ['arvo-dancing-script', 'source-ornaments', 'fidelity-adapter.css', 'theme-media'],
             ],
             'yami-buzzy' => [
@@ -106,7 +107,8 @@ if (!function_exists('theme_contract_registry')) {
                     ['id' => 'footer', 'dom_id' => null, 'label' => 'Footer', 'title' => 'Footer', 'embedded_capabilities' => ['seo']],
                 ],
                 'admin_capabilities' => ['wedding', 'schedule', 'story', 'rsvp', 'music', 'maps', 'media', 'seo', 'whatsapp'],
-                'media_roles' => [],
+                // The adapted renderer uses media.cover as its hero/footer fallback.
+                'media_roles' => ['cover'],
                 'assets' => ['cormorant-garamond-outfit', 'invite.css', 'invite-1.js', 'tally-widget-optional'],
             ],
             'parang' => [
