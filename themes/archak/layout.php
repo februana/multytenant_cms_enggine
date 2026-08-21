@@ -4,12 +4,13 @@ if (!defined('THEME_HELPER_LOADED')) {
 }
 $config = $config ?? [];
 $presetKey = 'archak';
-$brideName = escape_html($config['wedding']['bride_name'] ?? '');
-$groomName = escape_html($config['wedding']['groom_name'] ?? '');
+$semanticNames = theme_semantic_names($config);
+$brideName = escape_html($semanticNames['bride_full_name']);
+$groomName = escape_html($semanticNames['groom_full_name']);
 $guestName = function_exists('resolve_guest_name') ? resolve_guest_name($config) : '';
 $guestLabel = escape_html($guestName !== '' ? $guestName : 'Bapak/Ibu/Saudara/i');
-$brideNickname = escape_html($config['wedding']['bride_nickname'] ?? $brideName);
-$groomNickname = escape_html($config['wedding']['groom_nickname'] ?? $groomName);
+$brideNickname = escape_html($semanticNames['bride_nickname']);
+$groomNickname = escape_html($semanticNames['groom_nickname']);
 $bridePhoto = !empty($config['media']['bride_photo']) ? $config['media']['bride_photo'] : ($config['media']['cover'] ?? '');
 $groomPhoto = !empty($config['media']['groom_photo']) ? $config['media']['groom_photo'] : ($config['media']['cover'] ?? '');
 $couplePhoto = !empty($config['media']['couple_photo']) ? $config['media']['couple_photo'] : ($config['media']['cover'] ?? '');
@@ -95,7 +96,7 @@ $archakVisualStyle = '<style id="cms-archak-visual">:root{--cms-archak-accent:' 
         <h3>Kita Akan Menikah</h3>
         <p id="guest-greeting" class="guest-greeting">Kepada <?php echo $guestLabel; ?></p>
         <p class="opening-greeting"><?php echo $openingGreeting; ?></p>
-        <h1><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1>
+        <h1><?php echo $brideNickname; ?> &amp; <?php echo $groomNickname; ?></h1>
         <div class="container-out"><div class="container-in text"><?php echo $akadDate ? escape_html(date('l, M. j, Y', strtotime($akadDate))) : ''; ?><br><?php echo $venue; ?><button class="huge-btn" type="button" onclick="window.open('<?php echo $whatsappLink; ?>','_blank')">Konfirmasi Kehadiran</button></div><div class="home-img" id="home-img-lg"<?php if ($heroStyle !== ''): ?> style="<?php echo $heroStyle; ?>"<?php endif; ?>></div></div>
     </div>
     <div class="home-img home-img-sm"<?php if ($heroStyle !== ''): ?> style="<?php echo $heroStyle; ?>"<?php endif; ?>></div>
