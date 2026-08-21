@@ -414,9 +414,6 @@ function validate_theme_visual_value($value, array $definition) {
 function switch_active_theme_preset_config(array $config, string $selectedPreset): ?array {
     $selectedPreset = trim($selectedPreset);
     if ($selectedPreset === '') return null;
-    if (!array_key_exists('theme_custom', $config) || !is_array($config['theme_custom']) || get_theme_mode($config) === 'custom') {
-        $config['theme_custom'] = theme_custom_config($config);
-    }
     if ($selectedPreset === 'custom') {
         $config['theme'] = theme_custom_config($config);
         return $config;

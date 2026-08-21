@@ -2322,7 +2322,7 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                         <form method="post" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="<?php echo escape_html(get_csrf_token()); ?>">
                             <input type="hidden" name="action" value="upload_music">
-                            <div class="form-row"><label>Unggah Audio (mp3, ogg, wav)</label><input type="file" name="music_file" accept="audio/*"></div>
+                            <div class="form-row"><label>Unggah Musik (mp3, ogg, wav; hasil disimpan sebagai MP3)</label><input type="file" name="music_file" accept="audio/*"></div>
                             <button type="submit">Unggah Musik</button>
                         </form>
                         <div class="form-row"><label>File Musik Saat Ini</label><input type="text" readonly value="<?php echo escape_html($config['media']['music']); ?>"></div>

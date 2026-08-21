@@ -256,9 +256,20 @@ function render_theme_hero_markup(array $config, string $presetKey, string $bgHe
     }
 }
 
+function render_theme_music_markup(array $config, string $musicSrc): string {
+    if (!is_section_enabled($config, 'music')) return '';
+    $musicPath = trim($musicSrc);
+    if ($musicPath === '') return '';
+    $musicUrl = filter_var($musicPath, FILTER_VALIDATE_URL) && in_array(strtolower((string)(parse_url($musicPath, PHP_URL_SCHEME) ?? '')), ['http', 'https'], true)
+        ? $musicPath
+        : public_path($musicPath);
+    if ($musicUrl === '' || $musicUrl === 'data:,') return '';
+    return '<audio id="backgroundMusic" src="' . escape_html($musicUrl) . '" preload="none" loop></audio><button class="music-btn" type="button" id="musicBtn">Putar Musik</button>';
+}
+
 function render_dewankl_hero(array $config, array $shared): string {
     $themeMode = resolve_theme_mode($config);
-    $musicButton = is_section_enabled($config, 'music') ? '<button class="music-btn" type="button" id="musicBtn">Putar Musik</button>' : '';
+    $musicButton = render_theme_music_markup($config, (string)($shared['musicSrc'] ?? ''));
     $guestName = normalize_guest_name((string)($shared['guestName'] ?? ''));
     $guestLabel = escape_html($guestName !== '' ? $guestName : ($shared['guestFallback'] ?? 'Bapak/Ibu/Saudara/i'));
     return '<section id="hero" class="hero" ' . $shared['bgHero'] . '>
@@ -282,7 +293,7 @@ function render_dewankl_hero(array $config, array $shared): string {
 
 
 function render_rainier_hero(array $config, array $shared): string {
-    $musicButton = is_section_enabled($config, 'music') ? '<button class="music-btn" type="button" id="musicBtn">Putar Musik</button>' : '';
+    $musicButton = render_theme_music_markup($config, (string)($shared['musicSrc'] ?? ''));
     return '<section id="hero" class="hero hero-rainier" ' . $shared['bgHero'] . '>
       <div class="hero-card hero-card--editorial">
         <p class="eyebrow">Kami Akan Menikah</p>
@@ -304,7 +315,7 @@ function render_rainier_hero(array $config, array $shared): string {
 }
 
 function render_archak_hero(array $config, array $shared): string {
-    $musicButton = is_section_enabled($config, 'music') ? '<button class="music-btn" type="button" id="musicBtn">Putar Musik</button>' : '';
+    $musicButton = render_theme_music_markup($config, (string)($shared['musicSrc'] ?? ''));
     return '<section id="hero" class="hero hero-archak" ' . $shared['bgHero'] . '>
       <div class="hero-card hero-card--split">
         <div class="hero-card__text">

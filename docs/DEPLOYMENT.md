@@ -27,7 +27,7 @@ Run the installer from a trusted checkout as root. It follows the Apache + PHP-F
 | PHP-FPM socket under `/run/php` | FastCGI application execution without mod_php |
 | Composer | Installation of the locked `chillerlan/php-qrcode` dependency graph |
 | ImageMagick CLI and PHP GD | Foundation image conversion with GD fallback |
-| FFmpeg and FFprobe | Canonical Love Story video processing and metadata verification |
+| FFmpeg and FFprobe | Canonical music and Love Story video processing plus metadata verification |
 | Cloudflare Tunnel (`cloudflared`) | Intended public ingress |
 
 The installer does not use `rsync --delete`, does not delete `.env`, the database, tenant media, backups, or WebDAV data, and does not create a per-tenant VirtualHost. It renders one catch-all vhost and leaves tenant resolution to the application.
@@ -107,8 +107,8 @@ Super Admin may also create tenants manually at `/admin/super-admin.php`. The DN
 All uploads are tenant-scoped. The media pipeline is:
 
 ```text
-Upload -> validate -> WebP conversion where applicable -> preset resize
-       -> delete original after successful conversion -> tenant namespace
+Upload -> validate -> ImageMagick/WebP for images or FFmpeg/MP3 for music or FFmpeg/MP4 for video
+       -> verify canonical output -> delete original -> tenant namespace
 ```
 
 Apache rewrites `/uploads/<path>` to [`media.php`](../media.php). The endpoint resolves the current host tenant, validates the requested path against the current tenant's approved media roots, verifies MIME type, and serves only the authorized file. Do not expose the `uploads/` directory through an alternate static alias.

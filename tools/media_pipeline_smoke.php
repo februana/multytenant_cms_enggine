@@ -46,6 +46,16 @@ function media_pipeline_fixture(string $path, int $width, int $height, string $f
     if ($code !== 0 || !is_file($path) || filesize($path) <= 0) throw new RuntimeException('Unable to create image fixture.');
 }
 
+function media_pipeline_audio_fixture(string $path): void {
+    $ffmpeg = find_ffmpeg_binary();
+    if ($ffmpeg === null) throw new RuntimeException('FFmpeg is required for audio pipeline smoke fixtures.');
+    $command = escapeshellarg($ffmpeg) . ' -hide_banner -loglevel error -y'
+        . ' -f lavfi -i ' . escapeshellarg('sine=frequency=523.25:sample_rate=48000')
+        . ' -t 2 -c:a pcm_s16le -ar 48000 -ac 1 ' . escapeshellarg($path);
+    exec($command, $output, $code);
+    if ($code !== 0 || !is_file($path) || filesize($path) <= 0) throw new RuntimeException('Unable to create audio fixture.');
+}
+
 function media_pipeline_upload(string $source, string $name, string $destination, string $role, ?string $preset = null): array {
     return upload_file([
         'error' => UPLOAD_ERR_OK,
@@ -53,6 +63,15 @@ function media_pipeline_upload(string $source, string $name, string $destination
         'name' => $name,
         'size' => filesize($source),
     ], $destination, ALLOWED_IMAGE_TYPES, MAX_UPLOAD_SIZE, $role, $preset);
+}
+
+function media_pipeline_audio_upload(string $source, string $name, string $destination, ?string $preset = null): array {
+    return upload_file([
+        'error' => UPLOAD_ERR_OK,
+        'tmp_name' => $source,
+        'name' => $name,
+        'size' => filesize($source),
+    ], $destination, ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE, 'music', $preset);
 }
 
 $created = [];
@@ -121,6 +140,88 @@ try {
     $themeOnlyConfig['gallery']['items'] = [];
     media_pipeline_assert(get_gallery_items($themeOnlyConfig) === [], 'Theme asset does not become Gallery automatically');
     $created[] = $themeAsset['path'];
+
+    $audioSource = sys_get_temp_dir() . '/' . $token . '-music.wav';
+    media_pipeline_audio_fixture($audioSource);
+    $fixtures[] = $audioSource;
+    $audio = media_pipeline_audio_upload($audioSource, 'music.wav', tenant_upload_dir('music'), 'parang');
+    media_pipeline_assert(!empty($audio['success']), 'audio upload processes through FFmpeg');
+    media_pipeline_assert(str_ends_with((string)$audio['path'], '.mp3'), 'audio reference is canonical MP3');
+    media_pipeline_assert(!is_file($audioSource), 'audio original is removed after verified output');
+    media_pipeline_assert(verify_mp3_output($audio['path'], media_requirement('music', 'parang')), 'audio output verifies MIME, codec, sample rate, channels, and duration');
+    $audioRelativePath = relative_path($audio['path']);
+    $audioInventory = list_media_library(['group' => 'music', 'type' => 'audio']);
+    media_pipeline_assert(in_array($audioRelativePath, array_column($audioInventory, 'path'), true), 'File Manager inventory lists the canonical music MP3');
+    $audioConfig = config_defaults();
+    $audioConfig['media']['music'] = $audioRelativePath;
+    media_pipeline_assert(save_config($audioConfig), 'music reference persists through canonical tenant config');
+    media_pipeline_assert((load_config()['media']['music'] ?? '') === $audioRelativePath, 'persisted music reference reloads unchanged');
+    $created[] = $audio['path'];
+
+    $musicReplacementSource = sys_get_temp_dir() . '/' . $token . '-music-replacement.wav';
+    media_pipeline_audio_fixture($musicReplacementSource);
+    $fixtures[] = $musicReplacementSource;
+    $musicReplacement = replace_uploaded_asset($audioRelativePath, ['error' => UPLOAD_ERR_OK, 'tmp_name' => $musicReplacementSource, 'name' => 'replacement.wav', 'size' => filesize($musicReplacementSource)]);
+    media_pipeline_assert(!empty($musicReplacement['success']) && str_ends_with((string)($musicReplacement['path'] ?? ''), '.mp3'), 'music replacement produces a new verified canonical MP3');
+    media_pipeline_assert(is_file($audio['path']), 'old music remains until reference update and save succeed');
+    $musicReplacementConfig = config_defaults();
+    $musicReplacementConfig['media']['music'] = $musicReplacement['old_path'];
+    replace_media_references($musicReplacementConfig, $musicReplacement['old_path'], $musicReplacement['path']);
+    media_pipeline_assert(($musicReplacementConfig['media']['music'] ?? '') === $musicReplacement['path'], 'music replacement updates reference before cleanup');
+    media_pipeline_assert(cleanup_replaced_media($musicReplacement['old_path'], $musicReplacementConfig), 'old music is removed after reference update');
+    $created[] = ROOT_DIR . '/' . ltrim((string)$musicReplacement['path'], '/');
+    media_pipeline_assert(!is_file(ROOT_DIR . '/' . $musicReplacement['old_path']), 'old music no longer remains after safe cleanup');
+
+    $invalidAudioSource = sys_get_temp_dir() . '/' . $token . '-invalid-audio.mp3';
+    file_put_contents($invalidAudioSource, 'not an audio file');
+    $fixtures[] = $invalidAudioSource;
+    $invalidAudio = media_pipeline_audio_upload($invalidAudioSource, 'invalid.mp3', tenant_upload_dir('music'), 'parang');
+    media_pipeline_assert(empty($invalidAudio['success']), 'invalid audio MIME is rejected safely');
+    media_pipeline_assert(is_file($invalidAudioSource), 'invalid audio source remains available for failure reporting');
+    $audioFailure = process_audio_to_mp3($invalidAudioSource, tenant_upload_dir('music'), 'music', 'parang', 'invalid.mp3');
+    media_pipeline_assert(empty($audioFailure['success']), 'audio processing failure is reported');
+    media_pipeline_assert(is_file($invalidAudioSource), 'audio processing failure preserves the temporary original');
+    media_pipeline_assert(count(glob(tenant_upload_dir('music') . '/.*.tmp.mp3') ?: []) === 0, 'audio processing failure leaves no temporary MP3 in canonical storage');
+
+    $wrongExtensionSource = sys_get_temp_dir() . '/' . $token . '-wrong-extension.wav';
+    media_pipeline_audio_fixture($wrongExtensionSource);
+    $fixtures[] = $wrongExtensionSource;
+    $wrongExtension = media_pipeline_audio_upload($wrongExtensionSource, 'music.txt', tenant_upload_dir('music'), 'parang');
+    media_pipeline_assert(empty($wrongExtension['success']), 'audio extension mismatch is rejected safely');
+    media_pipeline_assert(is_file($wrongExtensionSource), 'extension-mismatch audio source remains available');
+
+    $oversizedAudioSource = sys_get_temp_dir() . '/' . $token . '-oversized-audio.wav';
+    media_pipeline_audio_fixture($oversizedAudioSource);
+    $fixtures[] = $oversizedAudioSource;
+    $oversizedAudio = upload_file(['error' => UPLOAD_ERR_OK, 'tmp_name' => $oversizedAudioSource, 'name' => 'oversized.wav', 'size' => MAX_MUSIC_UPLOAD_SIZE + 1], tenant_upload_dir('music'), ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE, 'music', 'parang');
+    media_pipeline_assert(empty($oversizedAudio['success']), 'oversized audio upload is rejected');
+    media_pipeline_assert(is_file($oversizedAudioSource), 'oversized audio source is retained');
+
+    $missingBinarySource = sys_get_temp_dir() . '/' . $token . '-missing-ffmpeg.wav';
+    media_pipeline_audio_fixture($missingBinarySource);
+    $fixtures[] = $missingBinarySource;
+    $savedPath = getenv('PATH');
+    putenv('PATH=');
+    $missingBinary = process_audio_to_mp3($missingBinarySource, tenant_upload_dir('music'), 'music', 'parang', 'missing-ffmpeg.wav');
+    if ($savedPath !== false) putenv('PATH=' . $savedPath); else putenv('PATH');
+    media_pipeline_assert(empty($missingBinary['success']), 'missing FFmpeg/FFprobe is reported');
+    media_pipeline_assert(is_file($missingBinarySource), 'missing FFmpeg/FFprobe preserves audio source');
+
+    $zeroAudioOutput = tenant_upload_dir('music') . '/zero-output.mp3';
+    file_put_contents($zeroAudioOutput, '');
+    media_pipeline_assert(!verify_mp3_output($zeroAudioOutput, media_requirement('music', 'parang')), 'zero-byte MP3 output is rejected by verifier');
+    @unlink($zeroAudioOutput);
+    $corruptAudioOutput = tenant_upload_dir('music') . '/corrupt-output.mp3';
+    file_put_contents($corruptAudioOutput, 'corrupt mp3 output');
+    media_pipeline_assert(!verify_mp3_output($corruptAudioOutput, media_requirement('music', 'parang')), 'corrupt MP3 output is rejected by verifier');
+    @unlink($corruptAudioOutput);
+
+    $invalidDestinationAudioSource = sys_get_temp_dir() . '/' . $token . '-invalid-audio-destination.wav';
+    media_pipeline_audio_fixture($invalidDestinationAudioSource);
+    $fixtures[] = $invalidDestinationAudioSource;
+    $invalidDestinationAudio = upload_file(['error' => UPLOAD_ERR_OK, 'tmp_name' => $invalidDestinationAudioSource, 'name' => 'invalid-destination.wav', 'size' => filesize($invalidDestinationAudioSource)], sys_get_temp_dir(), ALLOWED_AUDIO_TYPES, MAX_MUSIC_UPLOAD_SIZE, 'music', 'parang');
+    media_pipeline_assert(empty($invalidDestinationAudio['success']), 'audio destination outside active tenant is rejected');
+    media_pipeline_assert(is_file($invalidDestinationAudioSource), 'invalid audio tenant destination preserves source');
 
     $invalidSource = sys_get_temp_dir() . '/' . $token . '-invalid.jpg';
     file_put_contents($invalidSource, 'not an image');

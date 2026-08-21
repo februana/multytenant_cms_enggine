@@ -2037,15 +2037,25 @@ function find_ffprobe_binary(): ?string {
     return $code === 0 && !empty($output[0]) ? trim((string)$output[0]) : null;
 }
 
+function media_processing_temp_path(string $directory, string $extension): string {
+    $extension = ltrim(strtolower(trim($extension)), '.');
+    if ($extension === '') $extension = 'tmp';
+    return rtrim($directory, '/\\') . '/.' . bin2hex(random_bytes(12)) . '.tmp.' . $extension;
+}
+
 function video_processing_temp_path(string $directory): string {
-    return rtrim($directory, '/\\') . '/.' . bin2hex(random_bytes(12)) . '.tmp.mp4';
+    return media_processing_temp_path($directory, 'mp4');
+}
+
+function audio_processing_temp_path(string $directory): string {
+    return media_processing_temp_path($directory, 'mp3');
 }
 
 function probe_video_stream(string $path, bool $audio = false): ?array {
     $binary = find_ffprobe_binary();
     if ($binary === null || !is_file($path)) return null;
     $selector = $audio ? 'a:0' : 'v:0';
-    $entries = $audio ? 'codec_type,codec_name,sample_rate,channels' : 'codec_type,codec_name,width,height,pix_fmt,r_frame_rate,duration';
+    $entries = $audio ? 'codec_type,codec_name,sample_rate,channels,duration' : 'codec_type,codec_name,width,height,pix_fmt,r_frame_rate,duration';
     $command = escapeshellarg($binary) . ' -v error -select_streams ' . escapeshellarg($selector) . ' -show_entries stream=' . escapeshellarg($entries) . ' -of json ' . escapeshellarg($path) . ' 2>/dev/null';
     $output = [];
     @exec($command, $output, $code);
@@ -2079,6 +2089,62 @@ function verify_mp4_output(string $path, array $requirement = []): bool {
     return true;
 }
 
+function verify_mp3_output(string $path, array $requirement = []): bool {
+    if (!is_file($path) || filesize($path) <= 0 || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'mp3') return false;
+    $mime = safe_image_mime($path);
+    if (!in_array($mime, ['audio/mpeg', 'audio/mp3', 'application/octet-stream'], true)) return false;
+    $audio = probe_video_stream($path, true);
+    if ($audio === null || ($audio['codec_name'] ?? '') !== (string)($requirement['audio_codec'] ?? 'mp3')) return false;
+    if (isset($requirement['sample_rate']) && (int)($audio['sample_rate'] ?? 0) !== (int)$requirement['sample_rate']) return false;
+    if (isset($requirement['channels']) && (int)($audio['channels'] ?? 0) !== (int)$requirement['channels']) return false;
+    return (float)($audio['duration'] ?? 0) > 0.05;
+}
+
+function run_ffmpeg_command(array $parts): array {
+    $command = implode(' ', $parts);
+    $process = @proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($process)) return ['success' => false, 'stderr' => 'Unable to start FFmpeg process.', 'exit_code' => -1];
+    fclose($pipes[0]);
+    stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exitCode = proc_close($process);
+    return ['success' => $exitCode === 0, 'stderr' => (string)$stderr, 'exit_code' => $exitCode];
+}
+
+function process_audio_to_mp3(string $sourcePath, string $destinationDir, string $role = 'music', ?string $preset = null, string $originalName = ''): array {
+    if (!is_file($sourcePath) || !is_readable($sourcePath)) return ['success' => false, 'error' => 'Sumber audio tidak dapat dibaca.'];
+    $requirement = media_requirement($role, $preset);
+    $binary = find_ffmpeg_binary();
+    if ($binary === null || find_ffprobe_binary() === null) return ['success' => false, 'error' => 'FFmpeg dan FFprobe diperlukan untuk memproses musik.'];
+    if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan musik.'];
+    $safeBase = preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($originalName !== '' ? $originalName : basename($sourcePath), PATHINFO_FILENAME));
+    $safeBase = trim((string)$safeBase, '-_');
+    if ($safeBase === '') $safeBase = 'music';
+    $finalName = $safeBase . '-' . bin2hex(random_bytes(8)) . '.mp3';
+    $finalPath = rtrim($destinationDir, '/\\') . '/' . $finalName;
+    $temporaryPath = audio_processing_temp_path($destinationDir);
+    $parts = [
+        escapeshellarg($binary), '-hide_banner', '-loglevel', 'error', '-y',
+        '-i', escapeshellarg($sourcePath), '-map', escapeshellarg('0:a:0'), '-vn', '-sn', '-dn',
+        '-map_metadata', '-1', '-c:a', escapeshellarg((string)($requirement['audio_encoder'] ?? 'libmp3lame')),
+        '-b:a', escapeshellarg((string)($requirement['audio_bitrate'] ?? '160k')),
+        '-ar', (string)(int)($requirement['sample_rate'] ?? 44100), '-ac', (string)(int)($requirement['channels'] ?? 2),
+        escapeshellarg($temporaryPath)
+    ];
+    $run = run_ffmpeg_command($parts);
+    $processed = !empty($run['success']) && verify_mp3_output($temporaryPath, $requirement);
+    if (!$processed || !@rename($temporaryPath, $finalPath) || !verify_mp3_output($finalPath, $requirement)) {
+        if (!empty($run['stderr'])) error_log('MediaProcessor FFmpeg audio failed: ' . trim((string)$run['stderr']));
+        @unlink($temporaryPath);
+        @unlink($finalPath);
+        return ['success' => false, 'error' => 'Gagal memproses musik menjadi MP3 terverifikasi.'];
+    }
+    $audio = probe_video_stream($finalPath, true);
+    return ['success' => true, 'path' => $finalPath, 'name' => $finalName, 'mime' => 'audio/mpeg', 'duration' => (float)($audio['duration'] ?? 0), 'requirement' => $requirement];
+}
+
 function process_video_to_mp4(string $sourcePath, string $destinationDir, string $role = 'love_story_video', ?string $preset = null, string $originalName = ''): array {
     if (!is_file($sourcePath) || !is_readable($sourcePath)) return ['success' => false, 'error' => 'Sumber video tidak dapat dibaca.'];
     $requirement = media_requirement($role, $preset);
@@ -2101,21 +2167,10 @@ function process_video_to_mp4(string $sourcePath, string $destinationDir, string
         '-c:a', escapeshellarg((string)($requirement['audio_codec'] ?? 'aac')), '-b:a', escapeshellarg((string)($requirement['audio_bitrate'] ?? '128k')),
         '-movflags', '+faststart', '-sn', '-dn', escapeshellarg($temporaryPath)
     ];
-    $command = implode(' ', $parts);
-    $process = @proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
-    $processed = false;
-    $stderr = '';
-    if (is_resource($process)) {
-        fclose($pipes[0]);
-        stream_get_contents($pipes[1]);
-        fclose($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-        $exitCode = proc_close($process);
-        $processed = $exitCode === 0 && verify_mp4_output($temporaryPath, $requirement);
-    }
+    $run = run_ffmpeg_command($parts);
+    $processed = !empty($run['success']) && verify_mp4_output($temporaryPath, $requirement);
     if (!$processed || !@rename($temporaryPath, $finalPath) || !verify_mp4_output($finalPath, $requirement)) {
-        if ($stderr !== '') error_log('MediaProcessor FFmpeg failed: ' . trim($stderr));
+        if (!empty($run['stderr'])) error_log('MediaProcessor FFmpeg failed: ' . trim((string)$run['stderr']));
         @unlink($temporaryPath);
         @unlink($finalPath);
         return ['success' => false, 'error' => 'Gagal memproses video menjadi MP4 terverifikasi.'];
@@ -2170,6 +2225,7 @@ function media_requirements(): array {
             'qris_image' => ['max_width' => 1200, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
             'og_image' => ['width' => 1200, 'height' => 630, 'fit' => 'cover', 'crop' => true, 'upscale' => true],
             'theme_asset' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false, 'preserve_alpha' => true],
+            'music' => ['audio_codec' => 'mp3', 'audio_encoder' => 'libmp3lame', 'audio_bitrate' => '160k', 'sample_rate' => 44100, 'channels' => 2],
             'love_story_video' => ['max_width' => 1280, 'max_height' => 720, 'fit' => 'contain', 'video_codec' => 'h264', 'video_encoder' => 'libx264', 'audio_codec' => 'aac', 'pixel_format' => 'yuv420p', 'max_fps' => 30, 'crf' => 25, 'audio_bitrate' => '128k', 'preset' => 'veryfast'],
         ],
         'presets' => [
@@ -2620,6 +2676,15 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
         // it only after the verified final WebP has been atomically installed.
         if (is_file($temporarySource) && $temporarySource !== $result['path']) @unlink($temporarySource);
         $result['extension'] = 'webp';
+        $result['original_extension'] = $extension;
+        return $result;
+    }
+
+    if ($isAudio) {
+        $result = process_audio_to_mp3($temporarySource, $destinationDir, $role, $preset, (string)$file['name']);
+        if (empty($result['success'])) return $result;
+        if (is_file($temporarySource) && $temporarySource !== $result['path']) @unlink($temporarySource);
+        $result['extension'] = 'mp3';
         $result['original_extension'] = $extension;
         return $result;
     }
