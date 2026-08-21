@@ -46,6 +46,15 @@ foreach ($requiredBootstrapReferences as $script) {
     $source = file_get_contents($script);
     assert_true(is_string($source) && str_contains($source, 'runtime-directories.sh'), 'deployment path references shared runtime contract: ' . basename($script));
 }
+$installer = (string) file_get_contents($root . '/deploy/install.sh');
+assert_true(str_contains($installer, 'apache2 apache2-utils php-fpm'), 'native installer installs Apache and PHP-FPM foundation packages');
+assert_true(str_contains($installer, 'composer install --no-dev'), 'native installer installs Composer dependencies from the lock file');
+assert_true(str_contains($installer, 'start_php_fpm_and_detect_socket'), 'native installer detects an active PHP-FPM socket');
+assert_true(str_contains($installer, 'apache2ctl configtest'), 'native installer gates activation on Apache configtest');
+assert_true(str_contains($installer, 'APACHE_WEBDAV_ENABLE'), 'native installer keeps WebDAV explicitly operator-controlled');
+assert_true(!str_contains($installer, 'nginx'), 'native installer does not introduce an Nginx deployment path');
+$updater = (string) file_get_contents($root . '/deploy/update.sh');
+assert_true(str_contains($updater, 'multytenant_cms_enggine.git'), 'updater defaults to the multi-tenant repository');
 
 $dockerfile = (string) file_get_contents($root . '/Dockerfile');
 assert_true(str_contains($dockerfile, 'HEALTHCHECK'), 'Dockerfile declares an HTTP healthcheck');

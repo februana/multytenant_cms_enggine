@@ -1,0 +1,1845 @@
+=== validate ===
+PASS: CMS-first contract validation succeeded.
+EXIT=0
+=== repo_contract ===
+PASS: dewankl registry/contract/layout/IDs/anchors/visual schema checked
+PASS: rainier registry/contract/layout/IDs/anchors/visual schema checked
+PASS: archak registry/contract/layout/IDs/anchors/visual schema checked
+PASS: parang registry/contract/layout/IDs/anchors/visual schema checked
+PASS: pawiwahan registry/contract/layout/IDs/anchors/visual schema checked
+PASS: shubh-vivah registry/contract/layout/IDs/anchors/visual schema checked
+PASS: yami-buzzy registry/contract/layout/IDs/anchors/visual schema checked
+PASS: custom renderer duplicate ID check completed
+PASS: tenant-authorized media delivery contract checked
+EXIT=0
+=== dependency_graph ===
+PASS: required runtime component connected: config.php
+PASS: required runtime component connected: app/theme-contract.php
+PASS: required runtime component connected: app/theme-helper.php
+PASS: required runtime component connected: app/theme-renderer.php
+PASS: required runtime component connected: index.php
+PASS: required runtime component connected: media.php
+INTENTIONALLY_UNUSED: decrypt_visible_password defined at config.php:101; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: tenant_query_scope defined at config.php:409; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: tenant_default_config_from_legacy defined at config.php:414; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: get_safe_config defined at config.php:1867; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: get_config_value defined at config.php:1872; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: set_theme_option defined at config.php:1888; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: build_full_url defined at config.php:1928; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: normalize_path defined at config.php:1934; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: normalize_image_orientation defined at config.php:1953; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: process_uploaded_image defined at config.php:2283; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: write_event_ics defined at config.php:2939; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_contract_data_capabilities defined at app/theme-contract.php:218; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_contract_presentation_capabilities defined at app/theme-contract.php:222; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_contract_has_media_role defined at app/theme-contract.php:236; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_contract_has_visual_capability defined at app/theme-contract.php:249; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_contract_assets defined at app/theme-contract.php:262; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_section_title defined at app/theme-contract.php:347; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_section_subtitle defined at app/theme-contract.php:353; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_capabilities_for defined at app/theme-renderer.php:35; no direct static call, retained as an internal/public helper contract
+INTENTIONALLY_UNUSED: theme_supports_presentation defined at app/theme-renderer.php:78; no direct static call, retained as an internal/public helper contract
+PASS: dewankl rendered asset resolves: /themes/dewankl/assets/icon-192x192.png
+PASS: dewankl rendered asset resolves: /themes/dewankl/original/common.css
+PASS: dewankl rendered asset resolves: /themes/dewankl/original/guest.css
+PASS: dewankl rendered asset resolves: /themes/dewankl/original/animation.css
+PASS: dewankl rendered asset resolves: /themes/dewankl/fidelity-adapter.css
+PASS: dewankl rendered asset resolves: /themes/dewankl/assets/placeholder.webp
+PASS: dewankl rendered asset resolves: /themes/dewankl/script.js
+PASS: dewankl visual capability reaches its layout consumer: accent_color
+PASS: dewankl visual capability reaches its layout consumer: heading_font
+PASS: dewankl visual capability reaches its layout consumer: body_font
+PASS: dewankl visual capability reaches its layout consumer: hero_background
+PASS: dewankl visual capability reaches its layout consumer: welcome_background
+PASS: dewankl visual capability reaches its layout consumer: section_background_home
+PASS: dewankl visual capability reaches its layout consumer: section_background_bride
+PASS: dewankl visual capability reaches its layout consumer: section_background_wedding_date
+PASS: dewankl visual capability reaches its layout consumer: section_background_gallery
+PASS: dewankl visual capability reaches its layout consumer: section_background_love_gift
+PASS: dewankl visual capability reaches its layout consumer: section_background_comment
+PASS: dewankl visual capability reaches its layout consumer: hero_overlay
+PASS: dewankl visual capability reaches its layout consumer: heading_color
+PASS: dewankl visual capability reaches its layout consumer: text_color
+PASS: dewankl visual capability reaches its layout consumer: muted_color
+PASS: dewankl visual capability reaches its layout consumer: link_color
+PASS: dewankl media role connected: cover
+PASS: dewankl media role connected: bride_photo
+PASS: dewankl media role connected: groom_photo
+PASS: dewankl media role connected: couple_photo
+PASS: dewankl media role connected: love_story_video
+PASS: dewankl contract → helper → renderer → HTML chain checked
+PASS: rainier rendered asset resolves: /themes/rainier/original/invite.css
+PASS: rainier rendered asset resolves: /themes/rainier/original/invite-1-adapter.js
+PASS: rainier visual capability reaches its layout consumer: accent_color
+PASS: rainier visual capability reaches its layout consumer: heading_font
+PASS: rainier visual capability reaches its layout consumer: body_font
+PASS: rainier visual capability reaches its layout consumer: hero_background
+PASS: rainier visual capability reaches its layout consumer: glass_opacity
+PASS: rainier visual capability reaches its layout consumer: heading_color
+PASS: rainier visual capability reaches its layout consumer: text_color
+PASS: rainier visual capability reaches its layout consumer: muted_color
+PASS: rainier visual capability reaches its layout consumer: link_color
+PASS: rainier contract → helper → renderer → HTML chain checked
+PASS: archak rendered asset resolves: /themes/archak/original/style.css
+PASS: archak rendered asset resolves: /themes/archak/fidelity-adapter.css
+PASS: archak rendered asset resolves: /themes/archak/original/main.js
+PASS: archak visual capability reaches its layout consumer: accent_color
+PASS: archak visual capability reaches its layout consumer: heading_font
+PASS: archak visual capability reaches its layout consumer: body_font
+PASS: archak visual capability reaches its layout consumer: hero_background
+PASS: archak visual capability reaches its layout consumer: header_badge
+PASS: archak visual capability reaches its layout consumer: hero_title_scale
+PASS: archak visual capability reaches its layout consumer: heading_color
+PASS: archak visual capability reaches its layout consumer: text_color
+PASS: archak visual capability reaches its layout consumer: muted_color
+PASS: archak visual capability reaches its layout consumer: link_color
+PASS: archak media role connected: cover
+PASS: archak media role connected: bride_photo
+PASS: archak media role connected: groom_photo
+PASS: archak media role connected: couple_photo
+PASS: archak contract → helper → renderer → HTML chain checked
+PASS: parang rendered asset resolves: /themes/parang/style.css
+PASS: parang rendered asset resolves: /themes/parang/assets/gunungan.webp
+PASS: parang rendered asset resolves: /themes/parang/assets/wayang.webp
+PASS: parang rendered asset resolves: /themes/parang/script.js
+PASS: parang visual capability reaches its layout consumer: accent_color
+PASS: parang visual capability reaches its layout consumer: heading_font
+PASS: parang visual capability reaches its layout consumer: body_font
+PASS: parang visual capability reaches its layout consumer: hero_background
+PASS: parang visual capability reaches its layout consumer: ornament_left
+PASS: parang visual capability reaches its layout consumer: ornament_right
+PASS: parang visual capability reaches its layout consumer: heading_color
+PASS: parang visual capability reaches its layout consumer: text_color
+PASS: parang visual capability reaches its layout consumer: muted_color
+PASS: parang visual capability reaches its layout consumer: link_color
+PASS: parang media role connected: bride_photo
+PASS: parang media role connected: groom_photo
+PASS: parang contract → helper → renderer → HTML chain checked
+PASS: pawiwahan rendered asset resolves: /themes/pawiwahan/assets/images/icon/site.webmanifest
+PASS: pawiwahan rendered asset resolves: /themes/pawiwahan/style.css
+PASS: pawiwahan rendered asset resolves: /themes/pawiwahan/assets/hero-source.jpg
+PASS: pawiwahan rendered asset resolves: /themes/pawiwahan/assets/js/jquery.countdown.min.js
+PASS: pawiwahan rendered asset resolves: /themes/pawiwahan/script.js
+PASS: pawiwahan visual capability reaches its layout consumer: accent_color
+PASS: pawiwahan visual capability reaches its layout consumer: heading_font
+PASS: pawiwahan visual capability reaches its layout consumer: body_font
+PASS: pawiwahan visual capability reaches its layout consumer: hero_background
+PASS: pawiwahan visual capability reaches its layout consumer: welcome_background
+PASS: pawiwahan visual capability reaches its layout consumer: heading_color
+PASS: pawiwahan visual capability reaches its layout consumer: text_color
+PASS: pawiwahan visual capability reaches its layout consumer: muted_color
+PASS: pawiwahan visual capability reaches its layout consumer: link_color
+PASS: pawiwahan media role connected: cover
+PASS: pawiwahan media role connected: bride_photo
+PASS: pawiwahan media role connected: groom_photo
+PASS: pawiwahan contract → helper → renderer → HTML chain checked
+PASS: shubh-vivah rendered asset resolves: /themes/shubh-vivah/fidelity-adapter.css
+PASS: shubh-vivah rendered asset resolves: /themes/shubh-vivah/assets/audio/source-background.mp3
+PASS: shubh-vivah visual capability reaches its layout consumer: accent_color
+PASS: shubh-vivah visual capability reaches its layout consumer: heading_font
+PASS: shubh-vivah visual capability reaches its layout consumer: body_font
+PASS: shubh-vivah visual capability reaches its layout consumer: hero_background
+PASS: shubh-vivah visual capability reaches its layout consumer: hero_overlay
+PASS: shubh-vivah visual capability reaches its layout consumer: ornament_left
+PASS: shubh-vivah visual capability reaches its layout consumer: ornament_right
+PASS: shubh-vivah visual capability reaches its layout consumer: heading_color
+PASS: shubh-vivah visual capability reaches its layout consumer: text_color
+PASS: shubh-vivah visual capability reaches its layout consumer: muted_color
+PASS: shubh-vivah visual capability reaches its layout consumer: link_color
+PASS: shubh-vivah contract → helper → renderer → HTML chain checked
+PASS: yami-buzzy rendered asset resolves: /themes/yami-buzzy/assets/pic/favicon.png
+PASS: yami-buzzy rendered asset resolves: /themes/yami-buzzy/fidelity-adapter.css
+PASS: yami-buzzy visual capability reaches its layout consumer: accent_color
+PASS: yami-buzzy visual capability reaches its layout consumer: heading_font
+PASS: yami-buzzy visual capability reaches its layout consumer: body_font
+PASS: yami-buzzy visual capability reaches its layout consumer: hero_background
+PASS: yami-buzzy visual capability reaches its layout consumer: welcome_background
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_home
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_couple
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_event
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_story
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_gallery
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_video
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_gift
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_invitation
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_rsvp
+PASS: yami-buzzy visual capability reaches its layout consumer: section_background_closing
+PASS: yami-buzzy visual capability reaches its layout consumer: hero_overlay
+PASS: yami-buzzy visual capability reaches its layout consumer: heading_color
+PASS: yami-buzzy visual capability reaches its layout consumer: text_color
+PASS: yami-buzzy visual capability reaches its layout consumer: muted_color
+PASS: yami-buzzy visual capability reaches its layout consumer: link_color
+PASS: yami-buzzy media role connected: bride_photo
+PASS: yami-buzzy media role connected: groom_photo
+PASS: yami-buzzy media role connected: couple_photo
+PASS: yami-buzzy media role connected: love_story_video
+PASS: yami-buzzy contract → helper → renderer → HTML chain checked
+PASS: custom renderer produced a non-empty render fragment
+PASS: dewankl contract asset hint classified as external CDN dependency: bootstrap@5.3.8
+PASS: dewankl contract asset hint classified as external CDN dependency: fontawesome@7.1.0
+PASS: dewankl contract asset hint classified as external CDN dependency: aos@2.3.4
+PASS: dewankl contract asset hint classified as external CDN dependency: canvas-confetti@1.9.3
+PASS: dewankl contract asset hint classified as local static dependency (themes/dewankl/original/guest.css): guest.css
+PASS: dewankl contract asset hint classified as local static dependency (themes/dewankl/original/guest.js): guest.js
+PASS: dewankl contract asset hint classified as local static dependency (themes/dewankl/original/common.css): common.css
+PASS: dewankl contract asset hint classified as local static dependency (themes/dewankl/original/animation.css): animation.css
+PASS: dewankl contract asset hint classified as abstract/source metadata or runtime capability: theme-media
+PASS: rainier contract asset hint classified as metadata/abstract contract hint: cormorant-garamond-outfit
+PASS: rainier contract asset hint classified as local static dependency (themes/rainier/original/invite.css): invite.css
+PASS: rainier contract asset hint classified as local static dependency (themes/rainier/original/invite-1.js): invite-1.js
+PASS: rainier contract asset hint classified as abstract/source metadata or runtime capability: tally-widget-optional
+PASS: archak contract asset hint classified as abstract/source metadata or runtime capability: fontawesome-kit
+PASS: archak contract asset hint classified as local static dependency (themes/archak/style.css): style.css
+PASS: archak contract asset hint classified as local static dependency (themes/archak/original/main.js): main.js
+PASS: archak contract asset hint classified as abstract/source metadata or runtime capability: theme-media
+PASS: parang contract asset hint classified as metadata/abstract contract hint: libre-caslon-text-manrope
+PASS: parang contract asset hint classified as metadata/abstract contract hint: material-symbols-outlined
+PASS: parang contract asset hint classified as local static dependency (themes/parang/style.css): style.css
+PASS: parang contract asset hint classified as local static dependency (themes/parang/script.js): script.js
+PASS: parang contract asset hint classified as abstract/source metadata or runtime capability: theme-media
+PASS: pawiwahan contract asset hint classified as external CDN dependency: bootstrap@5.0.1
+PASS: pawiwahan contract asset hint classified as external CDN dependency: bootstrap-icons@1.9.1
+PASS: pawiwahan contract asset hint classified as external CDN dependency: jquery@3.6.0
+PASS: pawiwahan contract asset hint classified as external CDN dependency: jquery-countdown@2.2.0
+PASS: pawiwahan contract asset hint classified as local adapter alias (style.css/script.js): pawiwahan.css
+PASS: pawiwahan contract asset hint classified as local adapter alias (style.css/script.js): pawiwahan.js
+PASS: pawiwahan contract asset hint classified as abstract/source metadata or runtime capability: theme-media
+PASS: shubh-vivah contract asset hint classified as metadata/abstract contract hint: arvo-dancing-script
+PASS: shubh-vivah contract asset hint classified as abstract/source metadata or runtime capability: source-ornaments
+PASS: shubh-vivah contract asset hint classified as local static dependency (themes/shubh-vivah/fidelity-adapter.css): fidelity-adapter.css
+PASS: shubh-vivah contract asset hint classified as abstract/source metadata or runtime capability: theme-media
+PASS: yami-buzzy contract asset hint classified as abstract/source metadata or runtime capability: gilroy-font
+PASS: yami-buzzy contract asset hint classified as local static dependency (themes/yami-buzzy/fidelity-adapter.css): fidelity-adapter.css
+PASS: yami-buzzy contract asset hint classified as abstract/source metadata or runtime capability: source-dresscode-icons
+PASS: yami-buzzy contract asset hint classified as abstract/source metadata or runtime capability: theme-media
+PASS: get_theme_asset_url(archak, original/style.css) → existing file
+PASS: get_theme_asset_url(archak, fidelity-adapter.css) → existing file
+PASS: get_theme_asset_url(archak, original/main.js) → existing file
+PASS: get_theme_asset_url(dewankl, assets/placeholder.webp) → existing file
+PASS: get_theme_asset_url(dewankl, assets/icon-192x192.png) → existing file
+PASS: get_theme_asset_url(dewankl, assets/donate.png) → existing file
+PASS: get_theme_asset_url(dewankl, original/common.css) → existing file
+PASS: get_theme_asset_url(dewankl, original/guest.css) → existing file
+PASS: get_theme_asset_url(dewankl, original/animation.css) → existing file
+PASS: get_theme_asset_url(dewankl, fidelity-adapter.css) → existing file
+PASS: get_theme_asset_url(dewankl, script.js) → existing file
+PASS: get_theme_asset_url(parang, assets/parang-pattern.webp) → existing file
+PASS: get_theme_asset_url(parang, assets/gunungan.webp) → existing file
+PASS: get_theme_asset_url(parang, assets/wayang.webp) → existing file
+PASS: get_theme_asset_url(parang, style.css) → existing file
+PASS: get_theme_asset_url(parang, script.js) → existing file
+PASS: get_theme_asset_url(pawiwahan, style.css) → existing file
+PASS: get_theme_asset_url(pawiwahan, assets/js/jquery.countdown.min.js) → existing file
+PASS: get_theme_asset_url(pawiwahan, script.js) → existing file
+PASS: get_theme_asset_url(rainier, original/invite.css) → existing file
+PASS: get_theme_asset_url(rainier, original/invite-1-adapter.js) → existing file
+PASS: get_theme_asset_url(shubh-vivah, fidelity-adapter.css) → existing file
+PASS: get_theme_asset_url(yami-buzzy, fidelity-adapter.css) → existing file
+PASS: endpoint provider connected: save.php via root wrapper
+PASS: endpoint provider connected: messages.php via root wrapper
+PASS: endpoint provider connected: gallery.php via root wrapper
+PASS: endpoint provider connected: love-story.php via app implementation
+PASS: endpoint provider connected: event.ics.php via root wrapper
+PASS: endpoint provider connected: media.php via root wrapper
+PASS: endpoint has at least one runtime consumer/reference: save.php
+PASS: endpoint has at least one runtime consumer/reference: messages.php
+PASS: endpoint has at least one runtime consumer/reference: gallery.php
+INTENTIONALLY_UNUSED: love-story.php is a direct/public endpoint contract with no static fetch consumer
+PASS: endpoint has at least one runtime consumer/reference: event.ics.php
+PASS: endpoint has Apache rewrite consumer: media.php
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: site
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: wedding
+PASS: config key family connected: parents
+PASS: config key family connected: parents
+PASS: config key family connected: parents
+PASS: config key family connected: parents
+PASS: config key family connected: schedule
+PASS: config key family connected: schedule
+PASS: config key family connected: schedule
+PASS: config key family connected: schedule
+PASS: config key family connected: schedule
+PASS: config key family connected: schedule
+PASS: config key family connected: schedule
+PASS: config key family connected: location
+PASS: config key family connected: location
+PASS: config key family connected: location
+PASS: config key family connected: location
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: media
+PASS: config key family connected: gallery
+PASS: config key family connected: gallery
+PASS: config key family connected: gift
+PASS: config key family connected: gift
+PASS: config key family connected: gift
+PASS: config key family connected: gift
+PASS: config key family connected: gift
+PASS: config key family connected: gift
+PASS: config key family connected: whatsapp
+PASS: config key family connected: whatsapp
+PASS: config key family connected: admin
+PASS: config key family connected: admin
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: theme
+PASS: config key family connected: buttons
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: sections
+PASS: config key family connected: love_story
+PASS: config key family connected: dresscode
+PASS: config key family connected: dresscode
+PASS: config key family connected: dresscode
+PASS: config key family connected: dresscode
+PASS: config key family connected: dresscode
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_options
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: theme_visuals
+PASS: config key family connected: custom_css
+INTENTIONALLY_UNUSED: config.php:1635 mentions legacy config.json only for compatibility documentation
+PASS: app/theme-renderer.php:265 references the current tenant event.ics.php endpoint
+PASS: uploads → Apache rewrite → media.php → current tenant containment chain connected
+PASS: environment template enables validated auto-provisioning by default
+
+SUMMARY: 0 confirmed failures, 0 warnings
+PASS: dependency graph audit completed without confirmed broken dependency.
+EXIT=0
+=== auth_smoke ===
+PASS: tenant admin session valid for its active tenant
+PASS: known tenant mutation is allowed
+PASS: unknown mutation is denied
+PASS: current password verification succeeds
+PASS: wrong current password is rejected
+PASS: session is invalidated when database role no longer matches session
+PASS: super admin session is valid only when database identity matches
+PASS: audit event is stored with target tenant
+AUTH SMOKE PASSED
+EXIT=0
+=== deployment_smoke ===
+PASS: deployment defaults, runtime data paths, asset bootstrap, and optional media guards
+EXIT=0
+=== theme_contract ===
+PASS: theme contract smoke test
+EXIT=0
+=== theme_render ===
+PASS: custom rendered (10146 bytes)
+PASS: dewankl rendered (60349 bytes)
+PASS: shubh-vivah rendered (11538 bytes)
+PASS: yami-buzzy rendered (15878 bytes)
+PASS: rainier rendered (15220 bytes)
+PASS: archak rendered (10310 bytes)
+PASS: parang rendered (17073 bytes)
+PASS: pawiwahan rendered (16675 bytes)
+EXIT=0
+=== theme_regression ===
+PASS: switch -> custom
+PASS: switch -> dewankl
+PASS: switch -> rainier
+PASS: switch -> archak
+PASS: switch -> parang
+PASS: switch -> pawiwahan
+PASS: switch -> shubh-vivah
+PASS: switch -> yami-buzzy
+PASS: switch -> custom
+EXIT=0
+=== theme_localization ===
+PASS: Indonesian static guest UI, global preset selector, and source-template boundaries are covered
+EXIT=0
+=== visual_contract ===
+PASS: custom declares only its supported visual capabilities
+PASS: custom resolves a default for accent_color
+PASS: custom resolves a default for background_color
+PASS: custom resolves a default for paper_color
+PASS: custom resolves a default for text_color
+PASS: custom resolves a default for heading_font
+PASS: custom resolves a default for body_font
+PASS: custom resolves a default for hero_background
+PASS: custom resolves a default for hero_overlay
+PASS: custom resolves a default for hero_title_scale
+PASS: custom resolves a default for section_background_home
+PASS: custom resolves a default for section_background_event
+PASS: custom resolves a default for section_background_story
+PASS: custom resolves a default for section_background_gallery
+PASS: custom resolves a default for section_background_location
+PASS: custom resolves a default for section_background_gift
+PASS: custom resolves a default for section_background_rsvp
+PASS: custom resolves a default for heading_color
+PASS: custom resolves a default for muted_color
+PASS: custom resolves a default for link_color
+PASS: dewankl declares only its supported visual capabilities
+PASS: dewankl resolves a default for accent_color
+PASS: dewankl resolves a default for heading_font
+PASS: dewankl resolves a default for body_font
+PASS: dewankl resolves a default for hero_background
+PASS: dewankl resolves a default for welcome_background
+PASS: dewankl resolves a default for section_background_home
+PASS: dewankl resolves a default for section_background_bride
+PASS: dewankl resolves a default for section_background_wedding_date
+PASS: dewankl resolves a default for section_background_gallery
+PASS: dewankl resolves a default for section_background_love_gift
+PASS: dewankl resolves a default for section_background_comment
+PASS: dewankl resolves a default for hero_overlay
+PASS: dewankl resolves a default for heading_color
+PASS: dewankl resolves a default for text_color
+PASS: dewankl resolves a default for muted_color
+PASS: dewankl resolves a default for link_color
+PASS: rainier declares only its supported visual capabilities
+PASS: rainier resolves a default for accent_color
+PASS: rainier resolves a default for heading_font
+PASS: rainier resolves a default for body_font
+PASS: rainier resolves a default for hero_background
+PASS: rainier resolves a default for section_background_event_details
+PASS: rainier resolves a default for section_background_schedule
+PASS: rainier resolves a default for section_background_quotes
+PASS: rainier resolves a default for section_background_rsvp
+PASS: rainier resolves a default for glass_opacity
+PASS: rainier resolves a default for heading_color
+PASS: rainier resolves a default for text_color
+PASS: rainier resolves a default for muted_color
+PASS: rainier resolves a default for link_color
+PASS: archak declares only its supported visual capabilities
+PASS: archak resolves a default for accent_color
+PASS: archak resolves a default for heading_font
+PASS: archak resolves a default for body_font
+PASS: archak resolves a default for hero_background
+PASS: archak resolves a default for section_background_timeline
+PASS: archak resolves a default for section_background_gallery
+PASS: archak resolves a default for section_background_stay
+PASS: archak resolves a default for section_background_registry
+PASS: archak resolves a default for header_badge
+PASS: archak resolves a default for hero_title_scale
+PASS: archak resolves a default for heading_color
+PASS: archak resolves a default for text_color
+PASS: archak resolves a default for muted_color
+PASS: archak resolves a default for link_color
+PASS: parang declares only its supported visual capabilities
+PASS: parang resolves a default for accent_color
+PASS: parang resolves a default for heading_font
+PASS: parang resolves a default for body_font
+PASS: parang resolves a default for hero_background
+PASS: parang resolves a default for section_background_home
+PASS: parang resolves a default for section_background_gallery
+PASS: parang resolves a default for section_background_location
+PASS: parang resolves a default for ornament_left
+PASS: parang resolves a default for ornament_right
+PASS: parang resolves a default for heading_color
+PASS: parang resolves a default for text_color
+PASS: parang resolves a default for muted_color
+PASS: parang resolves a default for link_color
+PASS: pawiwahan declares only its supported visual capabilities
+PASS: pawiwahan resolves a default for accent_color
+PASS: pawiwahan resolves a default for heading_font
+PASS: pawiwahan resolves a default for body_font
+PASS: pawiwahan resolves a default for hero_background
+PASS: pawiwahan resolves a default for welcome_background
+PASS: pawiwahan resolves a default for section_background_gallery
+PASS: pawiwahan resolves a default for section_background_location
+PASS: pawiwahan resolves a default for section_background_gift
+PASS: pawiwahan resolves a default for section_background_messages
+PASS: pawiwahan resolves a default for heading_color
+PASS: pawiwahan resolves a default for text_color
+PASS: pawiwahan resolves a default for muted_color
+PASS: pawiwahan resolves a default for link_color
+PASS: shubh-vivah declares only its supported visual capabilities
+PASS: shubh-vivah resolves a default for accent_color
+PASS: shubh-vivah resolves a default for heading_font
+PASS: shubh-vivah resolves a default for body_font
+PASS: shubh-vivah resolves a default for hero_background
+PASS: shubh-vivah resolves a default for hero_overlay
+PASS: shubh-vivah resolves a default for section_background_event
+PASS: shubh-vivah resolves a default for section_background_gallery
+PASS: shubh-vivah resolves a default for section_background_rsvp
+PASS: shubh-vivah resolves a default for ornament_left
+PASS: shubh-vivah resolves a default for ornament_right
+PASS: shubh-vivah resolves a default for heading_color
+PASS: shubh-vivah resolves a default for text_color
+PASS: shubh-vivah resolves a default for muted_color
+PASS: shubh-vivah resolves a default for link_color
+PASS: shubh-vivah resolves a default for section_background_home
+PASS: yami-buzzy declares only its supported visual capabilities
+PASS: yami-buzzy resolves a default for accent_color
+PASS: yami-buzzy resolves a default for heading_font
+PASS: yami-buzzy resolves a default for body_font
+PASS: yami-buzzy resolves a default for hero_background
+PASS: yami-buzzy resolves a default for welcome_background
+PASS: yami-buzzy resolves a default for section_background_home
+PASS: yami-buzzy resolves a default for section_background_couple
+PASS: yami-buzzy resolves a default for section_background_event
+PASS: yami-buzzy resolves a default for section_background_story
+PASS: yami-buzzy resolves a default for section_background_gallery
+PASS: yami-buzzy resolves a default for section_background_video
+PASS: yami-buzzy resolves a default for section_background_gift
+PASS: yami-buzzy resolves a default for section_background_invitation
+PASS: yami-buzzy resolves a default for section_background_rsvp
+PASS: yami-buzzy resolves a default for section_background_closing
+PASS: yami-buzzy resolves a default for hero_overlay
+PASS: yami-buzzy resolves a default for heading_color
+PASS: yami-buzzy resolves a default for text_color
+PASS: yami-buzzy resolves a default for muted_color
+PASS: yami-buzzy resolves a default for link_color
+PASS: Removed legacy preset has no contract sections
+PASS: Preset selector exposes only renderer-backed built-ins
+PASS: Shubh Vivah visual override persists
+PASS: Shubh Vivah hero media path persists unchanged
+PASS: Yami Buzzy visual override persists independently
+PASS: Yami Buzzy welcome media path persists independently
+PASS: New preset visual overrides do not leak across presets
+PASS: switching to custom succeeds
+PASS: switching to custom preserves Shubh Vivah visuals
+PASS: switching to custom preserves Yami Buzzy visuals
+PASS: switching to custom preserves Archak visuals
+PASS: switching to dewankl succeeds
+PASS: switching to dewankl preserves Shubh Vivah visuals
+PASS: switching to dewankl preserves Yami Buzzy visuals
+PASS: switching to dewankl preserves Archak visuals
+PASS: switching to rainier succeeds
+PASS: switching to rainier preserves Shubh Vivah visuals
+PASS: switching to rainier preserves Yami Buzzy visuals
+PASS: switching to rainier preserves Archak visuals
+PASS: switching to archak succeeds
+PASS: switching to archak preserves Shubh Vivah visuals
+PASS: switching to archak preserves Yami Buzzy visuals
+PASS: switching to archak preserves Archak visuals
+PASS: switching to parang succeeds
+PASS: switching to parang preserves Shubh Vivah visuals
+PASS: switching to parang preserves Yami Buzzy visuals
+PASS: switching to parang preserves Archak visuals
+PASS: switching to pawiwahan succeeds
+PASS: switching to pawiwahan preserves Shubh Vivah visuals
+PASS: switching to pawiwahan preserves Yami Buzzy visuals
+PASS: switching to pawiwahan preserves Archak visuals
+PASS: switching to shubh-vivah succeeds
+PASS: switching to shubh-vivah preserves Shubh Vivah visuals
+PASS: switching to shubh-vivah preserves Yami Buzzy visuals
+PASS: switching to shubh-vivah preserves Archak visuals
+PASS: switching to yami-buzzy succeeds
+PASS: switching to yami-buzzy preserves Shubh Vivah visuals
+PASS: switching to yami-buzzy preserves Yami Buzzy visuals
+PASS: switching to yami-buzzy preserves Archak visuals
+PASS: switching to custom succeeds
+PASS: switching to custom preserves Shubh Vivah visuals
+PASS: switching to custom preserves Yami Buzzy visuals
+PASS: switching to custom preserves Archak visuals
+PASS: Media usage detects Shubh Vivah visual references
+PASS: Reset clears only Shubh Vivah overrides
+PASS: Reset preserves hidden Yami Buzzy overrides
+PASS: Reset preserves hidden Archak overrides
+PASS: HTTPS visual URL is not prefixed with a slash
+PASS: Color validation accepts valid hex
+PASS: Color validation rejects invalid values
+PASS: Range validation rejects out-of-range values
+PASS: Shubh Vivah render includes stored accent bridge
+PASS: Shubh Vivah render includes stored hero media bridge
+PASS: Shubh Vivah render includes localized CTA
+PASS: Shubh Vivah render preserves source card and event flow
+PASS: Yami Buzzy render includes stored accent bridge
+PASS: Yami Buzzy render includes stored welcome media bridge
+PASS: Yami Buzzy render preserves modal and story flow
+PASS: Yami Buzzy render exposes section background variables
+PASS: Dewankl render includes the stored accent bridge
+PASS: Dewankl render includes the stored hero media bridge
+PASS: Rainier render includes the stored accent bridge
+PASS: Rainier render includes the stored hero media bridge
+PASS: Archak render includes the stored accent bridge
+PASS: Archak render includes the stored hero media bridge
+PASS: Parang render includes the stored accent bridge
+PASS: Parang render includes the stored hero media bridge
+PASS: Pawiwahan render includes the stored accent bridge
+PASS: Pawiwahan render includes the stored hero media bridge
+PASS: Shubh-vivah render includes the stored accent bridge
+PASS: Shubh-vivah render includes the stored hero media bridge
+PASS: Yami-buzzy render includes the stored accent bridge
+PASS: Yami-buzzy render includes the stored hero media bridge
+PASS: Custom renderer exposes gallery background capability
+PASS: DewanaKL render exposes gallery background capability
+PASS: Admin resolves the current preset at action time
+PASS: Admin exposes dynamic visual schemas to the editor
+PASS: Admin exposes per-preset visual reset
+PASS: Admin exposes canonical image assets to visual editor
+PASS: Admin exposes named color palettes to visual editor
+PASS: Admin dynamic editor applies named color palette selections
+PASS: Admin visual editor consumes canonical media assets
+PASS: Admin visual preview handles scoped image capabilities
+PASS: Admin explains visual customization in plain Indonesian
+PASS: Admin image selector uses plain Indonesian fallback wording
+PASS: global site URL survives Custom -> shubh-vivah
+PASS: global site URL survives Custom -> yami-buzzy
+PASS: global site URL survives Custom -> rainier
+PASS: global site URL survives Custom -> archak
+PASS: global site URL survives Custom -> dewankl
+PASS: Canonical existing WebP is accepted for visual image reference
+PASS: visual contract smoke test
+EXIT=0
+=== visual_capabilities ===
+PASS: dewankl exists in registry
+PASS: dewankl declares visual capability accent_color
+PASS: dewankl declares visual capability heading_color
+PASS: dewankl declares visual capability text_color
+PASS: dewankl declares visual capability muted_color
+PASS: dewankl declares visual capability link_color
+PASS: dewankl declares visual capability heading_font
+PASS: dewankl declares visual capability body_font
+PASS: dewankl has at least 10 options for heading_font
+PASS: dewankl default heading_font is selectable
+PASS: dewankl has at least 10 options for body_font
+PASS: dewankl default body_font is selectable
+PASS: dewankl has a named palette for accent_color
+PASS: dewankl default accent_color exists in palette
+PASS: dewankl has a named palette for heading_color
+PASS: dewankl default heading_color exists in palette
+PASS: dewankl has a named palette for text_color
+PASS: dewankl default text_color exists in palette
+PASS: dewankl has a named palette for muted_color
+PASS: dewankl default muted_color exists in palette
+PASS: dewankl has a named palette for link_color
+PASS: dewankl default link_color exists in palette
+PASS: dewankl loads the shared font library
+PASS: dewankl image capability hero_background reaches layout
+PASS: preview map mentions image capability dewankl.hero_background
+PASS: dewankl image capability welcome_background reaches layout
+PASS: preview map mentions image capability dewankl.welcome_background
+PASS: dewankl image capability section_background_home reaches layout
+PASS: preview map mentions image capability dewankl.section_background_home
+PASS: dewankl section background section_background_home reaches layout
+PASS: preview map mentions section background dewankl.section_background_home
+PASS: dewankl image capability section_background_bride reaches layout
+PASS: preview map mentions image capability dewankl.section_background_bride
+PASS: dewankl section background section_background_bride reaches layout
+PASS: preview map mentions section background dewankl.section_background_bride
+PASS: dewankl image capability section_background_wedding_date reaches layout
+PASS: preview map mentions image capability dewankl.section_background_wedding_date
+PASS: dewankl section background section_background_wedding_date reaches layout
+PASS: preview map mentions section background dewankl.section_background_wedding_date
+PASS: dewankl image capability section_background_gallery reaches layout
+PASS: preview map mentions image capability dewankl.section_background_gallery
+PASS: dewankl section background section_background_gallery reaches layout
+PASS: preview map mentions section background dewankl.section_background_gallery
+PASS: dewankl image capability section_background_love_gift reaches layout
+PASS: preview map mentions image capability dewankl.section_background_love_gift
+PASS: dewankl section background section_background_love_gift reaches layout
+PASS: preview map mentions section background dewankl.section_background_love_gift
+PASS: dewankl image capability section_background_comment reaches layout
+PASS: preview map mentions image capability dewankl.section_background_comment
+PASS: dewankl section background section_background_comment reaches layout
+PASS: preview map mentions section background dewankl.section_background_comment
+PASS: preview map contains dewankl.accent_color
+PASS: dewankl renderer consumes --cms-dewana-accent
+PASS: preview map contains dewankl.heading_color
+PASS: dewankl renderer consumes --cms-dewana-heading-color
+PASS: preview map contains dewankl.text_color
+PASS: dewankl renderer consumes --cms-dewana-text
+PASS: preview map contains dewankl.muted_color
+PASS: dewankl renderer consumes --cms-dewana-muted
+PASS: preview map contains dewankl.link_color
+PASS: dewankl renderer consumes --cms-dewana-link
+PASS: rainier exists in registry
+PASS: rainier declares visual capability accent_color
+PASS: rainier declares visual capability heading_color
+PASS: rainier declares visual capability text_color
+PASS: rainier declares visual capability muted_color
+PASS: rainier declares visual capability link_color
+PASS: rainier declares visual capability heading_font
+PASS: rainier declares visual capability body_font
+PASS: rainier has at least 10 options for heading_font
+PASS: rainier default heading_font is selectable
+PASS: rainier has at least 10 options for body_font
+PASS: rainier default body_font is selectable
+PASS: rainier has a named palette for accent_color
+PASS: rainier default accent_color exists in palette
+PASS: rainier has a named palette for heading_color
+PASS: rainier default heading_color exists in palette
+PASS: rainier has a named palette for text_color
+PASS: rainier default text_color exists in palette
+PASS: rainier has a named palette for muted_color
+PASS: rainier default muted_color exists in palette
+PASS: rainier has a named palette for link_color
+PASS: rainier default link_color exists in palette
+PASS: rainier loads the shared font library
+PASS: rainier image capability hero_background reaches layout
+PASS: preview map mentions image capability rainier.hero_background
+PASS: rainier image capability section_background_event_details reaches layout
+PASS: preview map mentions image capability rainier.section_background_event_details
+PASS: rainier section background section_background_event_details reaches layout
+PASS: preview map mentions section background rainier.section_background_event_details
+PASS: rainier image capability section_background_schedule reaches layout
+PASS: preview map mentions image capability rainier.section_background_schedule
+PASS: rainier section background section_background_schedule reaches layout
+PASS: preview map mentions section background rainier.section_background_schedule
+PASS: rainier image capability section_background_quotes reaches layout
+PASS: preview map mentions image capability rainier.section_background_quotes
+PASS: rainier section background section_background_quotes reaches layout
+PASS: preview map mentions section background rainier.section_background_quotes
+PASS: rainier image capability section_background_rsvp reaches layout
+PASS: preview map mentions image capability rainier.section_background_rsvp
+PASS: rainier section background section_background_rsvp reaches layout
+PASS: preview map mentions section background rainier.section_background_rsvp
+PASS: preview map contains rainier.accent_color
+PASS: rainier renderer consumes --primary
+PASS: preview map contains rainier.heading_color
+PASS: rainier renderer consumes --rainier-heading-color
+PASS: preview map contains rainier.text_color
+PASS: rainier renderer consumes --text
+PASS: preview map contains rainier.muted_color
+PASS: rainier renderer consumes --muted
+PASS: preview map contains rainier.link_color
+PASS: rainier renderer consumes --rainier-link
+PASS: archak exists in registry
+PASS: archak declares visual capability accent_color
+PASS: archak declares visual capability heading_color
+PASS: archak declares visual capability text_color
+PASS: archak declares visual capability muted_color
+PASS: archak declares visual capability link_color
+PASS: archak declares visual capability heading_font
+PASS: archak declares visual capability body_font
+PASS: archak has at least 10 options for heading_font
+PASS: archak default heading_font is selectable
+PASS: archak has at least 10 options for body_font
+PASS: archak default body_font is selectable
+PASS: archak has a named palette for accent_color
+PASS: archak default accent_color exists in palette
+PASS: archak has a named palette for heading_color
+PASS: archak default heading_color exists in palette
+PASS: archak has a named palette for text_color
+PASS: archak default text_color exists in palette
+PASS: archak has a named palette for muted_color
+PASS: archak default muted_color exists in palette
+PASS: archak has a named palette for link_color
+PASS: archak default link_color exists in palette
+PASS: archak loads the shared font library
+PASS: archak image capability hero_background reaches layout
+PASS: preview map mentions image capability archak.hero_background
+PASS: archak image capability section_background_timeline reaches layout
+PASS: preview map mentions image capability archak.section_background_timeline
+PASS: archak section background section_background_timeline reaches layout
+PASS: preview map mentions section background archak.section_background_timeline
+PASS: archak image capability section_background_gallery reaches layout
+PASS: preview map mentions image capability archak.section_background_gallery
+PASS: archak section background section_background_gallery reaches layout
+PASS: preview map mentions section background archak.section_background_gallery
+PASS: archak image capability section_background_stay reaches layout
+PASS: preview map mentions image capability archak.section_background_stay
+PASS: archak section background section_background_stay reaches layout
+PASS: preview map mentions section background archak.section_background_stay
+PASS: archak image capability section_background_registry reaches layout
+PASS: preview map mentions image capability archak.section_background_registry
+PASS: archak section background section_background_registry reaches layout
+PASS: preview map mentions section background archak.section_background_registry
+PASS: archak image capability header_badge reaches layout
+PASS: preview map mentions image capability archak.header_badge
+PASS: preview map contains archak.accent_color
+PASS: archak renderer consumes --cms-archak-accent
+PASS: preview map contains archak.heading_color
+PASS: archak renderer consumes --cms-archak-heading-color
+PASS: preview map contains archak.text_color
+PASS: archak renderer consumes --cms-archak-text
+PASS: preview map contains archak.muted_color
+PASS: archak renderer consumes --cms-archak-muted
+PASS: preview map contains archak.link_color
+PASS: archak renderer consumes --cms-archak-link
+PASS: parang exists in registry
+PASS: parang declares visual capability accent_color
+PASS: parang declares visual capability heading_color
+PASS: parang declares visual capability text_color
+PASS: parang declares visual capability muted_color
+PASS: parang declares visual capability link_color
+PASS: parang declares visual capability heading_font
+PASS: parang declares visual capability body_font
+PASS: parang has at least 10 options for heading_font
+PASS: parang default heading_font is selectable
+PASS: parang has at least 10 options for body_font
+PASS: parang default body_font is selectable
+PASS: parang has a named palette for accent_color
+PASS: parang default accent_color exists in palette
+PASS: parang has a named palette for heading_color
+PASS: parang default heading_color exists in palette
+PASS: parang has a named palette for text_color
+PASS: parang default text_color exists in palette
+PASS: parang has a named palette for muted_color
+PASS: parang default muted_color exists in palette
+PASS: parang has a named palette for link_color
+PASS: parang default link_color exists in palette
+PASS: parang loads the shared font library
+PASS: parang image capability hero_background reaches layout
+PASS: preview map mentions image capability parang.hero_background
+PASS: parang image capability section_background_home reaches layout
+PASS: preview map mentions image capability parang.section_background_home
+PASS: parang section background section_background_home reaches layout
+PASS: preview map mentions section background parang.section_background_home
+PASS: parang image capability section_background_gallery reaches layout
+PASS: preview map mentions image capability parang.section_background_gallery
+PASS: parang section background section_background_gallery reaches layout
+PASS: preview map mentions section background parang.section_background_gallery
+PASS: parang image capability section_background_location reaches layout
+PASS: preview map mentions image capability parang.section_background_location
+PASS: parang section background section_background_location reaches layout
+PASS: preview map mentions section background parang.section_background_location
+PASS: parang image capability ornament_left reaches layout
+PASS: preview map mentions image capability parang.ornament_left
+PASS: parang image capability ornament_right reaches layout
+PASS: preview map mentions image capability parang.ornament_right
+PASS: preview map contains parang.accent_color
+PASS: parang renderer consumes --parang-gold
+PASS: preview map contains parang.heading_color
+PASS: parang renderer consumes --parang-heading-color
+PASS: preview map contains parang.text_color
+PASS: parang renderer consumes --parang-text
+PASS: preview map contains parang.muted_color
+PASS: parang renderer consumes --parang-muted
+PASS: preview map contains parang.link_color
+PASS: parang renderer consumes --parang-link
+PASS: pawiwahan exists in registry
+PASS: pawiwahan declares visual capability accent_color
+PASS: pawiwahan declares visual capability heading_color
+PASS: pawiwahan declares visual capability text_color
+PASS: pawiwahan declares visual capability muted_color
+PASS: pawiwahan declares visual capability link_color
+PASS: pawiwahan declares visual capability heading_font
+PASS: pawiwahan declares visual capability body_font
+PASS: pawiwahan has at least 10 options for heading_font
+PASS: pawiwahan default heading_font is selectable
+PASS: pawiwahan has at least 10 options for body_font
+PASS: pawiwahan default body_font is selectable
+PASS: pawiwahan has a named palette for accent_color
+PASS: pawiwahan default accent_color exists in palette
+PASS: pawiwahan has a named palette for heading_color
+PASS: pawiwahan default heading_color exists in palette
+PASS: pawiwahan has a named palette for text_color
+PASS: pawiwahan default text_color exists in palette
+PASS: pawiwahan has a named palette for muted_color
+PASS: pawiwahan default muted_color exists in palette
+PASS: pawiwahan has a named palette for link_color
+PASS: pawiwahan default link_color exists in palette
+PASS: pawiwahan loads the shared font library
+PASS: pawiwahan image capability hero_background reaches layout
+PASS: preview map mentions image capability pawiwahan.hero_background
+PASS: pawiwahan image capability welcome_background reaches layout
+PASS: preview map mentions image capability pawiwahan.welcome_background
+PASS: pawiwahan image capability section_background_gallery reaches layout
+PASS: preview map mentions image capability pawiwahan.section_background_gallery
+PASS: pawiwahan section background section_background_gallery reaches layout
+PASS: preview map mentions section background pawiwahan.section_background_gallery
+PASS: pawiwahan image capability section_background_location reaches layout
+PASS: preview map mentions image capability pawiwahan.section_background_location
+PASS: pawiwahan section background section_background_location reaches layout
+PASS: preview map mentions section background pawiwahan.section_background_location
+PASS: pawiwahan image capability section_background_gift reaches layout
+PASS: preview map mentions image capability pawiwahan.section_background_gift
+PASS: pawiwahan section background section_background_gift reaches layout
+PASS: preview map mentions section background pawiwahan.section_background_gift
+PASS: pawiwahan image capability section_background_messages reaches layout
+PASS: preview map mentions image capability pawiwahan.section_background_messages
+PASS: pawiwahan section background section_background_messages reaches layout
+PASS: preview map mentions section background pawiwahan.section_background_messages
+PASS: preview map contains pawiwahan.accent_color
+PASS: pawiwahan renderer consumes --pawiwahan-accent
+PASS: preview map contains pawiwahan.heading_color
+PASS: pawiwahan renderer consumes --pawiwahan-heading-color
+PASS: preview map contains pawiwahan.text_color
+PASS: pawiwahan renderer consumes --pawiwahan-text
+PASS: preview map contains pawiwahan.muted_color
+PASS: pawiwahan renderer consumes --pawiwahan-muted
+PASS: preview map contains pawiwahan.link_color
+PASS: pawiwahan renderer consumes --pawiwahan-link
+PASS: shubh-vivah exists in registry
+PASS: shubh-vivah declares visual capability accent_color
+PASS: shubh-vivah declares visual capability heading_color
+PASS: shubh-vivah declares visual capability text_color
+PASS: shubh-vivah declares visual capability muted_color
+PASS: shubh-vivah declares visual capability link_color
+PASS: shubh-vivah declares visual capability heading_font
+PASS: shubh-vivah declares visual capability body_font
+PASS: shubh-vivah has at least 10 options for heading_font
+PASS: shubh-vivah default heading_font is selectable
+PASS: shubh-vivah has at least 10 options for body_font
+PASS: shubh-vivah default body_font is selectable
+PASS: shubh-vivah has a named palette for accent_color
+PASS: shubh-vivah default accent_color exists in palette
+PASS: shubh-vivah has a named palette for heading_color
+PASS: shubh-vivah default heading_color exists in palette
+PASS: shubh-vivah has a named palette for text_color
+PASS: shubh-vivah default text_color exists in palette
+PASS: shubh-vivah has a named palette for muted_color
+PASS: shubh-vivah default muted_color exists in palette
+PASS: shubh-vivah has a named palette for link_color
+PASS: shubh-vivah default link_color exists in palette
+PASS: shubh-vivah loads the shared font library
+PASS: shubh-vivah image capability hero_background reaches layout
+PASS: preview map mentions image capability shubh-vivah.hero_background
+PASS: shubh-vivah image capability section_background_home reaches layout
+PASS: preview map mentions image capability shubh-vivah.section_background_home
+PASS: shubh-vivah section background section_background_home reaches layout
+PASS: preview map mentions section background shubh-vivah.section_background_home
+PASS: shubh-vivah image capability section_background_event reaches layout
+PASS: preview map mentions image capability shubh-vivah.section_background_event
+PASS: shubh-vivah section background section_background_event reaches layout
+PASS: preview map mentions section background shubh-vivah.section_background_event
+PASS: shubh-vivah image capability section_background_gallery reaches layout
+PASS: preview map mentions image capability shubh-vivah.section_background_gallery
+PASS: shubh-vivah section background section_background_gallery reaches layout
+PASS: preview map mentions section background shubh-vivah.section_background_gallery
+PASS: shubh-vivah image capability section_background_rsvp reaches layout
+PASS: preview map mentions image capability shubh-vivah.section_background_rsvp
+PASS: shubh-vivah section background section_background_rsvp reaches layout
+PASS: preview map mentions section background shubh-vivah.section_background_rsvp
+PASS: shubh-vivah image capability ornament_left reaches layout
+PASS: preview map mentions image capability shubh-vivah.ornament_left
+PASS: shubh-vivah image capability ornament_right reaches layout
+PASS: preview map mentions image capability shubh-vivah.ornament_right
+PASS: preview map contains shubh-vivah.accent_color
+PASS: shubh-vivah renderer consumes --shubh-accent
+PASS: preview map contains shubh-vivah.heading_color
+PASS: shubh-vivah renderer consumes --shubh-heading-color
+PASS: preview map contains shubh-vivah.text_color
+PASS: shubh-vivah renderer consumes --shubh-ink
+PASS: preview map contains shubh-vivah.muted_color
+PASS: shubh-vivah renderer consumes --shubh-muted
+PASS: preview map contains shubh-vivah.link_color
+PASS: shubh-vivah renderer consumes --shubh-link
+PASS: yami-buzzy exists in registry
+PASS: yami-buzzy declares visual capability accent_color
+PASS: yami-buzzy declares visual capability heading_color
+PASS: yami-buzzy declares visual capability text_color
+PASS: yami-buzzy declares visual capability muted_color
+PASS: yami-buzzy declares visual capability link_color
+PASS: yami-buzzy declares visual capability heading_font
+PASS: yami-buzzy declares visual capability body_font
+PASS: yami-buzzy has at least 10 options for heading_font
+PASS: yami-buzzy default heading_font is selectable
+PASS: yami-buzzy has at least 10 options for body_font
+PASS: yami-buzzy default body_font is selectable
+PASS: yami-buzzy has a named palette for accent_color
+PASS: yami-buzzy default accent_color exists in palette
+PASS: yami-buzzy has a named palette for heading_color
+PASS: yami-buzzy default heading_color exists in palette
+PASS: yami-buzzy has a named palette for text_color
+PASS: yami-buzzy default text_color exists in palette
+PASS: yami-buzzy has a named palette for muted_color
+PASS: yami-buzzy default muted_color exists in palette
+PASS: yami-buzzy has a named palette for link_color
+PASS: yami-buzzy default link_color exists in palette
+PASS: yami-buzzy loads the shared font library
+PASS: yami-buzzy image capability hero_background reaches layout
+PASS: preview map mentions image capability yami-buzzy.hero_background
+PASS: yami-buzzy image capability welcome_background reaches layout
+PASS: preview map mentions image capability yami-buzzy.welcome_background
+PASS: yami-buzzy image capability section_background_home reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_home
+PASS: yami-buzzy section background section_background_home reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_home
+PASS: yami-buzzy image capability section_background_couple reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_couple
+PASS: yami-buzzy section background section_background_couple reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_couple
+PASS: yami-buzzy image capability section_background_event reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_event
+PASS: yami-buzzy section background section_background_event reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_event
+PASS: yami-buzzy image capability section_background_story reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_story
+PASS: yami-buzzy section background section_background_story reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_story
+PASS: yami-buzzy image capability section_background_gallery reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_gallery
+PASS: yami-buzzy section background section_background_gallery reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_gallery
+PASS: yami-buzzy image capability section_background_video reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_video
+PASS: yami-buzzy section background section_background_video reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_video
+PASS: yami-buzzy image capability section_background_gift reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_gift
+PASS: yami-buzzy section background section_background_gift reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_gift
+PASS: yami-buzzy image capability section_background_invitation reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_invitation
+PASS: yami-buzzy section background section_background_invitation reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_invitation
+PASS: yami-buzzy image capability section_background_rsvp reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_rsvp
+PASS: yami-buzzy section background section_background_rsvp reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_rsvp
+PASS: yami-buzzy image capability section_background_closing reaches layout
+PASS: preview map mentions image capability yami-buzzy.section_background_closing
+PASS: yami-buzzy section background section_background_closing reaches layout
+PASS: preview map mentions section background yami-buzzy.section_background_closing
+PASS: preview map contains yami-buzzy.accent_color
+PASS: yami-buzzy renderer consumes --yami-accent
+PASS: preview map contains yami-buzzy.heading_color
+PASS: yami-buzzy renderer consumes --yami-heading-color
+PASS: preview map contains yami-buzzy.text_color
+PASS: yami-buzzy renderer consumes --yami-ink
+PASS: preview map contains yami-buzzy.muted_color
+PASS: yami-buzzy renderer consumes --yami-muted
+PASS: preview map contains yami-buzzy.link_color
+PASS: yami-buzzy renderer consumes --yami-link
+PASS: custom declares visual capability heading_color
+PASS: custom declares visual capability text_color
+PASS: custom declares visual capability muted_color
+PASS: custom declares visual capability link_color
+PASS: custom declares visual capability heading_font
+PASS: custom declares visual capability body_font
+PASS: custom has extended heading font catalog
+PASS: custom has extended body font catalog
+PASS: custom renderer uses shared font stylesheet helper
+PASS: visual capability consistency audit
+EXIT=0
+=== visual_color_font ===
+PASS: dewankl emits a resolved font stylesheet URL, not PHP source
+PASS: dewankl render includes shared font library
+PASS: dewankl render bridges heading_color
+PASS: dewankl render bridges text_color
+PASS: dewankl render bridges muted_color
+PASS: dewankl render bridges link_color
+PASS: dewankl render emits selected section_background_home media
+PASS: rainier emits a resolved font stylesheet URL, not PHP source
+PASS: rainier render includes shared font library
+PASS: rainier render bridges heading_color
+PASS: rainier render bridges text_color
+PASS: rainier render bridges muted_color
+PASS: rainier render bridges link_color
+PASS: rainier render emits selected section_background_event_details media
+PASS: archak emits a resolved font stylesheet URL, not PHP source
+PASS: archak render includes shared font library
+PASS: archak render bridges heading_color
+PASS: archak render bridges text_color
+PASS: archak render bridges muted_color
+PASS: archak render bridges link_color
+PASS: archak render emits selected section_background_timeline media
+PASS: parang emits a resolved font stylesheet URL, not PHP source
+PASS: parang render includes shared font library
+PASS: parang render bridges heading_color
+PASS: parang render bridges text_color
+PASS: parang render bridges muted_color
+PASS: parang render bridges link_color
+PASS: parang render emits selected section_background_home media
+PASS: pawiwahan emits a resolved font stylesheet URL, not PHP source
+PASS: pawiwahan render includes shared font library
+PASS: pawiwahan render bridges heading_color
+PASS: pawiwahan render bridges text_color
+PASS: pawiwahan render bridges muted_color
+PASS: pawiwahan render bridges link_color
+PASS: pawiwahan render emits selected section_background_gallery media
+PASS: shubh-vivah emits a resolved font stylesheet URL, not PHP source
+PASS: shubh-vivah render includes shared font library
+PASS: shubh-vivah render bridges heading_color
+PASS: shubh-vivah render bridges text_color
+PASS: shubh-vivah render bridges muted_color
+PASS: shubh-vivah render bridges link_color
+PASS: shubh-vivah render emits selected section_background_home media
+PASS: yami-buzzy emits a resolved font stylesheet URL, not PHP source
+PASS: yami-buzzy render includes shared font library
+PASS: yami-buzzy render bridges heading_color
+PASS: yami-buzzy render bridges text_color
+PASS: yami-buzzy render bridges muted_color
+PASS: yami-buzzy render bridges link_color
+PASS: yami-buzzy render emits selected section_background_home media
+PASS: visual color/font smoke test
+EXIT=0
+=== media_pipeline ===
+PASS: cover upload processes successfully
+PASS: cover reference is canonical WebP
+PASS: cover original is removed after verified output
+PASS: cover output verifies MIME, bytes, and bounded dimensions
+PASS: background upload processes successfully
+PASS: Parang background respects the global bounded-preserve requirement
+PASS: Parang background preserves source aspect ratio
+PASS: background original is removed after verified output
+PASS: bride upload processes successfully
+PASS: bride reference is canonical WebP
+PASS: bride original is removed after verified output
+PASS: bride output dimensions and MIME verify
+PASS: groom upload processes successfully
+PASS: groom reference is canonical WebP
+PASS: groom original is removed after verified output
+PASS: groom output dimensions and MIME verify
+PASS: gallery upload processes successfully
+PASS: gallery reference is canonical WebP
+PASS: gallery original is removed after verified output
+PASS: gallery output dimensions and MIME verify
+PASS: story upload processes successfully
+PASS: story reference is canonical WebP
+PASS: story original is removed after verified output
+PASS: story output dimensions and MIME verify
+PASS: Gallery membership remains explicit after processing
+PASS: Parang theme asset processes through the shared pipeline
+PASS: Parang theme asset uses the preset-scoped theme-assets directory
+PASS: Parang theme asset leaves only the final WebP
+PASS: Theme asset does not become Gallery automatically
+PASS: invalid image is rejected safely
+PASS: invalid source remains available for failure reporting
+PASS: processing failure is reported
+PASS: processing failure preserves the temporary original
+PASS: processing failure leaves no temporary WebP in canonical storage
+PASS: old cover fixture is canonicalized
+PASS: replacement produces a new verified canonical WebP
+PASS: old asset remains until reference update and save succeed
+PASS: replacement updates the media reference before cleanup
+PASS: old replacement asset is removed after reference update
+PASS: old replacement asset no longer remains after safe cleanup
+PASS: small gallery image processes successfully
+PASS: small gallery image is not unnecessarily upscaled
+PASS: File Manager does not present legacy source images as canonical assets
+PASS: Gallery endpoint does not create persistent derivative thumbnails
+PASS: Backup includes the canonical uploads tree
+PASS: Restore accepts canonical uploads including Theme Assets
+PASS: media pipeline smoke test
+EXIT=0
+=== media_requirements ===
+PASS: custom gallery very-large upload succeeds
+PASS: custom gallery very-large is canonical WebP
+PASS: custom gallery very-large original is removed after verification
+PASS: custom gallery very-large satisfies resolved requirement
+PASS: custom gallery very-large preserves source aspect ratio
+PASS: custom gallery very-large stays within global maximum
+PASS: custom gallery correct upload succeeds
+PASS: custom gallery correct is canonical WebP
+PASS: custom gallery correct original is removed after verification
+PASS: custom gallery correct satisfies resolved requirement
+PASS: custom gallery correct preserves source aspect ratio
+PASS: custom gallery correct stays within global maximum
+PASS: custom gallery small upload succeeds
+PASS: custom gallery small is canonical WebP
+PASS: custom gallery small original is removed after verification
+PASS: custom gallery small satisfies resolved requirement
+PASS: custom gallery small preserves source aspect ratio
+PASS: custom gallery small stays within global maximum
+PASS: custom gallery portrait upload succeeds
+PASS: custom gallery portrait is canonical WebP
+PASS: custom gallery portrait original is removed after verification
+PASS: custom gallery portrait satisfies resolved requirement
+PASS: custom gallery portrait preserves source aspect ratio
+PASS: custom gallery portrait stays within global maximum
+PASS: custom gallery landscape upload succeeds
+PASS: custom gallery landscape is canonical WebP
+PASS: custom gallery landscape original is removed after verification
+PASS: custom gallery landscape satisfies resolved requirement
+PASS: custom gallery landscape preserves source aspect ratio
+PASS: custom gallery landscape stays within global maximum
+PASS: dewankl gallery very-large upload succeeds
+PASS: dewankl gallery very-large is canonical WebP
+PASS: dewankl gallery very-large original is removed after verification
+PASS: dewankl gallery very-large satisfies resolved requirement
+PASS: dewankl gallery very-large preserves source aspect ratio
+PASS: dewankl gallery very-large stays within global maximum
+PASS: dewankl gallery correct upload succeeds
+PASS: dewankl gallery correct is canonical WebP
+PASS: dewankl gallery correct original is removed after verification
+PASS: dewankl gallery correct satisfies resolved requirement
+PASS: dewankl gallery correct preserves source aspect ratio
+PASS: dewankl gallery correct stays within global maximum
+PASS: dewankl gallery small upload succeeds
+PASS: dewankl gallery small is canonical WebP
+PASS: dewankl gallery small original is removed after verification
+PASS: dewankl gallery small satisfies resolved requirement
+PASS: dewankl gallery small preserves source aspect ratio
+PASS: dewankl gallery small stays within global maximum
+PASS: dewankl gallery portrait upload succeeds
+PASS: dewankl gallery portrait is canonical WebP
+PASS: dewankl gallery portrait original is removed after verification
+PASS: dewankl gallery portrait satisfies resolved requirement
+PASS: dewankl gallery portrait preserves source aspect ratio
+PASS: dewankl gallery portrait stays within global maximum
+PASS: dewankl gallery landscape upload succeeds
+PASS: dewankl gallery landscape is canonical WebP
+PASS: dewankl gallery landscape original is removed after verification
+PASS: dewankl gallery landscape satisfies resolved requirement
+PASS: dewankl gallery landscape preserves source aspect ratio
+PASS: dewankl gallery landscape stays within global maximum
+PASS: rainier gallery very-large upload succeeds
+PASS: rainier gallery very-large is canonical WebP
+PASS: rainier gallery very-large original is removed after verification
+PASS: rainier gallery very-large satisfies resolved requirement
+PASS: rainier gallery very-large preserves source aspect ratio
+PASS: rainier gallery very-large stays within global maximum
+PASS: rainier gallery correct upload succeeds
+PASS: rainier gallery correct is canonical WebP
+PASS: rainier gallery correct original is removed after verification
+PASS: rainier gallery correct satisfies resolved requirement
+PASS: rainier gallery correct preserves source aspect ratio
+PASS: rainier gallery correct stays within global maximum
+PASS: rainier gallery small upload succeeds
+PASS: rainier gallery small is canonical WebP
+PASS: rainier gallery small original is removed after verification
+PASS: rainier gallery small satisfies resolved requirement
+PASS: rainier gallery small preserves source aspect ratio
+PASS: rainier gallery small stays within global maximum
+PASS: rainier gallery portrait upload succeeds
+PASS: rainier gallery portrait is canonical WebP
+PASS: rainier gallery portrait original is removed after verification
+PASS: rainier gallery portrait satisfies resolved requirement
+PASS: rainier gallery portrait preserves source aspect ratio
+PASS: rainier gallery portrait stays within global maximum
+PASS: rainier gallery landscape upload succeeds
+PASS: rainier gallery landscape is canonical WebP
+PASS: rainier gallery landscape original is removed after verification
+PASS: rainier gallery landscape satisfies resolved requirement
+PASS: rainier gallery landscape preserves source aspect ratio
+PASS: rainier gallery landscape stays within global maximum
+PASS: archak gallery very-large upload succeeds
+PASS: archak gallery very-large is canonical WebP
+PASS: archak gallery very-large original is removed after verification
+PASS: archak gallery very-large satisfies resolved requirement
+PASS: archak gallery very-large preserves source aspect ratio
+PASS: archak gallery very-large stays within global maximum
+PASS: archak gallery correct upload succeeds
+PASS: archak gallery correct is canonical WebP
+PASS: archak gallery correct original is removed after verification
+PASS: archak gallery correct satisfies resolved requirement
+PASS: archak gallery correct preserves source aspect ratio
+PASS: archak gallery correct stays within global maximum
+PASS: archak gallery small upload succeeds
+PASS: archak gallery small is canonical WebP
+PASS: archak gallery small original is removed after verification
+PASS: archak gallery small satisfies resolved requirement
+PASS: archak gallery small preserves source aspect ratio
+PASS: archak gallery small stays within global maximum
+PASS: archak gallery portrait upload succeeds
+PASS: archak gallery portrait is canonical WebP
+PASS: archak gallery portrait original is removed after verification
+PASS: archak gallery portrait satisfies resolved requirement
+PASS: archak gallery portrait preserves source aspect ratio
+PASS: archak gallery portrait stays within global maximum
+PASS: archak gallery landscape upload succeeds
+PASS: archak gallery landscape is canonical WebP
+PASS: archak gallery landscape original is removed after verification
+PASS: archak gallery landscape satisfies resolved requirement
+PASS: archak gallery landscape preserves source aspect ratio
+PASS: archak gallery landscape stays within global maximum
+PASS: parang gallery very-large upload succeeds
+PASS: parang gallery very-large is canonical WebP
+PASS: parang gallery very-large original is removed after verification
+PASS: parang gallery very-large satisfies resolved requirement
+PASS: parang gallery very-large is cropped to the source square card ratio
+PASS: parang gallery very-large stays within square maximum
+PASS: parang gallery correct upload succeeds
+PASS: parang gallery correct is canonical WebP
+PASS: parang gallery correct original is removed after verification
+PASS: parang gallery correct satisfies resolved requirement
+PASS: parang gallery correct is cropped to the source square card ratio
+PASS: parang gallery correct stays within square maximum
+PASS: parang gallery small upload succeeds
+PASS: parang gallery small is canonical WebP
+PASS: parang gallery small original is removed after verification
+PASS: parang gallery small satisfies resolved requirement
+PASS: parang gallery small is cropped to the source square card ratio
+PASS: parang gallery small stays within square maximum
+PASS: parang gallery portrait upload succeeds
+PASS: parang gallery portrait is canonical WebP
+PASS: parang gallery portrait original is removed after verification
+PASS: parang gallery portrait satisfies resolved requirement
+PASS: parang gallery portrait is cropped to the source square card ratio
+PASS: parang gallery portrait stays within square maximum
+PASS: parang gallery landscape upload succeeds
+PASS: parang gallery landscape is canonical WebP
+PASS: parang gallery landscape original is removed after verification
+PASS: parang gallery landscape satisfies resolved requirement
+PASS: parang gallery landscape is cropped to the source square card ratio
+PASS: parang gallery landscape stays within square maximum
+PASS: pawiwahan gallery very-large upload succeeds
+PASS: pawiwahan gallery very-large is canonical WebP
+PASS: pawiwahan gallery very-large original is removed after verification
+PASS: pawiwahan gallery very-large satisfies resolved requirement
+PASS: pawiwahan gallery very-large preserves source aspect ratio
+PASS: pawiwahan gallery very-large stays within global maximum
+PASS: pawiwahan gallery correct upload succeeds
+PASS: pawiwahan gallery correct is canonical WebP
+PASS: pawiwahan gallery correct original is removed after verification
+PASS: pawiwahan gallery correct satisfies resolved requirement
+PASS: pawiwahan gallery correct preserves source aspect ratio
+PASS: pawiwahan gallery correct stays within global maximum
+PASS: pawiwahan gallery small upload succeeds
+PASS: pawiwahan gallery small is canonical WebP
+PASS: pawiwahan gallery small original is removed after verification
+PASS: pawiwahan gallery small satisfies resolved requirement
+PASS: pawiwahan gallery small preserves source aspect ratio
+PASS: pawiwahan gallery small stays within global maximum
+PASS: pawiwahan gallery portrait upload succeeds
+PASS: pawiwahan gallery portrait is canonical WebP
+PASS: pawiwahan gallery portrait original is removed after verification
+PASS: pawiwahan gallery portrait satisfies resolved requirement
+PASS: pawiwahan gallery portrait preserves source aspect ratio
+PASS: pawiwahan gallery portrait stays within global maximum
+PASS: pawiwahan gallery landscape upload succeeds
+PASS: pawiwahan gallery landscape is canonical WebP
+PASS: pawiwahan gallery landscape original is removed after verification
+PASS: pawiwahan gallery landscape satisfies resolved requirement
+PASS: pawiwahan gallery landscape preserves source aspect ratio
+PASS: pawiwahan gallery landscape stays within global maximum
+PASS: shubh-vivah gallery very-large upload succeeds
+PASS: shubh-vivah gallery very-large is canonical WebP
+PASS: shubh-vivah gallery very-large original is removed after verification
+PASS: shubh-vivah gallery very-large satisfies resolved requirement
+PASS: shubh-vivah gallery very-large preserves source aspect ratio
+PASS: shubh-vivah gallery very-large stays within global maximum
+PASS: shubh-vivah gallery correct upload succeeds
+PASS: shubh-vivah gallery correct is canonical WebP
+PASS: shubh-vivah gallery correct original is removed after verification
+PASS: shubh-vivah gallery correct satisfies resolved requirement
+PASS: shubh-vivah gallery correct preserves source aspect ratio
+PASS: shubh-vivah gallery correct stays within global maximum
+PASS: shubh-vivah gallery small upload succeeds
+PASS: shubh-vivah gallery small is canonical WebP
+PASS: shubh-vivah gallery small original is removed after verification
+PASS: shubh-vivah gallery small satisfies resolved requirement
+PASS: shubh-vivah gallery small preserves source aspect ratio
+PASS: shubh-vivah gallery small stays within global maximum
+PASS: shubh-vivah gallery portrait upload succeeds
+PASS: shubh-vivah gallery portrait is canonical WebP
+PASS: shubh-vivah gallery portrait original is removed after verification
+PASS: shubh-vivah gallery portrait satisfies resolved requirement
+PASS: shubh-vivah gallery portrait preserves source aspect ratio
+PASS: shubh-vivah gallery portrait stays within global maximum
+PASS: shubh-vivah gallery landscape upload succeeds
+PASS: shubh-vivah gallery landscape is canonical WebP
+PASS: shubh-vivah gallery landscape original is removed after verification
+PASS: shubh-vivah gallery landscape satisfies resolved requirement
+PASS: shubh-vivah gallery landscape preserves source aspect ratio
+PASS: shubh-vivah gallery landscape stays within global maximum
+PASS: yami-buzzy gallery very-large upload succeeds
+PASS: yami-buzzy gallery very-large is canonical WebP
+PASS: yami-buzzy gallery very-large original is removed after verification
+PASS: yami-buzzy gallery very-large satisfies resolved requirement
+PASS: yami-buzzy gallery very-large preserves source aspect ratio
+PASS: yami-buzzy gallery very-large stays within global maximum
+PASS: yami-buzzy gallery correct upload succeeds
+PASS: yami-buzzy gallery correct is canonical WebP
+PASS: yami-buzzy gallery correct original is removed after verification
+PASS: yami-buzzy gallery correct satisfies resolved requirement
+PASS: yami-buzzy gallery correct preserves source aspect ratio
+PASS: yami-buzzy gallery correct stays within global maximum
+PASS: yami-buzzy gallery small upload succeeds
+PASS: yami-buzzy gallery small is canonical WebP
+PASS: yami-buzzy gallery small original is removed after verification
+PASS: yami-buzzy gallery small satisfies resolved requirement
+PASS: yami-buzzy gallery small preserves source aspect ratio
+PASS: yami-buzzy gallery small stays within global maximum
+PASS: yami-buzzy gallery portrait upload succeeds
+PASS: yami-buzzy gallery portrait is canonical WebP
+PASS: yami-buzzy gallery portrait original is removed after verification
+PASS: yami-buzzy gallery portrait satisfies resolved requirement
+PASS: yami-buzzy gallery portrait preserves source aspect ratio
+PASS: yami-buzzy gallery portrait stays within global maximum
+PASS: yami-buzzy gallery landscape upload succeeds
+PASS: yami-buzzy gallery landscape is canonical WebP
+PASS: yami-buzzy gallery landscape original is removed after verification
+PASS: yami-buzzy gallery landscape satisfies resolved requirement
+PASS: yami-buzzy gallery landscape preserves source aspect ratio
+PASS: yami-buzzy gallery landscape stays within global maximum
+PASS: custom cover upload succeeds
+PASS: custom cover is canonical WebP
+PASS: custom cover original is removed after verification
+PASS: custom cover satisfies resolved requirement
+PASS: custom bride_photo upload succeeds
+PASS: custom bride_photo is canonical WebP
+PASS: custom bride_photo original is removed after verification
+PASS: custom bride_photo satisfies resolved requirement
+PASS: custom groom_photo upload succeeds
+PASS: custom groom_photo is canonical WebP
+PASS: custom groom_photo original is removed after verification
+PASS: custom groom_photo satisfies resolved requirement
+PASS: custom couple_photo upload succeeds
+PASS: custom couple_photo is canonical WebP
+PASS: custom couple_photo original is removed after verification
+PASS: custom couple_photo satisfies resolved requirement
+PASS: custom story upload succeeds
+PASS: custom story is canonical WebP
+PASS: custom story original is removed after verification
+PASS: custom story satisfies resolved requirement
+PASS: custom qris_image upload succeeds
+PASS: custom qris_image is canonical WebP
+PASS: custom qris_image original is removed after verification
+PASS: custom qris_image satisfies resolved requirement
+PASS: dewankl cover upload succeeds
+PASS: dewankl cover is canonical WebP
+PASS: dewankl cover original is removed after verification
+PASS: dewankl cover satisfies resolved requirement
+PASS: dewankl bride_photo upload succeeds
+PASS: dewankl bride_photo is canonical WebP
+PASS: dewankl bride_photo original is removed after verification
+PASS: dewankl bride_photo satisfies resolved requirement
+PASS: dewankl groom_photo upload succeeds
+PASS: dewankl groom_photo is canonical WebP
+PASS: dewankl groom_photo original is removed after verification
+PASS: dewankl groom_photo satisfies resolved requirement
+PASS: dewankl couple_photo upload succeeds
+PASS: dewankl couple_photo is canonical WebP
+PASS: dewankl couple_photo original is removed after verification
+PASS: dewankl couple_photo satisfies resolved requirement
+PASS: dewankl story upload succeeds
+PASS: dewankl story is canonical WebP
+PASS: dewankl story original is removed after verification
+PASS: dewankl story satisfies resolved requirement
+PASS: dewankl qris_image upload succeeds
+PASS: dewankl qris_image is canonical WebP
+PASS: dewankl qris_image original is removed after verification
+PASS: dewankl qris_image satisfies resolved requirement
+PASS: rainier cover upload succeeds
+PASS: rainier cover is canonical WebP
+PASS: rainier cover original is removed after verification
+PASS: rainier cover satisfies resolved requirement
+PASS: rainier bride_photo upload succeeds
+PASS: rainier bride_photo is canonical WebP
+PASS: rainier bride_photo original is removed after verification
+PASS: rainier bride_photo satisfies resolved requirement
+PASS: rainier groom_photo upload succeeds
+PASS: rainier groom_photo is canonical WebP
+PASS: rainier groom_photo original is removed after verification
+PASS: rainier groom_photo satisfies resolved requirement
+PASS: rainier couple_photo upload succeeds
+PASS: rainier couple_photo is canonical WebP
+PASS: rainier couple_photo original is removed after verification
+PASS: rainier couple_photo satisfies resolved requirement
+PASS: rainier story upload succeeds
+PASS: rainier story is canonical WebP
+PASS: rainier story original is removed after verification
+PASS: rainier story satisfies resolved requirement
+PASS: rainier qris_image upload succeeds
+PASS: rainier qris_image is canonical WebP
+PASS: rainier qris_image original is removed after verification
+PASS: rainier qris_image satisfies resolved requirement
+PASS: archak cover upload succeeds
+PASS: archak cover is canonical WebP
+PASS: archak cover original is removed after verification
+PASS: archak cover satisfies resolved requirement
+PASS: archak bride_photo upload succeeds
+PASS: archak bride_photo is canonical WebP
+PASS: archak bride_photo original is removed after verification
+PASS: archak bride_photo satisfies resolved requirement
+PASS: archak groom_photo upload succeeds
+PASS: archak groom_photo is canonical WebP
+PASS: archak groom_photo original is removed after verification
+PASS: archak groom_photo satisfies resolved requirement
+PASS: archak couple_photo upload succeeds
+PASS: archak couple_photo is canonical WebP
+PASS: archak couple_photo original is removed after verification
+PASS: archak couple_photo satisfies resolved requirement
+PASS: archak story upload succeeds
+PASS: archak story is canonical WebP
+PASS: archak story original is removed after verification
+PASS: archak story satisfies resolved requirement
+PASS: archak qris_image upload succeeds
+PASS: archak qris_image is canonical WebP
+PASS: archak qris_image original is removed after verification
+PASS: archak qris_image satisfies resolved requirement
+PASS: parang cover upload succeeds
+PASS: parang cover is canonical WebP
+PASS: parang cover original is removed after verification
+PASS: parang cover satisfies resolved requirement
+PASS: parang bride_photo upload succeeds
+PASS: parang bride_photo is canonical WebP
+PASS: parang bride_photo original is removed after verification
+PASS: parang bride_photo satisfies resolved requirement
+PASS: parang groom_photo upload succeeds
+PASS: parang groom_photo is canonical WebP
+PASS: parang groom_photo original is removed after verification
+PASS: parang groom_photo satisfies resolved requirement
+PASS: parang couple_photo upload succeeds
+PASS: parang couple_photo is canonical WebP
+PASS: parang couple_photo original is removed after verification
+PASS: parang couple_photo satisfies resolved requirement
+PASS: parang story upload succeeds
+PASS: parang story is canonical WebP
+PASS: parang story original is removed after verification
+PASS: parang story satisfies resolved requirement
+PASS: parang qris_image upload succeeds
+PASS: parang qris_image is canonical WebP
+PASS: parang qris_image original is removed after verification
+PASS: parang qris_image satisfies resolved requirement
+PASS: pawiwahan cover upload succeeds
+PASS: pawiwahan cover is canonical WebP
+PASS: pawiwahan cover original is removed after verification
+PASS: pawiwahan cover satisfies resolved requirement
+PASS: pawiwahan bride_photo upload succeeds
+PASS: pawiwahan bride_photo is canonical WebP
+PASS: pawiwahan bride_photo original is removed after verification
+PASS: pawiwahan bride_photo satisfies resolved requirement
+PASS: pawiwahan groom_photo upload succeeds
+PASS: pawiwahan groom_photo is canonical WebP
+PASS: pawiwahan groom_photo original is removed after verification
+PASS: pawiwahan groom_photo satisfies resolved requirement
+PASS: pawiwahan couple_photo upload succeeds
+PASS: pawiwahan couple_photo is canonical WebP
+PASS: pawiwahan couple_photo original is removed after verification
+PASS: pawiwahan couple_photo satisfies resolved requirement
+PASS: pawiwahan story upload succeeds
+PASS: pawiwahan story is canonical WebP
+PASS: pawiwahan story original is removed after verification
+PASS: pawiwahan story satisfies resolved requirement
+PASS: pawiwahan qris_image upload succeeds
+PASS: pawiwahan qris_image is canonical WebP
+PASS: pawiwahan qris_image original is removed after verification
+PASS: pawiwahan qris_image satisfies resolved requirement
+PASS: shubh-vivah cover upload succeeds
+PASS: shubh-vivah cover is canonical WebP
+PASS: shubh-vivah cover original is removed after verification
+PASS: shubh-vivah cover satisfies resolved requirement
+PASS: shubh-vivah bride_photo upload succeeds
+PASS: shubh-vivah bride_photo is canonical WebP
+PASS: shubh-vivah bride_photo original is removed after verification
+PASS: shubh-vivah bride_photo satisfies resolved requirement
+PASS: shubh-vivah groom_photo upload succeeds
+PASS: shubh-vivah groom_photo is canonical WebP
+PASS: shubh-vivah groom_photo original is removed after verification
+PASS: shubh-vivah groom_photo satisfies resolved requirement
+PASS: shubh-vivah couple_photo upload succeeds
+PASS: shubh-vivah couple_photo is canonical WebP
+PASS: shubh-vivah couple_photo original is removed after verification
+PASS: shubh-vivah couple_photo satisfies resolved requirement
+PASS: shubh-vivah story upload succeeds
+PASS: shubh-vivah story is canonical WebP
+PASS: shubh-vivah story original is removed after verification
+PASS: shubh-vivah story satisfies resolved requirement
+PASS: shubh-vivah qris_image upload succeeds
+PASS: shubh-vivah qris_image is canonical WebP
+PASS: shubh-vivah qris_image original is removed after verification
+PASS: shubh-vivah qris_image satisfies resolved requirement
+PASS: yami-buzzy cover upload succeeds
+PASS: yami-buzzy cover is canonical WebP
+PASS: yami-buzzy cover original is removed after verification
+PASS: yami-buzzy cover satisfies resolved requirement
+PASS: yami-buzzy bride_photo upload succeeds
+PASS: yami-buzzy bride_photo is canonical WebP
+PASS: yami-buzzy bride_photo original is removed after verification
+PASS: yami-buzzy bride_photo satisfies resolved requirement
+PASS: yami-buzzy groom_photo upload succeeds
+PASS: yami-buzzy groom_photo is canonical WebP
+PASS: yami-buzzy groom_photo original is removed after verification
+PASS: yami-buzzy groom_photo satisfies resolved requirement
+PASS: yami-buzzy couple_photo upload succeeds
+PASS: yami-buzzy couple_photo is canonical WebP
+PASS: yami-buzzy couple_photo original is removed after verification
+PASS: yami-buzzy couple_photo satisfies resolved requirement
+PASS: yami-buzzy story upload succeeds
+PASS: yami-buzzy story is canonical WebP
+PASS: yami-buzzy story original is removed after verification
+PASS: yami-buzzy story satisfies resolved requirement
+PASS: yami-buzzy qris_image upload succeeds
+PASS: yami-buzzy qris_image is canonical WebP
+PASS: yami-buzzy qris_image original is removed after verification
+PASS: yami-buzzy qris_image satisfies resolved requirement
+PASS: custom background upload succeeds
+PASS: custom background original is removed after verification
+PASS: custom background satisfies resolved requirement
+PASS: custom background respects maximum dimensions
+PASS: custom background preserves source ratio
+PASS: dewankl background upload succeeds
+PASS: dewankl background original is removed after verification
+PASS: dewankl background satisfies resolved requirement
+PASS: dewankl background respects maximum dimensions
+PASS: dewankl background preserves source ratio
+PASS: rainier background upload succeeds
+PASS: rainier background original is removed after verification
+PASS: rainier background satisfies resolved requirement
+PASS: rainier background respects maximum dimensions
+PASS: rainier background preserves source ratio
+PASS: archak background upload succeeds
+PASS: archak background original is removed after verification
+PASS: archak background satisfies resolved requirement
+PASS: archak background respects maximum dimensions
+PASS: archak background preserves source ratio
+PASS: parang background upload succeeds
+PASS: parang background original is removed after verification
+PASS: parang background satisfies resolved requirement
+PASS: parang background respects maximum dimensions
+PASS: parang background preserves source ratio
+PASS: pawiwahan background upload succeeds
+PASS: pawiwahan background original is removed after verification
+PASS: pawiwahan background satisfies resolved requirement
+PASS: pawiwahan background respects maximum dimensions
+PASS: pawiwahan background preserves source ratio
+PASS: shubh-vivah background upload succeeds
+PASS: shubh-vivah background original is removed after verification
+PASS: shubh-vivah background satisfies resolved requirement
+PASS: shubh-vivah background respects maximum dimensions
+PASS: shubh-vivah background preserves source ratio
+PASS: yami-buzzy background upload succeeds
+PASS: yami-buzzy background original is removed after verification
+PASS: yami-buzzy background satisfies resolved requirement
+PASS: yami-buzzy background respects maximum dimensions
+PASS: yami-buzzy background preserves source ratio
+PASS: global OG image upload succeeds
+PASS: global OG image uses exact 1200x630 canvas
+PASS: global OG original is removed after verified output
+PASS: Pawiwahan small background upload succeeds
+PASS: Pawiwahan preserve policy does not upscale a small background
+PASS: Parang transparent Theme Asset uses shared pipeline
+PASS: Parang Theme Asset WebP is verified
+PASS: Parang transparent Theme Asset original is removed after verification
+PASS: Parang Theme Asset final file exists without rasterizing into a non-WebP placeholder
+PASS: media requirement smoke test (8 presets, 5 gallery shapes)
+EXIT=0
+=== media_delete_fallback ===
+PASS: Media usage detects all CMS references before forced delete
+PASS: Forced delete clears media, gallery, visual, and theme option references
+PASS: Forced delete clears gallery cover reference
+PASS: Canonical media file can be deleted after references are cleared
+PASS: Deleted media file no longer exists on disk
+PASS: Yami Buzzy empty custom background falls back to bundled source hero
+PASS: Shubh Vivah empty custom background falls back to bundled source card
+PASS: media delete and source fallback smoke test
+EXIT=0
+=== media_roles ===
+PASS: media role contract, Admin gates, tenant-aware renderer usage, and Yami fallback
+EXIT=0
+=== user_input_capabilities ===
+PASS: user input capability contract, Admin paths, dresscode, QRIS, video renderer, and media lifecycle
+EXIT=0
+=== copy_defaults ===
+PASS: default bride name is FEBRUANA
+PASS: default groom name is ANDI MUHAMAD BASUKI
+PASS: default bride nickname is Febru
+PASS: default groom nickname is Andi
+PASS: default quote includes Arabic Ar-Rum 21
+PASS: default quote includes Indonesian reference
+PASS: default opening uses Indonesian Islamic invitation wording
+PASS: default closing includes doa restu sentiment
+PASS: default calendar metadata follows new title and opening
+PASS: calendar metadata follows admin wedding override
+PASS: dewankl default greeting includes Arabic and salam
+PASS: shubh-vivah default greeting includes Arabic and salam
+PASS: yami-buzzy default greeting includes Arabic and salam
+PASS: rainier default greeting includes Arabic and salam
+PASS: archak default greeting includes Arabic and salam
+PASS: parang default greeting includes Arabic and salam
+PASS: custom default greeting includes Arabic and salam
+PASS: Pawiwahan preserves source greeting fallback
+PASS: empty admin input restores default wedding.bride_name
+PASS: empty admin input restores default wedding.groom_name
+PASS: empty admin input restores default wedding.title
+PASS: empty admin input restores default wedding.opening_text
+PASS: empty admin input restores default wedding.closing_text
+PASS: empty admin input restores default wedding.quote
+PASS: empty admin input restores default wedding.bride_nickname
+PASS: empty admin input restores default wedding.groom_nickname
+PASS: admin save_wedding uses config default fallback
+PASS: runtime has no global config.json constant
+PASS: tenant config defaults use official bride name
+PASS: tenant config defaults use official groom name
+PASS: tenant config defaults store Arabic quote
+PASS: dewankl renders official couple names
+PASS: dewankl renders Arabic or localized greeting content
+PASS: rainier renders official couple names
+PASS: rainier renders Arabic or localized greeting content
+PASS: archak renders official couple names
+PASS: archak renders Arabic or localized greeting content
+PASS: parang renders official couple names
+PASS: parang renders Arabic or localized greeting content
+PASS: pawiwahan renders official couple names
+PASS: pawiwahan renders Arabic or localized greeting content
+PASS: shubh-vivah renders official couple names
+PASS: shubh-vivah renders Arabic or localized greeting content
+PASS: yami-buzzy renders official couple names
+PASS: yami-buzzy renders Arabic or localized greeting content
+PASS: wedding copy default smoke test
+EXIT=0
+=== pawiwahan ===
+PASS: contract records the audited Pawiwahan source revision
+PASS: contract declares messages capability
+PASS: contract does not invent a Story admin panel
+PASS: Pawiwahan is a renderer-backed built-in preset
+PASS: original Pawiwahan HTML is retained for provenance
+PASS: original Pawiwahan CSS is retained
+PASS: original Pawiwahan JavaScript is retained
+PASS: source ornament is locally available
+PASS: CMS wedding names reach Pawiwahan source boundaries
+PASS: global guest resolver reaches the welcome modal safely
+PASS: multilingual opening text remains preserved
+PASS: admin-configured Pawiwahan greeting preserves Unicode and line breaks
+PASS: Pawiwahan Angpau trigger and modal use stable CMS IDs
+PASS: Pawiwahan account copy control remains connected to status feedback
+PASS: CMS visual hero override wins over source fallback
+PASS: source carousel and welcome modal boundaries remain intact
+PASS: countdown data bridge reaches the source lifecycle
+PASS: Pawiwahan Angpau has Bootstrap and native modal fallback wiring
+PASS: RSVP uses the existing CMS backend
+PASS: opening greeting resolver returns the saved Pawiwahan value
+PASS: Pawiwahan adapter does not import source Firebase/Vue backend coupling
+PASS: demo music and Firebase sample media are not rendered as clean defaults
+PASS: source attribution remains in the rendered footer
+PASS: retained source HTML preserves original gallery carousel markup
+PASS: Pawiwahan focused smoke test
+EXIT=0
+=== backup_restore ===
+PASS: empty installation backup succeeds with optional paths absent
+PASS: genuine backup failure returns non-zero and retains older archive
+PASS: populated backup is valid, canonical, hidden-file-safe, and permission-restricted
+PASS: valid backup restores state, WebDAV credentials, hidden files, spaces, and database-only runtime directories
+PASS: legacy archive without Theme Assets remains compatible with on-demand tenant media directories
+PASS: corrupt archive is rejected before target modification
+PASS: path traversal archive is rejected before target modification
+PASS: successful update preserves all user namespaces and does not leak staging data
+PASS: failed SSH-shaped clone exposes diagnostics and leaves application content unchanged
+PASS: backup failure blocks clone and application replacement
+PASS: deployment backup/restore/update smoke (10 assertions)
+EXIT=0
+TOTAL_FAILURES=0

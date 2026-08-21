@@ -1,6 +1,37 @@
 <?php
 ob_start();
+$token = 'media-pipeline-' . bin2hex(random_bytes(5));
+$probeDb = sys_get_temp_dir() . '/' . $token . '.sqlite';
+$probeDomain = $token . '.test';
+putenv('UNDANGAN_DB_PATH=' . $probeDb);
+putenv('UNDANGAN_MAIN_DOMAIN=' . $probeDomain);
+$_SERVER['HTTP_HOST'] = $probeDomain;
 require_once dirname(__DIR__) . '/config.php';
+
+$probeTenantId = 900000 + random_int(1, 90000);
+$probeDbHandle = new SQLite3($probeDb);
+$probeDbHandle->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/001_multi_tenant.sql'));
+$probeTenantStmt = $probeDbHandle->prepare('INSERT INTO tenants (id, domain, status) VALUES (:id, :domain, \'active\')');
+$probeTenantStmt->bindValue(':id', $probeTenantId, SQLITE3_INTEGER);
+$probeTenantStmt->bindValue(':domain', $probeDomain, SQLITE3_TEXT);
+$probeTenantStmt->execute();
+$probeConfig = json_encode(config_defaults(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$probeConfigStmt = $probeDbHandle->prepare('INSERT INTO tenant_configs (tenant_id, config_json) VALUES (:tenant_id, :config_json)');
+$probeConfigStmt->bindValue(':tenant_id', $probeTenantId, SQLITE3_INTEGER);
+$probeConfigStmt->bindValue(':config_json', $probeConfig, SQLITE3_TEXT);
+$probeConfigStmt->execute();
+$probeDbHandle->close();
+register_shutdown_function(static function () use ($probeDb, $probeTenantId): void {
+    $probeRoot = dirname(__DIR__) . '/uploads/tenant_' . $probeTenantId;
+    if (is_dir($probeRoot)) {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($probeRoot, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($iterator as $item) {
+            $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
+        }
+        @rmdir($probeRoot);
+    }
+    @unlink($probeDb);
+});
 
 function media_pipeline_assert(bool $condition, string $message): void {
     if (!$condition) throw new RuntimeException('FAIL: ' . $message);
@@ -26,7 +57,6 @@ function media_pipeline_upload(string $source, string $name, string $destination
 
 $created = [];
 $fixtures = [];
-$token = 'media-pipeline-' . bin2hex(random_bytes(5));
 $coverDir = tenant_upload_dir('cover');
 $backgroundDir = tenant_upload_dir('background');
 $galleryDir = tenant_upload_dir('gallery');
@@ -143,7 +173,7 @@ try {
     media_pipeline_assert(is_string($galleryEndpointSource) && !str_contains($galleryEndpointSource, 'create_thumb') && !str_contains($galleryEndpointSource, 'uploads/gallery/thumbs'), 'Gallery endpoint does not create persistent derivative thumbnails');
     $backupSource = file_get_contents(ROOT_DIR . '/admin/backup.php');
     $restoreSource = file_get_contents(ROOT_DIR . '/admin/restore.php');
-    media_pipeline_assert(is_string($backupSource) && str_contains($backupSource, 'UPLOADS_DIR'), 'Backup includes the canonical uploads tree');
+    media_pipeline_assert(is_string($backupSource) && (str_contains($backupSource, 'UPLOADS_DIR') || str_contains($backupSource, "ROOT_DIR . '/uploads'")), 'Backup includes the canonical uploads tree');
     media_pipeline_assert(is_string($restoreSource) && str_contains($restoreSource, 'str_starts_with($entry,'), 'Restore accepts canonical uploads including Theme Assets');
 
     echo "PASS: media pipeline smoke test" . PHP_EOL;

@@ -4,7 +4,7 @@ The production architecture is one PHP/SQLite application served by one Apache c
 
 ## Native Apache installation
 
-The installer is application-only and non-destructive. It checks PHP, SQLite3, and OpenSSL, copies application code without deleting runtime data, creates runtime directories, and runs `deploy/migrate.php`. It does not install packages, modify `/etc/apache2` or `/etc/nginx`, enable or disable sites/modules, or restart services.
+The installer follows the foundation Apache + PHP-FPM deployment flow and remains non-destructive for application data. It installs/verifies Apache, PHP-FPM, Composer, ImageMagick, GD, mbstring, zip, and SQLite support; copies application code without `--delete`; runs Composer and `deploy/migrate.php`; detects the PHP-FPM socket; renders the repository Apache template; enables the required modules; runs `apache2ctl configtest`; and only then starts or reloads Apache. Existing `.env`, database, tenant media, backups, and WebDAV data are preserved. Set `SKIP_APACHE_PACKAGE_INSTALL=1` only when the operator has already provisioned the required packages.
 
 ```bash
 cd /path/to/multytenant_cms_enggine
@@ -12,7 +12,7 @@ sudo bash deploy/install.sh
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-Review and apply [`deploy/apache-catchall.conf.example`](deploy/apache-catchall.conf.example) separately. The origin must not be directly exposed to the Internet.
+The installer writes the source-adapted catch-all site to `/etc/apache2/sites-available/wedding.conf` and disables the default site after a successful configtest. Set `APACHE_ENABLE_SSL=1` with an existing certificate directory to enable the optional SSL template. Set `APACHE_WEBDAV_ENABLE=1` only when WebDAV is intentionally provisioned. The origin must not be directly exposed to the Internet.
 
 ## Routine operations
 

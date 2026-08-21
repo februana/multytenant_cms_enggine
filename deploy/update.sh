@@ -10,7 +10,7 @@ CANONICAL_TARGET="${CANONICAL_TARGET:-/var/www/wedding}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
-REPOSITORY_URL="${REPOSITORY_URL:-git@github.com:februana/webserver_undangan.git}"
+REPOSITORY_URL="${REPOSITORY_URL:-https://github.com/februana/multytenant_cms_enggine.git}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-$CANONICAL_TARGET/deploy/backup.sh}"
 HEALTH_CHECK_SCRIPT="${HEALTH_CHECK_SCRIPT:-$CANONICAL_TARGET/deploy/health-check.sh}"
 

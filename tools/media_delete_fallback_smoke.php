@@ -1,5 +1,30 @@
 <?php
+$probeToken = 'media-delete-' . bin2hex(random_bytes(5));
+$probeDb = sys_get_temp_dir() . '/' . $probeToken . '.sqlite';
+$probeDomain = $probeToken . '.test';
+$probeTenantId = 990000 + random_int(1, 9000);
+putenv('UNDANGAN_DB_PATH=' . $probeDb);
+putenv('UNDANGAN_MAIN_DOMAIN=' . $probeDomain);
+$_SERVER['HTTP_HOST'] = $probeDomain;
 require_once dirname(__DIR__) . '/config.php';
+$probeDbHandle = new SQLite3($probeDb);
+$probeDbHandle->exec(file_get_contents(dirname(__DIR__) . '/database/migrations/001_multi_tenant.sql'));
+$probeTenantStmt = $probeDbHandle->prepare('INSERT INTO tenants (id, domain, status) VALUES (:id, :domain, \'active\')');
+$probeTenantStmt->bindValue(':id', $probeTenantId, SQLITE3_INTEGER);
+$probeTenantStmt->bindValue(':domain', $probeDomain, SQLITE3_TEXT);
+$probeTenantStmt->execute();
+$probeDbHandle->close();
+register_shutdown_function(static function () use ($probeDb, $probeTenantId): void {
+    $probeRoot = dirname(__DIR__) . '/uploads/tenant_' . $probeTenantId;
+    if (is_dir($probeRoot)) {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($probeRoot, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($iterator as $item) {
+            $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
+        }
+        @rmdir($probeRoot);
+    }
+    @unlink($probeDb);
+});
 require_once dirname(__DIR__) . '/app/theme-helper.php';
 require_once dirname(__DIR__) . '/app/theme-renderer.php';
 

@@ -1,5 +1,7 @@
 <?php
 ob_start();
+require_once dirname(__DIR__) . '/tools/tenant_smoke_fixture.php';
+tenant_smoke_bootstrap('media-requirement');
 require_once dirname(__DIR__) . '/config.php';
 
 function media_requirement_assert(bool $condition, string $message): void {
