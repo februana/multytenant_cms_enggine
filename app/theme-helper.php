@@ -268,6 +268,57 @@ function media_manager_target_definitions(array $config, ?string $presetKey = nu
     return $targets;
 }
 
+/**
+ * Filter only the targets supported by the active CMS/preset capabilities.
+ * This is a presentation filter; the write path validates the same contract
+ * server-side through media_manager_set_target().
+ */
+function media_manager_target_is_visible(array $config, string $target, array $definition, ?string $presetKey = null): bool {
+    $presetKey = $presetKey ?: resolve_theme_preset_key($config);
+    $adminCapabilities = function_exists('theme_admin_capabilities_for_config')
+        ? theme_admin_capabilities_for_config($config)
+        : [];
+    $hasAdminCapability = static fn(string $capability): bool => in_array($capability, $adminCapabilities, true);
+    $mediaRoles = function_exists('theme_contract_media_roles')
+        ? theme_contract_media_roles($presetKey)
+        : [];
+    $hasMediaRole = static fn(string $role): bool => in_array($role, $mediaRoles, true);
+
+    if (str_starts_with($target, 'theme_visuals.' . $presetKey . '.')) {
+        $visualKey = substr($target, strlen('theme_visuals.' . $presetKey . '.'));
+        $schema = theme_visual_capabilities_for_config($config, $presetKey);
+        return isset($schema[$visualKey]) && (($schema[$visualKey]['type'] ?? '') === 'image');
+    }
+    if (str_starts_with($target, 'theme_options.' . $presetKey . '.')) {
+        $optionKey = substr($target, strlen('theme_options.' . $presetKey . '.'));
+        $schema = (array)(theme_registry()[$presetKey]['schema'] ?? []);
+        return isset($schema[$optionKey]) && (($schema[$optionKey]['type'] ?? '') === 'image');
+    }
+
+    return match ($target) {
+        'media.cover' => $hasMediaRole('cover'),
+        'media.bride_photo' => $hasMediaRole('bride_photo'),
+        'media.groom_photo' => $hasMediaRole('groom_photo'),
+        'media.couple_photo' => $hasMediaRole('couple_photo'),
+        'media.love_story_video' => $hasMediaRole('love_story_video'),
+        'media.music' => $hasAdminCapability('music'),
+        'media.background_hero', 'media.background_sections.0', 'media.background_sections.1', 'media.background_sections.2' => $hasAdminCapability('background') || in_array('background', (array)(theme_contract_presentation_capabilities($presetKey)), true),
+        'gift.qris_image' => $hasAdminCapability('gift'),
+        'site.open_graph_image' => $hasAdminCapability('seo'),
+        default => false,
+    };
+}
+
+function media_manager_visible_target_definitions(array $config, ?string $presetKey = null): array {
+    $presetKey = $presetKey ?: resolve_theme_preset_key($config);
+    $targets = media_manager_target_definitions($config, $presetKey);
+    return array_filter(
+        $targets,
+        static fn(array $definition, string $target): bool => media_manager_target_is_visible($config, $target, $definition, $presetKey),
+        ARRAY_FILTER_USE_BOTH
+    );
+}
+
 function media_manager_target_value(array $config, string $target): string {
     $value = $config;
     foreach (explode('.', trim($target, '.')) as $part) {
@@ -278,6 +329,16 @@ function media_manager_target_value(array $config, string $target): string {
 }
 
 function media_manager_set_target(array &$config, string $target, string $value): bool {
+    $targetDefinitions = media_manager_visible_target_definitions($config);
+    if (!isset($targetDefinitions[$target])) return false;
+    $definition = $targetDefinitions[$target];
+    if ($value !== '') {
+        if (($definition['type'] ?? 'image') === 'image') {
+            if (!theme_visual_image_reference_is_canonical($value)) return false;
+        } elseif (!tenant_media_reference_is_safe($value)) {
+            return false;
+        }
+    }
     $parts = explode('.', trim($target, '.'));
     if (!$parts || in_array('', $parts, true)) return false;
     $cursor =& $config;

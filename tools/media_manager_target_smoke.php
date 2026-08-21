@@ -33,19 +33,53 @@ $db->close();
 
 $config = load_config();
 $sourcePresetKeys = ['dewankl', 'shubh-vivah', 'yami-buzzy', 'rainier', 'parang', 'pawiwahan', 'archak'];
+$globalRoleTargets = [
+    'media.cover' => 'cover',
+    'media.bride_photo' => 'bride_photo',
+    'media.groom_photo' => 'groom_photo',
+    'media.couple_photo' => 'couple_photo',
+    'media.love_story_video' => 'love_story_video',
+];
 foreach ($sourcePresetKeys as $presetKey) {
-    $schema = theme_visual_capabilities_for_config($config, $presetKey);
-    $targets = media_manager_target_definitions($config, $presetKey);
+    $presetConfig = $config;
+    $presetConfig['theme']['mode'] = 'preset';
+    $presetConfig['theme']['theme_preset'] = $presetKey;
+    $schema = theme_visual_capabilities_for_config($presetConfig, $presetKey);
+    $allTargets = media_manager_target_definitions($presetConfig, $presetKey);
+    $visibleTargets = media_manager_visible_target_definitions($presetConfig, $presetKey);
     foreach ($schema as $visualKey => $definition) {
         if (($definition['type'] ?? '') !== 'image') continue;
-        media_manager_assert(isset($targets['theme_visuals.' . $presetKey . '.' . $visualKey]), "$presetKey exposes visual asset target $visualKey");
+        $target = 'theme_visuals.' . $presetKey . '.' . $visualKey;
+        media_manager_assert(isset($allTargets[$target]), "$presetKey retains visual asset target $visualKey internally");
+        media_manager_assert(isset($visibleTargets[$target]), "$presetKey exposes schema visual target $visualKey");
     }
+    foreach ((array)(theme_registry()[$presetKey]['schema'] ?? []) as $optionKey => $definition) {
+        if (($definition['type'] ?? '') !== 'image') continue;
+        $target = 'theme_options.' . $presetKey . '.' . $optionKey;
+        media_manager_assert(isset($allTargets[$target]), "$presetKey retains image option $optionKey internally");
+        media_manager_assert(isset($visibleTargets[$target]), "$presetKey exposes image option $optionKey");
+    }
+    $roles = theme_contract_media_roles($presetKey);
+    foreach ($globalRoleTargets as $target => $role) {
+        media_manager_assert(isset($visibleTargets[$target]) === in_array($role, $roles, true), "$presetKey filters $target by its media role");
+    }
+    $adminCapabilities = theme_admin_capabilities_for_config($presetConfig);
+    media_manager_assert(isset($visibleTargets['media.music']) === in_array('music', $adminCapabilities, true), "$presetKey filters music by admin capability");
+    media_manager_assert(isset($visibleTargets['gift.qris_image']) === in_array('gift', $adminCapabilities, true), "$presetKey filters QRIS by Gift capability");
+    media_manager_assert(isset($visibleTargets['site.open_graph_image']) === in_array('seo', $adminCapabilities, true), "$presetKey filters Open Graph by SEO capability");
+    $otherPreset = $presetKey === 'dewankl' ? 'rainier' : 'dewankl';
+    media_manager_assert(!isset($visibleTargets['theme_visuals.' . $otherPreset . '.hero_background']), "$presetKey hides another preset's visual target");
 }
 
-$archakTargets = media_manager_target_definitions($config, 'archak');
-media_manager_assert(isset($archakTargets['theme_options.archak.header_badge_image']), 'Archak header badge is exposed as a Media Manager target');
-media_manager_assert(in_array('cover', theme_contract_media_roles('rainier'), true), 'Rainier cover fallback is exposed in the admin role contract');
-media_manager_assert(in_array('cover', theme_contract_media_roles('shubh-vivah'), true), 'Shubh Vivah cover fallback is exposed in the admin role contract');
+$customConfig = $config;
+$customConfig['theme']['mode'] = 'custom';
+$customConfig['theme']['theme_preset'] = 'custom';
+$customVisibleTargets = media_manager_visible_target_definitions($customConfig, 'custom');
+foreach (['media.cover', 'media.bride_photo', 'media.groom_photo', 'media.couple_photo', 'media.love_story_video', 'media.music', 'gift.qris_image', 'site.open_graph_image', 'theme_visuals.custom.hero_background'] as $target) {
+    media_manager_assert(isset($customVisibleTargets[$target]), "Custom mode retains $target capability");
+}
+media_manager_assert(!media_manager_set_target($customConfig, 'media.invalid_target', 'uploads/not-allowed.webp'), 'Invalid media target cannot be written');
+media_manager_assert(!media_manager_set_target($customConfig, 'theme_visuals.rainier.hero_background', 'uploads/not-allowed.webp'), 'Inactive preset visual target cannot be written');
 
 ensure_upload_dirs();
 $probeSuffix = bin2hex(random_bytes(4));
@@ -96,7 +130,7 @@ media_manager_assert(delete_uploaded_asset($relativeAsset), 'Media Manager delet
 media_manager_assert(!is_file(ROOT_DIR . '/' . $relativeAsset), 'Deleted asset is removed from tenant storage');
 
 $adminSource = (string)file_get_contents($root . '/admin/index.php');
-media_manager_assert(str_contains($adminSource, 'media_manager_target_definitions'), 'Admin derives media targets from the preset contract');
+media_manager_assert(str_contains($adminSource, 'media_manager_visible_target_definitions'), 'Admin derives visible media targets from the preset contract');
 media_manager_assert(str_contains($adminSource, 'clear_media_target'), 'Admin exposes target reset action');
 media_manager_assert(str_contains($adminSource, 'Atur penggunaan di preset aktif'), 'Admin exposes detailed per-asset target controls');
 foreach (['bride_photo', 'groom_photo', 'couple_photo', 'qris', 'open_graph'] as $uploadTarget) {

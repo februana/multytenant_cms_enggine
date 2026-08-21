@@ -151,7 +151,7 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                     $error = 'Asset media bukan milik tenant aktif.';
                     break;
                 }
-                $dynamicTargets = media_manager_target_definitions($config, resolve_theme_preset_key($config));
+                $dynamicTargets = media_manager_visible_target_definitions($config, resolve_theme_preset_key($config));
                 if (isset($dynamicTargets[$target])) {
                     if (($dynamicTargets[$target]['type'] ?? 'image') === 'image' && !theme_visual_image_reference_is_canonical($path)) {
                         $error = 'Asset gambar belum valid atau belum diproses menjadi WebP.';
@@ -200,7 +200,7 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
                 break;
             case 'clear_media_target':
                 $target = trim((string)($_POST['media_target'] ?? ''));
-                $dynamicTargets = media_manager_target_definitions($config, resolve_theme_preset_key($config));
+                $dynamicTargets = media_manager_visible_target_definitions($config, resolve_theme_preset_key($config));
                 if (!isset($dynamicTargets[$target])) {
                     $error = 'Target media tidak valid untuk preset aktif.';
                     break;
@@ -1048,8 +1048,8 @@ $themePreviewConfig = $config['theme'] ?? [];
 $activeVisualPresetKey = $themeMode === 'custom' ? 'custom' : $activePresetKey;
 $activeThemeVisualSchema = $themeVisualSchemas[$activeVisualPresetKey] ?? [];
 $activeThemeVisualValues = $themeVisualValues[$activeVisualPresetKey] ?? [];
-$mediaManagerTargets = function_exists('media_manager_target_definitions')
-    ? media_manager_target_definitions($config, $activePresetKey)
+$mediaManagerTargets = function_exists('media_manager_visible_target_definitions')
+    ? media_manager_visible_target_definitions($config, $activePresetKey)
     : [];
 // Ensure hero settings are included in preview config for backward compatibility
 if (!isset($themePreviewConfig['hero_height'])) {
