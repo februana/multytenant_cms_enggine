@@ -8,6 +8,16 @@ Each source revision was inspected locally and recorded below. The source reposi
 
 Where a source uses the MIT License, redistribution of substantial portions requires retaining the copyright and permission notice. Adapted project code is identified as an integration layer; it must not be represented as the original author's work. Template attribution links are retained in the relevant rendered footer where the original template provides one, and this document is the repository-level attribution record.
 
+## Public frontend attribution policy
+
+The public invitation footer distinguishes two independent provenance layers. The original preset creator is sourced from the exact source repository revision and is shown by the existing source footer when that credit is already part of the adapted template. When the source has no visible creator credit, the shared renderer shows the verified creator from the contract metadata. The CMS integration line is platform-controlled and is not stored in tenant-editable configuration.
+
+The standard public wording is `Dibuat dengan hati oleh {creator}` followed by `CMS didesain oleh Febru & Andi`. For the user-owned Parang preset, the renderer emits only `Didesain oleh Febru & Andi` so the preset designer is not credited twice. Custom Mode has no original preset creator and emits only `CMS didesain oleh Febru & Andi`.
+
+Yami Buzzy has no explicit creator/footer line in the audited source HTML or README. The contract therefore records `Tynab` only as the verified repository owner and sole GitHub contributor at the audited revision; it does not relabel the source page title's wedding names as creator identity. This provenance distinction is intentionally documented rather than guessed.
+
+The implementation is centralized in `app/theme-contract.php` and `app/theme-helper.php`; `tools/credit_attribution_smoke.php` validates public rendering, source-credit preservation, duplicate prevention, Custom Mode behavior, idempotent insertion, and independence from tenant configuration.
+
 ## DewanaKL
 
 **Original project:** Template website undangan pernikahan sederhana.  

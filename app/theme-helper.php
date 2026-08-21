@@ -459,6 +459,69 @@ function get_section_subtitle(array $config, string $sectionId, string $defaultS
     return !empty($section['custom_subtitle']) ? (string)$section['custom_subtitle'] : (string)($section['subtitle'] ?? $defaultSubtitle);
 }
 
+/** Resolve platform attribution metadata without reading tenant-editable configuration. */
+function cms_attribution_metadata(string $presetKey): array {
+    if (function_exists('theme_contract_attribution')) {
+        return theme_contract_attribution($presetKey);
+    }
+    return [
+        'creator' => null,
+        'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+        'source_credit_present' => false,
+        'same_creator_as_cms' => false,
+    ];
+}
+
+/** Render the public attribution block for the active preset exactly once. */
+function cms_attribution_markup(string $presetKey): string {
+    $metadata = cms_attribution_metadata($presetKey);
+    $creator = is_array($metadata['creator'] ?? null) ? $metadata['creator'] : null;
+    $cmsCredit = is_array($metadata['cms_credit'] ?? null) ? $metadata['cms_credit'] : [];
+    $creatorName = trim((string)($creator['name'] ?? ''));
+    $cmsName = trim((string)($cmsCredit['name'] ?? 'Febru & Andi'));
+    $sameCreator = !empty($metadata['same_creator_as_cms']) || ($creatorName !== '' && strcasecmp($creatorName, $cmsName) === 0);
+    $lines = [];
+
+    $linkedName = static function (string $name, string $url): string {
+        $nameHtml = escape_html($name);
+        $url = trim($url);
+        if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) return $nameHtml;
+        $scheme = strtolower((string)(parse_url($url, PHP_URL_SCHEME) ?? ''));
+        if (!in_array($scheme, ['http', 'https'], true)) return $nameHtml;
+        return '<a href="' . escape_html($url) . '" target="_blank" rel="noopener noreferrer">' . $nameHtml . '</a>';
+    };
+
+    if ($sameCreator && $creatorName !== '') {
+        $lines[] = '<span class="cms-attribution__line cms-attribution__line--owner">Didesain oleh <strong>' . $linkedName($creatorName, (string)($creator['url'] ?? '')) . '</strong></span>';
+    } else {
+        if ($creatorName !== '' && empty($metadata['source_credit_present'])) {
+            $lines[] = '<span class="cms-attribution__line cms-attribution__line--creator">Dibuat dengan hati oleh <strong>' . $linkedName($creatorName, (string)($creator['url'] ?? '')) . '</strong></span>';
+        }
+        if ($cmsName !== '') {
+            $lines[] = '<span class="cms-attribution__line cms-attribution__line--cms">CMS didesain oleh <strong>' . escape_html($cmsName) . '</strong></span>';
+        }
+    }
+
+    if ($lines === []) return '';
+    return '<div id="cms-attribution" class="cms-attribution" data-platform-attribution="1" data-preset="' . escape_html($presetKey) . '" aria-label="Atribusi desain">' . implode('', $lines) . '</div>';
+}
+
+/** Render a small responsive style block while leaving each preset's visual language in control. */
+function cms_attribution_style(): string {
+    return '<style id="cms-attribution-style">.cms-attribution{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.16rem;width:100%;max-width:100%;margin:1rem auto 0;padding:.55rem 1rem .2rem;color:inherit;font:inherit;font-size:clamp(.68rem,1.4vw,.78rem);line-height:1.45;text-align:center;opacity:.78;overflow-wrap:anywhere;position:relative;z-index:2}.cms-attribution__line{display:block;max-width:100%}.cms-attribution strong{font-weight:650}.cms-attribution a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.16em}.cms-attribution a:hover{opacity:.86}@media (max-width:576px){.cms-attribution{margin-top:.8rem;padding:.5rem .75rem .15rem;font-size:.7rem;line-height:1.4}}@media (prefers-reduced-motion:reduce){.cms-attribution *{transition:none!important}}</style>';
+}
+
+/** Insert platform attribution before the public footer closes, idempotently. */
+function append_cms_attribution(string $html, string $presetKey): string {
+    if (stripos($html, 'id="cms-attribution"') !== false) return $html;
+    $markup = cms_attribution_markup($presetKey);
+    if ($markup === '') return $html;
+    if (stripos($html, '</footer>') !== false) {
+        return preg_replace('/<\\/footer>/i', $markup . '</footer>', $html, 1) ?? $html;
+    }
+    return preg_replace('/<\\/body>/i', $markup . '</body>', $html, 1) ?? ($html . $markup);
+}
+
 /**
  * Preserve site-level SEO schema and the existing CMS theme live-preview bridge
  * without making index.php a second frontend renderer.
@@ -469,6 +532,12 @@ function finalize_theme_output(string $html, array $config): string {
         $schemaBlock = "\n<script type=\"application/ld+json\">\n" . $schema . "\n</script>\n";
         $html = preg_replace('/<\/head>/i', $schemaBlock . '</head>', $html, 1) ?? $html;
     }
+
+    $activePresetKey = resolve_theme_preset_key($config);
+    if (stripos($html, 'id="cms-attribution-style"') === false) {
+        $html = preg_replace('/<\\/head>/i', cms_attribution_style() . '</head>', $html, 1) ?? $html;
+    }
+    $html = append_cms_attribution($html, $activePresetKey);
 
     $previewScript = <<<'HTML'
 <script>
