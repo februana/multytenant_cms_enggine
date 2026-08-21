@@ -82,7 +82,7 @@ if (!function_exists('theme_contract_registry')) {
                     'source_credit_present' => false,
                 ],
                 'data_capabilities' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'dresscode', 'love_story_video'],
-                'presentation_capabilities' => ['welcome_modal', 'hero_countdown', 'couple_cards', 'dresscode_timeline', 'love_story_timeline', 'gallery_grid', 'video_panel', 'gift_card', 'mobile_navigation', 'audio_control'],
+                'presentation_capabilities' => ['welcome_modal', 'hero_countdown', 'couple_cards', 'dresscode_timeline', 'love_story_timeline', 'love_story_video', 'gallery_grid', 'video_panel', 'gift_card', 'mobile_navigation', 'audio_control'],
                 'sections' => [
                     ['id' => 'home', 'dom_id' => 'yami-home', 'label' => 'Beranda', 'title' => 'Beranda', 'embedded_capabilities' => ['wedding', 'guest_name', 'countdown', 'calendar']],
                     ['id' => 'couple', 'dom_id' => 'yami-couple', 'label' => 'Mempelai', 'title' => 'Mempelai', 'embedded_capabilities' => ['parents', 'media']],

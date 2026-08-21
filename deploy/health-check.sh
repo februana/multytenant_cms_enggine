@@ -296,6 +296,12 @@ else
   fail "No ImageMagick or PHP GD WebP processor is available"
 fi
 
+if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
+  pass "FFmpeg and FFprobe video processor are available"
+else
+  fail "FFmpeg and FFprobe video processors are required"
+fi
+
 # Check 4: Optional WebDAV should not be treated as a critical dependency
 if [ -d "$DEPLOY_DIR/webdav" ]; then
   if [ -w "$DEPLOY_DIR/webdav" ]; then

@@ -18,7 +18,7 @@ The installer and Docker entrypoint create shared runtime roots, while tenant-sp
 
 ### Prerequisites
 
-Run the installer from a trusted checkout as root. It follows the Apache + PHP-FPM flow from the foundation repository and can install the required native packages through Debian/Ubuntu `apt-get`. The package set includes Apache, Apache utilities, PHP-FPM, PHP CLI, SQLite3, GD, mbstring, zip, Composer, ImageMagick, rsync, OpenSSL, CA certificates, curl, and unzip. `SKIP_APACHE_PACKAGE_INSTALL=1` is available only when the operator has already provisioned and verified those requirements.
+Run the installer from a trusted checkout as root. It follows the Apache + PHP-FPM flow from the foundation repository and can install the required native packages through Debian/Ubuntu `apt-get`. The package set includes Apache, Apache utilities, PHP-FPM, PHP CLI, SQLite3, GD, mbstring, zip, Composer, ImageMagick, FFmpeg/FFprobe, rsync, OpenSSL, CA certificates, curl, and unzip. `SKIP_APACHE_PACKAGE_INSTALL=1` is available only when the operator has already provisioned and verified those requirements.
 
 | Requirement | Purpose |
 |---|---|
@@ -26,7 +26,8 @@ Run the installer from a trusted checkout as root. It follows the Apache + PHP-F
 | Apache with `mod_rewrite`, `headers`, `expires`, and `proxy_fcgi` | Catch-all HTTP serving, security headers, caching, and PHP-FPM |
 | PHP-FPM socket under `/run/php` | FastCGI application execution without mod_php |
 | Composer | Installation of the locked `chillerlan/php-qrcode` dependency graph |
-| ImageMagick CLI and PHP GD | Foundation media conversion with GD fallback |
+| ImageMagick CLI and PHP GD | Foundation image conversion with GD fallback |
+| FFmpeg and FFprobe | Canonical Love Story video processing and metadata verification |
 | Cloudflare Tunnel (`cloudflared`) | Intended public ingress |
 
 The installer does not use `rsync --delete`, does not delete `.env`, the database, tenant media, backups, or WebDAV data, and does not create a per-tenant VirtualHost. It renders one catch-all vhost and leaves tenant resolution to the application.
@@ -164,3 +165,9 @@ The health check validates application files, theme adapters, the shared databas
 - [`BACKUP_RESTORE.md`](../BACKUP_RESTORE.md) — backup and disaster recovery.
 - [`SECURITY.md`](../SECURITY.md) — security policy and reporting.
 - [`docs/ATTRIBUTIONS.md`](ATTRIBUTIONS.md) — source provenance and license status.
+
+### Media upload limits
+
+The application validates three environment-backed limits before processing media: `MAX_UPLOAD_SIZE` defaults to 10MB for images, `MAX_MUSIC_UPLOAD_SIZE` defaults to 50MB for audio, and `MAX_VIDEO_UPLOAD_SIZE` defaults to 512MB for Love Story video. The PHP-FPM `upload_max_filesize` and `post_max_size` values must be set above the selected application limit when deploying large videos; application validation remains the authoritative per-file limit after PHP accepts the request.
+
+Love Story video uploads are transcoded through FFmpeg to a bounded H.264/AAC MP4 profile (maximum 1280×720 and 30 FPS). The original temporary upload is removed only after output metadata and file integrity verification succeed. A failed transcode retains the source for error handling and leaves no temporary canonical output.

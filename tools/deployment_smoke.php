@@ -52,6 +52,7 @@ assert_true(str_contains($installer, 'composer install --no-dev'), 'native insta
 assert_true(str_contains($installer, 'start_php_fpm_and_detect_socket'), 'native installer detects an active PHP-FPM socket');
 assert_true(str_contains($installer, 'apache2ctl configtest'), 'native installer gates activation on Apache configtest');
 assert_true(str_contains($installer, 'APACHE_WEBDAV_ENABLE'), 'native installer keeps WebDAV explicitly operator-controlled');
+assert_true(str_contains($installer, 'ffmpeg'), 'native installer installs FFmpeg for Love Story video processing');
 assert_true(!str_contains($installer, 'nginx'), 'native installer does not introduce an Nginx deployment path');
 $updater = (string) file_get_contents($root . '/deploy/update.sh');
 assert_true(str_contains($updater, 'multytenant_cms_enggine.git'), 'updater defaults to the multi-tenant repository');
@@ -62,6 +63,9 @@ assert_true(str_contains($dockerfile, 'http://127.0.0.1/'), 'Dockerfile healthch
 assert_true(str_contains($dockerfile, 'already builds pdo_sqlite'), 'Dockerfile documents SQLite extensions supplied by the base image');
 assert_true(!str_contains($dockerfile, 'docker-php-ext-install pdo_sqlite'), 'Dockerfile does not recompile PDO SQLite');
 assert_true(!str_contains($dockerfile, 'docker-php-ext-install sqlite3'), 'Dockerfile does not recompile SQLite3');
+assert_true(str_contains($dockerfile, 'ffmpeg'), 'Dockerfile installs FFmpeg for Love Story video processing');
+$healthCheck = (string) file_get_contents($root . '/deploy/health-check.sh');
+assert_true(str_contains($healthCheck, 'ffprobe'), 'health-check verifies FFprobe availability');
 $compose = (string) file_get_contents($root . '/docker-compose.yml');
 assert_true(str_contains($compose, 'healthcheck:'), 'Compose declares a service healthcheck');
 assert_true(str_contains($compose, 'wedding_backups:'), 'Compose persists backup artifacts');

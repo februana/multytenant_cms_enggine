@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng-dev \
         libwebp-dev \
         imagemagick \
+        ffmpeg \
         libonig-dev \
         libsqlite3-dev \
         sqlite3 \

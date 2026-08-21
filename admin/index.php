@@ -75,6 +75,18 @@ if ($adminSessionValid && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
         switch ($_POST['action']) {
             case 'upload_media_library':
                 $targetFolder = trim((string)($_POST['media_dir'] ?? ''));
+                $uploadPresetKey = function_exists('resolve_theme_preset_key') ? resolve_theme_preset_key($config) : (string)($config['theme']['theme_preset'] ?? 'custom');
+                $uploadMediaRoles = function_exists('theme_contract_media_roles') ? theme_contract_media_roles($uploadPresetKey) : [];
+                $uploadAdminCapabilities = function_exists('theme_admin_capabilities_for_config') ? theme_admin_capabilities_for_config($config) : [];
+                $uploadTargetAllowed = match ($targetFolder) {
+                    'video' => in_array('love_story_video', $uploadMediaRoles, true),
+                    'love_story' => in_array('story', $uploadAdminCapabilities, true),
+                    default => true,
+                };
+                if (!$uploadTargetAllowed) {
+                    $error = 'Target media tidak tersedia untuk preset aktif.';
+                    break;
+                }
                 $allowedByFolder = [
                     'cover' => ALLOWED_IMAGE_TYPES,
                     'bride_photo' => ALLOWED_IMAGE_TYPES,
@@ -1698,8 +1710,8 @@ if (!isset($themePreviewConfig['buttons']['mobile_layout'])) {
                                         <?php if ($adminCapabilityEnabled('seo')): ?><option value="open_graph">Gambar Open Graph</option><?php endif; ?>
                                         <option value="background">Latar Belakang</option>
                                         <option value="gallery">Galeri</option>
-                                        <option value="love_story">Cerita Cinta (gambar)</option>
-                                        <option value="video">Video Cerita</option>
+                                        <?php if ($adminCapabilityEnabled('story')): ?><option value="love_story">Cerita Cinta (gambar)</option><?php endif; ?>
+                                        <?php if (in_array('love_story_video', $themeMediaRoles, true)): ?><option value="video">Video Cerita</option><?php endif; ?>
                                         <option value="theme_assets">Aset khusus gaya aktif</option>
                                         <option value="music">Musik</option>
                                     </select>

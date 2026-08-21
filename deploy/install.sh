@@ -64,11 +64,11 @@ install_os_dependencies() {
     echo 'SKIP_APACHE_PACKAGE_INSTALL=1: instalasi package OS dilewati.'
     return 0
   fi
-  echo 'Installing Apache, PHP-FPM, Composer, ImageMagick, and PHP extensions...'
+  echo 'Installing Apache, PHP-FPM, Composer, ImageMagick, FFmpeg, and PHP extensions...'
   apt-get update -qq
   DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     apache2 apache2-utils php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip \
-    composer imagemagick rsync openssl ca-certificates curl unzip
+    composer imagemagick ffmpeg rsync openssl ca-certificates curl unzip
 }
 
 check_apache_commands() {

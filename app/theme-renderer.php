@@ -35,8 +35,8 @@ function resolve_theme_preset_key(array $config): string {
 function theme_capabilities_for(string $presetKey): array {
     if ($presetKey === 'custom') {
         return [
-            'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'parents', 'rsvp', 'seo', 'whatsapp', 'sections'],
-            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation'],
+            'content' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'parents', 'rsvp', 'story', 'love_story_video', 'seo', 'whatsapp', 'sections'],
+            'presentation' => ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation', 'love_story_video'],
         ];
     }
 
@@ -64,7 +64,7 @@ function theme_preset_layout_order(string $presetKey, ?array $config = null): ar
 function theme_presentation_capabilities(array $config): array {
     $themeMode = resolve_theme_mode($config);
     if ($themeMode === 'custom') {
-        return ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation'];
+        return ['colors', 'typography', 'hero', 'background', 'cards', 'gallery_layout', 'navigation', 'footer', 'spacing', 'animation', 'love_story_video'];
     }
 
     $presetKey = resolve_theme_preset_key($config);
@@ -139,7 +139,13 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             }
             return '<section id="acara" class="section panel" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'acara', 'Jadwal Acara')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'acara', 'Rangkaian Acara')) . '</h2></div><div class="cards-grid">' . $cards . '</div></div></section>';
         case 'cerita':
-            return '<section id="cerita" class="section intro-section" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'cerita', 'Cerita Kami')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')) . '</h2></div><div id="loveStoryContainer"><p class="loading">Memuat cerita...</p></div></div></section>';
+            $videoPath = trim((string)($config['media']['love_story_video'] ?? ''));
+            $videoUrl = $videoPath === '' ? '' : (filter_var($videoPath, FILTER_VALIDATE_URL) ? $videoPath : public_path($videoPath));
+            $videoRoleEnabled = !function_exists('theme_contract_has_media_role') || theme_contract_has_media_role('custom', 'love_story_video');
+            $videoBlock = ($videoRoleEnabled && $videoUrl !== '' && $videoUrl !== 'data:,')
+                ? '<div class="love-story-video" style="margin:0 auto 28px;max-width:760px"><video controls playsinline preload="metadata" style="display:block;width:100%;border-radius:18px;box-shadow:0 18px 40px rgba(40,25,20,.14)" src="' . escape_html($videoUrl) . '">Peramban Anda tidak mendukung video HTML5.</video></div>'
+                : '';
+            return '<section id="cerita" class="section intro-section" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head"><p class="label">' . escape_html(get_section_title($config, 'cerita', 'Cerita Kami')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'cerita', 'Perjalanan indah bersama')) . '</h2></div>' . $videoBlock . '<div id="loveStoryContainer"><p class="loading">Memuat cerita...</p></div></div></section>';
         case 'galeri':
             return '<section id="galeri" class="section intro-section" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'galeri', 'Galeri')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'galeri', 'Prewedding Kami')) . '</h2><p style="max-width:680px;margin:0 auto 34px;font-size:1.15rem;line-height:1.9;text-align:center;color:var(--muted)">Beberapa momen indah kami dalam perjalanan sebelum hari pernikahan.</p></div><button type="button" id="loadGalleryBtn" class="load-gallery-btn" style="display:none; margin:20px auto; padding:10px 20px; background:#d4a574; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Muat Galeri</button><div id="galleryGrid" class="gallery-grid"><p class="loading">Memuat galeri...</p></div></div></section>';
         case 'lokasi':

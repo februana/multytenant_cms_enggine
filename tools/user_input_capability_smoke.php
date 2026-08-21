@@ -56,7 +56,8 @@ foreach (['shubh-vivah', 'rainier', 'pawiwahan'] as $preset) {
 $adminSource = file_get_contents(dirname(__DIR__) . '/admin/index.php');
 input_capability_assert(strpos($adminSource, 'name="qris_image"') !== false, 'Admin QRIS upload field is missing');
 input_capability_assert(strpos($adminSource, 'name="dresscode_color"') !== false, 'Admin dresscode input is missing');
-input_capability_assert(strpos($adminSource, '<option value="video">Video Cerita</option>') !== false, 'Media Manager video folder is missing');
+input_capability_assert(strpos($adminSource, 'value="video">Video Cerita</option>') !== false, 'Media Manager video folder label is missing');
+input_capability_assert(strpos($adminSource, "in_array('love_story_video', \$themeMediaRoles, true)") !== false, 'Media Manager video folder is not contract-gated');
 input_capability_assert(strpos($adminSource, 'media.love_story_video') !== false, 'Media Manager video assignment target is missing');
 
 $shared = [
@@ -111,6 +112,14 @@ foreach ($renderProbes as $preset => $probeData) {
     }
     if ($preset === 'dewankl') input_capability_assert(strpos($html, 'input-probe.mp4') !== false, 'DewanaKL video probe did not render');
 }
+
+$customConfig = $base;
+$customConfig['theme']['mode'] = 'custom';
+$customConfig['theme']['theme_preset'] = 'custom';
+$customConfig['media']['love_story_video'] = $tenantVideoPath('custom-input-probe.mp4');
+$shared['presetKey'] = 'custom';
+$customHtml = render_theme_layout($customConfig, $shared);
+input_capability_assert(strpos($customHtml, 'custom-input-probe.mp4') !== false, 'Custom Mode video probe did not render');
 
 $videoPath = $tenantVideoPath('reference-video.mp4');
 $usageConfig = $base;

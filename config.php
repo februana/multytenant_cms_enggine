@@ -34,9 +34,9 @@ if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS
 if (!defined('UPLOADS_THEME_ASSETS_DIR')) define('UPLOADS_THEME_ASSETS_DIR', UPLOADS_DIR . '/theme-assets');
 
 // Security defaults
-if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
-if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 15 * 1024 * 1024));
-if (!defined('MAX_VIDEO_UPLOAD_SIZE')) define('MAX_VIDEO_UPLOAD_SIZE', (int) (getenv('MAX_VIDEO_UPLOAD_SIZE') ?: 50 * 1024 * 1024));
+if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 10 * 1024 * 1024));
+if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 50 * 1024 * 1024));
+if (!defined('MAX_VIDEO_UPLOAD_SIZE')) define('MAX_VIDEO_UPLOAD_SIZE', (int) (getenv('MAX_VIDEO_UPLOAD_SIZE') ?: 512 * 1024 * 1024));
 if (!defined('WEBP_QUALITY')) define('WEBP_QUALITY', max(60, min(95, (int) (getenv('WEBP_QUALITY') ?: 82))));
 if (!defined('SESSION_TIMEOUT')) define('SESSION_TIMEOUT', (int) (getenv('SESSION_TIMEOUT') ?: 3600));
 if (!defined('ALLOWED_IMAGE_TYPES')) define('ALLOWED_IMAGE_TYPES', array_map('strtolower', (array) (getenv('ALLOWED_IMAGE_TYPES') ? explode(',', getenv('ALLOWED_IMAGE_TYPES')) : ['jpg','jpeg','png','webp'])));
@@ -2025,6 +2025,105 @@ function find_imagemagick_binary(): ?string {
     return null;
 }
 
+function find_ffmpeg_binary(): ?string {
+    $output = [];
+    @exec('command -v ffmpeg 2>/dev/null', $output, $code);
+    return $code === 0 && !empty($output[0]) ? trim((string)$output[0]) : null;
+}
+
+function find_ffprobe_binary(): ?string {
+    $output = [];
+    @exec('command -v ffprobe 2>/dev/null', $output, $code);
+    return $code === 0 && !empty($output[0]) ? trim((string)$output[0]) : null;
+}
+
+function video_processing_temp_path(string $directory): string {
+    return rtrim($directory, '/\\') . '/.' . bin2hex(random_bytes(12)) . '.tmp.mp4';
+}
+
+function probe_video_stream(string $path, bool $audio = false): ?array {
+    $binary = find_ffprobe_binary();
+    if ($binary === null || !is_file($path)) return null;
+    $selector = $audio ? 'a:0' : 'v:0';
+    $entries = $audio ? 'codec_type,codec_name,sample_rate,channels' : 'codec_type,codec_name,width,height,pix_fmt,r_frame_rate,duration';
+    $command = escapeshellarg($binary) . ' -v error -select_streams ' . escapeshellarg($selector) . ' -show_entries stream=' . escapeshellarg($entries) . ' -of json ' . escapeshellarg($path) . ' 2>/dev/null';
+    $output = [];
+    @exec($command, $output, $code);
+    if ($code !== 0 || !$output) return null;
+    $decoded = json_decode(implode('', $output), true);
+    return is_array($decoded) && isset($decoded['streams'][0]) && is_array($decoded['streams'][0]) ? $decoded['streams'][0] : null;
+}
+
+function video_stream_fps(array $stream): float {
+    $rate = trim((string)($stream['r_frame_rate'] ?? ''));
+    if ($rate === '' || !str_contains($rate, '/')) return 0.0;
+    [$numerator, $denominator] = array_map('floatval', explode('/', $rate, 2));
+    return $denominator > 0 ? $numerator / $denominator : 0.0;
+}
+
+function verify_mp4_output(string $path, array $requirement = []): bool {
+    if (!is_file($path) || filesize($path) <= 0 || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'mp4') return false;
+    $mime = safe_image_mime($path);
+    if (!in_array($mime, ['video/mp4', 'application/mp4', 'application/octet-stream'], true)) return false;
+    $video = probe_video_stream($path);
+    if ($video === null || ($video['codec_name'] ?? '') !== (string)($requirement['video_codec'] ?? 'libx264')) return false;
+    $width = (int)($video['width'] ?? 0);
+    $height = (int)($video['height'] ?? 0);
+    if ($width < 2 || $height < 2) return false;
+    if (isset($requirement['max_width']) && $width > (int)$requirement['max_width']) return false;
+    if (isset($requirement['max_height']) && $height > (int)$requirement['max_height']) return false;
+    if (($video['pix_fmt'] ?? '') !== (string)($requirement['pixel_format'] ?? 'yuv420p')) return false;
+    $fps = video_stream_fps($video);
+    if (isset($requirement['max_fps']) && $fps > (float)$requirement['max_fps'] + 0.05) return false;
+    if ((float)($video['duration'] ?? 0) <= 0.05) return false;
+    return true;
+}
+
+function process_video_to_mp4(string $sourcePath, string $destinationDir, string $role = 'love_story_video', ?string $preset = null, string $originalName = ''): array {
+    if (!is_file($sourcePath) || !is_readable($sourcePath)) return ['success' => false, 'error' => 'Sumber video tidak dapat dibaca.'];
+    $requirement = media_requirement($role, $preset);
+    $binary = find_ffmpeg_binary();
+    if ($binary === null || find_ffprobe_binary() === null) return ['success' => false, 'error' => 'FFmpeg dan FFprobe diperlukan untuk memproses Video Cerita.'];
+    if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan video.'];
+    $safeBase = preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($originalName !== '' ? $originalName : basename($sourcePath), PATHINFO_FILENAME));
+    $safeBase = trim((string)$safeBase, '-_');
+    if ($safeBase === '') $safeBase = 'love-story-video';
+    $finalName = $safeBase . '-' . bin2hex(random_bytes(8)) . '.mp4';
+    $finalPath = rtrim($destinationDir, '/\\') . '/' . $finalName;
+    $temporaryPath = video_processing_temp_path($destinationDir);
+    $vf = "scale='min(" . (int)($requirement['max_width'] ?? 1280) . ",iw)':'min(" . (int)($requirement['max_height'] ?? 720) . ",ih)':force_original_aspect_ratio=decrease:force_divisible_by=2";
+    $parts = [
+        escapeshellarg($binary), '-hide_banner', '-loglevel', 'error', '-y',
+        '-i', escapeshellarg($sourcePath), '-map', escapeshellarg('0:v:0'), '-map', escapeshellarg('0:a:0?'),
+        '-vf', escapeshellarg($vf), '-c:v', escapeshellarg((string)($requirement['video_encoder'] ?? 'libx264')),
+        '-preset', escapeshellarg((string)($requirement['preset'] ?? 'veryfast')), '-crf', (string)(int)($requirement['crf'] ?? 25),
+        '-pix_fmt', escapeshellarg((string)($requirement['pixel_format'] ?? 'yuv420p')), '-r', (string)(int)($requirement['max_fps'] ?? 30),
+        '-c:a', escapeshellarg((string)($requirement['audio_codec'] ?? 'aac')), '-b:a', escapeshellarg((string)($requirement['audio_bitrate'] ?? '128k')),
+        '-movflags', '+faststart', '-sn', '-dn', escapeshellarg($temporaryPath)
+    ];
+    $command = implode(' ', $parts);
+    $process = @proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    $processed = false;
+    $stderr = '';
+    if (is_resource($process)) {
+        fclose($pipes[0]);
+        stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+        $processed = $exitCode === 0 && verify_mp4_output($temporaryPath, $requirement);
+    }
+    if (!$processed || !@rename($temporaryPath, $finalPath) || !verify_mp4_output($finalPath, $requirement)) {
+        if ($stderr !== '') error_log('MediaProcessor FFmpeg failed: ' . trim($stderr));
+        @unlink($temporaryPath);
+        @unlink($finalPath);
+        return ['success' => false, 'error' => 'Gagal memproses video menjadi MP4 terverifikasi.'];
+    }
+    $video = probe_video_stream($finalPath);
+    return ['success' => true, 'path' => $finalPath, 'name' => $finalName, 'mime' => 'video/mp4', 'width' => (int)($video['width'] ?? 0), 'height' => (int)($video['height'] ?? 0), 'duration' => (float)($video['duration'] ?? 0), 'requirement' => $requirement];
+}
+
 function media_role_alias(string $role): string {
     $role = strtolower(trim($role));
     $aliases = [
@@ -2071,6 +2170,7 @@ function media_requirements(): array {
             'qris_image' => ['max_width' => 1200, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
             'og_image' => ['width' => 1200, 'height' => 630, 'fit' => 'cover', 'crop' => true, 'upscale' => true],
             'theme_asset' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false, 'preserve_alpha' => true],
+            'love_story_video' => ['max_width' => 1280, 'max_height' => 720, 'fit' => 'contain', 'video_codec' => 'h264', 'video_encoder' => 'libx264', 'audio_codec' => 'aac', 'pixel_format' => 'yuv420p', 'max_fps' => 30, 'crf' => 25, 'audio_bitrate' => '128k', 'preset' => 'veryfast'],
         ],
         'presets' => [
             'parang' => [
@@ -2524,6 +2624,15 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
         return $result;
     }
 
+    if ($isVideo) {
+        $result = process_video_to_mp4($temporarySource, $destinationDir, $role, $preset, (string)$file['name']);
+        if (empty($result['success'])) return $result;
+        if (is_file($temporarySource) && $temporarySource !== $result['path']) @unlink($temporarySource);
+        $result['extension'] = 'mp4';
+        $result['original_extension'] = $extension;
+        return $result;
+    }
+
     $safeName = generate_safe_filename((string)$file['name']);
     $dest = rtrim($destinationDir, '/\\') . '/' . $safeName;
     if (!@move_uploaded_file($temporarySource, $dest) && !($isCliFixture && @rename($temporarySource, $dest))) {
@@ -2693,7 +2802,7 @@ function list_media_library(array $options = []): array {
         'background' => ['dir' => tenant_upload_dir('background'), 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
         'gallery' => ['dir' => tenant_upload_dir('gallery'), 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
         'love_story' => ['dir' => tenant_upload_dir('love_story'), 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'video' => ['dir' => tenant_upload_dir('video'), 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
+        'video' => ['dir' => tenant_upload_dir('love_story'), 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
         'theme_assets' => ['dir' => tenant_upload_dir('theme_assets'), 'label' => 'Theme Assets', 'allowed' => ALLOWED_IMAGE_TYPES],
         'music' => ['dir' => tenant_upload_dir('music'), 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
     ];
