@@ -16,6 +16,11 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'DewanaKL',
                 'source' => 'https://github.com/dewanakl/undangan',
                 'source_revision' => '99e7c2d',
+                'attribution' => [
+                    'creator' => ['name' => 'DewanaKL', 'role' => 'Original Preset Creator', 'url' => 'https://github.com/dewanakl/undangan'],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => true,
+                ],
                 'data_capabilities' => [
                     'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
                     'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media',
@@ -47,6 +52,11 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Shubh Vivah',
                 'source' => 'https://github.com/vinitshahdeo/wedding-website',
                 'source_revision' => 'f42fbe6',
+                'attribution' => [
+                    'creator' => ['name' => 'Vinit Shahdeo', 'role' => 'Original Preset Creator', 'url' => 'https://github.com/vinitshahdeo/wedding-website'],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => false,
+                ],
                 'data_capabilities' => ['wedding', 'schedule', 'countdown', 'gallery', 'music', 'maps', 'rsvp', 'messages', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar'],
                 'presentation_capabilities' => ['invitation_card', 'ornamental_corners', 'script_typography', 'countdown', 'gallery_grid', 'audio_control'],
                 'sections' => [
@@ -66,6 +76,11 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Yami Buzzy',
                 'source' => 'https://github.com/Tynab/Yami-Buzzy',
                 'source_revision' => '367f5a5',
+                'attribution' => [
+                    'creator' => ['name' => 'Tynab', 'role' => 'Original Preset Creator', 'url' => 'https://github.com/Tynab/Yami-Buzzy'],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => false,
+                ],
                 'data_capabilities' => ['wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music', 'gift', 'maps', 'rsvp', 'messages', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'dresscode', 'love_story_video'],
                 'presentation_capabilities' => ['welcome_modal', 'hero_countdown', 'couple_cards', 'dresscode_timeline', 'love_story_timeline', 'gallery_grid', 'video_panel', 'gift_card', 'mobile_navigation', 'audio_control'],
                 'sections' => [
@@ -90,6 +105,11 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Rainier',
                 'source' => 'https://github.com/Rainier-PS/Invitation-Template',
                 'source_revision' => '443a04f',
+                'attribution' => [
+                    'creator' => ['name' => 'Rainier Pearson Saputra', 'role' => 'Original Preset Creator', 'url' => 'https://github.com/Rainier-PS/Invitation-Template'],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => true,
+                ],
                 'data_capabilities' => [
                     'wedding', 'schedule', 'countdown', 'maps', 'rsvp', 'messages',
                     'guest_name', 'calendar', 'seo', 'music', 'media'
@@ -116,6 +136,12 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Parang',
                 'source' => 'User-provided HTML design reference',
                 'source_revision' => 'attachment:pasted_content_15',
+                'attribution' => [
+                    'creator' => ['name' => 'Febru & Andi', 'role' => 'Preset Designer', 'url' => ''],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => false,
+                    'same_creator_as_cms' => true,
+                ],
                 'data_capabilities' => [
                     'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
                     'gift', 'maps', 'rsvp', 'story', 'guest_name', 'media', 'seo', 'whatsapp', 'calendar', 'dresscode'
@@ -145,6 +171,11 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Pawiwahan',
                 'source' => 'https://github.com/parta99/pawiwahan',
                 'source_revision' => '957b3f3',
+                'attribution' => [
+                    'creator' => ['name' => 'DE Juna', 'role' => 'Original Preset Creator', 'url' => 'https://github.com/parta99/pawiwahan'],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => true,
+                ],
                 'data_capabilities' => [
                     'wedding', 'parents', 'schedule', 'countdown', 'gallery', 'music',
                     'gift', 'maps', 'rsvp', 'messages', 'guest_name', 'media', 'seo',
@@ -179,6 +210,11 @@ if (!function_exists('theme_contract_registry')) {
                 'label' => 'Archak',
                 'source' => 'https://github.com/archakNath/wedding-invitation-website',
                 'source_revision' => '1b54902',
+                'attribution' => [
+                    'creator' => ['name' => 'Archak Nath', 'role' => 'Original Preset Creator', 'url' => 'https://github.com/archakNath/wedding-invitation-website'],
+                    'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+                    'source_credit_present' => true,
+                ],
                 'data_capabilities' => [
                     'wedding', 'parents', 'schedule', 'maps', 'rsvp', 'guest_name',
                     'gallery', 'story', 'gift', 'media', 'seo', 'whatsapp'
@@ -207,6 +243,16 @@ if (!function_exists('theme_contract_registry')) {
 
     function theme_contract_for(string $presetKey): array {
         return theme_contract_registry()[$presetKey] ?? [];
+    }
+    function theme_contract_attribution(string $presetKey): array {
+        $fallback = [
+            'creator' => null,
+            'cms_credit' => ['name' => 'Febru & Andi', 'role' => 'CMS Designer & Adapter'],
+            'source_credit_present' => false,
+            'same_creator_as_cms' => false,
+        ];
+        $attribution = theme_contract_for($presetKey)['attribution'] ?? [];
+        return array_replace($fallback, is_array($attribution) ? $attribution : []);
     }
 
     function theme_contract_sections(string $presetKey): array {
