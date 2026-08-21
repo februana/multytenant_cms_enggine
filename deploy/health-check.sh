@@ -35,7 +35,9 @@ else
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
+RUNTIME_DEPENDENCIES_SCRIPT="$SCRIPT_DIR/runtime-dependencies.sh"
 WEDDING_BUILTIN_PRESETS="dewankl rainier archak parang pawiwahan shubh-vivah yami-buzzy custom"
+RUNTIME_DEPENDENCIES_AVAILABLE=0
 PASS_COUNT=0
 WARN_COUNT=0
 FAIL_COUNT=0
@@ -52,6 +54,12 @@ if [ -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
   . "$RUNTIME_DIRECTORIES_SCRIPT"
 else
   fail "Runtime directory contract missing: $RUNTIME_DIRECTORIES_SCRIPT"
+fi
+if [ -r "$RUNTIME_DEPENDENCIES_SCRIPT" ]; then
+  . "$RUNTIME_DEPENDENCIES_SCRIPT"
+  RUNTIME_DEPENDENCIES_AVAILABLE=1
+else
+  fail "Runtime dependency contract missing: $RUNTIME_DEPENDENCIES_SCRIPT"
 fi
 
 # Detect web server type
@@ -288,18 +296,68 @@ case " $WEDDING_BUILTIN_PRESETS " in
 esac
 fi
 
-if command -v magick >/dev/null 2>&1 || command -v convert >/dev/null 2>&1; then
-  pass "ImageMagick WebP processor is available"
+if command -v magick >/dev/null 2>&1 && magick -version >/dev/null 2>&1; then
+  pass "ImageMagick magick WebP processor is available and callable"
+elif command -v convert >/dev/null 2>&1 && convert -version >/dev/null 2>&1; then
+  pass "ImageMagick convert WebP processor is available and callable"
 elif command -v php >/dev/null 2>&1 && php -r 'exit(function_exists("imagewebp") ? 0 : 1);' >/dev/null 2>&1; then
-  pass "PHP GD WebP fallback is available"
+  pass "PHP GD WebP fallback is available and callable"
 else
-  fail "No ImageMagick or PHP GD WebP processor is available"
+  fail "No callable ImageMagick or PHP GD WebP processor is available"
 fi
 
-if command -v ffmpeg >/dev/null 2>&1 && command -v ffprobe >/dev/null 2>&1; then
-  pass "FFmpeg and FFprobe video processor are available"
+if command -v ffmpeg >/dev/null 2>&1 && ffmpeg -version >/dev/null 2>&1; then
+  pass "FFmpeg is available and callable"
 else
-  fail "FFmpeg and FFprobe video processors are required"
+  fail "FFmpeg video/audio processor is required and not callable"
+fi
+if command -v ffprobe >/dev/null 2>&1 && ffprobe -version >/dev/null 2>&1; then
+  pass "FFprobe is available and callable"
+else
+  fail "FFprobe metadata processor is required and not callable"
+fi
+if command -v composer >/dev/null 2>&1; then
+  pass "Composer is available and callable"
+else
+  fail "Composer is required and not callable"
+fi
+if [ -f "$DEPLOY_DIR/vendor/autoload.php" ] && [ -f "$DEPLOY_DIR/composer.lock" ] && (cd "$DEPLOY_DIR" && composer check-platform-reqs --no-dev --no-interaction >/dev/null 2>&1); then
+  pass "Composer vendor dependencies satisfy runtime platform requirements"
+else
+  fail "Composer vendor dependencies are missing or platform requirements are not satisfied"
+fi
+if command -v php >/dev/null 2>&1; then
+  for extension in sqlite3 pdo_sqlite fileinfo mbstring openssl json; do
+    if php -r "exit(extension_loaded('$extension') ? 0 : 1);" >/dev/null 2>&1; then
+      pass "PHP extension available: $extension"
+    else
+      fail "Required PHP extension missing: $extension"
+    fi
+  done
+else
+  fail "PHP CLI is required for extension checks"
+fi
+if [ "$RUNTIME_DEPENDENCIES_AVAILABLE" -eq 1 ]; then
+  if [ "${RUNTIME_PHP_MODE:-fpm}" = "apache" ]; then
+    if runtime_php_limits_match php; then
+      pass "PHP upload limits are $RUNTIME_PHP_FPM_UPLOAD_MAX/$RUNTIME_PHP_FPM_POST_MAX"
+    else
+      fail "PHP upload limits do not meet $RUNTIME_PHP_FPM_UPLOAD_MAX/$RUNTIME_PHP_FPM_POST_MAX"
+    fi
+  else
+    if runtime_php_fpm_service >/dev/null 2>&1; then
+      pass "PHP-FPM service is active"
+    else
+      fail "PHP-FPM service is not active"
+    fi
+    if runtime_php_fpm_limits_match; then
+      pass "PHP-FPM upload limits are $RUNTIME_PHP_FPM_UPLOAD_MAX/$RUNTIME_PHP_FPM_POST_MAX"
+    else
+      fail "PHP-FPM upload limits do not meet $RUNTIME_PHP_FPM_UPLOAD_MAX/$RUNTIME_PHP_FPM_POST_MAX"
+    fi
+  fi
+else
+  fail "Runtime dependency contract unavailable; executable, extension, and upload-limit checks skipped"
 fi
 
 # Check 4: Optional WebDAV should not be treated as a critical dependency
@@ -341,7 +399,11 @@ fi
 if [ "$WEB_SERVER" = "apache" ]; then
     echo ""
     echo "Apache-Specific Checks:"
-    
+    if apache2ctl configtest >/dev/null 2>&1; then
+        pass "Apache configuration test passes"
+    else
+        fail "Apache configuration test failed"
+    fi
     # Check ports.conf configuration
     if [ -f /etc/apache2/ports.conf ]; then
         if grep -q "^Listen 80" /etc/apache2/ports.conf && grep -q "Listen 443" /etc/apache2/ports.conf; then
@@ -353,8 +415,11 @@ if [ "$WEB_SERVER" = "apache" ]; then
         fail "ports.conf not found"
     fi
     
-    # Check required Apache modules
-    REQUIRED_MODULES=("rewrite" "headers" "ssl" "proxy_fcgi" "setenvif")
+    # Check required Apache modules. SSL is optional unless an SSL site is enabled.
+    REQUIRED_MODULES=("rewrite" "headers" "expires" "proxy_fcgi" "setenvif")
+    if [ -e /etc/apache2/sites-enabled/wedding-ssl.conf ] || [ -e /etc/apache2/sites-enabled/*ssl*.conf ]; then
+        REQUIRED_MODULES+=("ssl")
+    fi
     for mod in "${REQUIRED_MODULES[@]}"; do
         if [ -f "/etc/apache2/mods-enabled/${mod}.load" ]; then
             pass "Apache module enabled: $mod"

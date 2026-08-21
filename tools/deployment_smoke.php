@@ -30,6 +30,11 @@ assert_true(($loaded['media']['music'] ?? null) === '', 'loaded music default mu
 
 $contract = $root . '/deploy/runtime-directories.sh';
 assert_true(is_file($contract), 'shared runtime directory contract exists');
+$dependencyContract = $root . '/deploy/runtime-dependencies.sh';
+assert_true(is_file($dependencyContract), 'shared runtime dependency contract exists');
+$dependencySource = (string) file_get_contents($dependencyContract);
+assert_true(str_contains($dependencySource, 'runtime_required_os_packages'), 'dependency contract declares required OS packages');
+assert_true(str_contains($dependencySource, 'apache2 apache2-utils php-fpm'), 'dependency contract includes Apache and PHP-FPM');
 assert_true(is_file($root . '/tools/deployment_backup_restore_smoke.sh'), 'backup/restore/update fixture smoke test exists');
 $bootstrapRoot = $runtime . '/app';
 $command = 'sh -c ' . escapeshellarg('. ' . escapeshellarg($contract) . '; ensure_runtime_directories ' . escapeshellarg($bootstrapRoot));
@@ -46,16 +51,28 @@ foreach ($requiredBootstrapReferences as $script) {
     $source = file_get_contents($script);
     assert_true(is_string($source) && str_contains($source, 'runtime-directories.sh'), 'deployment path references shared runtime contract: ' . basename($script));
 }
+foreach ([$root . '/deploy/install.sh', $root . '/deploy/update.sh', $root . '/deploy/health-check.sh'] as $script) {
+    $source = file_get_contents($script);
+    assert_true(is_string($source) && str_contains($source, 'runtime-dependencies.sh'), 'deployment path references shared dependency contract: ' . basename($script));
+}
 $installer = (string) file_get_contents($root . '/deploy/install.sh');
-assert_true(str_contains($installer, 'apache2 apache2-utils php-fpm'), 'native installer installs Apache and PHP-FPM foundation packages');
+assert_true(str_contains($installer, 'runtime_install_os_dependencies'), 'native installer installs dependency contract packages');
 assert_true(str_contains($installer, 'composer install --no-dev'), 'native installer installs Composer dependencies from the lock file');
 assert_true(str_contains($installer, 'start_php_fpm_and_detect_socket'), 'native installer detects an active PHP-FPM socket');
 assert_true(str_contains($installer, 'apache2ctl configtest'), 'native installer gates activation on Apache configtest');
 assert_true(str_contains($installer, 'APACHE_WEBDAV_ENABLE'), 'native installer keeps WebDAV explicitly operator-controlled');
-assert_true(str_contains($installer, 'ffmpeg'), 'native installer installs FFmpeg for Love Story video processing');
+assert_true(str_contains($dependencySource, 'ffmpeg'), 'dependency contract includes FFmpeg for Love Story video processing');
+assert_true(str_contains($installer, 'runtime_configure_php_fpm_upload_limits'), 'native installer configures PHP-FPM upload limits');
+assert_true(str_contains($installer, 'runtime_verify_commands'), 'native installer verifies callable runtime commands');
 assert_true(!str_contains($installer, 'nginx'), 'native installer does not introduce an Nginx deployment path');
 $updater = (string) file_get_contents($root . '/deploy/update.sh');
 assert_true(str_contains($updater, 'multytenant_cms_enggine.git'), 'updater defaults to the multi-tenant repository');
+assert_true(str_contains($updater, 'runtime_reconcile_dependencies'), 'updater reconciles required runtime dependencies before source replacement');
+$healthCheck = (string) file_get_contents($root . '/deploy/health-check.sh');
+assert_true(str_contains($healthCheck, 'runtime_php_fpm_limits_match'), 'health-check verifies effective PHP-FPM upload limits');
+assert_true(str_contains($healthCheck, 'composer check-platform-reqs'), 'health-check verifies Composer platform requirements');
+assert_true(str_contains($healthCheck, 'ffmpeg -version'), 'health-check verifies callable FFmpeg');
+assert_true(str_contains($healthCheck, 'ffprobe -version'), 'health-check verifies callable FFprobe');
 
 $dockerfile = (string) file_get_contents($root . '/Dockerfile');
 assert_true(str_contains($dockerfile, 'HEALTHCHECK'), 'Dockerfile declares an HTTP healthcheck');
@@ -64,9 +81,12 @@ assert_true(str_contains($dockerfile, 'already builds pdo_sqlite'), 'Dockerfile 
 assert_true(!str_contains($dockerfile, 'docker-php-ext-install pdo_sqlite'), 'Dockerfile does not recompile PDO SQLite');
 assert_true(!str_contains($dockerfile, 'docker-php-ext-install sqlite3'), 'Dockerfile does not recompile SQLite3');
 assert_true(str_contains($dockerfile, 'ffmpeg'), 'Dockerfile installs FFmpeg for Love Story video processing');
-$healthCheck = (string) file_get_contents($root . '/deploy/health-check.sh');
-assert_true(str_contains($healthCheck, 'ffprobe'), 'health-check verifies FFprobe availability');
+assert_true(str_contains($dockerfile, 'RUNTIME_PHP_MODE=apache'), 'Dockerfile declares Apache PHP runtime mode');
+assert_true(str_contains($dockerfile, 'upload_max_filesize = 512M'), 'Dockerfile configures 512M upload limit');
+assert_true(str_contains($dockerfile, 'post_max_size = 520M'), 'Dockerfile configures 520M post limit');
 $compose = (string) file_get_contents($root . '/docker-compose.yml');
+assert_true(str_contains($compose, 'RUNTIME_PHP_MODE: apache'), 'Compose declares Apache PHP runtime mode');
+assert_true(str_contains($healthCheck, 'ffprobe'), 'health-check verifies FFprobe availability');
 assert_true(str_contains($compose, 'healthcheck:'), 'Compose declares a service healthcheck');
 assert_true(str_contains($compose, 'wedding_backups:'), 'Compose persists backup artifacts');
 assert_true(str_contains($compose, 'wedding_webdav:'), 'Compose persists WebDAV data');

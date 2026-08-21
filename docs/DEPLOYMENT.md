@@ -30,6 +30,19 @@ Run the installer from a trusted checkout as root. It follows the Apache + PHP-F
 | FFmpeg and FFprobe | Canonical music and Love Story video processing plus metadata verification |
 | Cloudflare Tunnel (`cloudflared`) | Intended public ingress |
 
+The dependency contract is centralized in [`deploy/runtime-dependencies.sh`](../deploy/runtime-dependencies.sh). It is sourced by native install, update, and health-check scripts so required packages do not drift between fresh and existing deployments.
+
+| Dependency | Evidence in source | Required | Provisioning/check |
+|---|---|---:|---|
+| Apache + PHP-FPM | Apache templates, PHP-FPM socket handler, native installer | Yes for native deployment | `install.sh` installs/configures; `health-check.sh` checks service and `apache2ctl configtest` |
+| PHP CLI + `sqlite3`/`pdo_sqlite` | `config.php`, `deploy/migrate.php`, tenant database access | Yes | Package install plus extension checks |
+| `fileinfo`, `mbstring`, `openssl`, `json` | MIME detection, RSVP limits, password encryption, locked Composer graph | Yes | PHP extension checks and Composer platform check |
+| Composer + `chillerlan/php-qrcode` | `admin/qr.php` requires `vendor/autoload.php` | Yes | `composer install` from `composer.lock`; health-check runs `composer check-platform-reqs` |
+| ImageMagick CLI or PHP GD WebP fallback | `process_image_to_webp()` | At least one | Installer provisions both; health-check verifies a callable processor |
+| FFmpeg + FFprobe | `process_audio_to_mp3()`, `process_video_to_mp4()`, probe/verification helpers | Yes | Installer/update reconcile packages; health-check invokes `-version` for both |
+| `rsync`, OpenSSL, curl, CA certificates, unzip | update preservation, credentials, HTTP checks, Composer/package operations | Yes for native deployment | Dependency contract installs and update uses the tools |
+| Cloudflare Tunnel (`cloudflared`) | Intended public ingress | Operator-managed | Not installed by the application scripts |
+
 The installer does not use `rsync --delete`, does not delete `.env`, the database, tenant media, backups, or WebDAV data, and does not create a per-tenant VirtualHost. It renders one catch-all vhost and leaves tenant resolution to the application.
 
 ### Install the application
@@ -46,7 +59,7 @@ The installer copies application code without `--delete`, preserves an existing 
 
 The first installation requires `UNDANGAN_MAIN_DOMAIN` or prompts for a valid FQDN. This primary domain is inserted as the initial **normal tenant**: it has its own public invitation, tenant-scoped configuration/media/data, and Tenant Admin behavior. The migration then creates a separate Primary Tenant Admin with `role = tenant_admin` and that tenant ID, followed by the global Super Admin account with `role = super_admin` and `tenant_id IS NULL`. The Super Admin role, not the hostname, authorizes cross-tenant management. Newly generated Primary Tenant Admin credentials and Super Admin credentials are printed once; repeat migrations preserve existing accounts and passwords.
 
-The installer is deliberately non-destructive toward application data, but it does configure the native Apache service as part of the foundation deployment contract. It enables `rewrite`, `headers`, `expires`, `proxy_fcgi`, and `setenvif`, starts the detected PHP-FPM service, renders `/etc/apache2/sites-available/wedding.conf` from [`deploy/templates/apache/apache-http.conf.template`](../deploy/templates/apache/apache-http.conf.template), runs `apache2ctl configtest`, enables the site, disables `000-default.conf`, and only then starts or reloads Apache. Set `APACHE_ENABLE_SSL=1` to use the existing SSL template with an already-provisioned certificate. Set `APACHE_WEBDAV_ENABLE=1` to provision `/etc/apache2/.davpasswd` and the optional source WebDAV modules. The installer does not introduce Nginx or create per-tenant VirtualHosts.
+The installer is deliberately non-destructive toward application data, but it does configure the native Apache service as part of the foundation deployment contract. It installs the dependency contract, configures PHP-FPM to accept `upload_max_filesize = 512M` and `post_max_size = 520M`, verifies the effective limits, enables `rewrite`, `headers`, `expires`, `proxy_fcgi`, and `setenvif`, starts the detected PHP-FPM service, renders `/etc/apache2/sites-available/wedding.conf` from [`deploy/templates/apache/apache-http.conf.template`](../deploy/templates/apache/apache-http.conf.template), runs `apache2ctl configtest`, enables the site, disables `000-default.conf`, and only then starts or reloads Apache. Set `APACHE_ENABLE_SSL=1` to use the existing SSL template with an already-provisioned certificate. Set `APACHE_WEBDAV_ENABLE=1` to provision `/etc/apache2/.davpasswd` and the optional source WebDAV modules. The installer does not introduce Nginx or create per-tenant VirtualHosts.
 
 The generated catch-all uses the deployed application as its document root and permits overrides. Its PHP handler is the source foundation's PHP-FPM Unix-socket handler, and its `/uploads/` boundary remains application-owned through `media.php`:
 
@@ -78,7 +91,7 @@ Use the guarded updater for application changes:
 sudo /var/www/wedding/deploy/update.sh
 ```
 
-The updater backs up runtime data before replacing code, preserves `.env`, the shared database, the complete tenant-prefixed `uploads/` tree, backups, WebDAV data, and compatible legacy storage, then reruns the runtime directory contract, standalone migration, and health validation. Do not use a source checkout as the live runtime directory when the deployment path is `/var/www/wedding`.
+The updater backs up runtime data before replacing code, clones and validates the new source, loads its dependency contract, reconciles required OS packages and effective PHP-FPM limits, runs Composer from the new lockfile, preserves `.env`, the shared database, the complete tenant-prefixed `uploads/` tree, backups, WebDAV data, and compatible legacy storage, then reruns the runtime directory contract, standalone migration, service reload, and health validation. Dependency reconciliation happens before source replacement; if it fails, the existing application is not replaced. The updater never resets `.env`, database, tenant media, canonical media, backups, WebDAV data, or runtime state. Do not use a source checkout as the live runtime directory when the deployment path is `/var/www/wedding`.
 
 ## Cloudflare Tunnel and onboarding
 
@@ -140,7 +153,7 @@ sudo /var/www/wedding/deploy/restore.sh /path/to/backup.tar.gz
 sudo /var/www/wedding/deploy/health-check.sh
 ```
 
-The health check validates application files, theme adapters, the shared database, tenant media root, WebP support, permissions, sensitive-file blocking, and HTTP reachability. Missing optional administrator media is reported as a warning; missing runtime, schema, or security requirements fails the check.
+The health check validates application files, theme adapters, the shared database, tenant media root, WebP support, callable ImageMagick/GD, callable FFmpeg and FFprobe, Composer vendor/platform requirements, required PHP extensions, active PHP-FPM and effective upload limits, Apache configtest, permissions, sensitive-file blocking, and HTTP reachability. Missing optional administrator media is reported as a warning; missing runtime, dependency, schema, or security requirements fails the check. Tenant configuration/path unavailable is an error; optional media absent from an otherwise valid tenant configuration is only a warning.
 
 ## Deployment safety checklist
 
@@ -168,6 +181,6 @@ The health check validates application files, theme adapters, the shared databas
 
 ### Media upload limits
 
-The application validates three environment-backed limits before processing media: `MAX_UPLOAD_SIZE` defaults to 10MB for images, `MAX_MUSIC_UPLOAD_SIZE` defaults to 50MB for audio, and `MAX_VIDEO_UPLOAD_SIZE` defaults to 512MB for Love Story video. The PHP-FPM `upload_max_filesize` and `post_max_size` values must be set above the selected application limit when deploying large videos; application validation remains the authoritative per-file limit after PHP accepts the request.
+The application validates three environment-backed limits before processing media: `MAX_UPLOAD_SIZE` defaults to 10MB for images, `MAX_MUSIC_UPLOAD_SIZE` defaults to 50MB for audio, and `MAX_VIDEO_UPLOAD_SIZE` defaults to 512MB for Love Story video. Native install/update configure and health-check the effective PHP-FPM values `upload_max_filesize = 512M` and `post_max_size = 520M`; these are PHP runtime configuration, not `.env` application variables. Application validation remains the authoritative per-file limit after PHP accepts the request.
 
 Love Story video uploads are transcoded through FFmpeg to a bounded H.264/AAC MP4 profile (maximum 1280×720 and 30 FPS). The original temporary upload is removed only after output metadata and file integrity verification succeed. A failed transcode retains the source for error handling and leaves no temporary canonical output.

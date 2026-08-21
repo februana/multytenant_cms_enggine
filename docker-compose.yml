@@ -10,6 +10,7 @@ services:
     environment:
       ADMIN_USER: ${ADMIN_USER:-admin}
       ADMIN_PASS: ${ADMIN_PASS:?Set ADMIN_PASS in .env before starting Compose}
+      RUNTIME_PHP_MODE: apache
       UNDANGAN_DATA_DIR: /var/data
       UNDANGAN_DB_PATH: /var/data/database.sqlite
     volumes:

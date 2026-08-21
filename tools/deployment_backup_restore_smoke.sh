@@ -225,7 +225,7 @@ make_source "$SOURCE"
 make_mocks "$MOCK_BIN"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$FIXTURE/health-pass.sh"
 chmod 755 "$FIXTURE/health-pass.sh"
-TERM=xterm PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$UPDATE_APP" DEPLOY_DIR="$UPDATE_APP" UNDANGAN_DATA_DIR="$UPDATE_APP" BACKUP_SCRIPT="$UPDATE_APP/deploy/backup.sh" HEALTH_CHECK_SCRIPT="$FIXTURE/health-pass.sh" REPOSITORY_URL='git@github.com:februana/webserver_undangan.git' MOCK_GIT_SOURCE="$SOURCE" MOCK_GIT_LOG="$MOCK_LOG" bash "$ROOT_DIR/deploy/update.sh" <<< $'1\n\n4\n' >"$FIXTURE/update-success.log" 2>&1
+TERM=xterm RUNTIME_DEPENDENCY_DRY_RUN=1 PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$UPDATE_APP" DEPLOY_DIR="$UPDATE_APP" UNDANGAN_DATA_DIR="$UPDATE_APP" BACKUP_SCRIPT="$UPDATE_APP/deploy/backup.sh" HEALTH_CHECK_SCRIPT="$FIXTURE/health-pass.sh" REPOSITORY_URL='git@github.com:februana/webserver_undangan.git' MOCK_GIT_SOURCE="$SOURCE" MOCK_GIT_LOG="$MOCK_LOG" bash "$ROOT_DIR/deploy/update.sh" <<< $'1\n\n4\n' >"$FIXTURE/update-success.log" 2>&1
 [ -f "$UPDATE_APP/deployment-source-marker.txt" ] || fail 'successful update did not synchronize cloned source'
 [ ! -f "$UPDATE_APP/config.json" ] || fail 'successful update retained removed global config.json'
 [ -f "$UPDATE_APP/uploads/gallery/photo with spaces.webp" ] || fail 'successful update lost Gallery media'
@@ -235,13 +235,14 @@ TERM=xterm PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$UPDATE_APP" DEPLOY_DIR="$UP
 [ -d "$UPDATE_APP/uploads" ] || fail 'successful update did not bootstrap the uploads root'
 grep -F 'git@github.com:februana/webserver_undangan.git' "$MOCK_LOG" >/dev/null || fail 'update did not retain SSH repository transport'
 grep -F 'UPDATE COMPLETE' "$FIXTURE/update-success.log" >/dev/null || fail 'successful update omitted completion marker'
-pass 'successful update preserves all user namespaces and does not leak staging data'
+grep -F 'Reconciling required runtime dependencies from the new source' "$FIXTURE/update-success.log" >/dev/null || fail 'successful update omitted dependency reconciliation'
+pass 'successful update preserves all user namespaces, reconciles dependencies, and does not leak staging data'
 
 # Failed clone must expose the error and leave the application data/source unchanged.
 FAILED_APP="$FIXTURE/failed-clone-app"
 make_base_app "$FAILED_APP"
 : > "$MOCK_LOG"
-if TERM=xterm PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$FAILED_APP" DEPLOY_DIR="$FAILED_APP" UNDANGAN_DATA_DIR="$FAILED_APP" BACKUP_SCRIPT="$FAILED_APP/deploy/backup.sh" HEALTH_CHECK_SCRIPT="$FIXTURE/health-pass.sh" REPOSITORY_URL='git@github.com:februana/webserver_undangan.git' MOCK_GIT_SOURCE="$SOURCE" MOCK_GIT_LOG="$MOCK_LOG" MOCK_GIT_FAIL=1 bash "$ROOT_DIR/deploy/update.sh" <<< $'1\n\n4\n' >"$FIXTURE/update-failed-clone.log" 2>&1; then
+if TERM=xterm RUNTIME_DEPENDENCY_DRY_RUN=1 PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$FAILED_APP" DEPLOY_DIR="$FAILED_APP" UNDANGAN_DATA_DIR="$FAILED_APP" BACKUP_SCRIPT="$FAILED_APP/deploy/backup.sh" HEALTH_CHECK_SCRIPT="$FIXTURE/health-pass.sh" REPOSITORY_URL='git@github.com:februana/webserver_undangan.git' MOCK_GIT_SOURCE="$SOURCE" MOCK_GIT_LOG="$MOCK_LOG" MOCK_GIT_FAIL=1 bash "$ROOT_DIR/deploy/update.sh" <<< $'1\n\n4\n' >"$FIXTURE/update-failed-clone.log" 2>&1; then
     :
 fi
 grep -F 'simulated SSH authentication failure' "$FIXTURE/update-failed-clone.log" >/dev/null || fail 'real clone error was hidden'
@@ -262,7 +263,7 @@ exit 9
 FAILBACKUP
 chmod 755 "$FAIL_BACKUP"
 : > "$MOCK_LOG"
-if TERM=xterm PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$FAILED_BACKUP_APP" DEPLOY_DIR="$FAILED_BACKUP_APP" UNDANGAN_DATA_DIR="$FAILED_BACKUP_APP" BACKUP_SCRIPT="$FAIL_BACKUP" HEALTH_CHECK_SCRIPT="$FIXTURE/health-pass.sh" REPOSITORY_URL='git@github.com:februana/webserver_undangan.git' MOCK_GIT_SOURCE="$SOURCE" MOCK_GIT_LOG="$MOCK_LOG" bash "$ROOT_DIR/deploy/update.sh" <<< $'1\n\n4\n' >"$FIXTURE/update-failed-backup.log" 2>&1; then
+if TERM=xterm RUNTIME_DEPENDENCY_DRY_RUN=1 PATH="$MOCK_BIN:$PATH" CANONICAL_TARGET="$FAILED_BACKUP_APP" DEPLOY_DIR="$FAILED_BACKUP_APP" UNDANGAN_DATA_DIR="$FAILED_BACKUP_APP" BACKUP_SCRIPT="$FAIL_BACKUP" HEALTH_CHECK_SCRIPT="$FIXTURE/health-pass.sh" REPOSITORY_URL='git@github.com:februana/webserver_undangan.git' MOCK_GIT_SOURCE="$SOURCE" MOCK_GIT_LOG="$MOCK_LOG" bash "$ROOT_DIR/deploy/update.sh" <<< $'1\n\n4\n' >"$FIXTURE/update-failed-backup.log" 2>&1; then
     :
 fi
 grep -F 'Backup failed. Update aborted.' "$FIXTURE/update-failed-backup.log" >/dev/null || fail 'backup failure did not abort update'

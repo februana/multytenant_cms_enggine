@@ -10,6 +10,7 @@ CANONICAL_TARGET="${CANONICAL_TARGET:-/var/www/wedding}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/templates"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
+RUNTIME_DEPENDENCIES_SCRIPT="$SCRIPT_DIR/runtime-dependencies.sh"
 REPOSITORY_URL="${REPOSITORY_URL:-https://github.com/februana/multytenant_cms_enggine.git}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-$CANONICAL_TARGET/deploy/backup.sh}"
 HEALTH_CHECK_SCRIPT="${HEALTH_CHECK_SCRIPT:-$CANONICAL_TARGET/deploy/health-check.sh}"
@@ -18,7 +19,12 @@ if [ ! -r "$RUNTIME_DIRECTORIES_SCRIPT" ]; then
     echo "[ERROR] Missing runtime directory contract: $RUNTIME_DIRECTORIES_SCRIPT" >&2
     exit 2
 fi
+if [ ! -r "$RUNTIME_DEPENDENCIES_SCRIPT" ]; then
+    echo "[ERROR] Missing runtime dependency contract: $RUNTIME_DEPENDENCIES_SCRIPT" >&2
+    exit 2
+fi
 . "$RUNTIME_DIRECTORIES_SCRIPT"
+. "$RUNTIME_DEPENDENCIES_SCRIPT"
 REAL_USER="${SUDO_USER:-$USER}"
 
 RED='\033[0;31m'
@@ -224,8 +230,15 @@ update_application() (
         log_error "Clone failed. The existing application was not modified."
         return 1
     fi
-    if [ ! -f "$source_dir/index.php" ] || [ ! -f "$source_dir/config.php" ]; then
-        log_error "Cloned source failed application verification. The existing application was not modified."
+    if [ ! -f "$source_dir/index.php" ] || [ ! -f "$source_dir/config.php" ] || [ ! -r "$source_dir/deploy/runtime-dependencies.sh" ]; then
+        log_error "Cloned source failed application/dependency contract verification. The existing application was not modified."
+        return 1
+    fi
+
+    . "$source_dir/deploy/runtime-dependencies.sh"
+    log_info "Reconciling required runtime dependencies from the new source..."
+    if ! runtime_reconcile_dependencies; then
+        log_error "Required runtime dependencies are unavailable or could not be reconciled. The existing application was not modified."
         return 1
     fi
 
