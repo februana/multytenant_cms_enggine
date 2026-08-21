@@ -491,6 +491,20 @@ function get_section_subtitle(array $config, string $sectionId, string $defaultS
  * Preserve site-level SEO schema and the existing CMS theme live-preview bridge
  * without making index.php a second frontend renderer.
  */
+function cms_credit_markup(string $presetKey = ''): string {
+    $label = $presetKey === 'parang' ? 'Dibuat oleh' : 'CMS by';
+    return '<p id="cms-credit" class="cms-credit" style="margin:.45rem 0 0;font-size:.76rem;opacity:.78;">' . $label . ' <strong>Febru &amp; Andi</strong></p>';
+}
+
+function append_cms_credit(string $html, string $presetKey = ''): string {
+    if (stripos($html, 'id="cms-credit"') !== false) return $html;
+    $credit = cms_credit_markup($presetKey);
+    if (stripos($html, '</footer>') !== false) {
+        return preg_replace('/<\\/footer>/i', $credit . '</footer>', $html, 1) ?? $html;
+    }
+    return preg_replace('/<\\/body>/i', $credit . '</body>', $html, 1) ?? ($html . $credit);
+}
+
 function finalize_theme_output(string $html, array $config): string {
     $schema = trim((string)($config['site']['schema'] ?? ''));
     if ($schema !== '' && stripos($html, 'application/ld+json') === false) {
@@ -499,6 +513,7 @@ function finalize_theme_output(string $html, array $config): string {
     }
 
     $activePresetKey = resolve_theme_preset_key($config);
+    $html = append_cms_credit($html, $activePresetKey);
     if (stripos($html, 'id="cms-typography-palette-bridge"') === false) {
         $bridge = theme_typography_palette_bridge_style($config, $activePresetKey);
         $html = preg_replace('/<\\/head>/i', $bridge . '</head>', $html, 1) ?? $html;
