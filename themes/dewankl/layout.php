@@ -24,11 +24,12 @@ if (!defined('THEME_HELPER_LOADED')) {
 $config = $config ?? [];
 $shared = $shared ?? [];
 
-// Extract data from config
-$brideName = escape_html($config['wedding']['bride_name'] ?? '');
-$groomName = escape_html($config['wedding']['groom_name'] ?? '');
-$brideNickname = escape_html($config['wedding']['bride_nickname'] ?? '');
-$groomNickname = escape_html($config['wedding']['groom_nickname'] ?? '');
+// Extract semantic data from the existing CMS fields.
+$semanticNames = theme_semantic_names($config);
+$brideName = escape_html($semanticNames['bride_full_name']);
+$groomName = escape_html($semanticNames['groom_full_name']);
+$brideNickname = escape_html($semanticNames['bride_nickname']);
+$groomNickname = escape_html($semanticNames['groom_nickname']);
 $openingText = nl2br(escape_html($config['wedding']['opening_text'] ?? ''));
 $quote = nl2br(escape_html($config['wedding']['quote'] ?? ''));
 $closingText = nl2br(escape_html($config['wedding']['closing_text'] ?? ''));
@@ -214,7 +215,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                 </div>
                 
                 <div class="text-center p-4 bg-overlay-auto rounded-5">
-                    <h2 class="font-esthetic mb-4" style="font-size: 2rem;"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h2>
+                    <h2 class="font-esthetic mb-4" style="font-size: 2rem;"><?php echo $brideNickname; ?> &amp; <?php echo $groomNickname; ?></h2>
                     <p class="m-0" style="font-size: 1rem;"><?php echo $akadDateFormatted; ?></p>
                 </div>
             </div>
@@ -233,7 +234,7 @@ $dewanklVisualStyle = '<style id="cms-dewanakl-visual">:root{--cms-dewana-accent
                         
                         <img src="<?php echo escape_html(public_path($coverPath)); ?>" alt="sampul" class="img-center-crop rounded-circle border border-3 border-light shadow my-4 mx-auto">
                         
-                        <h2 class="font-esthetic my-4" style="font-size: 2.25rem;"><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h2>
+                        <h2 class="font-esthetic my-4" style="font-size: 2.25rem;"><?php echo $brideNickname; ?> &amp; <?php echo $groomNickname; ?></h2>
                         <p class="my-2" style="font-size: 1.25rem;"><?php echo $akadDateFormatted; ?></p>
                         
                         <button class="btn btn-outline-auto btn-sm shadow rounded-pill px-3 py-1" style="font-size: 0.825rem;" onclick="window.open('<?php echo $calendarLink; ?>', '_blank')">

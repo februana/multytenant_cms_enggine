@@ -9,10 +9,13 @@ $mediaUrl = static function (string $value, string $fallback = ''): string {
     $value = trim($value);
     return $value === '' ? $fallback : theme_visual_public_path($value);
 };
-$brideNameRaw = (string)($config['wedding']['bride_name'] ?? 'Mempelai Wanita');
-$groomNameRaw = (string)($config['wedding']['groom_name'] ?? 'Mempelai Pria');
+$semanticNames = theme_semantic_names($config);
+$brideNameRaw = $semanticNames['bride_full_name'];
+$groomNameRaw = $semanticNames['groom_full_name'];
 $brideName = escape_html($brideNameRaw);
 $groomName = escape_html($groomNameRaw);
+$brideNickname = escape_html($semanticNames['bride_nickname']);
+$groomNickname = escape_html($semanticNames['groom_nickname']);
 $siteTitle = escape_html((string)($config['site']['title'] ?? ($brideNameRaw . ' & ' . $groomNameRaw)));
 $description = escape_html((string)($config['site']['description'] ?? 'Undangan pernikahan digital'));
 $guestName = function_exists('resolve_guest_name') ? resolve_guest_name($config) : '';
@@ -103,7 +106,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <section class="shubh-card shubh-card-hero" aria-labelledby="shubh-title">
       <p class="shubh-greeting"><?php echo $openingGreeting; ?></p>
       <p class="shubh-kicker">Kami Mengundang Anda</p>
-      <h1 id="shubh-title"><span><?php echo $brideName; ?></span><em>dan</em><span><?php echo $groomName; ?></span></h1>
+      <h1 id="shubh-title"><span><?php echo $brideNickname; ?></span><em>dan</em><span><?php echo $groomNickname; ?></span></h1>
       <p class="shubh-quote"><?php echo $quoteText; ?></p>
       <div class="shubh-guest"><span>Kepada Yth.</span><strong><?php echo $guestLabel; ?></strong></div>
       <p class="shubh-date-place"><span><?php echo $eventDateDisplay; ?></span><?php echo $venue !== '' ? ' · ' . $venue : ''; ?></p>

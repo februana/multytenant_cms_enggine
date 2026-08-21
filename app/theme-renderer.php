@@ -81,7 +81,11 @@ function theme_supports_presentation(array $config, string $capability): bool {
 }
 
 function render_theme_header(array $config, string $presetKey): string {
-    $brand = escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']);
+    $names = function_exists('theme_semantic_names') ? theme_semantic_names($config) : [
+        'bride_nickname' => (string)($config['wedding']['bride_name'] ?? ''),
+        'groom_nickname' => (string)($config['wedding']['groom_name'] ?? ''),
+    ];
+    $brand = escape_html((string)($names['bride_nickname'] ?? '')) . ' &amp; ' . escape_html((string)($names['groom_nickname'] ?? ''));
 
     switch ($presetKey) {
         case 'rainier':
@@ -95,7 +99,11 @@ function render_theme_header(array $config, string $presetKey): string {
 }
 
 function render_theme_footer(array $config): string {
-    $brand = escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']);
+    $names = function_exists('theme_semantic_names') ? theme_semantic_names($config) : [
+        'bride_full_name' => (string)($config['wedding']['bride_name'] ?? ''),
+        'groom_full_name' => (string)($config['wedding']['groom_name'] ?? ''),
+    ];
+    $brand = escape_html((string)($names['bride_full_name'] ?? '')) . ' &amp; ' . escape_html((string)($names['groom_full_name'] ?? ''));
     return '<footer class="site-footer"><div class="footer-inner"><p>Terima kasih atas doa dan restu.</p><p>' . $brand . '</p></div></footer>';
 }
 
@@ -118,6 +126,11 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
     $dresscodeRule = $dresscodeRule === '' ? 'Rapi dan sopan' : $dresscodeRule;
     $dresscodeDescription = (string)($config['dresscode']['description'] ?? 'Kenakan busana terbaikmu untuk momen spesial.');
     $dresscodeDescription = $dresscodeDescription === '' ? 'Kenakan busana terbaikmu untuk momen spesial.' : $dresscodeDescription;
+
+    $formalNames = function_exists('theme_semantic_names') ? theme_semantic_names($config) : [
+        'bride_full_name' => (string)($config['wedding']['bride_name'] ?? ''),
+        'groom_full_name' => (string)($config['wedding']['groom_name'] ?? ''),
+    ];
 
     switch ($sectionId) {
         case 'countdown':
@@ -154,7 +167,7 @@ function render_shared_section_block(array $config, string $sectionId, array $sh
             $giftAccount = $config['gift']['account_number'];
             $giftEwalletLabel = $config['gift']['e_wallet_label'];
             $giftEwalletNumber = $config['gift']['e_wallet_number'];
-            return '<section id="amplop" class="section panel" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'amplop', 'Amplop Digital')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'amplop', 'Tanda Terima Kasih')) . '</h2><p>Jika ingin memberikan amplop digital, berikut data rekening:</p></div><div class="amplop-container"><div class="amplop-card"><div class="amplop-header">Untuk ' . escape_html($config['wedding']['bride_name']) . '</div><div class="amplop-item"><label>Bank:</label><span>' . escape_html($giftBank) . '</span></div><div class="amplop-item"><label>Nomor Rekening:</label><span class="amplop-number" data-account="' . escape_html($giftAccount) . '">' . escape_html($giftAccount) . '</span></div><button type="button" class="amplop-copy-btn" data-account="' . escape_html($giftAccount) . '">Salin Nomor</button><p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p></div><div class="amplop-card"><div class="amplop-header">Untuk ' . escape_html($config['wedding']['groom_name']) . '</div><div class="amplop-item"><label>E-Wallet:</label><span>' . escape_html($giftEwalletLabel) . '</span></div><div class="amplop-item"><label>Nomor Telepon:</label><span class="amplop-number" data-account="' . escape_html($giftEwalletNumber) . '">' . escape_html($giftEwalletNumber) . '</span></div><button type="button" class="amplop-copy-btn" data-account="' . escape_html($giftEwalletNumber) . '">Salin Nomor</button><p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p></div></div></section>';
+            return '<section id="amplop" class="section panel" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'amplop', 'Amplop Digital')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'amplop', 'Tanda Terima Kasih')) . '</h2><p>Jika ingin memberikan amplop digital, berikut data rekening:</p></div><div class="amplop-container"><div class="amplop-card"><div class="amplop-header">Untuk ' . escape_html((string)($formalNames['bride_full_name'] ?? '')) . '</div><div class="amplop-item"><label>Bank:</label><span>' . escape_html($giftBank) . '</span></div><div class="amplop-item"><label>Nomor Rekening:</label><span class="amplop-number" data-account="' . escape_html($giftAccount) . '">' . escape_html($giftAccount) . '</span></div><button type="button" class="amplop-copy-btn" data-account="' . escape_html($giftAccount) . '">Salin Nomor</button><p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p></div><div class="amplop-card"><div class="amplop-header">Untuk ' . escape_html((string)($formalNames['groom_full_name'] ?? '')) . '</div><div class="amplop-item"><label>E-Wallet:</label><span>' . escape_html($giftEwalletLabel) . '</span></div><div class="amplop-item"><label>Nomor Telepon:</label><span class="amplop-number" data-account="' . escape_html($giftEwalletNumber) . '">' . escape_html($giftEwalletNumber) . '</span></div><button type="button" class="amplop-copy-btn" data-account="' . escape_html($giftEwalletNumber) . '">Salin Nomor</button><p class="amplop-feedback" style="display:none;color:#4CAF50;font-size:12px;margin-top:8px;">✓ Nomor berhasil disalin</p></div></div></section>';
         case 'rsvp':
             return '<section id="rsvp" class="section panel" ' . $sectionStyle . '><div class="invitation-frame"><div class="ornament-corner top-left"></div><div class="ornament-corner top-right"></div><div class="ornament-corner bottom-left"></div><div class="ornament-corner bottom-right"></div><div class="section-head left"><p class="label">' . escape_html(get_section_title($config, 'rsvp', 'Konfirmasi Kehadiran')) . '</p><h2>' . escape_html(get_section_subtitle($config, 'rsvp', 'Konfirmasi Kehadiran')) . '</h2></div><form id="rsvpForm" class="rsvp-form"><input type="hidden" name="csrf_token" id="csrfToken" /><label>Nama<input type="text" name="nama" placeholder="Nama Anda" required /></label><label>Kehadiran<select name="status" required><option value="Hadir">Hadir</option><option value="Tidak Hadir">Tidak Hadir</option></select></label><label>Ucapan<textarea name="ucapan" rows="4" placeholder="Tulis ucapan dan doa"></textarea></label><input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="display:none"><button type="submit">Kirim Konfirmasi Kehadiran</button><p id="formMessage" class="form-message" role="status" aria-live="polite"></p></form>' . (is_section_enabled($config, 'messages') ? '<div id="messages" class="messages"></div>' : '') . '</div></section>';
         case 'hero':
@@ -221,7 +234,13 @@ function render_theme_layout(array $config, array $shared): string {
 
 function render_theme_hero_markup(array $config, string $presetKey, string $bgHero, string $heroText, string $brideParents, string $groomParents, string $calendarLink, string $whatsappLink, string $musicSrc, string $calendarDownloadName, string $guestFallback): string {
     $themeMode = resolve_theme_mode($config);
-    $altTitle = $config['wedding']['bride_name'] . ' & ' . $config['wedding']['groom_name'];
+    $names = function_exists('theme_semantic_names') ? theme_semantic_names($config) : [
+        'bride_full_name' => (string)($config['wedding']['bride_name'] ?? ''),
+        'groom_full_name' => (string)($config['wedding']['groom_name'] ?? ''),
+        'bride_nickname' => (string)($config['wedding']['bride_name'] ?? ''),
+        'groom_nickname' => (string)($config['wedding']['groom_name'] ?? ''),
+    ];
+    $altTitle = $names['bride_full_name'] . ' & ' . $names['groom_full_name'];
     $shared = [
         'bgHero' => $bgHero,
         'heroText' => $heroText,
@@ -233,6 +252,8 @@ function render_theme_hero_markup(array $config, string $presetKey, string $bgHe
         'calendarDownloadName' => $calendarDownloadName,
         'guestFallback' => $guestFallback,
         'altTitle' => $altTitle,
+        'brideNickname' => escape_html((string)$names['bride_nickname']),
+        'groomNickname' => escape_html((string)$names['groom_nickname']),
     ];
 
     switch ($presetKey) {
@@ -255,9 +276,9 @@ function render_dewankl_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--classic">
         <p class="eyebrow">Kami Akan Menikah</p>
         <p id="guest-greeting" class="hero-guest">Kepada Yth. ' . $guestLabel . '</p>
-        <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
+        <h1>' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</h1>
         <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
-        <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
+        <p class="hero-subtitle">' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</p>
         <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
         <div class="hero-actions">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
@@ -276,12 +297,12 @@ function render_rainier_hero(array $config, array $shared): string {
     return '<section id="hero" class="hero hero-rainier" ' . $shared['bgHero'] . '>
       <div class="hero-card hero-card--editorial">
         <p class="eyebrow">Kami Akan Menikah</p>
-        <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
+        <h1>' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</h1>
         <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <div class="hero-meta-row">
-          <span>' . escape_html($config['wedding']['bride_nickname']) . '</span>
+          <span>' . $shared['brideNickname'] . '</span>
           <span class="hero-love-mark">&amp;</span>
-          <span>' . escape_html($config['wedding']['groom_nickname']) . '</span>
+          <span>' . $shared['groomNickname'] . '</span>
         </div>
         <div class="hero-actions hero-actions--split">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
@@ -299,11 +320,11 @@ function render_archak_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--split">
         <div class="hero-card__text">
           <p class="eyebrow">Kami Akan Menikah</p>
-          <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
+          <h1>' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</h1>
           <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         </div>
         <div class="hero-card__meta">
-          <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
+          <p class="hero-subtitle">' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</p>
           <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
           <div class="hero-actions hero-actions--stack">
             <button type="button" id="openInvitationBtn">Buka Undangan</button>

@@ -18,6 +18,10 @@ Yami Buzzy has no explicit creator/footer line in the audited source HTML or REA
 
 The implementation is centralized in `app/theme-contract.php` and `app/theme-helper.php`; `tools/credit_attribution_smoke.php` validates public rendering, source-credit preservation, duplicate prevention, Custom Mode behavior, idempotent insertion, and independence from tenant configuration.
 
+## Semantic wedding-name presentation policy
+
+The existing `wedding.bride_name`, `wedding.groom_name`, `wedding.bride_nickname`, and `wedding.groom_nickname` fields are interpreted by presentation role; no new tenant field or schema migration is introduced. Welcome dialogs, navigation brands, and hero/opening titles use the nickname pair so long formal names do not overwhelm the invitation entry point. Couple profiles, parents/formal descriptions, gift recipients, copyright lines, structured or generated metadata fallbacks, and other informational contexts use the full-name pair. The shared `theme_semantic_names()` helper provides the mapping and falls back from an empty nickname to the full name, or from an empty full name to the nickname, without mutating tenant configuration. Explicit user-entered SEO fields remain unchanged. The targeted `tools/semantic_name_mapping_smoke.php` test covers all seven built-in presets, Custom Mode, fallback behavior, and the no-schema-change contract.
+
 ## DewanaKL
 
 **Original project:** Template website undangan pernikahan sederhana.  
