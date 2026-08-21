@@ -105,6 +105,22 @@ try {
     love_story_video_assert(is_file($broken), 'video source is retained after processing failure');
     love_story_video_assert(count(glob(tenant_upload_dir('love_story') . '/.*.tmp.mp4') ?: []) === 0, 'video processing failure leaves no temporary canonical file');
 
+    $zeroVideoOutput = tenant_upload_dir('love_story') . '/zero-output.mp4';
+    file_put_contents($zeroVideoOutput, '');
+    love_story_video_assert(!verify_mp4_output($zeroVideoOutput, media_requirement('love_story_video', 'dewankl')), 'zero-byte MP4 output is rejected by verifier');
+    @unlink($zeroVideoOutput);
+    $corruptVideoOutput = tenant_upload_dir('love_story') . '/corrupt-output.mp4';
+    file_put_contents($corruptVideoOutput, 'corrupt mp4 output');
+    love_story_video_assert(!verify_mp4_output($corruptVideoOutput, media_requirement('love_story_video', 'dewankl')), 'corrupt MP4 output is rejected by verifier');
+    @unlink($corruptVideoOutput);
+
+    $invalidDestinationSource = sys_get_temp_dir() . '/love-story-video-invalid-destination-' . bin2hex(random_bytes(5)) . '.mp4';
+    love_story_video_fixture($invalidDestinationSource);
+    $fixtures[] = $invalidDestinationSource;
+    $invalidDestination = upload_file(['error' => UPLOAD_ERR_OK, 'tmp_name' => $invalidDestinationSource, 'name' => 'invalid-destination.mp4', 'size' => filesize($invalidDestinationSource)], sys_get_temp_dir(), ALLOWED_VIDEO_TYPES, MAX_VIDEO_UPLOAD_SIZE, 'love_story_video', 'dewankl');
+    love_story_video_assert(empty($invalidDestination['success']), 'video destination outside active tenant is rejected');
+    love_story_video_assert(is_file($invalidDestinationSource), 'invalid tenant destination preserves video source');
+
     $oversized = sys_get_temp_dir() . '/love-story-video-oversized-' . bin2hex(random_bytes(5)) . '.mp4';
     love_story_video_fixture($oversized);
     $fixtures[] = $oversized;
