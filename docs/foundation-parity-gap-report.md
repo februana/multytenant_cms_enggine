@@ -1,64 +1,97 @@
 # Foundation Parity Gap Report
 
 **Source foundation:** [`februana/webserver_undangan`](https://github.com/februana/webserver_undangan), pristine `main` at `b2ecf80fb8c8efe7bd0f3669603aa29232e9b849`.
-**Target evolution:** [`februana/multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine), branch `fix/multitenant-super-admin-authorization` at `165d28cee955c3b6cbc6d928c3cf2f9505f0efcc` before this parity work.
+**Target current tree:** [`februana/multytenant_cms_enggine`](https://github.com/februana/multytenant_cms_enggine), PR #2 commit `77927f556822499f0dd985f38ab8ac6186c129a7`.
+**Historical pre-parity parent:** `165d28c`.
 
 ## Executive conclusion
 
-The target is not a new CMS that merely borrowed selected files. The comparison shows that the foundation application, Composer manifest/lock, preset assets, theme contract, most renderer components, media processing policy, Docker build, and baseline security helpers are carried forward. The target then adds a substantial multi-tenant layer around tenant resolution, tenant-scoped configuration, tenant-scoped media, provisioning, shared-schema migrations, and tenant-aware authorization.
+The available evidence supports the conclusion that **no CMS foundation capability is missing within the extracted source-target capability model**. The source and target have equal normalized configuration defaults, preset registry, section contracts, media roles, admin capabilities, presentation capabilities, visual schemas, asset hints, and data capabilities for all seven built-in presets. The target adds tenant resolution, tenant-scoped configuration and media, provisioning, migrations, role-aware authorization, and audit controls without replacing the foundation CMS capability surface.
 
-The verified gaps are concentrated in **native deployment integration and test fixtures**, not in a missing CMS foundation. The target already contains the source Apache templates and an updater helper that can generate PHP-FPM configuration, but `deploy/install.sh` still deliberately stops at application installation and instructs operators to configure Apache manually. The target sample vhost also uses mod_php instead of the source Apache/PHP-FPM handler. Separately, the target updater still defaults to the source repository URL and retains a legacy Nginx migration path, which can lead to an incorrect source checkout or a deployment path outside the requested Apache-only target.
+This report is documentation-only evidence for the current PR tree. It does not claim that every implementation detail is byte-identical, and it does not claim a symmetric dependency-graph proof: the target contains `tools/dependency_graph_audit.php`, while the source repository does not contain the corresponding tool.
 
 ## Quantitative inventory
 
-| Measure | Result | Interpretation |
-|---|---:|---|
-| Common tracked paths | 209 | Common foundation/application surface. |
-| Common files byte-identical | 158 | Strong evidence that preset assets and much of the CMS foundation were carried forward unchanged. |
-| Common files adapted/changed | 51 | Requires semantic classification; most changes are tenant storage, routing, docs, deployment, or security. |
-| Source-only tracked paths | 21 | Mostly legacy runtime files and source audit documentation; each category is classified below. |
-| Target-only tracked paths | 16 | Mostly tenant migrations, control-plane pages, tenant docs, and audit tooling. |
-| Composer manifest/lock | Identical hashes | Foundation package graph is preserved. |
-| Node package manifests | Absent in both | No npm build graph was found in either repository. |
-| Preset directories | Same built-in preset set | Preset foundation is present in target. |
+| Measure | Historical parent `165d28c` | Current PR #2 tree `77927f5` | Interpretation |
+|---|---:|---:|---|
+| Common tracked paths | 209 | 209 | Stable comparison universe. |
+| Common files byte-identical | 158 | 156 | Two paths became adapted in the parity commit. |
+| Common files adapted/changed | **51** | **53** | 51 is the historical pre-parity count; 53 is the current tree count. |
+| Source-only tracked paths | 21 | 21 | Four legacy data artifacts plus seventeen audit/provenance documents. |
+| Target-only tracked paths | 16 | 22 | Tenant, parity, deployment, and audit additions. |
+
+The two paths that changed the adapted count from historical 51 to current 53 are `tools/pawiwahan_smoke.php` and `tools/visual_contract_smoke.php`.
+
+## Source-only decomposition
+
+The 21 source-only paths are **not 21 missing CMS files**. They contain no source-only PHP, JavaScript, CSS, shell installer, preset asset, or runtime endpoint.
+
+| Category | Paths | Meaning |
+|---|---|---|
+| Legacy data artifacts | `config.json`, `database.sqlite`, `guest-links.json`, `event.ics` | Single-tenant/runtime data files replaced by tenant configuration/database, `guest_links` persistence, and the dynamic `event.ics.php` endpoint. They must not be restored globally because that would weaken tenant isolation. |
+| Audit/provenance documents | `docs/BROWSER_VERIFICATION.md`, `docs/CMS_THEME_AUDIT.md`, `docs/DEPENDENCY_MATRIX.md`, `docs/HARDENING_AUDIT.md`, `docs/MEDIA_REQUIREMENTS.md`, `docs/REGRESSION_REPORT.md`, `docs/admin-customization-audit.md`, `docs/deployment-audit-baseline.md`, `docs/docker-render-build-audit.md`, `docs/media-role-audit.md`, `docs/new-presets-cms-mapping.md`, `docs/new-presets-responsive-evidence.md`, `docs/new-presets-source-audit.md`, `docs/preset-render-fallback-delete-audit.md`, `docs/repository-consistency-audit.md`, `docs/user-input-capability-audit.md`, `docs/visual-capability-expansion-baseline.md` | Documentation and historical evidence only; no executable capability provider. |
 
 ## Foundation component classification
 
-| Foundation component | Source evidence | Target evidence | Status | Missing dependency / impact | Required action |
-|---|---|---|---|---|---|
-| Application core | Root PHP controllers, `config.php`, renderer, `.htaccess` | Same root controllers plus tenant-aware resolver and DB persistence | ADAPTED | No missing core identified; target adds tenant context | Preserve source behavior while reviewing tenant boundaries. |
-| Composer | `composer.json` and `composer.lock` require `chillerlan/php-qrcode` and its settings container | Files are byte-identical; Composer dry-run resolves the same two packages | IDENTICAL | `vendor/` is not tracked in either checkout | Native installer must run Composer install or explicitly require it; Docker already installs it. |
-| PHP extensions | Source Apache install requires `php-fpm`, `php-cli`, `php-sqlite3`, `php-gd`, `php-mbstring`, `php-zip` | Docker installs/builds the same functional extensions; native installer checks only PHP/SQLite/OpenSSL | PARTIAL | Native fresh install does not install the foundation extensions | Adapt native installer to install/verify the source-required runtime. |
-| ImageMagick | Source `find_imagemagick_binary()` and `process_image_to_webp()` use `magick`/`convert`, with GD fallback | Target retains the same processing pipeline and adds tenant destination safety | ADAPTED | Target smoke fixture assumes an active tenant but does not create one | Keep pipeline; repair test fixture to create isolated tenant runtime. |
-| Imagick PHP extension | No source code dependency on PHP `imagick` was found; source uses CLI ImageMagick plus GD fallback | Same behavior | IDENTICAL | `imagick` is not required by the observed foundation code | Do not add an unnecessary replacement dependency. |
-| Media pipeline | Validate input, role/preset requirements, ImageMagick resize/WebP, GD fallback, verification, cleanup | Same algorithm plus `tenant_upload_dir()` and path containment | ADAPTED | No foundation algorithm loss found | Add parity test with tenant fixture; keep canonical tenant storage. |
-| Helpers/internal library | 153 common symbols; source-only `init_database()` and `verify_admin_password()` are replaced by migration and DB auth | Target adds tenant/auth/audit helpers | ADAPTED / MULTI-TENANT ADDITION | No unexplained foundation helper loss identified yet | Trace source-only symbols and document replacement contracts. |
-| Virtual UI/admin UI | Source admin UI, theme helper, preview/visual helpers | Target keeps common admin/theme surface and adds tenant/control-plane UI | ADAPTED | No missing frontend package graph; no `package.json` in either repo | Preserve foundation UI contracts; do not create a replacement UI engine. |
-| Preset engine | Same preset directories, contracts, layouts, and assets; most assets are byte-identical | Target adds tenant-persisted config and tenant-safe media URLs | ADAPTED | No missing preset directory detected | Validate every preset through existing contract/smoke suite. |
-| Database foundation | Source uses `config.json`, `guest-links.json`, `event.ics`, and legacy `init_database()` | Target moves runtime configuration to `tenant_configs`, `guest_links`, shared migrations, and `event.ics.php` | ADAPTED / INTENTIONALLY REMOVED | Legacy files must not be restored globally; restoring them would break isolation | Keep migration compatibility as input only and preserve tenant schema. |
-| Security foundation | CSRF, sessions, password verification, upload MIME/path checks, `.htaccess` sensitive-file blocking | Target retains these and adds tenant containment, role revalidation, action allowlist, audit log | ADAPTED / MULTI-TENANT ADDITION | Native Apache sample still had a mod_php gap before parity work | Align deployment security with application security. |
-| Runtime directories | Source has uploads/webdav/backups contracts | Target has tenant uploads plus backups/webdav runtime contract | ADAPTED | Tenant subdirectories are created on demand | Keep `runtime-directories.sh` as shared contract. |
-| Docker deployment | Source Docker builds Apache image, Composer, GD/mbstring/zip, ImageMagick, and Apache modules | Target Dockerfile is byte-identical | IDENTICAL | Container path uses the foundation image's Apache PHP runtime; native PHP-FPM is a separate path | Do not alter Docker to PHP-FPM without source evidence. |
-| Native Apache deployment | Source installer installs Apache/PHP-FPM, modules, detects socket, renders template, configtests, enables site, manages service | Target templates exist and updater has related helper, but `install.sh` is application-only and sample vhost uses mod_php | PARTIAL / FOUNDATION GAP | Fresh native clone cannot automatically provision the source Apache/PHP-FPM path | Adapt installer and sample using source behavior plus tenant catch-all. |
-| Updater source identity | Source uses its own repository context | Target `deploy/update.sh` default was found pointing to `webserver_undangan` | FOUNDATION/DEPLOYMENT GAP | Update can pull the wrong CMS source | Change default to the target repository or require an explicit source URL. |
-| Nginx deployment | Source supports Nginx as an optional branch | Target updater retains Nginx migration code | INTENTIONALLY OUT OF SCOPE for this target task | Nginx is not requested for the target deployment path | Do not port or advertise Nginx as the target path; preserve only if explicitly documented as legacy and fail closed. |
+| Foundation component | Source evidence | Target evidence | Status |
+|---|---|---|---|
+| Application core | Root controllers, `config.php`, renderer, `.htaccess` | Same core surface plus tenant resolver and persistence | Adapted; no missing core capability identified |
+| Composer | Identical `composer.json` and `composer.lock` | Same locked package graph; Composer dry-run succeeds | Identical dependency definition |
+| PHP runtime extensions | Source package/bootstrap requirements | Target Docker and native installer preserve the required runtime path | Parity supported; no unresolved extension gap in final validation |
+| ImageMagick/GD media pipeline | ImageMagick CLI with GD fallback and WebP verification | Same processing policy plus tenant destination containment | Adapted; algorithm retained |
+| Media pipeline | Role/preset requirements, conversion, verification, cleanup | Same behavior plus tenant storage and path safety | Adapted; no foundation algorithm loss |
+| Preset engine | Source contracts, layouts, assets, and dependencies | Same seven preset contracts and assets with tenant-safe bridges | Adapted; contract equality verified |
+| Database foundation | Legacy global data files and `init_database()` | Tenant migrations, `tenant_database()`, `tenant_configs`, `guest_links`, dynamic calendar endpoint | Intentionally tenant-adapted |
+| Authentication | `verify_admin_password()` and single-tenant session path | Database-backed authentication, session revalidation, role/tenant checks | Intentionally tenant/security-adapted |
+| Security foundation | CSRF, sessions, password checks, upload/path checks, sensitive-file blocking | Same controls plus tenant containment, role revalidation, action allowlist, audit log | Adapted; no capability loss identified |
+| Native Apache deployment | Source Apache/PHP-FPM installer behavior | Target installer renders PHP-FPM tenant catch-all, configtests, activates site, and reloads service | Parity gap closed in PR #2 |
+| Docker deployment | Source Docker image and Apache runtime | Dockerfile is byte-identical | Identical; Docker path remains separate |
 
-## Dependency and media conclusions
+## Helper comparison
 
-Composer parity is confirmed by identical `composer.json` and `composer.lock` hashes. Both repositories resolve `chillerlan/php-settings-container` 3.3.0 and `chillerlan/php-qrcode` 5.0.5 in Composer dry-run. Neither repository tracks `vendor/`, and neither contains a `package.json` or npm lockfile. The target Dockerfile is byte-identical to the source Dockerfile and therefore retains the foundation container dependency strategy.
+The PHP symbol comparison found 155 source symbols, 190 target symbols, and 153 common symbols. Only two source symbols are absent from the target: `init_database()` and `verify_admin_password()`.
 
-The ImageMagick foundation is also present in target. Both codebases search for the `magick` or `convert` binary, use preset-specific media requirements, produce verified WebP, and fall back to GD when available. The target adds tenant-specific storage roots and rejects paths outside the active tenant. The first target media smoke run failed because its fixture invoked tenant storage without creating an active tenant and therefore attempted an invalid/empty path; this is a test-fixture parity issue, not evidence that the production pipeline is missing. It must be corrected before parity validation is declared complete.
+These are **single-tenant implementation details, not missing CMS capabilities**. `init_database()` is replaced by tenant-aware migration/database initialization. `verify_admin_password()` is replaced by database-backed authentication and session validation, including `authenticate_user()`, `current_admin_user_record()`, `verify_current_admin_password()`, and `session_admin_is_valid()`.
 
-## Deployment conclusion before implementation
+## Contract equality
 
-The correct implementation is not to invent a new Apache system or copy the single-tenant application. The correct sequence is:
+The extracted normalized contract comparison found 129 configuration leaf paths on both sides with no source-only or target-only leaf. For `archak`, `dewankl`, `parang`, `pawiwahan`, `rainier`, `shubh-vivah`, and `yami-buzzy`, the following dimensions are equal between source and target:
 
-> **Source foundation behavior → understand dependency → adapt document root and catch-all tenant context → preserve application routing and storage → validate before service reload.**
+| Contract dimension | Result |
+|---|---|
+| Preset registry and built-in preset keys | Equal |
+| Sections and DOM IDs | Equal |
+| Media roles | Equal |
+| Admin capabilities | Equal |
+| Presentation capabilities | Equal |
+| Visual schema keys | Equal |
+| Asset hints | Equal |
+| Data capabilities | Equal |
 
-Only the verified native deployment gap should be changed. The tenant resolver, shared schema, preset engine, media manager, and security model must remain the target architecture. Docker must remain separate because source and target already have identical container foundation behavior.
+This is evidence for **foundation contract parity**, not a claim that tenant routing or security additions should be byte-identical to the single-tenant source.
+
+## Dependency evidence and limitation
+
+`composer.json` and `composer.lock` are byte-identical. Composer dry-run succeeds in both repositories with `chillerlan/php-settings-container@3.3.0` and `chillerlan/php-qrcode@5.0.5`. The correct dependency model is:
+
+> `composer.json` + `composer.lock` → `composer install` → generated `vendor/`
+
+Neither repository tracks `vendor/`, and no `package.json` or npm lockfile exists in either repository.
+
+The **target** dependency graph audit passed with **0 confirmed failures and 0 warnings**. A symmetric source-target dependency-graph proof is not available because the source repository does not contain the corresponding `tools/dependency_graph_audit.php`. This is a limitation of evidence, not evidence that the source dependency graph is broken.
+
+## Validation status
+
+The current target proof suite contains 19 validator/smoke tests. All exited with code 0. The output contained no `FAIL`, fatal error, parse error, or unhandled exception markers. The target working tree was unchanged before and after the read-only suite.
+
+## Final status
+
+**Foundation parity is supported by the available evidence.** The documentation corrections are limited to provenance accuracy: current adapted count **53** versus historical pre-parity count **51**, explicit classification of the 21 source-only paths, precise replacement wording for two single-tenant helpers, and the non-symmetric dependency-graph limitation.
 
 ## References
 
 [1]: https://github.com/februana/webserver_undangan — CMS foundation source repository.
-[2]: https://github.com/februana/multytenant_cms_enggine — Multi-tenant evolution target repository.
+
+[2]: https://github.com/februana/multytenant_cms_enggine/pull/2 — PR #2 under audit.
+
 [3]: https://getcomposer.org/doc/01-basic-usage.md — Composer dependency installation and lock-file behavior.
