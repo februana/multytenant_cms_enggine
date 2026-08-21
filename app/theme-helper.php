@@ -35,6 +35,30 @@ function preserve_text_input($value, string $fallback = ''): string {
 }
 
 /**
+ * Resolve existing wedding names by presentation role without mutating tenant data.
+ * Welcome/hero slots use nicknames; post-opening formal slots use full names.
+ */
+function theme_semantic_names(array $config): array {
+    $wedding = is_array($config['wedding'] ?? null) ? $config['wedding'] : [];
+    $brideFull = trim((string)($wedding['bride_name'] ?? ''));
+    $groomFull = trim((string)($wedding['groom_name'] ?? ''));
+    $brideNick = trim((string)($wedding['bride_nickname'] ?? ''));
+    $groomNick = trim((string)($wedding['groom_nickname'] ?? ''));
+
+    $brideFull = $brideFull !== '' ? $brideFull : $brideNick;
+    $groomFull = $groomFull !== '' ? $groomFull : $groomNick;
+    $brideNick = $brideNick !== '' ? $brideNick : $brideFull;
+    $groomNick = $groomNick !== '' ? $groomNick : $groomFull;
+
+    return [
+        'bride_full_name' => $brideFull !== '' ? $brideFull : 'Mempelai Wanita',
+        'groom_full_name' => $groomFull !== '' ? $groomFull : 'Mempelai Pria',
+        'bride_nickname' => $brideNick !== '' ? $brideNick : ($brideFull !== '' ? $brideFull : 'Mempelai Wanita'),
+        'groom_nickname' => $groomNick !== '' ? $groomNick : ($groomFull !== '' ? $groomFull : 'Mempelai Pria'),
+    ];
+}
+
+/**
  * Resolve the short religious/opening greeting shown by each built-in preset.
  * Existing config files receive the preset default through config normalization;
  * non-empty admin values always win and preserve user-entered Unicode/newlines.

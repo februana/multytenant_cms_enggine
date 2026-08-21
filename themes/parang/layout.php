@@ -41,10 +41,13 @@ $qrisPath = trim((string)($config['gift']['qris_image'] ?? ''));
 $qrisUrl = $qrisPath !== '' ? $assetUrl($qrisPath, '') : '';
 $siteTitle = escape_html((string)($config['site']['title'] ?? 'Undangan Pernikahan'));
 $description = escape_html((string)($config['site']['description'] ?? $config['wedding']['opening_text'] ?? ''));
-$brideNameRaw = (string)($config['wedding']['bride_name'] ?? 'FEBRUANA');
-$groomNameRaw = (string)($config['wedding']['groom_name'] ?? 'ANDI MUHAMAD BASUKI');
+$semanticNames = theme_semantic_names($config);
+$brideNameRaw = $semanticNames['bride_full_name'];
+$groomNameRaw = $semanticNames['groom_full_name'];
 $brideName = escape_html($brideNameRaw);
 $groomName = escape_html($groomNameRaw);
+$brideNickname = escape_html($semanticNames['bride_nickname']);
+$groomNickname = escape_html($semanticNames['groom_nickname']);
 $openingText = render_preserved_text((string)($config['wedding']['opening_text'] ?? ''));
 $openingGreeting = render_preserved_text(theme_opening_greeting($config, 'parang'));
 $quoteText = render_preserved_text((string)($config['wedding']['quote'] ?? ''));
@@ -136,7 +139,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <aside class="parang-desktop-nav" aria-label="Navigasi undangan">
         <div class="parang-brand">
             <img src="<?php echo escape_html($sourceGunungan); ?>" alt="Ornamen Gunungan">
-            <h1><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1>
+            <h1><?php echo $brideNickname; ?> &amp; <?php echo $groomNickname; ?></h1>
             <p><?php echo $heroDateDisplay; ?></p>
         </div>
         <nav class="parang-nav-list">
@@ -149,7 +152,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
 
     <header class="parang-mobile-bar">
         <button type="button" id="parang-mobile-menu" aria-label="Buka navigasi"><span class="parang-icon" aria-hidden="true">menu</span></button>
-        <h1><?php echo $brideName; ?> &amp; <?php echo $groomName; ?></h1>
+        <h1><?php echo $brideNickname; ?> &amp; <?php echo $groomNickname; ?></h1>
         <?php if ($musicUrl !== ''): ?><button type="button" id="parang-music-toggle" aria-label="Putar musik"><span class="parang-icon" aria-hidden="true">music_note</span></button><?php else: ?><span aria-hidden="true"></span><?php endif; ?>
     </header>
 
@@ -166,9 +169,9 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
                 <p class="parang-hero-guest">Bapak/Ibu/Saudara/i</p>
                 <p class="parang-hero-guest-name"><?php echo $guestLabel; ?></p>
                 <p class="parang-label">Pernikahan Kami</p>
-                <h2 id="parang-hero-title" class="parang-hero-title"><?php echo $brideName; ?></h2>
+                <h2 id="parang-hero-title" class="parang-hero-title"><?php echo $brideNickname; ?></h2>
                 <p class="parang-hero-amp" aria-hidden="true">&amp;</p>
-                <h2 class="parang-hero-title"><?php echo $groomName; ?></h2>
+                <h2 class="parang-hero-title"><?php echo $groomNickname; ?></h2>
                 <p class="parang-hero-date"><?php echo $heroDateDisplay !== '' ? $heroDateDisplay : 'Hari Bahagia Kami'; ?></p>
                 <a class="parang-primary-button" href="<?php echo $sectionEnabled('couple') ? '#mempelai' : '#acara'; ?>"><span>Buka Undangan</span><span class="parang-icon" aria-hidden="true">arrow_downward</span></a>
                 <span class="parang-icon" aria-hidden="true" style="margin-top:2rem;color:var(--parang-secondary)">expand_more</span>

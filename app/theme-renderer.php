@@ -81,7 +81,8 @@ function theme_supports_presentation(array $config, string $capability): bool {
 }
 
 function render_theme_header(array $config, string $presetKey): string {
-    $brand = escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']);
+    $names = theme_semantic_names($config);
+    $brand = escape_html($names['bride_nickname']) . ' &amp; ' . escape_html($names['groom_nickname']);
 
     switch ($presetKey) {
         case 'rainier':
@@ -221,7 +222,8 @@ function render_theme_layout(array $config, array $shared): string {
 
 function render_theme_hero_markup(array $config, string $presetKey, string $bgHero, string $heroText, string $brideParents, string $groomParents, string $calendarLink, string $whatsappLink, string $musicSrc, string $calendarDownloadName, string $guestFallback): string {
     $themeMode = resolve_theme_mode($config);
-    $altTitle = $config['wedding']['bride_name'] . ' & ' . $config['wedding']['groom_name'];
+    $names = theme_semantic_names($config);
+    $altTitle = $names['bride_full_name'] . ' & ' . $names['groom_full_name'];
     $shared = [
         'bgHero' => $bgHero,
         'heroText' => $heroText,
@@ -233,6 +235,8 @@ function render_theme_hero_markup(array $config, string $presetKey, string $bgHe
         'calendarDownloadName' => $calendarDownloadName,
         'guestFallback' => $guestFallback,
         'altTitle' => $altTitle,
+        'brideNickname' => escape_html($names['bride_nickname']),
+        'groomNickname' => escape_html($names['groom_nickname']),
     ];
 
     switch ($presetKey) {
@@ -255,9 +259,9 @@ function render_dewankl_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--classic">
         <p class="eyebrow">Kami Akan Menikah</p>
         <p id="guest-greeting" class="hero-guest">Kepada Yth. ' . $guestLabel . '</p>
-        <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
+        <h1>' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</h1>
         <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
-        <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
+        <p class="hero-subtitle">' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</p>
         <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
         <div class="hero-actions">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
@@ -276,12 +280,12 @@ function render_rainier_hero(array $config, array $shared): string {
     return '<section id="hero" class="hero hero-rainier" ' . $shared['bgHero'] . '>
       <div class="hero-card hero-card--editorial">
         <p class="eyebrow">Kami Akan Menikah</p>
-        <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
+        <h1>' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</h1>
         <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         <div class="hero-meta-row">
-          <span>' . escape_html($config['wedding']['bride_nickname']) . '</span>
+          <span>' . $shared['brideNickname'] . '</span>
           <span class="hero-love-mark">&amp;</span>
-          <span>' . escape_html($config['wedding']['groom_nickname']) . '</span>
+          <span>' . $shared['groomNickname'] . '</span>
         </div>
         <div class="hero-actions hero-actions--split">
           <button type="button" id="openInvitationBtn">Buka Undangan</button>
@@ -299,11 +303,11 @@ function render_archak_hero(array $config, array $shared): string {
       <div class="hero-card hero-card--split">
         <div class="hero-card__text">
           <p class="eyebrow">Kami Akan Menikah</p>
-          <h1>' . escape_html($config['wedding']['bride_name']) . ' &amp; ' . escape_html($config['wedding']['groom_name']) . '</h1>
+          <h1>' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</h1>
           <p class="hero-text">' . render_preserved_text($shared['heroText']) . '</p>
         </div>
         <div class="hero-card__meta">
-          <p class="hero-subtitle">' . escape_html($config['wedding']['bride_nickname']) . ' &amp; ' . escape_html($config['wedding']['groom_nickname']) . '</p>
+          <p class="hero-subtitle">' . $shared['brideNickname'] . ' &amp; ' . $shared['groomNickname'] . '</p>
           <p class="hero-parents">Putra dari ' . $shared['groomParents'] . ' dan Putri dari ' . $shared['brideParents'] . '.</p>
           <div class="hero-actions hero-actions--stack">
             <button type="button" id="openInvitationBtn">Buka Undangan</button>
