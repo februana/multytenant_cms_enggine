@@ -27,6 +27,14 @@ $parangGalleryBg = $sectionCss('section_background_gallery');
 $parangLocationBg = $sectionCss('section_background_location');
 $parangLeft = $assetUrl((string)($visuals['ornament_left'] ?? ''), $sourceWayang);
 $parangRight = $assetUrl((string)($visuals['ornament_right'] ?? ''), $sourceWayang);
+$parangTop = $assetUrl((string)($visuals['ornament_top'] ?? ''), $sourceGunungan);
+$parangTopWidth = escape_html((string)($visuals['ornament_top_width'] ?? '192'));
+$parangTopOffsetY = escape_html((string)($visuals['ornament_top_offset_y'] ?? '-128'));
+$parangSideOffsetX = escape_html((string)($visuals['ornament_side_offset_x'] ?? '-128'));
+$parangSideOffsetY = escape_html((string)($visuals['ornament_side_offset_y'] ?? '50'));
+$parangSideHeightRatio = (float)($visuals['ornament_side_height_ratio'] ?? '70');
+$parangSideHeightFactor = escape_html(number_format($parangSideHeightRatio / 100, 4, '.', ''));
+$parangSideSize = escape_html((string)($visuals['ornament_side_size'] ?? '256'));
 $accent = escape_html((string)($visuals['accent_color'] ?? '#C49A45'));
 $headingColor = escape_html((string)($visuals['heading_color'] ?? '#211b0e'));
 $textColor = escape_html((string)($visuals['text_color'] ?? '#211b0e'));
@@ -131,7 +139,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     <link href="<?php echo escape_html(theme_google_font_stylesheet_url()); ?>" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo escape_html(get_theme_asset_url($presetKey, 'style.css')); ?>">
-    <style id="cms-parang-visual">:root{--parang-heading:<?php echo $headingFont; ?>;--parang-body:<?php echo $bodyFont; ?>;--parang-heading-color:<?php echo $headingColor; ?>;--parang-text:<?php echo $textColor; ?>;--parang-muted:<?php echo $mutedColor; ?>;--parang-link:<?php echo $linkColor; ?>;--parang-gold:<?php echo $accent; ?>;--cms-parang-bg:<?php echo $backgroundCss; ?>;--cms-parang-home-bg:<?php echo $parangHomeBg; ?>;--cms-parang-gallery-bg:<?php echo $parangGalleryBg; ?>;--cms-parang-location-bg:<?php echo $parangLocationBg; ?>;--cms-parang-left:<?php echo theme_visual_css_url($parangLeft); ?>;--cms-parang-right:<?php echo theme_visual_css_url($parangRight); ?>}#beranda,#galeri,#lokasi{background-size:cover;background-position:center;background-repeat:no-repeat}#beranda{background-image:linear-gradient(rgba(255,248,242,.78),rgba(240,227,206,.86)),var(--cms-parang-home-bg)}#galeri{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-gallery-bg)}#lokasi{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-location-bg)}.parang-ornament-left{content:var(--cms-parang-left)}.parang-ornament-right{content:var(--cms-parang-right)}#cms-parang-root h1,#cms-parang-root h2,#cms-parang-root h3{color:var(--parang-heading-color)}#cms-parang-root a{color:var(--parang-link)}#cms-parang-root .parang-nav-cta,#cms-parang-root .parang-primary-button,#cms-parang-root .parang-copy-button,#cms-parang-root .parang-rsvp-form button{color:var(--parang-cream)}</style>
+    <style id="cms-parang-visual">:root{--parang-heading:<?php echo $headingFont; ?>;--parang-body:<?php echo $bodyFont; ?>;--parang-heading-color:<?php echo $headingColor; ?>;--parang-text:<?php echo $textColor; ?>;--parang-muted:<?php echo $mutedColor; ?>;--parang-link:<?php echo $linkColor; ?>;--parang-gold:<?php echo $accent; ?>;--cms-parang-bg:<?php echo $backgroundCss; ?>;--cms-parang-home-bg:<?php echo $parangHomeBg; ?>;--cms-parang-gallery-bg:<?php echo $parangGalleryBg; ?>;--cms-parang-location-bg:<?php echo $parangLocationBg; ?>;--cms-parang-left:<?php echo theme_visual_css_url($parangLeft); ?>;--cms-parang-right:<?php echo theme_visual_css_url($parangRight); ?>;--cms-parang-top:<?php echo theme_visual_css_url($parangTop); ?>;--cms-parang-top-width:<?php echo $parangTopWidth; ?>px;--cms-parang-top-offset-y:<?php echo $parangTopOffsetY; ?>px;--cms-parang-side-offset-x:<?php echo $parangSideOffsetX; ?>px;--cms-parang-side-offset-y:<?php echo $parangSideOffsetY; ?>%;--cms-parang-side-height-ratio:<?php echo escape_html((string)$parangSideHeightRatio); ?>%;--cms-parang-side-height-factor:<?php echo $parangSideHeightFactor; ?>;--cms-parang-side-size:<?php echo $parangSideSize; ?>px}#beranda,#galeri,#lokasi{background-size:cover;background-position:center;background-repeat:no-repeat}#beranda{background-image:linear-gradient(rgba(255,248,242,.78),rgba(240,227,206,.86)),var(--cms-parang-home-bg)}#galeri{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-gallery-bg)}#lokasi{background-image:linear-gradient(rgba(255,248,242,.82),rgba(240,227,206,.88)),var(--cms-parang-location-bg)}.parang-ornament-left{content:var(--cms-parang-left)}.parang-ornament-right{content:var(--cms-parang-right)}#cms-parang-root h1,#cms-parang-root h2,#cms-parang-root h3{color:var(--parang-heading-color)}#cms-parang-root a{color:var(--parang-link)}#cms-parang-root .parang-nav-cta,#cms-parang-root .parang-primary-button,#cms-parang-root .parang-copy-button,#cms-parang-root .parang-rsvp-form button{color:var(--parang-cream)}</style>
     <?php if ($customCss !== ''): ?><style><?php echo $customCss; ?></style><?php endif; ?>
 </head>
 <body data-countdown-target="<?php echo escape_html((string)($config['schedule']['countdown_target'] ?? '')); ?>">
@@ -161,7 +169,7 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
         <?php if ($sectionEnabled('hero')): ?>
         <section id="beranda" class="parang-section parang-hero" aria-labelledby="parang-hero-title">
             <div class="parang-hero-card">
-                <img class="parang-ornament parang-ornament-top" src="<?php echo escape_html($sourceGunungan); ?>" alt="Ornamen Gunungan">
+                <img class="parang-ornament parang-ornament-top" src="<?php echo escape_html($parangTop); ?>" alt="Ornamen Gunungan">
                 <img class="parang-ornament parang-ornament-side parang-ornament-left" src="<?php echo escape_html($parangLeft); ?>" alt="Ornamen wayang" aria-hidden="true">
                 <img class="parang-ornament parang-ornament-side parang-ornament-right" src="<?php echo escape_html($parangRight); ?>" alt="" aria-hidden="true">
                 <p class="parang-opening-greeting"><?php echo $openingGreeting; ?></p>
@@ -299,6 +307,23 @@ $customCss = function_exists('load_custom_css') ? load_custom_css() : '';
     </nav>
     <?php if ($musicUrl !== ''): ?><audio id="parang-background-music" src="<?php echo $musicUrl; ?>" loop preload="none"></audio><?php endif; ?>
 </div>
-<script src="<?php echo escape_html(get_theme_asset_url($presetKey, 'script.js')); ?>" defer></script>
+    <script>
+    (function () {
+        function syncParangHeroCardHeight() {
+            var card = document.querySelector('.parang-hero-card');
+            if (!card) return;
+            document.documentElement.style.setProperty('--cms-parang-hero-card-height', card.getBoundingClientRect().height + 'px');
+        }
+        if (window.ResizeObserver) {
+            var observer = new ResizeObserver(syncParangHeroCardHeight);
+            var card = document.querySelector('.parang-hero-card');
+            if (card) observer.observe(card);
+        }
+        window.addEventListener('load', syncParangHeroCardHeight, {once: true});
+        window.addEventListener('resize', syncParangHeroCardHeight, {passive: true});
+        syncParangHeroCardHeight();
+    }());
+    </script>
+    <script src="<?php echo escape_html(get_theme_asset_url($presetKey, 'script.js')); ?>" defer></script>
 </body>
 </html>
