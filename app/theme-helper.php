@@ -224,6 +224,76 @@ function theme_visual_image_reference_is_canonical(string $value): bool {
     return $extension === 'webp' && safe_image_mime($absolute) === 'image/webp';
 }
 
+/**
+ * Return every user-facing media target that can be assigned from the File Manager.
+ * The target list is derived from the active preset schema so new source-backed
+ * image capabilities cannot silently exist only in the frontend/theme editor.
+ */
+function media_manager_target_definitions(array $config, ?string $presetKey = null): array {
+    $presetKey = $presetKey ?: resolve_theme_preset_key($config);
+    $targets = [
+        'media.cover' => ['label' => 'Cover / foto utama', 'type' => 'image', 'fallback' => 'Bawaan preset'],
+        'media.bride_photo' => ['label' => 'Foto mempelai wanita', 'type' => 'image', 'fallback' => 'Kosongkan untuk bawaan preset'],
+        'media.groom_photo' => ['label' => 'Foto mempelai pria', 'type' => 'image', 'fallback' => 'Kosongkan untuk bawaan preset'],
+        'media.couple_photo' => ['label' => 'Foto pasangan', 'type' => 'image', 'fallback' => 'Kosongkan untuk bawaan preset'],
+        'media.music' => ['label' => 'Musik latar', 'type' => 'audio', 'fallback' => 'Musik bawaan preset'],
+        'media.love_story_video' => ['label' => 'Video cerita cinta', 'type' => 'video', 'fallback' => 'Kosongkan untuk bawaan preset'],
+        'media.background_hero' => ['label' => 'Latar hero / pembuka', 'type' => 'image', 'fallback' => 'Latar bawaan preset'],
+        'media.background_sections.0' => ['label' => 'Latar section 1', 'type' => 'image', 'fallback' => 'Latar bawaan preset'],
+        'media.background_sections.1' => ['label' => 'Latar section 2', 'type' => 'image', 'fallback' => 'Latar bawaan preset'],
+        'media.background_sections.2' => ['label' => 'Latar section 3', 'type' => 'image', 'fallback' => 'Latar bawaan preset'],
+        'gift.qris_image' => ['label' => 'QRIS / hadiah digital', 'type' => 'image', 'fallback' => 'QRIS tidak ditampilkan'],
+        'site.open_graph_image' => ['label' => 'Gambar Open Graph', 'type' => 'image', 'fallback' => 'Gambar sosial bawaan'],
+    ];
+    $visualSchema = theme_visual_capabilities_for_config($config, $presetKey);
+    foreach ($visualSchema as $visualKey => $definition) {
+        if (($definition['type'] ?? '') !== 'image') continue;
+        $target = 'theme_visuals.' . $presetKey . '.' . $visualKey;
+        $targets[$target] = [
+            'label' => 'Tampilan ' . ($definition['label'] ?? ucwords(str_replace('_', ' ', $visualKey))),
+            'type' => 'image',
+            'fallback' => 'Bawaan ' . ($presetKey === 'custom' ? 'CMS' : $presetKey),
+        ];
+    }
+    $presetSchema = (array)(theme_registry()[$presetKey]['schema'] ?? []);
+    foreach ($presetSchema as $optionKey => $definition) {
+        if (($definition['type'] ?? '') !== 'image') continue;
+        $target = 'theme_options.' . $presetKey . '.' . $optionKey;
+        $targets[$target] = [
+            'label' => 'Aset ' . ($definition['label'] ?? ucwords(str_replace('_', ' ', $optionKey))),
+            'type' => 'image',
+            'fallback' => 'Bawaan ' . ($presetKey === 'custom' ? 'CMS' : $presetKey),
+        ];
+    }
+    return $targets;
+}
+
+function media_manager_target_value(array $config, string $target): string {
+    $value = $config;
+    foreach (explode('.', trim($target, '.')) as $part) {
+        if (!is_array($value) || !array_key_exists($part, $value)) return '';
+        $value = $value[$part];
+    }
+    return is_scalar($value) ? (string)$value : '';
+}
+
+function media_manager_set_target(array &$config, string $target, string $value): bool {
+    $parts = explode('.', trim($target, '.'));
+    if (!$parts || in_array('', $parts, true)) return false;
+    $cursor =& $config;
+    $last = array_pop($parts);
+    foreach ($parts as $part) {
+        if (!isset($cursor[$part]) || !is_array($cursor[$part])) $cursor[$part] = [];
+        $cursor =& $cursor[$part];
+    }
+    $cursor[$last] = $value;
+    return true;
+}
+
+function media_manager_clear_target(array &$config, string $target): bool {
+    return media_manager_set_target($config, $target, '');
+}
+
 function validate_theme_visual_value($value, array $definition) {
     $type = (string)($definition['type'] ?? 'text');
     if (is_array($value)) return null;

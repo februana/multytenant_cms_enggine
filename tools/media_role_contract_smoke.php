@@ -29,9 +29,9 @@ $db->close();
 $expectedRoles = [
     'custom' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
     'dewankl' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
-    'shubh-vivah' => [],
+    'shubh-vivah' => ['cover'],
     'yami-buzzy' => ['bride_photo', 'groom_photo', 'couple_photo', 'love_story_video'],
-    'rainier' => [],
+    'rainier' => ['cover'],
     'archak' => ['cover', 'bride_photo', 'groom_photo', 'couple_photo'],
     'parang' => ['bride_photo', 'groom_photo'],
     'pawiwahan' => ['cover', 'bride_photo', 'groom_photo'],
