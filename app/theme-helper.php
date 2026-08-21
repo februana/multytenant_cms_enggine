@@ -640,10 +640,10 @@ function finalize_theme_output(string $html, array $config): string {
       if (values.ornament_top) { const topUrl = values.ornament_top.charAt(0) === '/' ? values.ornament_top : '/' + values.ornament_top; document.querySelectorAll('.parang-ornament-top').forEach(function (image) { image.src = topUrl; }); }
       if (values.ornament_top_width !== undefined) { document.documentElement.style.setProperty('--cms-parang-top-width', Math.min(320, Math.max(128, Number(values.ornament_top_width) || 192)) + 'px'); }
       if (values.ornament_top_offset_y !== undefined) { document.documentElement.style.setProperty('--cms-parang-top-offset-y', Math.min(40, Math.max(-240, Number(values.ornament_top_offset_y) || -128)) + 'px'); }
-      if (values.ornament_side_offset_x !== undefined) { document.documentElement.style.setProperty('--cms-parang-side-offset-x', Math.min(40, Math.max(-240, Number(values.ornament_side_offset_x) || -128)) + 'px'); }
+      if (values.ornament_side_offset_x !== undefined) { document.documentElement.style.setProperty('--cms-parang-side-offset-x', Math.min(40, Math.max(-640, Number(values.ornament_side_offset_x) || -360)) + 'px'); }
       if (values.ornament_side_offset_y !== undefined) { document.documentElement.style.setProperty('--cms-parang-side-offset-y', Math.min(100, Math.max(0, Number(values.ornament_side_offset_y) || 50)) + '%'); }
       if (values.ornament_side_height_ratio !== undefined) { document.documentElement.style.setProperty('--cms-parang-side-height-ratio', Math.min(85, Math.max(45, Number(values.ornament_side_height_ratio) || 70)) + '%'); document.documentElement.style.setProperty('--cms-parang-side-height-factor', Math.min(0.85, Math.max(0.45, Number(values.ornament_side_height_ratio) || 70) / 100)); }
-      if (values.ornament_side_size !== undefined) { document.documentElement.style.setProperty('--cms-parang-side-size', Math.min(280, Math.max(112, Number(values.ornament_side_size) || 256)) + 'px'); }
+      if (values.ornament_side_size !== undefined) { document.documentElement.style.setProperty('--cms-parang-side-size', Math.min(640, Math.max(224, Number(values.ornament_side_size) || 480)) + 'px'); }
     }
   };
   window.addEventListener('message', function (event) {
