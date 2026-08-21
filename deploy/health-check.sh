@@ -7,7 +7,32 @@ set -euo pipefail
 
 DEPLOY_DIR="${DEPLOY_DIR:-/var/www/wedding}"
 DATA_DIR="${UNDANGAN_DATA_DIR:-$DEPLOY_DIR}"
-DB_FILE_PATH="${UNDANGAN_DB_PATH:-$DATA_DIR/database.sqlite}"
+
+read_env_file_value() {
+  local key="$1" env_file value
+  for env_file in "${UNDANGAN_ENV_FILE:-}" "$DATA_DIR/.env" "$DEPLOY_DIR/.env" "/var/www/private/.env"; do
+    [ -n "$env_file" ] && [ -r "$env_file" ] || continue
+    value="$(sed -n "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*//p" "$env_file" | head -n 1 | sed 's/[[:space:]]*$//' || true)"
+    value="${value#\"}"
+    value="${value#\'}"
+    value="${value%\"}"
+    value="${value%\'}"
+    [ -n "$value" ] && { printf '%s' "$value"; return 0; }
+  done
+  return 0
+}
+
+DB_PATH_FROM_ENV="${UNDANGAN_DB_PATH:-}"
+if [ -z "$DB_PATH_FROM_ENV" ]; then
+  DB_PATH_FROM_ENV="$(read_env_file_value 'UNDANGAN_DB_PATH')"
+fi
+if [ -n "$DB_PATH_FROM_ENV" ]; then
+  DB_FILE_PATH="$DB_PATH_FROM_ENV"
+elif [ -r "/var/www/private/database.sqlite" ]; then
+  DB_FILE_PATH="/var/www/private/database.sqlite"
+else
+  DB_FILE_PATH="$DATA_DIR/database.sqlite"
+fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME_DIRECTORIES_SCRIPT="$SCRIPT_DIR/runtime-directories.sh"
 WEDDING_BUILTIN_PRESETS="dewankl rainier archak parang pawiwahan shubh-vivah yami-buzzy custom"
@@ -121,16 +146,103 @@ else
   fail "Runtime directory contract unavailable; cannot validate upload paths"
 fi
 
-# Optional media is intentionally not provisioned by a clean checkout.
+# Tenant configuration is stored in the canonical SQLite database, not in a
+# global config.json. Resolve the active tenant from the deployment domain and
+# keep its config_json payload in memory for optional-media checks.
+CONFIG_AVAILABLE=0
+CONFIG_ERROR=""
+CONFIG_PAYLOAD_B64=""
+CONFIG_TENANT_DOMAIN=""
+CONFIG_TENANT_ID=""
+CONFIG_TENANT_UPLOAD_ROOT=""
+
+normalize_domain() {
+  local value="$1"
+  value="${value#http://}"
+  value="${value#https://}"
+  value="${value%%/*}"
+  value="${value%%:*}"
+  value="${value,,}"
+  value="${value%.}"
+  printf '%s' "$value"
+}
+
+load_tenant_configuration() {
+  local domain output
+  CONFIG_ERROR=""
+  CONFIG_TENANT_DOMAIN="${UNDANGAN_MAIN_DOMAIN:-${MAIN_DOMAIN:-}}"
+  if [ -z "$CONFIG_TENANT_DOMAIN" ]; then
+    CONFIG_TENANT_DOMAIN="$(read_env_file_value 'UNDANGAN_MAIN_DOMAIN')"
+  fi
+  CONFIG_TENANT_DOMAIN="$(normalize_domain "$CONFIG_TENANT_DOMAIN")"
+  if [ ! -r "$DB_FILE_PATH" ]; then
+    CONFIG_ERROR="canonical SQLite database is missing or unreadable: $DB_FILE_PATH"
+    return 1
+  fi
+  if [ -z "$CONFIG_TENANT_DOMAIN" ]; then
+    CONFIG_ERROR="tenant domain is unavailable; set UNDANGAN_MAIN_DOMAIN or provide it in .env"
+    return 1
+  fi
+  if ! command -v php >/dev/null 2>&1; then
+    CONFIG_ERROR="PHP CLI is unavailable for reading tenant_configs"
+    return 1
+  fi
+  if ! output="$(php -r '
+    $db = @new SQLite3($argv[1], SQLITE3_OPEN_READONLY);
+    if (!$db) exit(2);
+    $stmt = @$db->prepare("SELECT t.id, t.domain, tc.config_json FROM tenants t INNER JOIN tenant_configs tc ON tc.tenant_id = t.id WHERE t.domain = :domain AND t.status = :status LIMIT 1");
+    if (!$stmt) exit(3);
+    $stmt->bindValue(":domain", $argv[2], SQLITE3_TEXT);
+    $stmt->bindValue(":status", "active", SQLITE3_TEXT);
+    $result = @$stmt->execute();
+    $row = $result ? $result->fetchArray(SQLITE3_ASSOC) : false;
+    if (!is_array($row)) exit(4);
+    $config = json_decode((string)($row["config_json"] ?? ""), true);
+    if (!is_array($config)) exit(5);
+    $payload = ["tenant_id" => (int)$row["id"], "domain" => (string)$row["domain"], "config" => $config];
+    $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($encoded === false) exit(6);
+    echo base64_encode($encoded);
+  ' "$DB_FILE_PATH" "$CONFIG_TENANT_DOMAIN" 2>/dev/null)"; then
+    CONFIG_ERROR="unable to read active tenant_configs for domain $CONFIG_TENANT_DOMAIN"
+    return 1
+  fi
+  if [ -z "$output" ]; then
+    CONFIG_ERROR="tenant configuration is empty for domain $CONFIG_TENANT_DOMAIN"
+    return 1
+  fi
+  CONFIG_PAYLOAD_B64="$output"
+  CONFIG_TENANT_ID="$(CONFIG_PAYLOAD_B64="$CONFIG_PAYLOAD_B64" php -r '$payload = json_decode(base64_decode((string)getenv("CONFIG_PAYLOAD_B64")), true); echo (int)($payload["tenant_id"] ?? 0);' 2>/dev/null || true)"
+  if ! [[ "$CONFIG_TENANT_ID" =~ ^[1-9][0-9]*$ ]]; then
+    CONFIG_AVAILABLE=0
+    CONFIG_ERROR="tenant configuration returned an invalid tenant ID"
+    return 1
+  fi
+  CONFIG_TENANT_UPLOAD_ROOT="$DEPLOY_DIR/uploads/tenant_$CONFIG_TENANT_ID"
+  CONFIG_AVAILABLE=1
+  return 0
+}
+
 read_config_value() {
   local key="$1"
-  if [ ! -f "$CONFIG_FILE_PATH" ] || ! command -v php >/dev/null 2>&1; then
-    return 0
-  fi
-  CONFIG_KEY="$key" php -r '$value = json_decode(@file_get_contents($argv[1]), true); foreach (explode(".", getenv("CONFIG_KEY")) as $part) { if (!is_array($value) || !array_key_exists($part, $value)) { $value = null; break; } $value = $value[$part]; } if (is_string($value)) echo $value;' "$CONFIG_FILE_PATH" 2>/dev/null || true
+  [ "$CONFIG_AVAILABLE" -eq 1 ] || return 0
+  CONFIG_KEY="$key" CONFIG_PAYLOAD_B64="$CONFIG_PAYLOAD_B64" php -r '
+    $payload = json_decode(base64_decode((string)getenv("CONFIG_PAYLOAD_B64")), true);
+    $value = $payload["config"] ?? null;
+    foreach (explode(".", (string)getenv("CONFIG_KEY")) as $part) {
+      if (!is_array($value) || !array_key_exists($part, $value)) { $value = null; break; }
+      $value = $value[$part];
+    }
+    if (is_string($value) || is_numeric($value)) echo (string)$value;
+  ' 2>/dev/null || true
 }
+
+# Optional media is intentionally not provisioned by a clean checkout.
 check_optional_media() {
   local label="$1" reference="$2" resolved
+  if [ "$CONFIG_AVAILABLE" -ne 1 ]; then
+    return 0
+  fi
   if [ -z "$reference" ]; then
     warning "$label is not provisioned (optional/user-provided)"
     return 0
@@ -139,22 +251,42 @@ check_optional_media() {
     pass "$label uses an external URL (local file not checked)"
     return 0
   fi
-  if [[ "$reference" = /* ]]; then resolved="$reference"; else resolved="$DEPLOY_DIR/$reference"; fi
+  if [[ "$reference" = /* ]]; then
+    resolved="$reference"
+  else
+    resolved="$DEPLOY_DIR/$reference"
+  fi
   if [ -f "$resolved" ] && [ -r "$resolved" ]; then
-    pass "$label is readable: $reference"
+    if [[ "$resolved" = "$CONFIG_TENANT_UPLOAD_ROOT/"* ]]; then
+      pass "$label is readable: $reference"
+    else
+      fail "$label configuration path is outside active tenant media root: $reference"
+    fi
   else
     warning "$label is configured but missing/unreadable: $reference"
   fi
 }
+
+if ! load_tenant_configuration; then
+  fail "Tenant configuration unavailable: $CONFIG_ERROR"
+fi
 check_optional_media "Optional cover media" "$(read_config_value 'media.cover')"
 check_optional_media "Optional music media" "$(read_config_value 'media.music')"
 check_optional_media "Optional Open Graph image" "$(read_config_value 'site.open_graph_image')"
 
-ACTIVE_PRESET="$(read_config_value 'theme.theme_preset')"
+if [ "$CONFIG_AVAILABLE" -eq 1 ]; then
+  ACTIVE_PRESET="$(read_config_value 'theme.theme_preset')"
+else
+  ACTIVE_PRESET=""
+fi
+if [ "$CONFIG_AVAILABLE" -ne 1 ]; then
+  fail "Active preset unavailable because tenant configuration is unavailable"
+else
 case " $WEDDING_BUILTIN_PRESETS " in
   *" $ACTIVE_PRESET "*) pass "Active preset supported: ${ACTIVE_PRESET:-custom}" ;;
   *) fail "Active preset is not supported by the built-in contract: ${ACTIVE_PRESET:-empty}" ;;
 esac
+fi
 
 if command -v magick >/dev/null 2>&1 || command -v convert >/dev/null 2>&1; then
   pass "ImageMagick WebP processor is available"
@@ -183,13 +315,8 @@ else
   fail "Runtime data directory missing or not writable: $DATA_DIR"
 fi
 
-CONFIG_PERMS=$(stat -c %a "$CONFIG_FILE_PATH" 2>/dev/null || echo "000")
-if [[ "$CONFIG_PERMS" == "600" ]] || [[ "$CONFIG_PERMS" == "640" ]] || [[ "$CONFIG_PERMS" == "660" ]]; then
-  pass "Config file permissions secure ($CONFIG_PERMS)"
-else
-  fail "Config file permissions insecure ($CONFIG_PERMS), expected 600, 640, or 660"
-fi
-
+# Tenant configuration is stored inside the canonical SQLite database.
+# The database permission check below covers both tenant_configs and shared runtime state.
 DB_PERMS=$(stat -c %a "$DB_FILE_PATH" 2>/dev/null || echo "000")
 if [[ "$DB_PERMS" == "600" ]] || [[ "$DB_PERMS" == "640" ]] || [[ "$DB_PERMS" == "660" ]]; then
   pass "Database permissions secure ($DB_PERMS)"
