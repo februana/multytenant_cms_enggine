@@ -55,6 +55,10 @@ foreach ([$root . '/deploy/install.sh', $root . '/deploy/update.sh', $root . '/d
     $source = file_get_contents($script);
     assert_true(is_string($source) && str_contains($source, 'runtime-dependencies.sh'), 'deployment path references shared dependency contract: ' . basename($script));
 }
+$configSource = (string) file_get_contents($root . '/config.php');
+assert_true(str_contains($configSource, 'MEDIA_FFMPEG_TIMEOUT_SECONDS'), 'FFmpeg timeout is environment-configurable');
+assert_true(str_contains($configSource, 'proc_get_status'), 'FFmpeg runner observes the child process');
+assert_true(str_contains($configSource, "'timed_out' => true"), 'FFmpeg runner reports actual timeout termination');
 $installer = (string) file_get_contents($root . '/deploy/install.sh');
 assert_true(str_contains($installer, 'runtime_install_os_dependencies'), 'native installer installs dependency contract packages');
 assert_true(str_contains($installer, 'composer install --no-dev'), 'native installer installs Composer dependencies from the lock file');
@@ -64,6 +68,9 @@ assert_true(str_contains($installer, 'APACHE_WEBDAV_ENABLE'), 'native installer 
 assert_true(str_contains($dependencySource, 'ffmpeg'), 'dependency contract includes FFmpeg for Love Story video processing');
 assert_true(str_contains($installer, 'runtime_configure_php_fpm_upload_limits'), 'native installer configures PHP-FPM upload limits');
 assert_true(str_contains($installer, 'runtime_verify_commands'), 'native installer verifies callable runtime commands');
+$skipPosition = strpos($installer, 'SKIP_APACHE_PACKAGE_INSTALL=1');
+$verificationPosition = strpos($installer, 'runtime_verify_commands ||');
+assert_true($skipPosition !== false && $verificationPosition !== false && $verificationPosition > $skipPosition, 'installer skip mode still reaches runtime verification');
 assert_true(!str_contains($installer, 'nginx'), 'native installer does not introduce an Nginx deployment path');
 $updater = (string) file_get_contents($root . '/deploy/update.sh');
 assert_true(str_contains($updater, 'multytenant_cms_enggine.git'), 'updater defaults to the multi-tenant repository');

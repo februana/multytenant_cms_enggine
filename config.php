@@ -2100,17 +2100,57 @@ function verify_mp3_output(string $path, array $requirement = []): bool {
     return (float)($audio['duration'] ?? 0) > 0.05;
 }
 
+function media_ffmpeg_timeout_seconds(): int {
+    $configured = getenv('MEDIA_FFMPEG_TIMEOUT_SECONDS');
+    $seconds = is_string($configured) && trim($configured) !== '' ? (int)$configured : 300;
+    return max(10, min($seconds, 3600));
+}
+
 function run_ffmpeg_command(array $parts): array {
     $command = implode(' ', $parts);
     $process = @proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) return ['success' => false, 'stderr' => 'Unable to start FFmpeg process.', 'exit_code' => -1];
     fclose($pipes[0]);
-    stream_get_contents($pipes[1]);
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+    $stdout = '';
+    $stderr = '';
+    $startedAt = microtime(true);
+    $timeout = media_ffmpeg_timeout_seconds();
+    $timedOut = false;
+    while (true) {
+        $status = proc_get_status($process);
+        $stdout .= (string)(stream_get_contents($pipes[1]) ?: '');
+        $stderr .= (string)(stream_get_contents($pipes[2]) ?: '');
+        if (!$status['running']) break;
+        if (microtime(true) - $startedAt >= $timeout) {
+            $timedOut = true;
+            @proc_terminate($process, 15);
+            usleep(250000);
+            $status = proc_get_status($process);
+            if (!empty($status['running'])) @proc_terminate($process, 9);
+            break;
+        }
+        $read = [];
+        if (!feof($pipes[1])) $read[] = $pipes[1];
+        if (!feof($pipes[2])) $read[] = $pipes[2];
+        if ($read) {
+            $write = [];
+            $except = [];
+            @stream_select($read, $write, $except, 0, 100000);
+        } else {
+            usleep(100000);
+        }
+    }
+    $stdout .= (string)(stream_get_contents($pipes[1]) ?: '');
+    $stderr .= (string)(stream_get_contents($pipes[2]) ?: '');
     fclose($pipes[1]);
-    $stderr = stream_get_contents($pipes[2]);
     fclose($pipes[2]);
     $exitCode = proc_close($process);
-    return ['success' => $exitCode === 0, 'stderr' => (string)$stderr, 'exit_code' => $exitCode];
+    if ($timedOut) {
+        return ['success' => false, 'stderr' => trim($stderr . "\nFFmpeg process timed out after {$timeout} seconds."), 'exit_code' => -124, 'timed_out' => true];
+    }
+    return ['success' => $exitCode === 0, 'stderr' => (string)$stderr, 'exit_code' => $exitCode, 'timed_out' => false];
 }
 
 function process_audio_to_mp3(string $sourcePath, string $destinationDir, string $role = 'music', ?string $preset = null, string $originalName = ''): array {

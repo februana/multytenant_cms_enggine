@@ -84,6 +84,16 @@ $themeDir = tenant_upload_dir('theme_assets') . '/parang';
 ensure_upload_dirs();
 
 try {
+    $timeoutBinary = sys_get_temp_dir() . '/' . $token . '-slow-ffmpeg';
+    file_put_contents($timeoutBinary, "#!/bin/sh\nsleep 20\n");
+    chmod($timeoutBinary, 0755);
+    $fixtures[] = $timeoutBinary;
+    putenv('MEDIA_FFMPEG_TIMEOUT_SECONDS=10');
+    $timeoutStarted = microtime(true);
+    $timeoutResult = run_ffmpeg_command([escapeshellarg($timeoutBinary)]);
+    $timeoutElapsed = microtime(true) - $timeoutStarted;
+    media_pipeline_assert(empty($timeoutResult['success']) && !empty($timeoutResult['timed_out']) && ($timeoutResult['exit_code'] ?? 0) === -124, 'FFmpeg runner enforces actual timeout');
+    media_pipeline_assert($timeoutElapsed < 13.0, 'FFmpeg timeout terminates the child within the configured bound');
     foreach ([$themeDir] as $dir) if (!is_dir($dir)) mkdir($dir, 0755, true);
 
     $coverSource = sys_get_temp_dir() . '/' . $token . '-cover.jpg';
