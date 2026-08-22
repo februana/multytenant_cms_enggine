@@ -8,6 +8,7 @@ set -Eeuo pipefail
 CANONICAL_TARGET="${CANONICAL_TARGET:-/var/www/wedding}"
 SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUNTIME_DIRECTORIES_SCRIPT="$SOURCE_DIR/deploy/runtime-directories.sh"
+RUNTIME_DEPENDENCIES_SCRIPT="$SOURCE_DIR/deploy/runtime-dependencies.sh"
 APACHE_SITE_NAME="${APACHE_SITE_NAME:-wedding.conf}"
 APACHE_ENABLE_SSL="${APACHE_ENABLE_SSL:-0}"
 APACHE_WEBDAV_ENABLE="${APACHE_WEBDAV_ENABLE:-0}"
@@ -29,7 +30,12 @@ if [[ ! -r "$RUNTIME_DIRECTORIES_SCRIPT" ]]; then
   echo "ERROR: runtime directory contract not found: $RUNTIME_DIRECTORIES_SCRIPT" >&2
   exit 2
 fi
+if [[ ! -r "$RUNTIME_DEPENDENCIES_SCRIPT" ]]; then
+  echo "ERROR: runtime dependency contract not found: $RUNTIME_DEPENDENCIES_SCRIPT" >&2
+  exit 2
+fi
 . "$RUNTIME_DIRECTORIES_SCRIPT"
+. "$RUNTIME_DEPENDENCIES_SCRIPT"
 
 if [[ "$EUID" -ne 0 ]]; then
   echo "Jalankan sebagai root: sudo bash deploy/install.sh" >&2
@@ -53,8 +59,8 @@ verify_php_runtime() {
   for command_name in php openssl; do
     command -v "$command_name" >/dev/null 2>&1 || { echo "ERROR: command runtime tidak tersedia: $command_name" >&2; exit 2; }
   done
-  php -r 'exit(extension_loaded("sqlite3") && extension_loaded("pdo_sqlite") && extension_loaded("openssl") ? 0 : 1);' || {
-    echo 'ERROR: PHP sqlite3, pdo_sqlite, dan openssl wajib tersedia.' >&2
+  runtime_verify_php_extensions || {
+    echo 'ERROR: PHP sqlite3, pdo_sqlite, fileinfo, mbstring, openssl, dan json wajib tersedia.' >&2
     exit 2
   }
 }
@@ -64,11 +70,9 @@ install_os_dependencies() {
     echo 'SKIP_APACHE_PACKAGE_INSTALL=1: instalasi package OS dilewati.'
     return 0
   fi
-  echo 'Installing Apache, PHP-FPM, Composer, ImageMagick, and PHP extensions...'
-  apt-get update -qq
-  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-    apache2 apache2-utils php-fpm php-cli php-sqlite3 php-gd php-mbstring php-zip \
-    composer imagemagick rsync openssl ca-certificates curl unzip
+  echo 'Installing Apache, PHP-FPM, Composer, ImageMagick, FFmpeg, and PHP extensions...'
+  runtime_install_os_dependencies || { echo 'ERROR: instalasi dependency OS gagal.' >&2; exit 2; }
+  runtime_configure_php_fpm_upload_limits || { echo 'ERROR: konfigurasi PHP-FPM upload limits gagal.' >&2; exit 2; }
 }
 
 check_apache_commands() {
@@ -303,6 +307,8 @@ validate_and_activate_apache() {
 check_base_commands
 install_os_dependencies
 verify_php_runtime
+runtime_verify_commands || { echo 'ERROR: dependency runtime terpasang tetapi tidak dapat dipanggil.' >&2; exit 2; }
+runtime_php_fpm_limits_match || { echo 'ERROR: effective PHP-FPM upload limits bukan 512M/520M.' >&2; exit 2; }
 check_apache_commands
 copy_application
 install_composer_dependencies

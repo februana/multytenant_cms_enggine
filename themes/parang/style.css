@@ -8,6 +8,7 @@
     --parang-surface-high: #f4e7d1;
     --parang-outline: #81756d;
     --parang-gold: #c49a45;
+    --parang-ornament-filter: brightness(0) saturate(100%) invert(64%) sepia(41%) saturate(1180%) hue-rotate(3deg) brightness(91%) contrast(88%);
     --parang-text: #211b0e;
     --parang-muted: #4f453e;
     --parang-heading: 'Libre Caslon Text', serif;
@@ -216,10 +217,10 @@
     pointer-events: none;
 }
 
-.parang-ornament-top { top: var(--cms-parang-top-offset-y, -8rem); width: var(--cms-parang-top-width, 12rem); height: 12rem; content: var(--cms-parang-top); }
-.parang-ornament-side { top: var(--cms-parang-side-offset-y, 50%); width: min(var(--cms-parang-side-size, 16rem), calc((100vw - 4rem) / 2)); height: calc(var(--cms-parang-hero-card-height, var(--parang-hero-card-height, 42rem)) * var(--cms-parang-side-height-factor, .7)); opacity: .8; transform: translateY(-50%); object-fit: contain; mix-blend-mode: multiply; }
-.parang-ornament-left { left: var(--cms-parang-side-offset-x, -8rem); }
-.parang-ornament-right { right: var(--cms-parang-side-offset-x, -8rem); transform: translateY(-50%) scaleX(-1); }
+.parang-ornament-top { top: var(--cms-parang-top-offset-y, -8rem); width: var(--cms-parang-top-width, 12rem); height: 12rem; content: var(--cms-parang-top); filter: var(--parang-ornament-filter); }
+.parang-ornament-side { top: var(--cms-parang-side-offset-y, 50%); width: auto; max-width: var(--cms-parang-side-size, 30rem); height: calc(var(--cms-parang-hero-card-height, var(--parang-hero-card-height, 42rem)) * var(--cms-parang-side-height-factor, .7)); opacity: .9; transform: translateY(-50%); object-fit: contain; filter: var(--parang-ornament-filter); mix-blend-mode: multiply; }
+.parang-ornament-left { left: var(--cms-parang-side-offset-x, -22.5rem); }
+.parang-ornament-right { right: var(--cms-parang-side-offset-x, -22.5rem); transform: translateY(-50%) scaleX(-1); }
 
 .parang-label {
     margin: 0 0 .75rem;
@@ -359,7 +360,7 @@
     .parang-mobile-nav { display: flex; }
     .parang-hero { padding-top: 7rem; padding-bottom: 2rem; }
     .parang-hero-card { min-height: 40rem; --parang-hero-card-height: 40rem; padding: 4rem 2rem 3rem; }
-    .parang-ornament-side { width: min(var(--cms-parang-side-size, 16rem), calc((100vw - 3rem) / 2)); }
+    .parang-ornament-side { max-width: var(--cms-parang-side-size, 30rem); height: calc(var(--cms-parang-hero-card-height, 40rem) * var(--cms-parang-side-height-factor, .7)); }
     .parang-couple-section { padding-top: 3rem; }
 }
 
@@ -367,9 +368,9 @@
     .parang-hero { min-height: auto; padding: 6rem .75rem 2rem; }
     .parang-hero-card { min-height: 36rem; --parang-hero-card-height: 36rem; padding: 4.5rem 1rem 2.5rem; border-width: 3px; border-radius: 7rem 7rem .6rem .6rem; }
     .parang-ornament-top { top: calc(var(--cms-parang-top-offset-y, -8rem) * .75); width: min(calc(var(--cms-parang-top-width, 12rem) * .75), 11rem); height: 9rem; }
-    .parang-ornament-side { width: min(calc(var(--cms-parang-side-size, 16rem) * .82), calc((100vw - 3rem) / 2)); }
-    .parang-ornament-left { left: calc(var(--cms-parang-side-offset-x, -8rem) * .5); }
-    .parang-ornament-right { right: calc(var(--cms-parang-side-offset-x, -8rem) * .5); }
+    .parang-ornament-side { max-width: var(--cms-parang-side-size, 30rem); height: calc(var(--cms-parang-hero-card-height, 36rem) * var(--cms-parang-side-height-factor, .7)); }
+    .parang-ornament-left { left: calc(var(--cms-parang-side-offset-x, -22.5rem) * .62); }
+    .parang-ornament-right { right: calc(var(--cms-parang-side-offset-x, -22.5rem) * .62); }
     .parang-hero-title { font-size: clamp(2.5rem, 13vw, 4rem); }
     .parang-hero-amp { font-size: 2.5rem; }
     .parang-hero-date { margin-bottom: 2rem; font-size: 1rem; letter-spacing: .1em; }

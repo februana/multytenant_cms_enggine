@@ -94,7 +94,7 @@ uploads/
     └── theme-assets/
 ```
 
-The media lifecycle is upload validation → WebP conversion where applicable → preset-specific resizing → original cleanup after successful conversion → save inside the current tenant namespace. Upload, replacement, deletion, preview, and render-time references use tenant containment validation. MIME validation and path-traversal protection are part of the delivery boundary.
+The media lifecycle is upload validation → ImageMagick/WebP conversion for images or FFmpeg/MP3 conversion for music or FFmpeg/H.264-AAC MP4 conversion for video → preset-specific resizing where applicable → canonical output verification → original cleanup after successful conversion → save inside the current tenant namespace. Upload, replacement, deletion, preview, and render-time references use tenant containment validation. MIME validation and path-traversal protection are part of the delivery boundary.
 
 Apache rewrites `/uploads/...` to [`media.php`](../media.php). `media.php` resolves the current Host tenant again, rejects paths outside that tenant's approved roots, checks MIME type, and serves only the authorized file. There must be no static alias or alternate endpoint that bypasses tenant authorization.
 

@@ -7,6 +7,7 @@ FROM php:8.3-apache
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/wedding \
     PORT=80 \
+    RUNTIME_PHP_MODE=apache \
     UNDANGAN_DATA_DIR=/var/data \
     UNDANGAN_DB_PATH=/var/data/database.sqlite \
     DEBIAN_FRONTEND=noninteractive
@@ -22,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng-dev \
         libwebp-dev \
         imagemagick \
+        ffmpeg \
         libonig-dev \
         libsqlite3-dev \
         sqlite3 \
@@ -34,7 +36,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # are not provided by the base image; recompiling SQLite causes config.m4
 # failures in docker-php-ext-install.
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" gd mbstring zip
+    && docker-php-ext-install -j"$(nproc)" gd mbstring zip \
+    && printf 'upload_max_filesize = 512M\\npost_max_size = 520M\\n' > /usr/local/etc/php/conf.d/zz-wedding-upload-limits.ini
 
 # Layer 3: Enable Apache modules
 RUN a2enmod rewrite headers expires

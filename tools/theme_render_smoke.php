@@ -52,6 +52,9 @@ foreach ($markers as $preset => $required) {
     $shared['presetKey'] = $preset;
     $html = render_theme_layout($config, $shared);
     if ($html === '') throw new RuntimeException("Empty render for {$preset}");
+    if ($preset === 'custom' && (strpos($html, 'id="musicBtn"') !== false || strpos($html, 'id="backgroundMusic"') !== false)) {
+        throw new RuntimeException('Custom Mode must not render an audio control when music is empty');
+    }
     foreach ($required as $marker) {
         if (strpos($html, $marker) === false) throw new RuntimeException("Missing {$marker} in {$preset}");
     }
@@ -67,6 +70,18 @@ foreach ($markers as $preset => $required) {
     }
     if ($preset === 'yami-buzzy') {
         if (strpos($html, 'id="yami-rsvp-form"') === false || strpos($html, "fetch('save.php'") === false) throw new RuntimeException('Yami Buzzy RSVP must use the CMS save endpoint');
+    }
+    if (in_array($preset, ['dewankl', 'shubh-vivah', 'yami-buzzy', 'rainier', 'parang', 'pawiwahan'], true)) {
+        $audioConfig = $config;
+        $audioConfig['media']['music'] = 'https://cdn.example.test/canonical.mp3';
+        $audioHtml = render_theme_layout($audioConfig, $shared);
+        if (strpos($audioHtml, 'canonical.mp3') === false) throw new RuntimeException("Canonical music reference did not reach {$preset} renderer");
+        if ($preset === 'custom' && (strpos($audioHtml, 'id="musicBtn"') === false || strpos($audioHtml, 'id="backgroundMusic"') === false)) {
+            throw new RuntimeException('Custom Mode audio control/element is incomplete');
+        }
+        if ($preset === 'dewankl' && (strpos($audioHtml, 'id="button-music"') === false || strpos($audioHtml, 'id="backgroundMusic"') === false)) {
+            throw new RuntimeException('DewanaKL audio control/element is incomplete');
+        }
     }
     echo "PASS: {$preset} rendered (" . strlen($html) . " bytes)\n";
 }

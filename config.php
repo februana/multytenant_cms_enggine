@@ -34,9 +34,9 @@ if (!defined('UPLOADS_LOVE_STORY_DIR')) define('UPLOADS_LOVE_STORY_DIR', UPLOADS
 if (!defined('UPLOADS_THEME_ASSETS_DIR')) define('UPLOADS_THEME_ASSETS_DIR', UPLOADS_DIR . '/theme-assets');
 
 // Security defaults
-if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 5 * 1024 * 1024));
-if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 15 * 1024 * 1024));
-if (!defined('MAX_VIDEO_UPLOAD_SIZE')) define('MAX_VIDEO_UPLOAD_SIZE', (int) (getenv('MAX_VIDEO_UPLOAD_SIZE') ?: 50 * 1024 * 1024));
+if (!defined('MAX_UPLOAD_SIZE')) define('MAX_UPLOAD_SIZE', (int) (getenv('MAX_UPLOAD_SIZE') ?: 10 * 1024 * 1024));
+if (!defined('MAX_MUSIC_UPLOAD_SIZE')) define('MAX_MUSIC_UPLOAD_SIZE', (int) (getenv('MAX_MUSIC_UPLOAD_SIZE') ?: 50 * 1024 * 1024));
+if (!defined('MAX_VIDEO_UPLOAD_SIZE')) define('MAX_VIDEO_UPLOAD_SIZE', (int) (getenv('MAX_VIDEO_UPLOAD_SIZE') ?: 512 * 1024 * 1024));
 if (!defined('WEBP_QUALITY')) define('WEBP_QUALITY', max(60, min(95, (int) (getenv('WEBP_QUALITY') ?: 82))));
 if (!defined('SESSION_TIMEOUT')) define('SESSION_TIMEOUT', (int) (getenv('SESSION_TIMEOUT') ?: 3600));
 if (!defined('ALLOWED_IMAGE_TYPES')) define('ALLOWED_IMAGE_TYPES', array_map('strtolower', (array) (getenv('ALLOWED_IMAGE_TYPES') ? explode(',', getenv('ALLOWED_IMAGE_TYPES')) : ['jpg','jpeg','png','webp'])));
@@ -1303,15 +1303,15 @@ function theme_registry(): array {
                 'section_background_home' => ['type' => 'image', 'label' => 'Latar Beranda', 'description' => 'Gambar latar tambahan untuk bagian pembuka.', 'default' => ''],
                 'section_background_gallery' => ['type' => 'image', 'label' => 'Latar Galeri', 'description' => 'Gambar latar tambahan untuk bagian galeri.', 'default' => ''],
                 'section_background_location' => ['type' => 'image', 'label' => 'Latar Lokasi', 'description' => 'Gambar latar tambahan untuk bagian lokasi acara.', 'default' => ''],
-                'ornament_left' => ['type' => 'image', 'label' => 'Ornamen Wayang Kiri', 'description' => 'Gambar wayang kiri dari Media Library. Kosongkan untuk memakai wayang bawaan.', 'default' => ''],
-                'ornament_right' => ['type' => 'image', 'label' => 'Ornamen Wayang Kanan', 'description' => 'Gambar wayang kanan dari Media Library. Kosongkan untuk memakai wayang bawaan.', 'default' => ''],
-                'ornament_top' => ['type' => 'image', 'label' => 'Ornamen Gunungan Hero', 'description' => 'Gambar Gunungan di atas Hero card. Kosongkan untuk memakai Gunungan bawaan.', 'default' => 'themes/parang/assets/gunungan.webp'],
+                'ornament_left' => ['type' => 'image', 'label' => 'Wayang Pria Kiri', 'description' => 'Asset Wayang pria di sisi kiri Hero card. Kosongkan untuk memakai asset bawaan Parang.', 'default' => 'themes/parang/assets/wayang-pria.png'],
+                'ornament_right' => ['type' => 'image', 'label' => 'Wayang Wanita Kanan', 'description' => 'Asset Wayang wanita di sisi kanan Hero card. Kosongkan untuk memakai asset bawaan Parang.', 'default' => 'themes/parang/assets/wayang-wanita.png'],
+                'ornament_top' => ['type' => 'image', 'label' => 'Gunungan Hero', 'description' => 'Asset Gunungan di atas Hero card. Kosongkan untuk memakai asset bawaan Parang.', 'default' => 'themes/parang/assets/gunungan-hero.png'],
                 'ornament_top_width' => ['type' => 'range', 'label' => 'Lebar Gunungan Hero', 'description' => 'Atur lebar Gunungan Hero tanpa mengubah tinggi kotaknya.', 'default' => '192', 'min' => '128', 'max' => '320', 'step' => '1'],
                 'ornament_top_offset_y' => ['type' => 'range', 'label' => 'Posisi Vertikal Gunungan Hero', 'description' => 'Geser Gunungan Hero ke atas atau bawah dalam piksel.', 'default' => '-128', 'min' => '-240', 'max' => '40', 'step' => '1'],
-                'ornament_side_offset_x' => ['type' => 'range', 'label' => 'Posisi Horizontal Wayang', 'description' => 'Geser kedua ornamen Wayang ke kiri atau kanan dalam piksel.', 'default' => '-128', 'min' => '-240', 'max' => '40', 'step' => '1'],
+                'ornament_side_offset_x' => ['type' => 'range', 'label' => 'Jarak Wayang dari Hero card', 'description' => 'Atur jarak horizontal Wayang agar tampak memegang sisi Hero card.', 'default' => '-360', 'min' => '-640', 'max' => '40', 'step' => '1'],
                 'ornament_side_offset_y' => ['type' => 'range', 'label' => 'Posisi Vertikal Wayang', 'description' => 'Atur posisi vertikal kedua ornamen Wayang dalam persen.', 'default' => '50', 'min' => '0', 'max' => '100', 'step' => '1'],
                 'ornament_side_height_ratio' => ['type' => 'range', 'label' => 'Ketinggian Wayang', 'description' => 'Atur ketinggian Wayang sebagai persentase tinggi Hero card.', 'default' => '70', 'min' => '45', 'max' => '85', 'step' => '1'],
-                'ornament_side_size' => ['type' => 'range', 'label' => 'Lebar Wayang', 'description' => 'Atur lebar kedua ornamen Wayang agar pas mendampingi Gunungan.', 'default' => '256', 'min' => '112', 'max' => '280', 'step' => '1']
+                'ornament_side_size' => ['type' => 'range', 'label' => 'Batas Lebar Wayang', 'description' => 'Atur batas lebar Wayang; tinggi visual tetap mengikuti sekitar 70% Hero card.', 'default' => '480', 'min' => '224', 'max' => '640', 'step' => '1']
             ]
         ],
         'pawiwahan' => [
@@ -2025,6 +2025,200 @@ function find_imagemagick_binary(): ?string {
     return null;
 }
 
+function find_ffmpeg_binary(): ?string {
+    $output = [];
+    @exec('command -v ffmpeg 2>/dev/null', $output, $code);
+    return $code === 0 && !empty($output[0]) ? trim((string)$output[0]) : null;
+}
+
+function find_ffprobe_binary(): ?string {
+    $output = [];
+    @exec('command -v ffprobe 2>/dev/null', $output, $code);
+    return $code === 0 && !empty($output[0]) ? trim((string)$output[0]) : null;
+}
+
+function media_processing_temp_path(string $directory, string $extension): string {
+    $extension = ltrim(strtolower(trim($extension)), '.');
+    if ($extension === '') $extension = 'tmp';
+    return rtrim($directory, '/\\') . '/.' . bin2hex(random_bytes(12)) . '.tmp.' . $extension;
+}
+
+function video_processing_temp_path(string $directory): string {
+    return media_processing_temp_path($directory, 'mp4');
+}
+
+function audio_processing_temp_path(string $directory): string {
+    return media_processing_temp_path($directory, 'mp3');
+}
+
+function probe_video_stream(string $path, bool $audio = false): ?array {
+    $binary = find_ffprobe_binary();
+    if ($binary === null || !is_file($path)) return null;
+    $selector = $audio ? 'a:0' : 'v:0';
+    $entries = $audio ? 'codec_type,codec_name,sample_rate,channels,duration' : 'codec_type,codec_name,width,height,pix_fmt,r_frame_rate,duration';
+    $command = escapeshellarg($binary) . ' -v error -select_streams ' . escapeshellarg($selector) . ' -show_entries stream=' . escapeshellarg($entries) . ' -of json ' . escapeshellarg($path) . ' 2>/dev/null';
+    $output = [];
+    @exec($command, $output, $code);
+    if ($code !== 0 || !$output) return null;
+    $decoded = json_decode(implode('', $output), true);
+    return is_array($decoded) && isset($decoded['streams'][0]) && is_array($decoded['streams'][0]) ? $decoded['streams'][0] : null;
+}
+
+function video_stream_fps(array $stream): float {
+    $rate = trim((string)($stream['r_frame_rate'] ?? ''));
+    if ($rate === '' || !str_contains($rate, '/')) return 0.0;
+    [$numerator, $denominator] = array_map('floatval', explode('/', $rate, 2));
+    return $denominator > 0 ? $numerator / $denominator : 0.0;
+}
+
+function verify_mp4_output(string $path, array $requirement = []): bool {
+    if (!is_file($path) || filesize($path) <= 0 || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'mp4') return false;
+    $mime = safe_image_mime($path);
+    if (!in_array($mime, ['video/mp4', 'application/mp4', 'application/octet-stream'], true)) return false;
+    $video = probe_video_stream($path);
+    if ($video === null || ($video['codec_name'] ?? '') !== (string)($requirement['video_codec'] ?? 'libx264')) return false;
+    $width = (int)($video['width'] ?? 0);
+    $height = (int)($video['height'] ?? 0);
+    if ($width < 2 || $height < 2) return false;
+    if (isset($requirement['max_width']) && $width > (int)$requirement['max_width']) return false;
+    if (isset($requirement['max_height']) && $height > (int)$requirement['max_height']) return false;
+    if (($video['pix_fmt'] ?? '') !== (string)($requirement['pixel_format'] ?? 'yuv420p')) return false;
+    $fps = video_stream_fps($video);
+    if (isset($requirement['max_fps']) && $fps > (float)$requirement['max_fps'] + 0.05) return false;
+    if ((float)($video['duration'] ?? 0) <= 0.05) return false;
+    return true;
+}
+
+function verify_mp3_output(string $path, array $requirement = []): bool {
+    if (!is_file($path) || filesize($path) <= 0 || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'mp3') return false;
+    $mime = safe_image_mime($path);
+    if (!in_array($mime, ['audio/mpeg', 'audio/mp3', 'application/octet-stream'], true)) return false;
+    $audio = probe_video_stream($path, true);
+    if ($audio === null || ($audio['codec_name'] ?? '') !== (string)($requirement['audio_codec'] ?? 'mp3')) return false;
+    if (isset($requirement['sample_rate']) && (int)($audio['sample_rate'] ?? 0) !== (int)$requirement['sample_rate']) return false;
+    if (isset($requirement['channels']) && (int)($audio['channels'] ?? 0) !== (int)$requirement['channels']) return false;
+    return (float)($audio['duration'] ?? 0) > 0.05;
+}
+
+function media_ffmpeg_timeout_seconds(): int {
+    $configured = getenv('MEDIA_FFMPEG_TIMEOUT_SECONDS');
+    $seconds = is_string($configured) && trim($configured) !== '' ? (int)$configured : 300;
+    return max(10, min($seconds, 3600));
+}
+
+function run_ffmpeg_command(array $parts): array {
+    $command = implode(' ', $parts);
+    $process = @proc_open($command, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($process)) return ['success' => false, 'stderr' => 'Unable to start FFmpeg process.', 'exit_code' => -1];
+    fclose($pipes[0]);
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+    $stdout = '';
+    $stderr = '';
+    $startedAt = microtime(true);
+    $timeout = media_ffmpeg_timeout_seconds();
+    $timedOut = false;
+    while (true) {
+        $status = proc_get_status($process);
+        $stdout .= (string)(stream_get_contents($pipes[1]) ?: '');
+        $stderr .= (string)(stream_get_contents($pipes[2]) ?: '');
+        if (!$status['running']) break;
+        if (microtime(true) - $startedAt >= $timeout) {
+            $timedOut = true;
+            @proc_terminate($process, 15);
+            usleep(250000);
+            $status = proc_get_status($process);
+            if (!empty($status['running'])) @proc_terminate($process, 9);
+            break;
+        }
+        $read = [];
+        if (!feof($pipes[1])) $read[] = $pipes[1];
+        if (!feof($pipes[2])) $read[] = $pipes[2];
+        if ($read) {
+            $write = [];
+            $except = [];
+            @stream_select($read, $write, $except, 0, 100000);
+        } else {
+            usleep(100000);
+        }
+    }
+    $stdout .= (string)(stream_get_contents($pipes[1]) ?: '');
+    $stderr .= (string)(stream_get_contents($pipes[2]) ?: '');
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $exitCode = proc_close($process);
+    if ($timedOut) {
+        return ['success' => false, 'stderr' => trim($stderr . "\nFFmpeg process timed out after {$timeout} seconds."), 'exit_code' => -124, 'timed_out' => true];
+    }
+    return ['success' => $exitCode === 0, 'stderr' => (string)$stderr, 'exit_code' => $exitCode, 'timed_out' => false];
+}
+
+function process_audio_to_mp3(string $sourcePath, string $destinationDir, string $role = 'music', ?string $preset = null, string $originalName = ''): array {
+    if (!is_file($sourcePath) || !is_readable($sourcePath)) return ['success' => false, 'error' => 'Sumber audio tidak dapat dibaca.'];
+    $requirement = media_requirement($role, $preset);
+    $binary = find_ffmpeg_binary();
+    if ($binary === null || find_ffprobe_binary() === null) return ['success' => false, 'error' => 'FFmpeg dan FFprobe diperlukan untuk memproses musik.'];
+    if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan musik.'];
+    $safeBase = preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($originalName !== '' ? $originalName : basename($sourcePath), PATHINFO_FILENAME));
+    $safeBase = trim((string)$safeBase, '-_');
+    if ($safeBase === '') $safeBase = 'music';
+    $finalName = $safeBase . '-' . bin2hex(random_bytes(8)) . '.mp3';
+    $finalPath = rtrim($destinationDir, '/\\') . '/' . $finalName;
+    $temporaryPath = audio_processing_temp_path($destinationDir);
+    $parts = [
+        escapeshellarg($binary), '-hide_banner', '-loglevel', 'error', '-y',
+        '-i', escapeshellarg($sourcePath), '-map', escapeshellarg('0:a:0'), '-vn', '-sn', '-dn',
+        '-map_metadata', '-1', '-c:a', escapeshellarg((string)($requirement['audio_encoder'] ?? 'libmp3lame')),
+        '-b:a', escapeshellarg((string)($requirement['audio_bitrate'] ?? '160k')),
+        '-ar', (string)(int)($requirement['sample_rate'] ?? 44100), '-ac', (string)(int)($requirement['channels'] ?? 2),
+        escapeshellarg($temporaryPath)
+    ];
+    $run = run_ffmpeg_command($parts);
+    $processed = !empty($run['success']) && verify_mp3_output($temporaryPath, $requirement);
+    if (!$processed || !@rename($temporaryPath, $finalPath) || !verify_mp3_output($finalPath, $requirement)) {
+        if (!empty($run['stderr'])) error_log('MediaProcessor FFmpeg audio failed: ' . trim((string)$run['stderr']));
+        @unlink($temporaryPath);
+        @unlink($finalPath);
+        return ['success' => false, 'error' => 'Gagal memproses musik menjadi MP3 terverifikasi.'];
+    }
+    $audio = probe_video_stream($finalPath, true);
+    return ['success' => true, 'path' => $finalPath, 'name' => $finalName, 'mime' => 'audio/mpeg', 'duration' => (float)($audio['duration'] ?? 0), 'requirement' => $requirement];
+}
+
+function process_video_to_mp4(string $sourcePath, string $destinationDir, string $role = 'love_story_video', ?string $preset = null, string $originalName = ''): array {
+    if (!is_file($sourcePath) || !is_readable($sourcePath)) return ['success' => false, 'error' => 'Sumber video tidak dapat dibaca.'];
+    $requirement = media_requirement($role, $preset);
+    $binary = find_ffmpeg_binary();
+    if ($binary === null || find_ffprobe_binary() === null) return ['success' => false, 'error' => 'FFmpeg dan FFprobe diperlukan untuk memproses Video Cerita.'];
+    if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0755, true)) return ['success' => false, 'error' => 'Gagal membuat direktori penyimpanan video.'];
+    $safeBase = preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($originalName !== '' ? $originalName : basename($sourcePath), PATHINFO_FILENAME));
+    $safeBase = trim((string)$safeBase, '-_');
+    if ($safeBase === '') $safeBase = 'love-story-video';
+    $finalName = $safeBase . '-' . bin2hex(random_bytes(8)) . '.mp4';
+    $finalPath = rtrim($destinationDir, '/\\') . '/' . $finalName;
+    $temporaryPath = video_processing_temp_path($destinationDir);
+    $vf = "scale='min(" . (int)($requirement['max_width'] ?? 1280) . ",iw)':'min(" . (int)($requirement['max_height'] ?? 720) . ",ih)':force_original_aspect_ratio=decrease:force_divisible_by=2";
+    $parts = [
+        escapeshellarg($binary), '-hide_banner', '-loglevel', 'error', '-y',
+        '-i', escapeshellarg($sourcePath), '-map', escapeshellarg('0:v:0'), '-map', escapeshellarg('0:a:0?'),
+        '-vf', escapeshellarg($vf), '-c:v', escapeshellarg((string)($requirement['video_encoder'] ?? 'libx264')),
+        '-preset', escapeshellarg((string)($requirement['preset'] ?? 'veryfast')), '-crf', (string)(int)($requirement['crf'] ?? 25),
+        '-pix_fmt', escapeshellarg((string)($requirement['pixel_format'] ?? 'yuv420p')), '-r', (string)(int)($requirement['max_fps'] ?? 30),
+        '-c:a', escapeshellarg((string)($requirement['audio_codec'] ?? 'aac')), '-b:a', escapeshellarg((string)($requirement['audio_bitrate'] ?? '128k')),
+        '-movflags', '+faststart', '-sn', '-dn', escapeshellarg($temporaryPath)
+    ];
+    $run = run_ffmpeg_command($parts);
+    $processed = !empty($run['success']) && verify_mp4_output($temporaryPath, $requirement);
+    if (!$processed || !@rename($temporaryPath, $finalPath) || !verify_mp4_output($finalPath, $requirement)) {
+        if (!empty($run['stderr'])) error_log('MediaProcessor FFmpeg failed: ' . trim((string)$run['stderr']));
+        @unlink($temporaryPath);
+        @unlink($finalPath);
+        return ['success' => false, 'error' => 'Gagal memproses video menjadi MP4 terverifikasi.'];
+    }
+    $video = probe_video_stream($finalPath);
+    return ['success' => true, 'path' => $finalPath, 'name' => $finalName, 'mime' => 'video/mp4', 'width' => (int)($video['width'] ?? 0), 'height' => (int)($video['height'] ?? 0), 'duration' => (float)($video['duration'] ?? 0), 'requirement' => $requirement];
+}
+
 function media_role_alias(string $role): string {
     $role = strtolower(trim($role));
     $aliases = [
@@ -2071,6 +2265,8 @@ function media_requirements(): array {
             'qris_image' => ['max_width' => 1200, 'max_height' => 1200, 'fit' => 'preserve', 'upscale' => false],
             'og_image' => ['width' => 1200, 'height' => 630, 'fit' => 'cover', 'crop' => true, 'upscale' => true],
             'theme_asset' => ['max_width' => 2400, 'max_height' => 1600, 'fit' => 'preserve', 'upscale' => false, 'preserve_alpha' => true],
+            'music' => ['audio_codec' => 'mp3', 'audio_encoder' => 'libmp3lame', 'audio_bitrate' => '160k', 'sample_rate' => 44100, 'channels' => 2],
+            'love_story_video' => ['max_width' => 1280, 'max_height' => 720, 'fit' => 'contain', 'video_codec' => 'h264', 'video_encoder' => 'libx264', 'audio_codec' => 'aac', 'pixel_format' => 'yuv420p', 'max_fps' => 30, 'crf' => 25, 'audio_bitrate' => '128k', 'preset' => 'veryfast'],
         ],
         'presets' => [
             'parang' => [
@@ -2524,6 +2720,24 @@ function upload_file(array $file, string $destinationDir, array $allowedExtensio
         return $result;
     }
 
+    if ($isAudio) {
+        $result = process_audio_to_mp3($temporarySource, $destinationDir, $role, $preset, (string)$file['name']);
+        if (empty($result['success'])) return $result;
+        if (is_file($temporarySource) && $temporarySource !== $result['path']) @unlink($temporarySource);
+        $result['extension'] = 'mp3';
+        $result['original_extension'] = $extension;
+        return $result;
+    }
+
+    if ($isVideo) {
+        $result = process_video_to_mp4($temporarySource, $destinationDir, $role, $preset, (string)$file['name']);
+        if (empty($result['success'])) return $result;
+        if (is_file($temporarySource) && $temporarySource !== $result['path']) @unlink($temporarySource);
+        $result['extension'] = 'mp4';
+        $result['original_extension'] = $extension;
+        return $result;
+    }
+
     $safeName = generate_safe_filename((string)$file['name']);
     $dest = rtrim($destinationDir, '/\\') . '/' . $safeName;
     if (!@move_uploaded_file($temporarySource, $dest) && !($isCliFixture && @rename($temporarySource, $dest))) {
@@ -2693,7 +2907,7 @@ function list_media_library(array $options = []): array {
         'background' => ['dir' => tenant_upload_dir('background'), 'label' => 'Background', 'allowed' => ALLOWED_IMAGE_TYPES],
         'gallery' => ['dir' => tenant_upload_dir('gallery'), 'label' => 'Gallery', 'allowed' => ALLOWED_IMAGE_TYPES],
         'love_story' => ['dir' => tenant_upload_dir('love_story'), 'label' => 'Love Story', 'allowed' => ALLOWED_IMAGE_TYPES],
-        'video' => ['dir' => tenant_upload_dir('video'), 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
+        'video' => ['dir' => tenant_upload_dir('love_story'), 'label' => 'Video Cerita', 'allowed' => ALLOWED_VIDEO_TYPES],
         'theme_assets' => ['dir' => tenant_upload_dir('theme_assets'), 'label' => 'Theme Assets', 'allowed' => ALLOWED_IMAGE_TYPES],
         'music' => ['dir' => tenant_upload_dir('music'), 'label' => 'Music', 'allowed' => ALLOWED_AUDIO_TYPES],
     ];
